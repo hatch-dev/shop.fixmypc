@@ -26,7 +26,7 @@ class PaymentSeeder extends Seeder
                 'razorpay_key' => 'rzp_test_vtdcqC3RtQu6Y3',
                 'razorpay_secret' => 'BBFRuBHJiARuW5StLE80Z0jd',
                 'stripe_key' => 'pk_test_51JRA6eFeoecS5e5Lm6m5mOCTOWxgtj5r0D19uHvgPRvwd0vayTx8bqKuaSJaJwVnwuhgahIQYP4M6Wfme9d9wpDG00VUVbACbg',
-                'stripe_secret' => '',
+                'stripe_secret' => env('STRIPE_SECRET_KEY', ''),
                 'admin_id' => 1,
 
                 'razorpay' => 1,
