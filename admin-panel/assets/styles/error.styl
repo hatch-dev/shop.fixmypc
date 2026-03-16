@@ -1,0 +1,51 @@
+@import "variables.styl"
+
+.big-title
+  font-weight 300
+  font-size 6em
+
+.error-wrapper
+  padding 100px 0 0
+  text-align center
+  min-height 400px
+
+  &:before
+    content ''
+    position absolute
+    height 100%
+    width 100%
+    left 0
+    bottom 0
+    background #E8F0FE
+    z-index -2
+
+  &:after
+    opacity .02
+    content ''
+    position absolute
+    height 100%
+    width 100%
+    left 0
+    bottom 0
+    background-image url(bg2)
+    background-repeat no-repeat
+    z-index -1
+    background-size cover
+
+  .img-wrap
+    margin 0 auto
+    max-width 350px
+
+    img
+      height auto
+
+@media only screen and (max-width: 768px)
+  .big-title
+    font-size 4em
+
+@media only screen and (max-width: 576px)
+  .error-wrapper
+    padding-top 0
+    text-align center
+    min-height 0
+    display block

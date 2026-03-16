@@ -1,0 +1,67 @@
+@import "./variables.styl"
+
+.dashboard
+  .order-status-wrapper
+    display flex
+    gap 20px
+    flex-wrap wrap
+
+    .card
+      flex 1 1 250px
+      max-width 100%
+
+  .card-wrapper
+    display flex
+    flex-wrap wrap
+    gap 20px
+
+    .dashboard-card
+      flex 1 1 200px
+
+      .card-inner
+        overflow hidden
+        padding 20px 30px
+        background #FEF7DA
+        position relative
+
+        i
+          height 120px
+          width 120px
+          opacity .04
+          top -20%
+          right 5%
+          position absolute
+          background-size 1450% 1450%
+
+      &:nth-child(2)
+        .card-inner
+          background #E9FDFB
+
+      &:nth-child(3)
+        .card-inner
+          background #FEECED
+
+      &:nth-child(4)
+        .card-inner
+          background #DEF1FF
+
+//RESPONSIVE
+@media only screen and (max-width: 768px)
+  .dashboard
+    .order-status-wrapper
+      gap 15px
+
+      .order-status
+        gap 15px
+
+    .card-wrapper
+      gap 15px
+
+      .dashboard-card
+        min-width 50%
+
+@media only screen and (max-width: 576px)
+  .dashboard
+    .card-wrapper
+      .dashboard-card
+        min-width 100%

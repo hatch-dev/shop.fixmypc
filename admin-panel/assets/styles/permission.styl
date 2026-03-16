@@ -1,0 +1,25 @@
+.permission-group
+  display flex
+  margin-top 0
+
+  & > div:first-child
+    max-width 200px
+    min-width 200px
+
+  .permission-item
+    flex-grow 1
+    display flex
+    flex-wrap wrap
+
+    & > span
+      width calc(25% - 15px)
+      min-width calc(25% - 15px)
+
+/* RESPONSIVE */
+@media only screen and (max-width: 999px)
+  .permission-group
+    display block
+
+    & > div:first-child
+      max-width 1000px
+      min-width 0

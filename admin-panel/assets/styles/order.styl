@@ -1,0 +1,84 @@
+@import "variables.styl"
+
+.order-cb
+  display flex
+  gap 15px
+  flex-wrap wrap
+
+  li
+    display flex
+    gap 10px
+
+    input[type=checkbox]
+      margin 0
+
+
+.order-wrapper
+  max-width 1000px
+  margin 0 auto
+  background #fff
+
+  .custom-dropdown
+    .dropdown-wrapper
+      left auto
+      right 0
+
+  table.shipping-table
+    td
+      vertical-align baseline
+      border none
+
+  table
+    margin 15px 0
+
+    td
+      padding-top 15px
+      padding-bottom 15px
+
+    tr
+      background none!important
+
+    th
+      border none
+      color #fff
+      background primary-color !important
+      padding-top 10px
+      padding-bottom 10px
+
+  .order-details
+    li
+      display flex
+      justify-content space-between
+
+      & > span:first-child
+        font-weight 500
+        width 150px
+
+      & > span:last-child
+        width 160px
+
+  .order-price
+    li
+      padding 10px 0
+      border-bottom 1px solid #eee
+
+      &:last-child
+        border-bottom none
+
+      span:first-child
+        text-align right
+        width 100px
+
+      span:last-child
+        text-align right
+        width 80px
+
+// RESPONSIVE
+@media only screen and (max-width: 576px)
+  .order-wrapper
+    .title
+      display block
+
+      & > .dply-felx
+        margin-top 5px
+        justify-content left

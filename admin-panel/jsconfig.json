@@ -1,0 +1,306 @@
+{
+  "api": {
+    "url": "api/admin/",
+    "login": "login",
+    "logout": "logout",
+    "profile": "profile",
+    "clearCache": "clear-cache",
+    "forgotPassword": "forgot-password",
+    "verifyCode": "verify-code",
+    "orderStatistic": "order-statistic",
+    "dashboard": "dashboard",
+
+    "localization": "localization",
+    "resource": "resource",
+    "languages": "languages",
+    "activate": "activate",
+    "deactivate": "deactivate",
+
+    "convertImage": "setting/convert-image",
+    "getSetting": "setting/find",
+    "setCurrency": "setting/currency",
+    "setAddress": "setting/address",
+
+    "siteSettingUpload": "site-setting/upload",
+    "setSiteSetting": "site-setting/action",
+    "getSiteSetting": "site-setting/find",
+
+    "socialLoginFind": "setting/social-login-find",
+    "smtpFind": "setting/smtp-find",
+    "mediaStorageFind": "setting/media-storage-find",
+
+    "socialLoginAction": "setting/social-login-action",
+    "smtpAction": "setting/smtp-action",
+    "mediaStorageAction": "setting/media-storage-action",
+
+    "getPayment": "payment/find",
+    "setPayment": "payment/save",
+
+    "setProfile": "update",
+    "setPassword": "update-password",
+
+    "getAllCategories": "category/all-categories",
+    "getCategories": "category/all",
+    "deleteCategory": "category/delete",
+    "getCategory": "category/find",
+    "setCategory": "category/action",
+    "setCategoryImage": "category/upload",
+
+    "getAllSubCategories": "subcategory/all-subcategories",
+    "getSubCategories": "subcategory/all",
+    "deleteSubCategory": "subcategory/delete",
+    "getSubCategory": "subcategory/find",
+    "setSubCategory": "subcategory/action",
+    "setSubCategoryImage": "subcategory/upload",
+
+    "getAllBrands": "brand/all-brands",
+    "getBrands": "brand/all",
+    "deleteBrand": "brand/delete",
+    "getBrand": "brand/find",
+    "setBrand": "brand/action",
+    "setBrandImage": "brand/upload",
+
+    "bulkExport": "bulk/export",
+    "bulkImport": "bulk/import",
+
+    "imgAll": "images/all",
+    "imgDelete": "images/delete",
+    "imgUpload": "images/upload",
+
+    "allPlugins": "plugin/all",
+    "uploadPlugin": "plugin/upload",
+    "activatePlugin": "plugin/activate",
+    "deletePlugin": "plugin/delete",
+
+    "analytics": "setting/analytics",
+    "miscellaneous": "setting/miscellaneous",
+
+    "getAllAttributes": "attribute/all-attributes",
+    "getAttributes": "attribute/all",
+    "deleteAttribute": "attribute/delete",
+    "getAttribute": "attribute/find",
+    "setAttribute": "attribute/action",
+
+    "getAllTaxRules": "tax-rule/all-tax-rules",
+    "getTaxRules": "tax-rule/all",
+    "deleteTaxRule": "tax-rule/delete",
+    "getTaxRule": "tax-rule/find",
+    "setTaxRule": "tax-rule/action",
+
+
+    "getCustomScripts": "custom-script/all",
+    "deleteCustomScript": "custom-script/delete",
+    "getCustomScript": "custom-script/find",
+    "setCustomScript": "custom-script/action",
+
+
+    "getAllShippingRules": "shipping-rule/all-shipping-rules",
+    "getShippingRules": "shipping-rule/all",
+    "deleteShippingRule": "shipping-rule/delete",
+    "getShippingRule": "shipping-rule/find",
+    "setShippingRule": "shipping-rule/action",
+
+    "getAllProductCollections": "product-collection/all-product-collections",
+    "getProductCollections": "product-collection/all",
+    "deleteProductCollection": "product-collection/delete",
+    "getProductCollection": "product-collection/find",
+    "setProductCollection": "product-collection/action",
+
+    "getAllBundleDeals": "bundle-deal/all-bundle-deals",
+    "getBundleDeals": "bundle-deal/all",
+    "deleteBundleDeal": "bundle-deal/delete",
+    "getBundleDeal": "bundle-deal/find",
+    "setBundleDeal": "bundle-deal/action",
+
+    "getVouchers": "voucher/all",
+    "deleteVoucher": "voucher/delete",
+    "getVoucher": "voucher/find",
+    "setVoucher": "voucher/action",
+    "voucherValidity": "voucher/validity",
+
+    "getLanguages": "language/all",
+    "deleteLanguage": "language/delete",
+    "getLanguage": "language/find",
+    "setLanguage": "language/action",
+
+    "getProducts": "product/all",
+    "getProductsWithCategories": "product/with-categories",
+    "deleteProduct": "product/delete",
+    "getProduct": "product/find",
+    "setProduct": "product/action",
+    "setProductImage": "product/upload",
+    "setProductImages": "product/upload-images",
+    "deleteProductImage": "product/delete-image",
+    "setProductVideo": "product/upload-video",
+
+    "setProductImageAttributes": "product-image-attributes/action",
+
+    "getDropdownList": "product/dropdown-data",
+    "setWysiwygImage": "wysiwyg-image/upload",
+    "deleteWysiwygImage": "wysiwyg-image/delete",
+
+    "getTags": "tag/all",
+    "setTags": "tag/action",
+
+    "deleteFlashSale": "flash-sale/delete",
+    "getFlashSales": "flash-sale/all",
+    "getFlashSale": "flash-sale/find",
+    "setFlashSale": "flash-sale/action",
+
+    "deleteUpsell": "upsell/delete",
+    "getUpsells":"upsell/all",
+    "getUpsell":"upsell/find",
+    "setUpsell":"upsell/action",
+
+    "deleteUpdatedUpsell": "updated-upsell/delete",
+    "getUpdatedUpsells":"updated-upsell/all",
+    "getUpdatedUpsell":"updated-upsell/find",
+    "setUpdatedUpsell":"updated-upsell/action",
+
+    "deleteTemplate": "templates/delete",
+    "getTemplates":"templates/all",
+    "getTemplate":"templates/find",
+    "setTemplate":"templates/action",
+
+    "getCart": "cart/by-user",
+    "setCart": "cart/action",
+    "deleteCart": "cart/delete",
+    "updateShipping": "cart/update-shipping",
+
+    "deleteOrder": "order/delete",
+    "getOrders": "order/all",
+    "getVendorOrders": "order/vendor-all",
+    "getOrder": "order/find",
+    "updateOrderStatus": "order/update-status",
+    "paymentStatus": "order/payment-status",
+    "paymentMethod": "order/payment-method",
+    "sendStatusUpdateEmail": "order/send-delivered-email",
+    "getOderCancellationMessage": "cancellation/find",
+    "setOrderRefund": "cancellation/refund",
+
+    "getRatingReviews": "rating-review/all",
+    "deleteRatingReview": "rating-review/delete",
+
+    "getUsers": "user/all",
+    "deleteUser": "user/delete",
+    "getUserAddresses": "user/address/all",
+    "setUserAddress": "user/address/action",
+    "deleteUserAddress": "user/address/delete",
+    "countriesPhones": "countries-phones",
+
+    "getGuestUsers": "guest-user/all",
+    "deleteGuestUser": "guest-user/delete",
+
+    "getSubscribers": "subscriber/all",
+    "deleteSubscriber": "subscriber/delete",
+    "allSubscribers": "subscriber/all-subscribers",
+    "sendSubscriptionEmail": "subscriber/send-subscription-email",
+
+    "deleteUserMessage": "user-message/delete",
+    "getUserMessages": "user-message/all",
+    "getUserMessage": "user-message/find",
+    "setUserMessage": "user-message/action",
+
+    "setPosOrder": "pos-order/action",
+    "getPosOrders": "pos-order/all",
+    "deletePosOrders": "pos-order/delete",
+
+    "deletePosSetting": "pos-setting/delete",
+    "getPosSetting": "pos-setting/find",
+    "setPosSetting": "pos-setting/action",
+    "setPosSettingImage": "pos-setting/upload",
+
+    "deletePage": "page/delete",
+    "getAllPages": "page/all-pages",
+    "getPages": "page/all",
+    "getPage": "page/find",
+    "setPage": "page/action",
+
+    "deleteSubscriptionEmailFormat": "subscription-email-format/delete",
+    "getAllSubscriptionEmailFormats": "subscription-email-format/all-subscription-email-formats",
+    "getSubscriptionEmailFormats": "subscription-email-format/all",
+    "getSubscriptionEmailFormat": "subscription-email-format/find",
+    "setSubscriptionEmailFormat": "subscription-email-format/action",
+
+    "setPageWysiwygImage": "page-wysiwyg-image/upload",
+    "deletePageWysiwygImage": "page-wysiwyg-image/delete",
+    "deleteSliderImage": "home-slider-image/delete",
+    "getSliderImages": "home-slider-image/all",
+    "getSliderImage": "home-slider-image/find",
+    "setSliderImage": "home-slider-image/action",
+    "uploadSliderImage": "home-slider-image/upload",
+
+    "setFeatureWysiwygImage": "feature-wysiwyg-image/upload",
+    "deleteFeatureWysiwygImage": "feature-wysiwyg-image/delete",
+
+
+    "getBanners": "banner/all",
+    "getBanner": "banner/find",
+    "setBanner": "banner/action",
+    "uploadBanner": "banner/upload",
+
+
+
+    "getSiteFeatures": "site-feature/all",
+    "getSiteFeature": "site-feature/find",
+    "setSiteFeature": "site-feature/action",
+    "uploadSiteFeatureImage": "site-feature/upload",
+    "deleteSiteFeature": "site-feature/delete",
+
+
+    "getFooterLinks": "footer-link/all",
+    "setFooterLink": "footer-link/service-about-action",
+    "deleteFooterImageLink": "footer-image-link/delete",
+    "getFooterImageLink": "footer-image-link/find",
+    "setFooterImageLink": "footer-image-link/action",
+    "setFooterImageLinkImage": "footer-image-link/image",
+
+
+    "getHeaderLinks": "header-link/all",
+    "setHeaderLink": "header-link/action",
+
+
+    "setInventory": "updated-inventory/action",
+    "getInventory": "updated-inventory/find",
+
+    "getRoles": "role/all",
+    "getRole": "role/find",
+    "deleteRole": "role/delete",
+    "setRole": "role/action",
+    "allRoles": "role/all-roles",
+
+    "allPermissions": "role/all-permissions",
+
+    "getAdmins": "admin-data/all",
+    "getAdmin": "admin-data/find",
+    "deleteAdmin": "admin-data/delete",
+    "setAdmin": "admin-data/action",
+
+    "getStore": "store/find",
+    "setStore": "store/action",
+    "setStoreLogo": "store/upload-logo",
+
+    "setWithdrawalAccount": "withdrawal-account/action",
+    "getWithdrawalAccount": "withdrawal-account/find",
+    "getWithdrawalAccounts": "withdrawal-account/all",
+    "deleteWithdrawalAccount": "withdrawal-account/delete",
+    "getWithdrawalRequests": "withdrawal-request/all",
+    "getWithdrawalRequest": "withdrawal-request/find",
+    "setWithdrawalRequest": "withdrawal-request/withdraw",
+    "cancelWithdrawalRequest": "withdrawal-request/cancel",
+    "approveWithdrawalRequest": "withdrawal-request/approve",
+    "deleteWithdrawalRequest": "withdrawal-request/delete",
+
+
+    "getSuppliers": "suppliers/all",
+    "getSupplier" : "suppliers/find",
+    "setSupplier": "suppliers/action",
+    "deleteSupplier": "suppliers/delete",
+
+
+    "getLoyaltyGroups": "loyalty-groups/all",
+    "getLoyaltyGroup": "loyalty-groups/find",
+    "setLoyaltyGroup": "loyalty-groups/action",
+    "deleteLoyaltyGroup": "loyalty-groups/delete"
+  }
+}

@@ -1,0 +1,1155 @@
+@import "variables.styl"
+
+
+.lazy-img
+  transition none
+  opacity 0
+
+.cp
+  cursor pointer
+
+.no-click {
+  pointer-events: none;
+}
+
+.layout-spinner.spinner-wrapper
+  z-index 1000
+  background #fff
+
+.user-messages-wrapper
+  .item-hover
+    &:first-child
+      border-top 0
+
+.item-hover
+  &:hover
+    background #f4f5f4
+
+.new-record
+  background new-record-color
+
+.detail-width.tab-sidebar
+  min-width 800px
+  max-width 1000px
+
+.capitalize
+  text-transform capitalize
+
+.ignore-click
+  pointer-events none
+
+  *
+    pointer-events none
+
+.ellipsis-2
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+
+.card
+  background #fff
+  border-radius 10px
+  box-shadow 0 1px 2px rgba(0, 0, 0, .2), 1px -1px 2px rgba(0, 0, 0, .07), 0 -2px 5px rgba(0, 0, 0, .03)
+
+.shadow-1
+  box-shadow 0 1px 2px rgba(0, 0, 0, .2), 1px 1px 5px rgba(0, 0, 0, .1)
+
+.spinner-wrapper
+  display flex
+  align-items center
+  justify-content center
+  background rgba(255, 255, 255, .6)
+
+
+.ql-editor::-webkit-scrollbar-track
+.sb-1::-webkit-scrollbar-track
+  background-color rgba(0, 0, 0, .1)
+
+.sb-2::-webkit-scrollbar-track
+  background-color #eee
+
+.ql-editor::-webkit-scrollbar
+.sb::-webkit-scrollbar
+  width 8px
+
+.ql-editor::-webkit-scrollbar-thumb
+.sb::-webkit-scrollbar-thumb
+  background-color rgba(0, 0, 0, .15)
+  border-radius 40px
+
+td.color-success
+  font-weight 600
+
+.color-success
+  color success-foreground
+
+.color-danger
+  color danger-foreground
+
+.color-info
+  color info-foreground
+
+.info-msg
+  padding 12.5px 15px
+  border-radius 5px
+  background info-bg-color!important
+  color info-foreground!important
+
+  p
+    color info-foreground!important
+
+.warning-msg
+  padding 12.5px 15px
+  border-radius 5px
+  color warning-foreground!important
+  background warning-bg-color!important
+
+.success-msg
+  padding 12.5px 15px
+  border-radius 5px
+  color success-foreground!important
+  background success-bg-color!important
+
+.danger-msg
+  padding 12.5px 15px
+  border-radius 5px
+  color danger-foreground!important
+  background danger-bg-color!important
+
+.img-40x
+  max-height 40px
+  max-width 40px
+  min-width 40px
+  width auto
+  height auto
+  object-fit cover
+  border-radius 5px
+  overflow hidden
+
+.img-80x
+  height 80px !important
+  width 80px !important
+  border-radius 5px
+  overflow hidden
+
+.ellipsis
+  overflow hidden
+  text-overflow ellipsis
+  -webkit-box-orient vertical
+  -webkit-line-clamp 1
+
+.italic
+  font-style italic
+
+.primary-head
+  padding 10px 0
+  color primary-foreground
+  background primary-color
+
+.lh-2
+  line-height 2
+
+  span
+    line-height 2
+
+.no-bg
+  background none
+
+.img-50x
+  max-width 50px
+  max-height 50px
+  width auto
+  height auto
+  object-fit cover
+
+.mx-h-100x
+  max-height 100px
+
+.mx-h-100
+  max-height 100% !important
+
+.disabled
+  opacity .4
+  cursor not-allowed!important
+
+.b-0
+  border 0 !important
+
+.black-2
+  color #999
+
+.white-2
+  color #aaa
+
+.z-10
+  z-index 10
+
+.icon
+  height 24px
+  width 24px
+  min-width 24px
+  background-image url(sprite)
+  background-size icon-bg icon-bg
+
+.to-top
+  z-index 100
+
+.fw-400
+  font-weight 400
+
+.fw-500
+  font-weight 500
+
+.fw-600
+  font-weight 600
+
+.f-7
+  font-size .7em
+
+.f-8
+  font-size .8em
+
+.f-9
+  font-size .9em
+
+.f-1-2
+  font-size 1.2em
+
+.layer
+  position fixed
+  top header-height
+  left 0
+  right 0
+  bottom 0
+  z-index -1
+  background rgba(0, 0, 0, .4)
+
+.sticky
+  position sticky
+  top 0
+
+.full-dimen
+  height 100%
+  width 100%
+
+.h-25x
+  height 25px
+
+.h-100
+  height 100%
+
+.m-5
+  margin 5px !important
+
+.mlr-auto
+  margin-left auto !important
+  margin-right auto !important
+
+.mlr-0
+  margin-left 0 !important
+  margin-right 0 !important
+
+.mlr--2-5
+  margin-left -2.5px !important
+  margin-right -2.5px !important
+
+.mlr--5
+  margin-left -5px !important
+  margin-right -5px !important
+
+.mlr--7-5
+  margin-left -7.5px !important
+  margin-right -7.5px !important
+
+.mlr-2-5
+  margin-left 2.5px !important
+  margin-right 2.5px !important
+
+
+.mlr-5
+  margin-left 5px !important
+  margin-right 5px !important
+
+.mlr-7-5
+  margin-left 7.5px !important
+  margin-right 7.5px !important
+
+
+.mlr-10
+  margin-left 10px !important
+  margin-right 10px !important
+
+.mlr-15
+  margin-left 15px !important
+  margin-right 15px !important
+
+.ml-5
+  margin-left 5px !important
+
+.ml-10
+  margin-left 10px !important
+
+.mr-0
+  margin-right 0 !important
+
+.mr-5
+  margin-right 5px !important
+
+.mr-10
+  margin-right 10px !important
+
+.mr-15
+  margin-right 15px !important
+
+.mr-20
+  margin-right 20px !important
+
+.mr-50
+  margin-right 50px !important
+
+.mt-10
+  margin-top 10px !important
+
+.mt-15
+  margin-top 15px !important
+
+.mt-25
+  margin-top 25px !important
+
+.mt-30
+  margin-top 30px !important
+
+.mb-30
+  margin-bottom 30px !important
+
+.mtb-5
+  margin-top 5px !important
+  margin-bottom 5px !important
+
+.mtb-7-5
+  margin-top 7.5px !important
+  margin-bottom 7.5px !important
+
+.mtb-10
+  margin-top 10px !important
+  margin-bottom 10px !important
+
+.mtb-15
+  margin-top 15px !important
+  margin-bottom 15px !important
+
+.mtb-20
+  margin-top 20px !important
+  margin-bottom 20px !important
+
+.b-t
+  border-top 1px solid #eee
+
+.b-b
+  border-bottom 1px solid #eee
+
+.p-0
+  padding 0 !important
+
+.p-5
+  padding 5px !important
+
+.p-10
+  padding 10px !important
+
+.p-15
+  padding 15px !important
+
+.p-20
+  padding 20px !important
+
+.p-30
+  padding 30px !important
+
+.pt-0
+  padding-top 0 !important
+
+.pt-5
+  padding-top 5px !important
+
+.pt-15
+  padding-top 15px !important
+
+.pt-30
+  padding-top 30px !important
+
+.f-right
+  float right
+
+.f-left
+  float left
+
+.centered
+  text-align center
+
+.right-text
+  text-align right!important
+
+.error-list
+  font-size .95em
+  padding 15px
+  background danger-bg-color
+  color danger-foreground
+  border-radius 5px
+
+  li
+    display block
+    color danger-foreground
+    position relative
+    padding-left 16px
+
+    &:after
+      content ''
+      position absolute
+      top 50%
+      margin-top -3px
+      height 6px
+      width 6px
+      border-radius 10px
+      left 0
+      background danger-foreground
+
+    &:first-child
+      font-weight 600
+      padding-left 0
+
+      &:after
+        display none
+
+  label
+    margin-bottom 10px
+    font-size .9em
+
+  .input-wrapper
+    margin-bottom 15px
+
+  .sided
+    margin-top 30px
+
+.error
+  margin-top 5px
+  font-size .9em
+  display block
+  color red
+
+.has-error
+  .file-input
+    border-color red !important
+
+  .invalid
+    border 1px solid red !important
+
+button
+  padding 0 30px
+
+  &:hover:enabled
+    border-color #888
+
+label.checkbox
+  cursor pointer
+  user-select none
+  line-height 20px
+  display flex
+  align-items center
+
+  input
+    height 16px
+    width 16px
+    margin-right 10px
+
+.block
+  display block
+
+.close-icon
+  opacity .8
+  transform scale(.6)
+
+.btn-clear
+  border 0
+
+.close-btn
+  height 30px
+  width 30px
+  min-width 30px
+  border-radius 100px
+  padding 0
+  display flex
+  align-items center
+  z-index: 5;
+  justify-content center
+
+.sided
+  display flex
+  align-items center
+  justify-content space-between
+
+.f-wrap
+  flex-wrap wrap
+
+.fade-enter-active,
+.fade-leave-active
+  transition opacity .15s
+
+.fade-enter,
+.fade-leave-to
+  opacity 0
+
+.no-scroll
+  overflow hidden
+
+.d-none
+  display none
+
+.d-inline
+  display inline-block
+
+.dply-felx
+  gap 5px
+  display flex
+  justify-content space-between
+  align-items center
+
+.gap-0
+  gap 0
+
+.gap-10
+  gap 10px
+
+.gap-15
+  gap 15px
+
+.j-center
+  justify-content center
+
+.j-right
+  justify-content flex-end
+
+.j-left
+  justify-content flex-start !important
+
+.reverse
+  flex-direction row-reverse
+
+.f-column
+  flex-direction column
+
+.grow
+  flex-grow 1
+
+.start
+  justify-content flex-start
+
+.right
+  justify-content flex-end
+
+.align-start
+  align-items flex-start
+
+.align-end
+  align-items flex-end
+
+.centered-flex
+  display flex
+  align-items center
+  justify-content center
+
+.flex-v-centered
+  display flex
+  justify-content space-between
+  align-items center
+
+.input-wrapper.dply-felx > label > .label
+.input-wrapper.single-line > label
+.input-wrapper.dply-felx > label
+  min-width 120px
+
+.button.lite-btn
+.lite-btn
+  min-width 75px
+  width auto
+  background primary-lite-color
+  border 1px solid primary-lite-color
+  font-weight 700
+  color primary-color
+
+  &:hover
+    border 1px solid primary-color !important
+
+  & > i
+    background-size 300px 300px
+    height 100%
+
+.delete-btn
+  background danger-bg-color
+  border 1px solid danger-bg-color
+  color danger-foreground
+
+  &:hover
+    border 1px solid danger-foreground !important
+
+.outline-btn:not(.disabled)
+  font-size 1em
+  height btn-height
+  line-height btn-height - 2
+  border 1px solid #bbb
+  background linear-gradient(to bottom, #f7f8fa, #e7e9ec)
+  box-shadow 0 1px 0 rgba(255, 255, 255, .3) inset
+
+  &:hover:not(.disabled)
+    background linear-gradient(to top, #f7f8fa, #e7e9ec)
+
+  &:active:not(.disabled)
+    box-shadow 0 1px 2px 1px #b7b8ba
+
+.delete-btn.xs
+.edit-btn.xs
+.outline-btn.xs
+  font-size .75rem
+  height btn-height-sm - 4
+  line-height btn-height-sm - 6
+
+button.primary-btn
+.button.primary-btn
+  font-size 1em
+  border-radius 8px
+  text-align center
+  background linear-gradient(to bottom, primary-color, primary-hover)
+  border 0
+  padding 0 25px
+  font-weight 700
+  color primary-foreground
+  height btn-height
+  line-height btn-height
+  transition all .2s
+  box-shadow 0 1px 0 rgba(255, 255, 255, .3) inset
+
+  &:hover:not(.disabled)
+    background linear-gradient(to top, primary-color, primary-hover)
+
+  &:active:not(.disabled)
+    box-shadow 0 1px 3px 1px primary-hover
+
+
+.text-right
+  text-align end
+
+.bold
+  font-weight 700
+
+.semi-bold
+  font-weight 600
+
+.lite-bold
+  color #666
+  font-weight 700
+  margin-right 15px
+
+  th
+    background #f9fafb
+    font-size 13px
+    font-weight 600
+    padding 10px
+    border-bottom 1px solid #e5e7eb
+    text-align center !important
+    vertical-align middle
+
+table.mn-w-600x
+  tr
+    overflow visible !important
+
+    td
+      padding 8px 10px
+      border-bottom 1px solid #f1f1f1
+      font-size 13px
+      text-align center !important
+      vertical-align middle
+
+    &:hover
+      background #f8fbff
+
+.lite-bold th:first-child,
+table.mn-w-600x tr td:first-child
+  padding-left 4px !important
+
+.lite-bold th:nth-child(2),
+table.mn-w-600x tr td:nth-child(2)
+  padding-left 4px !important
+
+table
+  table-layout fixed
+
+.mx-w-70x
+  max-width 70px
+
+.mx-w-100x
+  max-width 100px
+
+.mx-w-130x
+  max-width 130px
+
+.mn-h-120x
+  min-height 120px
+
+.mn-h-200x
+  min-height 200px
+
+.mn-h-500x
+  min-height 500px
+
+.mn-w-24x
+  min-width 24px
+
+.mn-w-30x
+  min-width 30px
+.mn-w-50x
+  min-width 50px
+.mn-w-80x
+  min-width 80px
+
+.mn-w-90x
+  min-width 90px
+
+.mn-w-100x
+  min-width 100px
+
+.mn-w-130x
+  min-width 130px
+
+.mn-w-200x
+  min-width 200px
+
+.mn-w-400x
+  min-width 400px
+
+.mn-w-500x
+  min-width 500px
+
+.mn-w-600x
+  min-width 600px
+
+.mn-w-800x
+  min-width 800px
+
+.mx-w-50
+  max-width 50%
+
+.mx-w-50x
+  max-width 50px
+
+.mx-w-150x
+  max-width 150px
+
+.mx-w-200x
+  max-width 200px
+
+.mx-w-300x
+  max-width 300px
+
+.mx-w-350x
+  max-width 350px
+
+.mx-w-400x
+  max-width 400px
+
+.mx-w-600x
+  max-width 600px
+
+.mx-w-800x
+  max-width 800px
+
+.w-auto
+  width auto
+
+.w-100
+  width 100%
+
+.w-50
+  width 50%
+
+.w-50x
+  width 50px
+
+.w-30x
+  width 30px
+
+.w-70x
+  width 70px
+
+.w-120x
+  width 120px
+
+.w-150x
+  width 150px
+
+.w-200x
+  width 200px
+
+.mt-0
+  margin-top 0 !important
+
+.mt-5
+  margin-top 5px !important
+
+.mt-20
+  margin-top 20px !important
+
+.mt-30
+  margin-top 30px !important
+
+.mb-0
+  margin-bottom 0 !important
+
+.mb-5
+  margin-bottom 5px !important
+
+.mb-10
+  margin-bottom 10px !important
+
+.mb-15
+  margin-bottom 15px !important
+
+.mb-20
+  margin-bottom 20px !important
+
+.ml-10
+  margin-left 10px !important
+
+.ml-15
+  margin-left 15px !important
+
+.pl-0
+  padding-left 0 !important
+
+.pl-7-5
+  padding-left 7.5px !important
+
+.pl-15
+  padding-left 15px !important
+
+.pl-20
+  padding-left 20px !important
+
+.pl-50
+  padding-left 50px !important
+
+.pr-7-5
+  padding-right 7.5px !important
+
+.pr-15
+
+  padding-right 15px !important
+
+.pb-0
+  padding-bottom 0 !important
+
+.pb-10
+  padding-bottom 10px !important
+
+.pb-15
+  padding-bottom 15px !important
+
+.ptb-2-5
+  padding-top 2.5px !important
+  padding-bottom 2.5px !important
+
+.ptb-5
+  padding-top 5px !important
+  padding-bottom 5px !important
+
+.ptb-10
+  padding-top 10px !important
+  padding-bottom 10px !important
+
+.ptb-15
+  padding-top 15px !important
+  padding-bottom 15px !important
+
+.plr-10
+  padding-left 10px !important
+  padding-right 10px !important
+
+.plr-15
+  padding-left 15px !important
+  padding-right 15px !important
+
+.plr-20
+  padding-left 20px !important
+  padding-right 20px !important
+
+.plr-30
+  padding-left 30px !important
+  padding-right 30px !important
+
+.plr-100
+  padding-left 100px !important
+  padding-right 100px !important
+
+.oflow-hidden
+  overflow hidden
+
+.table-wrapper
+  overflow auto
+  margin 20px 0 0
+
+.table-wrapper th > input[type="checkbox"]
+.table-wrapper td > input[type="checkbox"]
+  margin-left 10px
+
+.oflow-auto
+  overflow auto
+
+.link
+  text-decoration underline
+
+  &:hover
+    text-decoration none
+
+button[disabled]
+  opacity .8
+  cursor not-allowed
+
+label.cb
+  position relative
+  cursor pointer
+
+  span
+    line-height 20px
+    margin-left 30px
+
+  input[type="checkbox"]
+    position absolute
+    top 50%
+    margin-top -8px
+    left 16px
+    height 16px
+    width 16px
+
+.wysiwyg-wrapper > .dply-felx > label
+.cb-wrapper > span
+.input-wrapper .dply-felx > span
+.input-wrapper .sided > span
+.input-wrapper .flex-v-centered > span
+.input-wrapper > label
+  font-size .9rem
+  color #888
+
+.rtl .input-wrapper > .dply-felx
+  gap 15px
+
+.rtl .input-wrapper > .dply-felx > .mr-15
+  margin-right 0!important
+
+
+form .input-wrapper .custom-dropdown
+  min-width 150px
+
+.single-btn
+.single-line.input-wrapper
+  display flex
+  flex-wrap wrap
+  align-items center
+  gap 15px
+
+.single-line.input-wrapper label
+  margin-bottom 0
+
+form
+  .input-wrapper
+    margin-bottom 20px
+
+    label
+      margin-bottom 10px
+
+.pos-rel
+  position relative
+
+.abs-centered
+  position absolute
+  top 50%
+  transform translate(-50%, -50%)
+  left 50%
+
+.abs-centered-right
+  position absolute
+  top 50%
+  transform translateY(-50%)
+  right 0
+
+.text-nowrap
+  white-space nowrap
+
+.hide
+  display none
+
+/* RESPONSIVE */
+@media only screen and (max-width: 1200px)
+  .mlr-lg-15
+    margin-right 15px !important
+    margin-left 15px !important
+
+  .mb-lg
+    margin-bottom 0 !important
+
+  .hide-lg
+    display none
+
+  button
+    padding 0 20px
+
+@media only screen and (max-width: 992px)
+  .detail-width.tab-sidebar
+    min-width 100%
+
+  .mt-md-10
+    margin-top 10px !important
+
+  .mt-md-15
+    margin-top 15px !important
+
+  .mtb-md-10
+    margin-top 10px !important
+    margin-bottom 10px !important
+
+  .mlr-md
+    margin-right 0 !important
+    margin-left 0 !important
+
+  .mb-md-15
+    margin-bottom 15px !important
+
+  .block-md
+    display block
+
+  .hide-md
+    display none
+
+@media only screen and (max-width: 768px)
+  .mtb-sm--5
+    margin-top -5px !important
+    margin-bottom -5px !important
+
+  .mtb-sm-5
+    margin-top 5px !important
+    margin-bottom 5px !important
+
+  .outline-btn:not(.disabled)
+    height btn-height-sm
+    line-height btn-height-sm - 2
+
+  .table-wrapper
+    margin 15px 0 0
+
+  .mb-sm
+    margin-bottom 0 !important
+
+  .mb-sm-20
+    margin-bottom 20px !important
+
+  .mr-sm
+    margin-right 0 !important
+
+  .p-sm-10
+    padding 10px !important
+
+  .block-sm
+    display block
+
+  .plr-sm-10
+    padding-left 10px !important
+    padding-right 10px !important
+
+  .mb-sm-10
+    margin-bottom 10px !important
+
+  .mtb-sm-15
+    margin-bottom 15px !important
+    margin-top 15px !important
+
+  .mb-sm-5
+    margin-bottom 5px !important
+
+  .mb-sm-15
+    margin-bottom 15px !important
+
+  button.primary-btn
+  .button.primary-btn
+    height btn-height-sm
+    line-height btn-height-sm - 2px
+
+  .hide-sm
+    display none
+
+  .mt-sm-15
+    margin-top 15px !important
+
+  .f-none-sm
+    float none
+
+  .d-block-sm
+    display block
+
+  form
+    .input-wrapper
+      margin-bottom 15px
+
+  button
+    padding 0 15px
+
+  .layer
+    top header-height-sm
+
+@media only screen and (max-width: 576px)
+
+  button.primary-btn
+  .button.primary-btn
+    padding 0 15px
+
+  .flex-xs
+    display block
+
+  .close-btn
+    .close-icon
+      background-position 12.7% 44.8%
+
+  .mlr-xs
+    margin-right 0!important
+    margin-left 0!important
+
+  .p-xs-10
+    padding 10px !important
+
+  .mb-xs-10
+    margin-bottom 10px !important
+
+  .mb-xs-5
+    margin-bottom 5px !important
+
+  .mtb-xs-10
+    margin-top 10px !important
+    margin-bottom 10px !important
+
+  .mt-xs-15
+    margin-top 15px !important
+
+  .block-xs
+    display block
+
+  .hide-xs
+    display none
+
+  .mb-xs-15
+    margin-bottom 15px !important
+
+  button
+    padding 0 15px
+
+@media only screen and (max-width: 380px)
+  .hide-xxs
+    display none

@@ -1,0 +1,29 @@
+@import "./variables.styl"
+
+.toast-message
+  padding 12.5px 20px
+  background #333
+  color #fff
+  position fixed
+  margin-left 125px
+  left 50%
+  transform translateX(-50%)
+  bottom 50px
+  border-radius 4px
+  z-index 11
+
+.error-toast
+  font-weight 700
+  background red
+
+  span
+    margin-right 10px
+
+//RESPONSIVE
+@media only screen and (max-width: 768px)
+  .toast-message
+    text-align center
+    margin-left 0
+    padding 10px
+    bottom 30px
+

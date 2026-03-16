@@ -1,0 +1,35 @@
+@import "./variables.styl"
+
+#nprogress
+/*  position fixed
+  top 0
+  bottom 0
+  left 0
+  right 0
+  z-index 1
+  background rgba(0, 0, 0, .2)*/
+
+  .bar
+    background progress-color!important
+    height 2px!important
+
+    .peg
+      box-shadow 0 0 10px progress-color, 0 0 5px progress-color!important
+
+  .spinner
+    display none!important
+  /*
+  .spinner
+    height 100%
+    width 100%
+    display flex
+    align-items center
+
+    .spinner-icon
+      height 80px
+      width 80px
+      margin 0 auto
+      border-width 6px
+      border-top-color progress-color
+      border-left-color progress-color
+      animation-duration .6s  */

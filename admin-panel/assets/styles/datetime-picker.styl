@@ -1,0 +1,108 @@
+@import "./variables.styl"
+
+
+.has-error
+  .red-border
+    .datetime-picker
+      input
+        border-color red
+
+.datetime-picker
+  //width auto!important
+
+  input
+    height 42px !important
+    line-height 40px !important
+    padding 0 15px !important
+    min-width auto!important
+
+.form-bottom
+  .calender-div
+    top auto!important
+    bottom 100%
+
+.calender-div
+  border-radius 5px!important
+  top 100% !important
+  padding 0!important
+
+  .okButton
+  .days
+    color primary-color!important
+
+  .activePort
+  .activePort:hover
+  .year-month-wrapper
+  .nav-l
+  .nav-r
+    background-color primary-color!important
+
+  .year-month-wrapper
+    height 34px
+    display flex!important
+    border-radius 5px 5px 0 0 !important
+
+    .month
+      width auto
+
+    button
+      width auto
+      height 100%!important
+      padding 0 15px
+      line-height 1
+
+    .month-setter
+      width 50%
+      margin 0
+      display flex!important
+      align-items center
+      justify-content space-between
+
+      button
+        align-items center
+        display flex
+
+  .headers
+    text-align center
+    background #eee
+
+  .week
+    text-align center
+
+  .time-picker
+    padding 10px 20px
+    margin 0 0 40px!important
+    border-top 1px solid #eee
+    border-bottom 1px solid #eee
+    display flex!important
+    justify-content space-between
+
+    &:before
+      display inline-block
+      margin-right 60px
+      content 'Time'
+
+  .showSelector
+    z-index 1
+
+  .okButton
+    border-radius 0
+    line-height 30px
+    margin 0!important
+    position absolute
+    bottom 0
+    right 70px
+    width 70px
+
+    &.ok
+      right 0
+
+//RESPONSIVE
+@media only screen and (max-width: 330px)
+  .calender-div
+    min-width 0!important
+    width 100%!important
+
+  .port
+  .days
+    margin 0!important

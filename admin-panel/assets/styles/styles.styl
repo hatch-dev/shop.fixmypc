@@ -1,0 +1,75 @@
+
+@import "./common.styl"
+@import './base.styl'
+@import './nprogress.styl'
+@import "./content.styl"
+@import "./table.styl"
+@import "./pagination.styl"
+@import "./seacrh-input.styl"
+@import "./form.styl"
+@import "./tab.styl"
+@import "./icons.styl"
+@import "./tab-sideabr.styl"
+@import "./error.styl"
+@import "./login.styl"
+@import "./datetime-picker.styl"
+@import "./product.styl"
+@import "./input.styl"
+@import "./permission.styl"
+@import "./payment.styl"
+@import "./image-input.styl"
+@import "./order.styl"
+@import "./tree.styl"
+@import "./multiple-dropdown.styl"
+@import "./images.styl"
+@import "./table-top.styl"
+@import "./product-inventory.styl"
+@import "./pos.styl"
+@import "./radio.styl"
+@import "./pos-ordered.styl"
+@import "./plugins.styl"
+
+.left-dd
+  min-width 150px
+  .dropdown-inner
+
+    left 0!important
+    right auto!important
+
+.rtl
+  direction rtl
+
+.rtl .dashboard-notice .close-btn
+  left 10px
+  right auto
+
+.rtl .dashboard-notice
+  padding-left 50px
+  padding-right 15px
+
+.dashboard-notice
+  position relative
+  padding-right 50px
+
+  .close-btn
+    position absolute
+    top 12px
+    right 10px
+    cursor pointer
+
+.loading
+  position relative
+  &:after
+    content ''
+    position absolute
+    z-index 1
+    top 0
+    left 0
+    right 0
+    bottom 0
+    background transparent
+
+.setting
+  .has-error
+    .file-input
+      border-color #ddd!important

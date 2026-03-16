@@ -1,0 +1,27 @@
+@import "variables.styl"
+
+.ck-button
+  margin-right 10px
+
+.ck-button label span {
+  background #fff
+  border-radius 100px
+  border 1px solid #D0D0D0
+  cursor pointer
+  padding 7.5px 20px
+  display block
+  &:hover {
+    background #ddd
+  }
+}
+
+.ck-button label input {
+  position:absolute;
+  top:-20px;
+}
+
+.ck-button input:checked + span {
+  background-color success-foreground
+  border-color success-foreground
+  color #fff
+}

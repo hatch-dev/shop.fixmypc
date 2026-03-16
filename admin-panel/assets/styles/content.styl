@@ -1,0 +1,78 @@
+@import "./variables.styl"
+
+.rtl
+  .main
+    .content
+      padding header-height + 20px 75px 20px 20px
+
+
+.main
+  background #F1F1F1
+  min-height 100vh
+
+  .content
+    background #F4F6F9
+    position relative
+    padding header-height + 00px 00px 20px 55px
+    transition all .08s
+    min-height 100vh
+    height 100vh
+    overflow-y auto
+    box-shadow: -2px 1px 2px rgba(9, 30, 66, .1), -1px 1px 1px rgba(9, 30, 66, .05), -1px 1px 1px rgba(9, 30, 66, .02), -4px 1px 4px rgba(9, 30, 66, .01)
+
+.sidebar-opened
+  .content
+    margin-left 270px
+    padding-left 0px
+  .sidebar
+    width 270px
+    overflow-y auto
+
+.rtl
+  .sidebar-opened
+    .content
+      margin-left 0
+      margin-right sidebar-width
+      padding-right 20px
+
+
+//RESPONSIVE
+@media only screen and (max-width: 1200px)
+  .sidebar-opened
+    .content
+      margin-left sidebar-width-lg
+
+@media only screen and (max-width: 992px)
+  .main
+    .content
+      padding-left 75px
+
+  .sidebar-opened.main
+    .content
+      padding-left 20px
+
+@media only screen and (max-width: 768px)
+  .p-sm-15
+    padding 15px !important
+
+  .pl-sm-0
+    padding-left 0 !important
+
+  .rtl .main .content
+    padding header-height-sm + 15px 15px 15px 15px
+
+  .main
+    .content
+      padding header-height-sm + 15px 15px 15px 15px
+
+  .rtl .sidebar-opened .content
+    margin-right 0
+
+  .sidebar-opened
+    .content
+      margin-left 0
+
+@media only screen and (max-width: 576px)
+  .main
+    .content
+      padding header-height-sm + 15px 15px 15px 15px

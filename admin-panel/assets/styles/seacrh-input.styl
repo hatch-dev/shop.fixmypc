@@ -1,0 +1,103 @@
+@import "./variables.styl"
+
+.table-heading
+  display flex
+  gap 15px
+  align-items center
+
+  li
+    .custom-dropdown
+      span
+        border-radius 100px 0 0 100px
+
+    & > div:last-child
+      span
+        border-left 0 !important
+        border-radius 0 100px 100px 0
+
+.rtl
+  .table-heading
+
+    li
+      .custom-dropdown
+        span
+          border-left 1px solid #ddd!important
+          border-radius 0 100px 100px 0
+
+
+      & > div:last-child
+        span
+          border-left 1px solid #bbb!important
+
+          border-radius 100px 0 0 100px
+
+.rtl .search-input input
+  padding-left 10px
+  padding-right 20px
+  border-radius 0 50px 50px 0!important
+
+.rtl .search-input button
+  border 0
+  border-right 1px solid #bbb
+  border-radius 50px 0 0 50px
+
+
+.search-input
+  display flex
+  flex-grow 1
+  border-radius 50px
+  position relative
+  border 1px solid #ddd
+  max-width 600px
+  z-index 1
+  margin 0
+
+  input
+    padding-left 20px
+    height btn-height
+    line-height btn-height - 2px
+    border-radius 50px !important
+    border 0!important
+    background #fff
+
+  button
+    border 0
+    border-left 1px solid #bbb
+    border-radius 0 50px 50px 0
+
+    &:after
+      content ''
+      position: absolute
+      top 0
+      left 0
+      bottom 0
+      right 0
+      z-index -1
+      box-shadow 0 0 0 2px primary-color
+      border-radius 50px
+      opacity 0
+      transition all .1s
+
+  input:focus ~ button:after
+    opacity 1
+
+//RESPONSIVE
+@media only screen and (max-width: 992px)
+  .search-input
+    margin 0 15px 0 0
+
+  .table-heading
+    margin-top 10px
+
+@media only screen and (max-width: 778px)
+  .search-input
+    input
+      height btn-height-sm
+      line-height btn-height-sm - 2px
+
+@media only screen and (max-width: 576px)
+  .search-input
+    margin 0 0 15px
+
+    & + button
+      float right

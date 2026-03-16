@@ -1,0 +1,134 @@
+@import "./variables.styl"
+
+.form-wrapper
+  position relative
+  padding 20px
+
+  .dply-felx.inputs
+    gap 10px
+
+    .input-wrapper:last-child
+      .dropdown-inner
+        right 0
+        left auto
+
+
+.file-wrapper > button span
+  overflow visible
+
+.file-wrapper
+  display flex
+  gap 15px
+  align-items center
+
+  .file-input
+    overflow hidden
+    height 300px
+    width 300px
+    position relative
+    display flex
+    align-items center
+    border-radius 8px
+    border 1px dashed #ddd
+
+    input[type="file"]
+      opacity 0
+      position absolute
+      top 0
+      height 100%
+      left 0
+      right 0
+
+    img
+      height auto
+      width auto
+      max-width 100%
+      max-height 100%
+      margin auto
+
+  & > button
+    width 50px
+
+.upload-block
+  display block
+  .file-input
+    width 100%
+    height auto
+    margin-bottom 15px
+    margin-right 0
+    min-height 60px
+
+  & > button
+    width 100%
+.btn-input
+  position relative
+
+  input
+    width 100%
+
+  button
+    position absolute
+    top 0
+    right 0
+    bottom 0
+    height auto
+    border-radius 0 border-radius border-radius 0
+
+.input-wrap
+  margin-bottom 15px
+
+  label
+    font-size .85em
+    font-weight 600
+    margin-bottom 10px
+    display block
+
+  textarea
+  input
+    width 100%
+    display block
+    border 1px solid #ddd
+    padding 0 15px
+
+  textarea
+    padding 15px
+    max-height 120px
+
+  .input-text
+    display flex
+
+    & > span
+      padding 0 10px
+      background #f3f4f6
+      font-size .9em
+      display flex
+      align-items center
+      border 1px solid #ddd
+      border-radius 5px 0 0 5px !important
+
+    & > input
+      border-radius 0 5px 5px 0 !important
+      border-left none !important
+
+/* RESPONSIVE */
+@media only screen and (max-width: 992px)
+  .form-wrapper
+    padding 15px
+
+@media only screen and (max-width: 768px)
+  .file-wrapper
+    .file-input
+      width auto
+      height auto
+      max-width 350px
+      max-height 350px
+
+  .form-wrapper
+    position relative
+    padding 20px
+
+    .dply-felx.inputs
+      .input-wrapper:last-child
+        .dropdown-inner
+          right auto
+          left 50%

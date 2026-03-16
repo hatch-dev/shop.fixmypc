@@ -1,0 +1,55 @@
+.inventory-wrap .tr
+  width 100%
+  padding-bottom 15px
+  border-bottom 1px solid #ddd
+
+.inventory-wrap .tr .title
+  width 120px
+  min-width 120px
+  border 0
+  padding 0
+
+.inventory-wrap .tr .right
+  width calc(100% - 140px)
+  min-width calc(100% - 140px)
+
+  display flex
+  flex-direction column
+
+.inventory-wrap .tr .right .inputs
+  justify-content start
+  width 100%
+
+.inventory-wrap .tr .img-wrap
+  height 100px
+  width 100px
+  border-radius 8px
+  position relative
+  border 1px solid #eee
+
+.inventory-wrap .img-wrap img
+  position absolute
+  height 100%
+  width 100%
+  object-fit contain
+
+.inventory-wrap .file-input
+  max-height 0
+  max-width  0
+  opacity 0
+  overflow hidden
+
+
+.inventory-wrap .img-wrap .remove-btn
+  position absolute
+  top -10px
+  right -10px
+  z-index 1
+  height 25px
+  text-align center
+  line-height 24px
+  width 25px
+  padding 0
+  border-radius 100px
+  background #fff
+

@@ -1,0 +1,197 @@
+@import "variables.styl"
+
+.plugin-badge{
+  font-size: .7rem;
+  background: danger-foreground;
+  color: #fff;
+  padding: 2px 10px 3px;
+  border-radius: 100px;
+}
+
+.rtl
+  .sidebar
+    left auto
+    right 0
+
+
+.rtl .sidebar ul ul li a
+  padding-right 35px
+  padding-left 10px
+
+.sidebar
+  position fixed
+  left 0
+  bottom 0
+  z-index 5
+  width 55px
+  transition all .1s
+  border-right 1px solid #eee
+  background #fff
+  justify-content space-between
+
+  .child-layer
+    position absolute
+    top 0
+    left 0
+    height 100vh
+    width 100vw
+
+  .layer
+    display none
+
+  ul
+    overflow auto
+    padding 15px 0
+    position relative
+    height 100%
+
+    ul
+      padding 0
+      li
+        a
+          padding-left 35px
+
+    .child-active > a
+      background rgba(68, 129, 243, .1)
+
+    .child-open > a
+      background rgba(68, 129, 243, .07)
+
+    .active > a
+      background rgba(68, 129, 243, .12)
+
+    li
+      display block
+
+      a
+        gap 15px
+        display flex
+        align-items center
+        padding 12.5px 15px
+        transition none
+        position relative
+        font-weight 400
+
+        &:hover
+          background rgba(68, 129, 243, .2)
+
+        i
+          opacity .9
+          transition all .08s
+          margin-right 0
+
+        span
+          overflow hidden
+          transition all .08s
+          max-width 0
+          opacity 0
+          line-height 0
+
+.sidebar-opened
+  .sidebar
+    width sidebar-width
+
+    ul
+      li
+        a
+          span
+            opacity 1
+            max-width 500px
+            line-height 1.6
+
+
+//RESPONSIVE
+@media only screen and (min-width: 768px)
+  .rtl
+    .sidebar-closed
+      .sidebar
+        ul
+          overflow visible
+
+          & > li
+            position relative
+
+            .child
+
+              left auto
+              right 100%
+
+
+  .sidebar-closed
+    .sidebar
+      ul
+        overflow visible
+
+        & > li
+          position relative
+
+          .child
+            min-width 200px
+            background #fff
+            padding 0
+            position absolute
+            top 0
+            left 100%
+            height auto
+            border-radius 0 5px 5px 0
+            border 1px solid #ddd
+
+            li > a
+              padding-left 20px
+              padding-right 20px
+
+              span
+                overflow visible
+                max-width 1000px
+                opacity 1
+
+@media only screen and (max-width: 1200px)
+  .sidebar-opened
+    .sidebar
+      width sidebar-width-lg
+
+@media only screen and (max-width: 992px)
+  .sidebar
+    width 53px
+
+    ul
+      background #FFFFFF
+      padding 0
+
+      li
+        a
+          padding 10px 15px
+
+  .sidebar-opened
+    .sidebar
+      width sidebar-width-sm
+
+@media only screen and (max-width: 768px)
+  .rtl .sidebar-opened .sidebar
+    left auto
+    right 0
+
+  .sidebar-opened
+    .sidebar
+      left 0
+
+  .rtl  .sidebar
+    left auto
+    right -200px
+
+  .sidebar
+    left -200px
+    width 200px
+    top header-height-sm
+
+    .layer
+      display block
+
+      li
+        a
+          i
+            margin-right 15px
+          span
+            max-width 500px
+            opacity 1
+            line-height 1.6

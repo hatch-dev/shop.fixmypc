@@ -1,0 +1,124 @@
+@import "./variables.styl"
+
+.qty-nav
+  display flex
+  gap 10px
+
+.qty-nav input
+  width 70px!important
+
+.pos-container .file-wrapper .file-input
+  width 150px
+  height 150px
+
+.pos-wrap
+  display flex
+  gap 15px
+  flex-wrap wrap
+
+.pos-wrap .pos-item
+  width 220px
+  min-width 220px
+  display flex
+  flex-direction column
+  justify-content space-between
+
+.pos-wrap .pos-item .img-wrap
+  padding-bottom 100%
+  position relative
+  margin-bottom 10px
+
+.pos-item .img-wrap img
+  position absolute
+  height 100%
+
+.pos-heading
+  display flex
+  gap 10px
+  flex-wrap wrap
+
+.pos-container .custom-dropdown .close-btn
+  position absolute
+  top 50%
+  transform translateY(-50%)
+  right 5px
+  border 0
+  background none
+
+.pos-container
+  display flex
+  gap 20px
+  flex-wrap wrap
+
+.pos-container .pos-products
+  position relative
+  min-height 100vh
+  flex-basis calc(100% - 440px)
+
+.address-card
+  width 100%
+  box-shadow none
+
+.pos-container .cart-wrap
+  flex-basis 420px
+  max-width 420px
+  background #fff
+  padding 20px
+  position relative
+  border-radius 8px
+
+.cart-wrap .custom-dropdown
+  width 100%
+
+.cart-tile-wrap .cart-item
+  position relative
+  display flex
+  gap 10px
+  justify-content space-between
+
+.cart-tile-wrap
+  display flex
+  flex-direction column
+  gap 15px
+
+.cart-tile-wrap .cart-item .img-wrap
+  flex-basis 90px
+  min-width 90px
+  height 90px
+  border-radius 8px
+  position relative
+
+.cart-tile-wrap .img-wrap img
+  position absolute
+  height 100%
+
+.cart-tile-wrap .cart-item .cart-content
+  flex-basis calc(100% - 105px)
+
+.product-attribute .attr-title
+  width 70px
+  min-width 70px
+  font-weight bold
+
+.cart-item .qty-nav input,
+.cart-item .qty-nav button
+  height: btn-height - 4
+  line-height: btn-height - 6
+
+.cart-item .delete-btn
+  padding 0 10px
+
+//RESPONSIVE
+@media only screen and (max-width: 992px)
+  .pos-container .pos-products
+    flex-basis calc(100% - 380px)
+
+  .pos-container .cart-wrap
+    flex-basis 360px
+    max-width 360px
+
+@media only screen and (max-width: 778px)
+  .pos-container .cart-wrap
+  .pos-container .pos-products
+    flex-basis 100%
+    max-width 100%

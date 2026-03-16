@@ -1,0 +1,162 @@
+@import "variables.styl"
+
+
+
+header
+  left 0
+  right 0
+  z-index 6
+  display flex
+  padding 0
+  position fixed
+  background #fff
+  align-items center
+  height header-height
+  justify-content space-between
+
+  .right-wrap
+    padding 0 20px
+
+  .clear-cache
+    min-width 115px
+
+    span
+      font-size .9rem
+
+  .lang-down
+    .icon
+      opacity .7
+      transform scale(1.1)
+
+    span
+      padding 0 10px
+      background none
+      border none
+
+
+  .logo-wrapper
+    justify-content start
+    min-width sidebar-width
+
+  i.icon
+    transform scale(.85)
+
+  .toggle-menu-btn
+    height header-height
+    width header-height
+    border-radius 0
+    box-shadow none!important
+
+  &:after
+    content ''
+    position absolute
+    left 0
+    right 0
+    top 100%
+    height 4px
+    background linear-gradient(180deg, rgba(9, 30, 66, .13) 0, rgba(9, 30, 66, .13) 1px, rgba(9, 30, 66, .08) 1px, rgba(9, 30, 66, .0) 4px)
+
+  .logo
+    display flex
+    align-items center
+    height 100%
+
+    img
+      height 35px
+      width auto
+
+  .dots-btn
+    display none
+    padding 0
+
+    i
+      margin-right 0
+
+  .right-area
+    display flex
+
+  button
+    display flex
+    gap 5px
+    align-items center
+    border none
+    padding 0 10px
+
+//RESPONSIVE
+@media only screen and (max-width: 1200px)
+  header
+    .logo-wrapper
+      min-width sidebar-width-lg
+
+@media only screen and (max-width: 992px)
+  .rtl header .right-wrap
+    justify-content left
+
+
+  header
+    .right-wrap
+      justify-content right
+
+    button
+      padding 0 5px
+
+    .logo-wrapper
+      min-width 0
+
+@media only screen and (max-width: 768px)
+  .rtl header .right-area
+    left 0
+    right auto
+
+  .rtl header .right-area button
+    padding-left 15px
+    padding-right 15px
+
+
+  header
+    padding 0 10px 0 0
+    height header-height-sm
+
+    .clear-cache
+      display none
+
+    .toggle-menu-btn
+      height header-height-sm
+      width header-height-sm
+
+    .dots-btn
+      display flex
+
+      .icon
+        height 28px
+        width 28px
+        min-width 28px
+
+    .right-area
+      position absolute
+      top 100%
+      right 0
+      background #fff
+      z-index 1
+      box-shadow 0 5px 15px rgba(0,0,0,.2)
+      border-radius 8px
+      display none
+      padding 0
+
+      button
+        padding-left 10px
+        padding-right 20px
+        width 100%
+        border-radius 0
+
+  .dots-open
+    .right-area
+      display block
+
+@media only screen and (max-width: 576px)
+  header
+    .logo
+      display none
+
+    button
+      padding 0 5px

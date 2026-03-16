@@ -1,0 +1,39 @@
+@import "./variables.styl"
+
+.editor-container
+  .toolbar
+    .active
+      background #ccc
+
+  .editor
+    height 200px
+    padding 15px
+    border 1px solid #eee
+    overflow auto
+    margin 15px 0
+    outline none
+    border-radius 5px
+
+    &:focus
+      border 1px solid #aaa !important
+
+    li
+      list-style disc
+      display list-item
+
+    ul
+      padding-left 2em
+      list-style-type disc
+      list-style-position inside
+
+    ol
+      padding-left 2em
+      list-style-position inside
+      list-style-type decimal
+
+      li
+        list-style decimal
+
+.wysiwyg-wrapper
+  li
+    display block

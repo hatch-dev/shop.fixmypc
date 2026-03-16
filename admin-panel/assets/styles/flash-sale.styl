@@ -1,0 +1,48 @@
+@import "./variables.styl"
+
+.flashSale
+  .custom-dropdown
+    width 100%
+
+    span
+      text-align left
+      width 100%
+
+  .product-search
+    position relative
+    right 0
+
+    .search-dropdown
+      position absolute
+      top 100%
+      left 0
+      right 0
+      background #fff
+      box-shadow 0 3px 10px rgba(0, 0, 0, .1)
+      border-radius 5px
+
+      ul
+        li
+          display block
+          border-bottom 1px solid #eee
+
+          a
+            display block
+            position relative
+            padding 15px 55px 15px 20px
+
+            &:hover
+              background #eee
+
+            i
+              position absolute
+              top 50%
+              right 15px
+              height 30px
+              width 30px
+              margin-top -15px
+              border-radius 100px
+              border 1px solid #ddd
+
+      & + div
+        padding 15px

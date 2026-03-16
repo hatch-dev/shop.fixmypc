@@ -1,0 +1,89 @@
+.table-tree
+  padding 50px 100px
+
+.table-tree .table-wrapper
+  padding 0
+
+.table-tree .tree-node button
+  height 38px
+  line-height 36px
+
+.rtl .table-tree ul {
+  margin-left: 0;
+  margin-right: 40px;
+}
+
+.table-tree ul {
+  margin-left: 30px;
+  counter-reset: item;
+}
+
+.table-tree li {
+  display block
+  list-style-type: none;
+  position: relative;
+}
+
+
+.rtl .table-tree li:before {
+  left: auto;
+  right: -30px;
+
+
+
+  border-left: 0;
+  border-right: 1px solid #ddd;
+}
+
+.table-tree li:before {
+  content: "";
+  counter-increment: item;
+  position: absolute;
+  top: -10px;
+  left: -30px;
+  border-left: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  width: 26px;
+  height: 38px;
+}
+
+.table-tree > li:first-child:before {
+  border-left 0
+}
+
+.rtl .table-tree li:after {
+  left: auto;
+  right: -30px;
+  top: auto;
+  bottom: 5px;
+
+  border-left: 0;
+  border-right: 1px solid #ddd;
+}
+
+
+.table-tree li:after {
+  position: absolute;
+  content: "";
+  top: 5px;
+  left: -30px;
+  border-left: 1px solid #ddd;
+  width: 30px;
+  height: 100%;
+}
+
+.table-tree li:last-child:after {
+  display: none;
+}
+
+.table-tree li span {
+  padding: 10px;
+  color: #666666;
+  text-decoration: none;
+}
+
+
+//RESPONSIVE
+@media only screen and (max-width: 778px)
+  .table-tree
+    padding 20px 40px

@@ -1,0 +1,39 @@
+@import "variables.styl"
+
+.rtl .inline-pop-wrapper .inline-pop-over
+  left 0
+  right auto
+
+.inline-pop-wrapper
+  position relative
+
+  .pop-header
+    border-bottom 1px solid #eee
+
+  .inline-pop-over
+    overflow hidden
+    position absolute
+    top 100%
+    right 0
+    z-index 3
+    box-shadow 0 5px 15px rgba(0,0,0,.2)
+    border-radius 8px
+    background #fff
+    min-width 300px
+
+    .pop-content
+      max-height 400px
+      overflow auto
+      position relative
+
+    .pop-footer
+      border-top 1px solid #eee
+
+//RESPONSIVE
+@media only screen and (max-width: 768px)
+  .inline-pop-wrapper
+    .inline-pop-over
+      min-width 300px
+
+      .pop-content
+        max-height 300px

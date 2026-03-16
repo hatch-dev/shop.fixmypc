@@ -1,0 +1,95 @@
+@import "./variables.styl"
+
+.tag-wrapper
+  border 1px solid #ddd
+  border-radius 4px
+  padding 10px 15px
+  position relative
+
+  .tags
+    display flex
+    flex-wrap wrap
+
+    .tag-input
+      flex-grow 1
+      position relative
+      padding-right 34px
+
+      .spinner
+        position absolute
+        top 50%
+        transform translateY(-50%)
+        right 5px
+
+      input
+        border none
+        padding 0
+        line-height 30px
+        height 30px
+        margin 5px 10px 5px 0
+        box-shadow none
+        background none
+
+    .tag
+      border 1px solid #ddd
+      border-radius 50px
+      padding 0 4px 0 10px
+      line-height 25px
+      height 30px
+      color font-color
+      margin 5px 10px 5px 0
+      background #eee
+      position relative
+      padding-right 30px
+      display flex
+      align-items center
+
+      .close-btn
+        position absolute
+        top 50%
+        margin-top -10px
+        right 3px
+        cursor pointer
+        color font-color
+        height 20px
+        width 20px
+        line-height 10px
+        border 1px solid #ddd
+        background #ddd
+        margin-left 5px
+
+        .close-icon
+          min-width 20px
+
+  .warning
+    .tag
+      border-color danger-foreground
+      background danger-foreground
+      color white
+
+  .tag-dropdown
+    overflow auto
+    min-height 100px
+    max-height 300px
+    position absolute
+    top calc(100% + 1px)
+    left 0
+    right 0
+    z-index 1
+    background #fff
+    box-shadow 0 3px 10px rgba(0, 0, 0, .1)
+    padding 15px 15px 5px
+    border-radius 5px
+
+    li
+      a
+        border 1px solid #ddd
+        border-radius 50px
+        padding 0 20px
+        line-height 30px
+        height 32px
+        color font-color
+        margin 0 10px 10px 0
+
+        &:hover
+          background #eee

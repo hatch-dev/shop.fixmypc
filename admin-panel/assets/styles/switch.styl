@@ -1,0 +1,52 @@
+@import "variables.styl"
+.custom-toggle
+  z-index 1
+  border 1px solid rgba(0,0,0, 0)
+  border-radius 100px
+  overflow hidden
+  display flex
+  width 120px
+  background primary-lite-color
+
+  label
+    text-align center
+    width 100%
+    margin 0!important
+    z-index 1
+    position relative
+    cursor pointer
+    display inline-block
+    padding 7.5px 0
+    transition all 0.2s ease
+    font-weight 700
+    color #444
+    font-size .9em
+
+    &:hover
+      background #ddd
+
+  .on + label:before
+    border-radius 0 100px 100px 0
+    content ''
+    width 100%
+    height 100%
+    position absolute
+    top 0
+    left 100%
+    z-index -1
+    background-color danger-foreground
+    transition all 0.2s ease
+
+  .on:checked + label:before
+    background-color success-foreground
+    left 0
+    border-radius 100px 0 0 100px
+
+  .on:checked + label
+  .off:checked + label
+    color #fff
+    background transparent
+
+  .on:active label
+    background primary-color
+

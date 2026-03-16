@@ -1,0 +1,49 @@
+@import "./variables.styl"
+
+.rtl .main-slider
+  direction ltr
+
+.rtl .main-slider .arrow-right
+  transform rotate(-90deg)
+
+.rtl .main-slider .arrow-left
+  transform rotate(90deg)
+
+.main-slider
+  .glide
+    .glide-bullets
+      background #fff
+      padding 5px 10px
+      border-radius 100px
+      position absolute
+      left 50%
+      transform translateX(-50%)
+      bottom 5px
+      z-index 1
+
+      li
+        margin 0 5px
+
+      .glide__bullet--active
+        font-weight 700
+        transform scale(1.2)
+
+    .glide-nav
+      button
+        display flex
+        align-items center
+        justify-content center
+        position absolute
+        top 50%
+        right 5px
+        height 40px
+        width 40px
+        margin-top -20px
+        z-index 1
+        padding 0
+        border-radius 100px
+        background #fff
+
+      .prev-btn
+        left 5px
+
