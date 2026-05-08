@@ -51,7 +51,7 @@
             @click.prevent="$refs.listPage.editItem(value.id)" class="lite-btn">{{ $t('category.edit') }}</button>
           <button
             v-if="$can('attribute', 'delete')"
-            @click.prevent="$refs.listPage.deleteItem(value.id)" class="lite-btn">{{ $t('category.delete') }}</button>
+            @click.prevent="$refs.listPage.deleteItem(value.id)" class="delete-btn lite-btn">{{ $t('category.delete') }}</button>
         </td>
       </tr>
     </template>

@@ -11,10 +11,18 @@ class Voucher extends Model
 
     protected $fillable = [
         'title', 'type', 'status', 'usage_limit', 'limit_per_customer', 'price', 'capped_price',
-        'min_spend', 'code', 'start_time', 'end_time', 'admin_id'
+        'min_spend', 'code', 'start_time', 'end_time', 'admin_id', 'apply_type'
     ];
 
     protected $hidden = [
         'admin_id'
     ];
+
+    public function products()
+    {
+        return $this->belongsToMany(
+            Product::class,
+            'voucher_products'
+        );
+    }
 }

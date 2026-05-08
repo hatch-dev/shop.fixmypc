@@ -1,7 +1,7 @@
 <template>
   <div class="">
     <button
-      class="outline-btn plr-30"
+      class="btn manage-btn"
       aria-label="submit"
       @click.prevent="payNow = true"
     >
@@ -49,4 +49,18 @@
     }
   }
 </script>
+<style scoped>
+.manage-btn {
+    background: #33319A;
+    color: #fff;
+    border-radius: 20px;
+    padding: 6px 18px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.manage-btn:hover {
+    background: #05B942;
+    color: #Fff;
+}
+</style>
 

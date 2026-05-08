@@ -3,11 +3,24 @@
     <div class="sticky-right">
       <div class="content">
         <h2 class="price-wrapper mb-5">
+        <template v-if="selectedVoucher">
+          <span class="strike-through f-7 mr-10">
+            <price-format
+              :price="finalUnitPrice"
+            />
+          </span>
+          <span class="color-deep price voucher-price">
+            <price-format
+              :price="discountedPrice"
+            />
+          </span>
+        </template>
+        <template v-else>
           <span
             class="color-deep price"
           >
              <price-format
-               :price="productPrice"
+               :price="finalUnitPrice"
              />
           </span>
           <span
@@ -18,7 +31,17 @@
               :price="prevPrice"
             />
           </span>
+        </template>
         </h2>
+        <div
+          v-if="selectedVoucher"
+          class="voucher-save-text"
+        >
+          You save
+          <price-format
+            :price="voucherDiscount"
+          />
+        </div>
         <div>
 
           <span
@@ -184,7 +207,7 @@
             </span>
           </p>
           <ajax-button
-            class="mt-15 w-100 outline-btn hide-sm"
+            class="mt-15 w-100 outline-btn wishlist-btn hide-sm"
             type="button"
             color="primary"
             :fetching-data="ajaxingWishlist"
@@ -235,7 +258,7 @@
         selectedAttributesTitle: {},
         quantity: 1,
         pricePopOver: false,
-        secureTrans: false
+        secureTrans: false,
       }
     },
     props: {
@@ -248,6 +271,22 @@
       },
       productInventory: {
         type: Object
+      },
+      bulkPricing: {
+        type: Array,
+        default: () => []
+      },
+      selectedVoucher: {
+        type: Object,
+        default: null
+      },
+      discountedPrice: {
+        type: [String, Number],
+        default: null
+      },
+      voucherDiscount: {
+        type: [String, Number],
+        default: 0
       }
     },
     components: {
@@ -261,6 +300,30 @@
     },
     mixins: [util, productHelper, productPriceHelper, cartHelper],
     computed: {
+      finalUnitPrice (){
+        let basePrice = parseFloat(this.productPrice);
+        if(!this.bulkPricing.length) {
+          return basePrice;
+        }
+        const qty = this.quantity
+
+        const matched = this.bulkPricing.find(row => {
+          return qty >= row.min && qty <= row.max
+        })
+
+        if (!matched) return basePrice;
+
+        const discountValue = parseFloat(matched.discount_value || 0);
+        let price = basePrice;
+
+        if (matched.discount_type === 'percentage') {
+          price -= (basePrice * discountValue / 100);
+        } else if (matched.discount_type === 'fixed') {
+          price -= discountValue;
+        }
+
+        return Math.max(price, 0);
+      },
       totalPrice() {
         return parseFloat(this.productPrice) + parseFloat(this.shippingPrice)
       },
@@ -299,7 +362,12 @@
         return this.product?.shipping_rule?.shipping_places;
       },
       maxQuantity() {
-        return this.productInventory?.quantity || 0
+        const inventory = this.productInventory || {}
+        const isBackOrder = inventory?.is_active == 1
+        if (isBackOrder) {
+          return 999999
+        }
+        return Number(inventory?.quantity || 0)
       },
       ...mapGetters('cart', ['cartProducts']),
     },
@@ -320,18 +388,45 @@
       productInventory: {
         immediate: true,
         handler(val) {
-          if (!val || !val.quantity || val.quantity <= 0) {
-            this.quantity = 0
+          if (!val) return
+
+          const isBackOrder = val?.is_active == 1
+
+          if (isBackOrder) {
+            this.quantity = this.quantity > 0 ? this.quantity : 1
             return
+          }
+
+          if (!val.quantity || val.quantity <= 0) {
+            this.quantity = 0
           }else {
             this.quantity = 1
           }
+
         }
       }
     }
   }
 </script>
 
-<style>
+<style scoped>
+.wishlist-btn {
+  background: #05B942;
+  color: #fff;
+}
 
+.wishlist-btn:hover {
+  background: #05B942;
+  color: #fff;
+}
+.voucher-price {
+  color: #16a34a;
+}
+
+.voucher-save-text {
+  color: #16a34a;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
 </style>

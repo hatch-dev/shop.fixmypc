@@ -30,7 +30,7 @@ class CreateVouchersTable extends Migration
             $table->timestamps();
             $table->integer('admin_id')->unsigned();
             $table->integer('capped_price')->nullable();
-
+            $table->tinyInteger('apply_type')->default(1)->comment('1=Global, 2=Product');
             $table->foreign('admin_id')
                 ->references('id')
                 ->on('admins');

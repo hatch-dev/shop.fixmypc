@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="dply-felx">
+    <div class="dply-felx mb-15">
 
 
       <h4>{{ title }}</h4>

@@ -149,7 +149,7 @@
 
       <div class="flex right no-space">
         <ajax-button
-          class="primary-btn plr-20 w-50"
+          class="primary-btn plr-20 w-100"
           :fetching-data="formSubmitting"
           :loading-text="$t('forgotPassword.registering')"
         >

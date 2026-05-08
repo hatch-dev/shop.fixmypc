@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="dply-felx">
+    <div class="dply-felx mb-15">
       <h4>{{ $t('setting.pl') }}</h4>
       <nuxt-link
         v-if="$can('footer_link', 'create')"
@@ -14,7 +14,6 @@
       <div class="table-wrapper mt-0 mb-15">
         <table
           v-if="result.payment_links.length"
-          class="mtb-15"
         >
           <tr class="lite-bold">
             <th>{{ $t('index.title') }}</th>
@@ -74,7 +73,7 @@
     </div>
 
 
-    <div class="dply-felx">
+    <div class="dply-felx mb-15">
       <h4>{{ $t('setting.sl') }}</h4>
       <nuxt-link
         v-if="$can('footer_link', 'create')"

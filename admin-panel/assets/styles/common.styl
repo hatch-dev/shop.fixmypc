@@ -14,7 +14,7 @@
 
 .layout-spinner.spinner-wrapper
   z-index 1000
-  background #fff
+  background bg-color
 
 .user-messages-wrapper
   .item-hover
@@ -23,7 +23,7 @@
 
 .item-hover
   &:hover
-    background #f4f5f4
+    background hover-color
 
 .new-record
   background new-record-color
@@ -49,18 +49,19 @@
   -webkit-box-orient: vertical;
 
 .card
-  background #fff
-  border-radius 10px
-  box-shadow 0 1px 2px rgba(0, 0, 0, .2), 1px -1px 2px rgba(0, 0, 0, .07), 0 -2px 5px rgba(0, 0, 0, .03)
+  background surface-color
+  border 1px solid border-color
+  border-radius var(--radius-lg)
+  box-shadow 0 1px 0 rgba(17, 24, 39, .03)
 
 .shadow-1
-  box-shadow 0 1px 2px rgba(0, 0, 0, .2), 1px 1px 5px rgba(0, 0, 0, .1)
+  box-shadow 0 8px 24px shadow-color
 
 .spinner-wrapper
   display flex
   align-items center
   justify-content center
-  background rgba(255, 255, 255, .6)
+  background rgba(255, 255, 255, .72)
 
 
 .ql-editor::-webkit-scrollbar-track
@@ -178,10 +179,10 @@ td.color-success
   border 0 !important
 
 .black-2
-  color #999
+  color var(--text-soft)
 
 .white-2
-  color #aaa
+  color var(--text-soft)
 
 .z-10
   z-index 10
@@ -224,7 +225,7 @@ td.color-success
   right 0
   bottom 0
   z-index -1
-  background rgba(0, 0, 0, .4)
+  background var(--overlay-color)
 
 .sticky
   position sticky
@@ -345,10 +346,10 @@ td.color-success
   margin-bottom 20px !important
 
 .b-t
-  border-top 1px solid #eee
+  border-top 1px solid border-color
 
 .b-b
-  border-bottom 1px solid #eee
+  border-bottom 1px solid border-color
 
 .p-0
   padding 0 !important
@@ -437,20 +438,20 @@ td.color-success
   margin-top 5px
   font-size .9em
   display block
-  color red
+  color danger-foreground
 
 .has-error
   .file-input
-    border-color red !important
+    border-color danger-foreground !important
 
   .invalid
-    border 1px solid red !important
+    border 1px solid danger-foreground !important
 
 button
   padding 0 30px
 
   &:hover:enabled
-    border-color #888
+    border-color primary-color
 
 label.checkbox
   cursor pointer
@@ -576,8 +577,11 @@ label.checkbox
   width auto
   background primary-lite-color
   border 1px solid primary-lite-color
-  font-weight 700
+  font-weight 600
   color primary-color
+  display inline-flex
+  align-items center
+  justify-content center
 
   &:hover
     border 1px solid primary-color !important
@@ -598,15 +602,15 @@ label.checkbox
   font-size 1em
   height btn-height
   line-height btn-height - 2
-  border 1px solid #bbb
-  background linear-gradient(to bottom, #f7f8fa, #e7e9ec)
-  box-shadow 0 1px 0 rgba(255, 255, 255, .3) inset
+  border 1px solid border-strong
+  background surface-color
+  box-shadow none
 
   &:hover:not(.disabled)
-    background linear-gradient(to top, #f7f8fa, #e7e9ec)
+    background hover-color
 
   &:active:not(.disabled)
-    box-shadow 0 1px 2px 1px #b7b8ba
+    box-shadow none
 
 .delete-btn.xs
 .edit-btn.xs
@@ -618,23 +622,23 @@ label.checkbox
 button.primary-btn
 .button.primary-btn
   font-size 1em
-  border-radius 8px
+  border-radius var(--radius-md)
   text-align center
-  background linear-gradient(to bottom, primary-color, primary-hover)
+  background primary-color
   border 0
-  padding 0 25px
-  font-weight 700
+  padding 0 16px
+  font-weight 650
   color primary-foreground
   height btn-height
   line-height btn-height
   transition all .2s
-  box-shadow 0 1px 0 rgba(255, 255, 255, .3) inset
+  box-shadow none
 
   &:hover:not(.disabled)
-    background linear-gradient(to top, primary-color, primary-hover)
+    background primary-hover
 
   &:active:not(.disabled)
-    box-shadow 0 1px 3px 1px primary-hover
+    box-shadow none
 
 
 .text-right
@@ -647,16 +651,16 @@ button.primary-btn
   font-weight 600
 
 .lite-bold
-  color #666
+  color muted-color
   font-weight 700
   margin-right 15px
 
   th
-    background #f9fafb
-    font-size 13px
-    font-weight 600
-    padding 10px
-    border-bottom 1px solid #e5e7eb
+    background #F9FAFB
+    font-size 12px
+    font-weight 650
+    padding 9px 10px
+    border-bottom 1px solid border-color
     text-align center !important
     vertical-align middle
 
@@ -666,13 +670,12 @@ table.mn-w-600x
 
     td
       padding 8px 10px
-      border-bottom 1px solid #f1f1f1
+      border-bottom 1px solid border-color
       font-size 13px
-      text-align center !important
       vertical-align middle
 
     &:hover
-      background #f8fbff
+      background hover-color
 
 .lite-bold th:first-child,
 table.mn-w-600x tr td:first-child
@@ -683,7 +686,7 @@ table.mn-w-600x tr td:nth-child(2)
   padding-left 4px !important
 
 table
-  table-layout fixed
+  table-layout auto
 
 .mx-w-70x
   max-width 70px
@@ -896,7 +899,8 @@ table
 
 .table-wrapper
   overflow auto
-  margin 20px 0 0
+  margin 0
+  border-radius var(--radius-lg)
 
 .table-wrapper th > input[type="checkbox"]
 .table-wrapper td > input[type="checkbox"]
@@ -938,7 +942,7 @@ label.cb
 .input-wrapper .flex-v-centered > span
 .input-wrapper > label
   font-size .9rem
-  color #888
+  color muted-color
 
 .rtl .input-wrapper > .dply-felx
   gap 15px
@@ -962,7 +966,7 @@ form .input-wrapper .custom-dropdown
 
 form
   .input-wrapper
-    margin-bottom 20px
+    margin-bottom 16px
 
     label
       margin-bottom 10px

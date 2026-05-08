@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cancellation;
 use App\Models\Cart;
 use App\Models\GuestUser;
+use App\Models\PointTransaction;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\SupplierCategory;
@@ -1364,8 +1365,8 @@ class OrdersController extends ControllerHelper
             $request->request->add(['order_method' => $params->order_method]);
             $request->request->add(['voucher' => $params->voucher]);
             $request->request->add(['time_zone' => $params->time_zone]);
-            $request->request->add(['transactionId' => $params->transactionId]);
-            $request->request->add(['orderId' => $params->orderId]);
+            $request->request->add(['transactionId' => $params->transactionId ?? null]);
+            $request->request->add(['orderId' => $params->orderId ?? null]);
 
             $payment = Payment::first();
 
@@ -1588,7 +1589,7 @@ class OrdersController extends ControllerHelper
                     );
                     $error = true;
                 }
-                if ((int)$c->updated_inventory->quantity < 1) {
+                if ((int)$c->updated_inventory->quantity < 1 && (int)$c->updated_inventory->is_active !== 1) {
                     array_push($productErr,
                         __('lang.out_stock_product', ['product' => $c->product->title], $lang)
                     );
@@ -1789,6 +1790,20 @@ class OrdersController extends ControllerHelper
 
 
                 $totalPrice = number_format($totalPrice, 2, '.', '');
+
+                if ($request->user('user')) {
+                    $user = $request->user('user');
+                    $points = $totalPrice - $offeredVoucher;
+                    $earnedPoints = ($points > 0) ? floor($points) : 0;
+                    PointTransaction::create([
+                        'user_id' => $user->id,
+                        'type' => 'credit',
+                        'points' => $earnedPoints,
+                        'value' => $earnedPoints * 0.01,
+                        'source' => 'order',
+                        'reference_id' => $order->id,
+                    ]);
+                }
 
                 $result = OrderedProduct::insert($orderedProducts);
 

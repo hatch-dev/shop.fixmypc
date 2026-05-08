@@ -5,6 +5,7 @@ const state = () => ({
   banners: null,
   collections: null,
   site_features: null,
+  categories: null,
   featured_categories: null,
   featured_brands: null,
   flash_sales: null,
@@ -17,6 +18,7 @@ const getters = {
   siteFeatures: ({ site_features }) => site_features,
   collections: ({ collections }) => collections,
   banners: ({ banners }) => banners,
+  categories: ({ categories }) => categories,
   featuredCategories: ({ featured_categories }) => featured_categories,
   featuredBrands: ({ featured_brands }) => featured_brands,
   flashSales: ({ flash_sales }) => flash_sales,
@@ -34,6 +36,7 @@ const mutations = {
     state.banners =  home?.banners
     state.collections =  home?.collections
     state.featured_categories =  home?.featured_categories
+    state.categories = home?.categories
     state.featured_brands =  home?.featured_brands
     state.flash_sales =  home?.flash_sales
   },

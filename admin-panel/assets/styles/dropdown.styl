@@ -24,7 +24,7 @@
   position relative
   display inline-block
   line-height 0
-  max-width 125px
+  max-width 180px
 
   .layer
     z-index 1
@@ -36,13 +36,13 @@
     justify-content space-between
     cursor pointer
     user-select none
-    padding 0 15px 0 20px
-    height btn-height
-    line-height btn-height
-    background linear-gradient(to bottom, #f7f8fa, #e7e9ec)
-    border 1px solid #bbb
-    border-radius 5px
-    font-size .95em
+    padding 0 12px
+    height 36px
+    line-height 34px
+    background surface-color
+    border 1px solid border-strong
+    border-radius var(--radius-md)
+    font-size .9em
     min-width 80px
     white-space nowrap
     overflow hidden
@@ -53,27 +53,29 @@
       opacity .5
 
     &:hover:not(.disabled)
-      background #f6f4f4 !important
+      background hover-color !important
+      border-color border-strong
 
     &:active:not(.disabled)
-      box-shadow 0 0 2px 1px primary-color
+      box-shadow none
 
   .dropdown-inner
     position absolute
     top 100%
     left 0
     min-width 150px
-    background #fff
-    padding 7.5px 5px
-    border-radius 5px
-    box-shadow 0 2px 10px rgba(0, 0, 0, .1)
+    background surface-color
+    padding 4px
+    border 1px solid border-color
+    border-radius var(--radius-md)
+    box-shadow none
     z-index 3
     max-height 400px
     overflow auto
 
     & > input
       padding 0 10px
-      border 1px solid #ddd
+      border 1px solid border-color
       margin-bottom 5px
 
     ul
@@ -84,14 +86,16 @@
         cursor pointer
         display block
         padding 7.5px 20px
+        border-radius var(--radius-sm)
         transition all .1s
         margin 0
 
         &:hover
-          background #eee
+          background hover-color
 
       .active
-        background #f6f6f7
+        background var(--primary-soft)
+        color primary-color
 
 .right-dropdown.custom-dropdown
   .dropdown-inner
@@ -100,7 +104,8 @@
 
 .open
   span
-    box-shadow 0 0 1px 1px primary-color
+    border-color primary-color
+    box-shadow none
 
 //RESPONSIVE
 @media only screen and (max-width: 992px)

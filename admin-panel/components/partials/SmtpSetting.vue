@@ -130,6 +130,24 @@
         </span>
       </div>
 
+      <div class="input-wrapper">
+        <label>
+          API Key
+        </label>
+        <input
+          type="text"
+          placeholder="Enter API Key"
+          v-model="result.apiKey"
+          :class="{invalid: !result.apiKey && hasError}"
+        >
+        <span
+          class="error"
+          v-if="!result.apiKey && hasError"
+        >
+          API Key is required
+        </span>
+      </div>
+
     </div>
 
     <div class="oflow-hidden">
@@ -163,13 +181,13 @@
 
         hasError: false,
         result: {
-
           smtpHost: null,
           smtpPort: null,
           smtpUsername: null,
           smtpPassword: null,
           smtpEncryption: null,
           mailFrom: null,
+          apiKey: null
         }
       }
     },
@@ -199,7 +217,7 @@
       },
       async updateData() {
         if (this.result.smtpHost && this.result.smtpPort && this.result.smtpUsername &&
-          this.result.smtpPassword && this.result.smtpEncryption && this.result.mailFrom
+          this.result.smtpPassword && this.result.smtpEncryption && this.result.mailFrom && this.result.apiKey
         ) {
           this.updating = true
 

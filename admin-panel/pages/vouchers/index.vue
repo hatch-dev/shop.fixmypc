@@ -17,6 +17,7 @@
           </th>
           <th>{{ $t('index.title') }}</th>
           <th>{{ $t('prod.code') }}</th>
+          <th>Voucher Type</th>
           <th>{{ $t('brand.price') }}({{ currencyIcon }})</th>
           <th>{{ $t('prod.capped') }}({{ currencyIcon }})</th>
           <th>{{ $t('prod.spent') }}({{ currencyIcon }})</th>
@@ -33,6 +34,21 @@
           </td>
           <td><h5 class="mx-w-300x">{{ item.title }}</h5></td>
           <td>{{ item.code }}</td>
+          <td>
+            <span
+              class="voucher-type"
+              :class="{
+                global: item.apply_type == 1,
+                product: item.apply_type == 2
+              }"
+            >
+              {{
+                item.apply_type == 2
+                  ? 'Product Wise'
+                  : 'Global'
+              }}
+            </span>
+          </td>
           <td>{{ priceFormat({type: item.type, price: item.price, icon: currencyIcon}) }}</td>
           <td>
             <span v-if="getDataFromObject(item, 'capped_price')">
@@ -115,6 +131,22 @@
   }
 </script>
 
-<style scoped>
+<style>
+.voucher-type {
+  padding: 5px 10px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
 
+.voucher-type.global {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.voucher-type.product {
+  background: var(--info-bg);
+  color: var(--info-text);
+}
 </style>

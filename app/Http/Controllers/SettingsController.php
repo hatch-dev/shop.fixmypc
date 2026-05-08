@@ -44,7 +44,7 @@ class SettingsController extends ControllerHelper
             $data['smtpPassword'] = env('MAIL_PASSWORD');
             $data['smtpEncryption'] = env('MAIL_ENCRYPTION');
             $data['mailFrom'] = env('MAIL_FROM_ADDRESS');
-
+            $data['apiKey'] = env('BREVO_API_KEY');
 
             return response()->json(new Response($request->token, $data));
 
@@ -111,6 +111,46 @@ class SettingsController extends ControllerHelper
         }
     }
 
+    public function getSumup(Request $request)
+    {
+        try {
+            $data['sumup_api_key'] = env('SUMUP_API_KEY');
+            $data['sumup_merchant_email'] = env('SUMUP_MERCHANT_EMAIL');
+            $data['sumup_merchant_code'] = env('SUMUP_MERCHANT_CODE');
+            return response()->json(new Response($request->token, $data));
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+    public function updateSumup(Request $request)
+    {
+        try{
+            $db = [
+                "SUMUP_API_KEY" => "sumup_api_key",
+                "SUMUP_MERCHANT_EMAIL" => "sumup_merchant_email",
+                "SUMUP_MERCHANT_CODE" => "sumup_merchant_code",
+            ];
+            $path = base_path('.env');
+            if (file_exists($path)) {
+                Artisan::call('config:clear');
+                Artisan::call('route:clear ');
+                Artisan::call('cache:clear');
+                Artisan::call('view:clear');
+
+                foreach ($db as $key => $value) {
+                    file_put_contents($path, str_replace(
+                        $key . '=' . env($key), $key . '=' . request($value), file_get_contents($path)
+                    ));
+                }
+            }
+            return response()->json(new Response($request->token, $request->all()));
+        }catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+        
+    }
+
 
     public function smtpAction(Request $request)
     {
@@ -128,7 +168,8 @@ class SettingsController extends ControllerHelper
                 "MAIL_USERNAME" => "smtpUsername",
                 "MAIL_PASSWORD" => "smtpPassword",
                 "MAIL_ENCRYPTION" => "smtpEncryption",
-                "MAIL_FROM_ADDRESS" => "mailFrom"
+                "MAIL_FROM_ADDRESS" => "mailFrom",
+                "BREVO_API_KEY" => "apiKey"
             ];
             $path = base_path('.env');
             if (file_exists($path)) {

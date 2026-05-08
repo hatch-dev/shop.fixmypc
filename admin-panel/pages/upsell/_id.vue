@@ -349,10 +349,10 @@
               isValid = false
             }
 
-            if (!upsell.price || Number(upsell.price) <= 0) {
-              this.$set(upsell.errors, 'price', 'Price must be greater than 0')
-              isValid = false
-            }
+            // if (!upsell.price || Number(upsell.price) <= 0) {
+            //   this.$set(upsell.errors, 'price', 'Price must be greater than 0')
+            //   isValid = false
+            // }
 
           }
 
@@ -363,16 +363,16 @@
               isValid = false
             }
 
-            upsell.ram_options.forEach((ram, rIndex) => {
-              if (!ram.price || Number(ram.price) <= 0) {
-                this.$set(
-                  upsell.errors,
-                  `ram_${rIndex}`,
-                  'RAM price must be greater than 0'
-                )
-                isValid = false
-              }
-            })
+            // upsell.ram_options.forEach((ram, rIndex) => {
+            //   if (!ram.price || Number(ram.price) <= 0) {
+            //     this.$set(
+            //       upsell.errors,
+            //       `ram_${rIndex}`,
+            //       'RAM price must be greater than 0'
+            //     )
+            //     isValid = false
+            //   }
+            // })
 
           }
 

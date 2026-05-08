@@ -73,6 +73,10 @@
       :payment-data="paymentData"
     />
 
+    <sumup
+      :payment-data="paymentData"
+    />
+
     <div class="oflow-hidden">
       <ajax-button
         v-if="$can('setting', 'edit')"
@@ -97,6 +101,7 @@
   import BankPayment from "./BankPayment";
   import Dropdown from "../Dropdown";
   import PayFast from "./PayFast";
+  import Sumup from "./Sumup";
 
   export default {
     name: 'PaymentSetting',
@@ -141,6 +146,11 @@
           payfast_merchant_id: '',
           payfast_merchant_key: '',
           payfast_passphrase: '',
+
+          sumup: true,
+          sumup_api_key: null,
+          sumup_merchant_email: null,
+          sumup_merchant_code: null,
         }
       }
     },
@@ -156,7 +166,8 @@
       Paypal,
       AjaxButton,
       Spinner,
-      BankPayment
+      BankPayment,
+      Sumup
     },
     computed: {
       ...mapGetters('payment', ['payment'])

@@ -18,6 +18,7 @@ class CreateProductsTable extends Migration
             $table->bigIncrements('id')->unsigned();
 
             $table->string('title')->default('');
+            $table->string('short_heading')->nullable();
             $table->text('description')->nullable();
             $table->text('overview')->nullable();
             $table->string('unit')->nullable();

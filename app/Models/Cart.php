@@ -12,7 +12,7 @@ class Cart extends Model
 
     protected $fillable = [
         'product_id', 'inventory_id', 'user_id', 'quantity', 'selected',
-        'shipping_place_id', 'shipping_type', 'user_token', 'admin_id', 'price'
+        'shipping_place_id', 'shipping_type', 'user_token', 'admin_id', 'price', 'voucher_code', 'voucher_discount', 'original_price'
     ];
 
     public function shipping_place()

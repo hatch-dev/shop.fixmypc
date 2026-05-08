@@ -26,6 +26,15 @@
           @update-cart-shipping="updateCartShipping"
           @current-shipping="currentShipping"
         />
+        <div class="card p-3 mb-3">
+          <h6 class="bundle-list-title">Frequently Bought Together</h6>
+          <bundle-carousel
+            v-for="bundle in upsellBundles"
+            :key="bundle.id"
+            :bundle="bundle"
+          />
+        </div>
+        <flash-discount/>
     </div>
     </transition>
   </div>
@@ -43,6 +52,7 @@
     name: 'CartList',
     data() {
       return {
+        bundleList: [],
         fetchingCartData: false,
         ajaxDeleting: 0,
       }
@@ -96,6 +106,26 @@
       LazyImage
     },
     computed: {
+      upsellBundles() {
+        if (!this.cartProducts?.length) return []
+        const map = new Map()
+        this.cartProducts.forEach(item => {
+          if (!item.upsell_products?.length) return
+          const key = item.upsell_products
+            .map(p => p.id)
+            .sort()
+            .join('-')
+
+          if (!map.has(key)) {
+            map.set(key, {
+              id: key,
+              title: "Frequently Bought Together",
+              products: item.upsell_products
+            })
+          }
+        });
+        return Array.from(map.values())
+      },
       ...mapGetters('language', ['langCode']),
     },
     mixins: [util],
@@ -137,6 +167,7 @@
             payload: evt,
             lang: this.langCode
           })
+          this.$emit('cart-changed', true);
         }catch (e) {
           this.$nuxt.error(e)
         }
@@ -165,10 +196,17 @@
     },
     created() {
     },
-    mounted() {
+    async mounted() {
     }
   }
 </script>
+<style scoped>
+.bundle-list-title{
+  font-weight: 500;
+  color: #130E2B;
+  font-size: 16px;
+}
+</style>
 
 
 

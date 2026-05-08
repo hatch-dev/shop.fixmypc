@@ -63,7 +63,7 @@
       return {
         currentPage: 1,
         draggedWidth: 0,
-        pagination: [6, 4, 3, 2, 2]
+        pagination: [4, 3, 1, 1, 1]
       }
     },
     watch: {

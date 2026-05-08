@@ -146,7 +146,7 @@
         list-api="getProducts"
         :name="$t('title.prod')"
         :filters="filters"
-        @list="itemList = $event"
+        @list="handleProductList"
       >
         <template v-slot:table-top>
           <div class="table-result-bar">
@@ -401,6 +401,54 @@
                   />
                 </template>
 
+                <!-- Upsell -->
+                <template v-else-if="col.key === 'updated_upsell'">
+                  <dropdown
+                    :selectedKey="bulkData.updated_upsell_id ? String(bulkData.updated_upsell_id) : null"
+                    :options="updatedUpsellOptions"
+                    @clicked="({key}) => bulkData.updated_upsell_id = key"
+                  />
+                </template>
+
+                <!-- Bundle -->
+                <template v-else-if="col.key === 'bundle'">
+                  <!-- <dropdown
+                    :selectedKey="String(bulkData.bundle_deal_id || '')"
+                    :options="bundleOptions"
+                    @clicked="({key}) => bulkData.bundle_deal_id = key"
+                  /> -->
+                  <div class="collection-cell-wrapper">
+                    <div
+                      class="collection-trigger"
+                      @click="activeBulkBundle = !activeBulkBundle"
+                    >
+                      <span v-if="bulkData.bundle_deal_ids?.length">
+                        {{ bulkData.bundle_deal_ids.length }}
+                      </span>
+                      <span v-else class="placeholder">Choose</span>
+                      <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div v-if="activeBulkBundle" class="collection-popup">
+                      <div class="popup-header">Select Bundles</div>
+
+                      <div class="collection-list">
+                        <label
+                          v-for="bundle in bundles"
+                          :key="bundle.id"
+                          class="collection-option"
+                        >
+                          <input
+                            type="checkbox"
+                            :value="bundle.id.toString()"
+                            v-model="bulkData.bundle_deal_ids"
+                          />
+                          {{ bundle.title }}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+
                 <!-- Status -->
                 <template v-else-if="col.key === 'status'">
                   <dropdown
@@ -533,6 +581,25 @@
                 <!-- Cross Sell -->
                 <template v-if="col.key === 'crosssell'">
                   {{ allUpsells[product.upsell_id]?.title }}
+                </template>
+
+                <!-- UpSell -->
+                <template v-if="col.key === 'updated_upsell'">
+                  {{ updated_upsells.find(u => u.id == product.updated_upsell_id)?.title }}
+                </template>
+
+                <!-- Bundle -->
+                <template v-if="col.key === 'bundle'">
+                  <!-- {{ bundles.find(b => b.id == product.bundle_deal_id)?.title }} -->
+                  <span v-if="product.bundle_deal_ids?.length">
+                    <span
+                      v-for="id in product.bundle_deal_ids"
+                      :key="id"
+                      class="chip"
+                    >
+                      {{ bundles.find(b => b.id == id)?.title }}
+                    </span>
+                  </span>
                 </template>
 
                 <!-- Status -->
@@ -962,6 +1029,99 @@
                     :options="allUpsells"
                     @clicked="({key}) => {value.upsell_id = Number(key); autoSave(value);}"
                   />
+                 </template>
+
+                 <!-- Upsell -->
+                 <template v-if="col.key === 'updated_upsell'">
+                  <dropdown
+                    :selectedKey="value.updated_upsell_id ? String(value.updated_upsell_id) : undefined"
+                    :options="updatedUpsellOptions"
+                    @clicked="({key}) => {value.updated_upsell_id = key || null; autoSave(value);}"
+                  />
+                 </template>
+
+                  <!-- Bundle -->
+                 <template v-if="col.key === 'bundle'">
+                  <!-- <dropdown
+                    :selectedKey="String(value.bundle_deal_id || '')"
+                    :options="bundleOptions"
+                    @clicked="({key}) => {
+                      value.bundle_deal_id = key ? String(key) : null
+                      autoSave(value)
+                    }"
+                  /> -->
+                  <div class="collection-cell-wrapper">
+
+                    <!-- Trigger -->
+                    <div
+                      class="category-trigger"
+                      @click.stop="toggleBundlePopup(value.id)"
+                      @mouseenter="hoverBundleRow = value.id"
+                      @mouseleave="hoverBundleRow = null"
+                    >
+                      <span v-if="value.bundle_deal_ids?.length">
+                        {{ value.bundle_deal_ids.length }}
+                      </span>
+
+                      <span v-else class="placeholder">
+                        Choose
+                      </span>
+
+                      <i class="fa-solid fa-chevron-down"></i>
+
+                      <!-- Hover Tooltip -->
+                      <div
+                        v-if="hoverBundleRow === value.id && value.bundle_deal_ids?.length"
+                        class="category-hover-tooltip"
+                      >
+                        <div
+                          v-for="id in value.bundle_deal_ids"
+                          :key="id"
+                          class="tooltip-item"
+                        >
+                          {{ bundles.find(b => b.id == id)?.title }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Popup -->
+                    <div
+                      v-if="activeBundleRow === value.id"
+                      class="collection-popup"
+                    >
+                      <div class="popup-header">
+                        Select Bundles
+                      </div>
+
+                      <div class="collection-list">
+                        <label
+                          v-for="bundle in bundles"
+                          :key="bundle.id"
+                          class="collection-option"
+                        >
+                          <input
+                            type="checkbox"
+                            :value="bundle.id.toString()"
+                            v-model="value.bundle_deal_ids"
+                          />
+                          {{ bundle.title }}
+                        </label>
+                      </div>
+
+                      <div class="popup-actions">
+                        <button @click="activeBundleRow = null">
+                          Cancel
+                        </button>
+                        <button
+                          class="primary-btn"
+                          @click="applyBundles(value)"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
                  </template>
 
                  <!-- Status -->
@@ -1715,12 +1875,16 @@ import LazyImage from "~/components/LazyImage"
 import debounce from 'lodash/debounce'
 import draggable from 'vuedraggable'
 import WYSIWYGEditor from '~/components/WYSIWYGEditor'
+import { update } from 'lodash'
 
 export default {
   mixins: [util],
   components: { ListPage, Multiselect, draggable, WYSIWYGEditor},
   data() {
     return {
+      activeBundleRow: null,
+      hoverBundleRow: null,
+      isPageLoaded: false,
       showEditorModal: false,
       editorProduct: null,
       editorTitle: '',
@@ -1759,6 +1923,8 @@ export default {
       collections: [],
       subCategories: [],
       allUpsells: {},
+      bundles: [],
+      updated_upsells: [],
       loadingUpsells: false,
       statusObj: {
         1: { title: 'Public' },
@@ -1787,6 +1953,8 @@ export default {
         discount_value: '',
         discount_type: 'fixed',
         upsell_id: null,
+        updated_upsell_id: null,
+        bundle_deal_id: null,
         status: '',
       },
       activeBulkCategory: false,
@@ -1801,14 +1969,16 @@ export default {
       columnOptions: [
         { key: 'image', label: 'Image', visible: true },
         { key: 'title', label: 'Title', visible: true },
-        { key: 'slug', label: 'Slug', visible: true },
-        { key: 'editor', label: 'Editor', visible: true },
+        { key: 'slug', label: 'Slug', visible: false },
+        { key: 'editor', label: 'Editor', visible: false },
         { key: 'category', label: 'Category', visible: true },
         { key: 'primary', label: 'Primary', visible: true },
         { key: 'collection', label: 'Collection', visible: true },
         { key: 'selling', label: 'Selling', visible: true },
         { key: 'discount', label: 'Discount', visible: true },
         { key: 'crosssell', label: 'Cross Sell', visible: true },
+        { key: 'updated_upsell', label: 'Upsell', visible: true },
+        { key: 'bundle', label: 'Bundle', visible: true },
         { key: 'status', label: 'Status', visible: true },
         { key: 'procurement', label: 'Procurement', visible: true },
       ],
@@ -1819,6 +1989,25 @@ export default {
     }
   },
   computed: {
+    updatedUpsellOptions() {
+      return [
+        { key: '', title: 'Select Upsell' },
+        ...this.updated_upsells.map(u => ({
+          key: String(u.id),
+          title: u.title
+        }))
+      ]
+    },
+
+    bundleOptions() {
+      return [
+        { key: '', title: 'Select Bundle' },
+        ...this.bundles.map(b => ({
+          key: String(b.id),
+          title: b.title
+        }))
+      ]
+    },
     allVariantsExpanded() {
       const variantProducts = this.itemList
         .filter(p => this.hasVariants(p))
@@ -1876,6 +2065,51 @@ export default {
     }
   },
   methods: {
+    toggleBundlePopup(id) {
+      if (this.activeBundleRow === id) {
+        this.activeBundleRow = null
+        return
+      }
+      this.activeBundleRow = id
+    },
+
+    applyBundles(product) {
+      product.bundle_deal_id =
+        (product.bundle_deal_ids || []).join(',')
+
+      this.activeBundleRow = null
+      this.autoSave(product)
+    },
+    onBundleChange(product) {
+      product.bundle_deal_id = (product.bundle_deal_ids || []).join(',');
+      this.autoSave(product);
+    },
+
+    onBulkBundleChange() {
+      this.bulkData.bundle_deal_id =
+        (this.bulkData.bundle_deal_ids || []).join(',');
+    },
+    handleProductList(list) {
+      list.forEach(item => {
+        item.updated_upsell_id =
+          item.updated_upsell_id !== null
+            ? String(item.updated_upsell_id)
+            : null
+
+        item.bundle_deal_ids = item.bundle_deal_id
+          ? item.bundle_deal_id.split(',').map(String)
+          : [];
+
+        // ✅ IMPORTANT FIX
+        item.tempCategoryIds = (item.selectedCategories || []).map(c => c.id)
+
+        item.tempPrimaryCategoryId = item.primaryCategoryId || ''
+
+        item.tempCollectionIds = (item.selectedCollections || []).map(c => c.id)
+      })
+
+      this.itemList = list
+    },
     toggleAllVariants() {
       const variantProducts = this.itemList
         .filter(p => this.hasVariants(p))
@@ -1962,6 +2196,8 @@ export default {
         'selling',
         'discount',
         'crosssell',
+        'updated_upsell',
+        'bundle',
         'status',
         'procurement'
       ]
@@ -2231,6 +2467,9 @@ export default {
         discount_value: '',
         discount_type: 'fixed',
         upsell_id: null,
+        updated_upsell_id: null,
+        bundle_deal_ids: [],
+        bundle_deal_id: null,
         status: '',
       }
 
@@ -2296,9 +2535,20 @@ export default {
           product.discount_type = this.bulkData.discount_type
         }
 
-        // Upsell
+        // Crossell
         if (this.bulkData.upsell_id !== null) {
           product.upsell_id = this.bulkData.upsell_id
+        }
+
+        // Upsell
+        if (this.bulkData.updated_upsell_id !== null) {
+          product.updated_upsell_id = this.bulkData.updated_upsell_id
+        }
+
+        // Bundle
+        if (this.bulkData.bundle_deal_ids?.length) {
+          product.bundle_deal_ids = [...this.bulkData.bundle_deal_ids];
+          product.bundle_deal_id = this.bulkData.bundle_deal_ids.join(',');
         }
 
         // Status
@@ -2418,6 +2668,8 @@ export default {
           offered: this.calculateFinalProductPrice(product),
 
           upsell_id: product.upsell_id,
+          updated_upsell_id: product.updated_upsell_id,
+          bundle_deal_id: product.bundle_deal_id,
           status: product.status,
           procurement: product.procurement,
           primary_category_id: product.primaryCategoryId,
@@ -2465,6 +2717,7 @@ export default {
       }
     },
     autoSave(product) {
+      if (!this.isPageLoaded) return
       if (product._skipAutoSave) return
       if (!product._debouncedSave) {
         product._debouncedSave = debounce(async () => {
@@ -2489,6 +2742,8 @@ export default {
               discount_value: product.discount_value,
               offered: this.calculateFinalProductPrice(product),
               upsell_id: product.upsell_id,
+              updated_upsell_id: product.updated_upsell_id,
+              bundle_deal_id: product.bundle_deal_id,
               status: product.status,
               procurement: product.procurement,
               primary_category_id: product.primaryCategoryId,
@@ -2704,6 +2959,8 @@ export default {
         this.collections = response.data.collections;
         this.brands = response.data.brands;
         this.products = response.data.products;
+        this.bundles = response.data.bundles;
+        this.updated_upsells = response.data.updated_upsells;
     },
     toggleStock(value) {
       this.filters.stock = this.filters.stock === value ? '' : value
@@ -2758,6 +3015,9 @@ export default {
         )
 
         this.$set(product, 'upsell_id', product.upsell_id ? Number(product.upsell_id) : null)
+        this.$set(product, 'updated_upsell_id', product.updated_upsell_id ? Number(product.updated_upsell_id) : null)
+        this.$set(product, 'bundle_deal_id', product.bundle_deal_id ? Number(product.bundle_deal_id) : null)
+
         this.$set(product, 'status', product.status ? Number(product.status) : 1)
         this.$set(product, 'procurement', product.procurement !== undefined ? Number(product.procurement) : null)
         this.$set(product, 'discount_type', product.discount_type || 'fixed')
@@ -2777,7 +3037,9 @@ export default {
       this.fetchCategories(),
       this.fetchUpsells()
     ])
-    await this.$nextTick()
+    this.$nextTick(() => {
+      this.isPageLoaded = true
+    })
     this.$refs.productList?.reload?.()
     document.addEventListener('click', this.handleGlobalClick)
   },

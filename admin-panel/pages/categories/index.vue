@@ -768,12 +768,9 @@ button.btn.btn-filter {
     margin-bottom: 20px;
     align-items: center;
     padding: 25px;
-    position: sticky;
     top: 0;
-    background: #fff;
     z-index: 9999;
-    border-top: 1px solid #E5E7EB;
-    box-shadow: 0 10px 35px 0 #b4b4b440;
+    border-radius: 10px;
 }
 .top-bar .btn {
 border: 0;
@@ -1276,7 +1273,6 @@ border-radius:10px;
   border: none;
   border-radius: 10px;
   padding: 16px;
-  font-family: monospace;
   font-size: 13px;
   resize: none;
   outline: none;
@@ -1539,9 +1535,9 @@ min-width:140px;
 }
 
 .cards, .table-box, .filter-bar {
-  max-width: 1300px;
   margin-left: auto;
   margin-right: auto;
+  border-radius: 10px;
 }
 
 .expand-checkbox{
@@ -1552,6 +1548,13 @@ min-width:140px;
   position: absolute;
   left: 0px;
   top: 27px;
+}
+
+.table-box table {
+    width: 100% !important;
+    table-layout: auto;
+    border-radius: 16px;
+    overflow: hidden;
 }
 
 /* ANIMATION */

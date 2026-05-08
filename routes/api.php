@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Plugin;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminsController;
+use App\Http\Controllers\GiftVoucherController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\BrandsController;
@@ -69,6 +70,12 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SumupPaymentController;
 use App\Http\Controllers\BidController;
 use App\Http\Controllers\LoyaltyGroupController;
+use App\Http\Controllers\BusinessProductsController;
+use App\Http\Controllers\WalletController;
+use App\Http\Controllers\RecentlyViewedController;
+use App\Http\Controllers\FlashDiscountController;
+use App\Http\Controllers\WalletOverviewController;
+use App\Http\Controllers\SaveForLaterController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
@@ -284,6 +291,17 @@ Route::group([
     Route::get('resource/{name}', [FrontendController::class, "resource"]);
     Route::get('countries-phones', [FrontendController::class, "countriesPhones"]);
 
+    Route::prefix('flash-discount')->group(function () {
+        Route::get('all', [FlashDiscountController::class, 'all']);
+        Route::get('find/{id}', [FlashDiscountController::class, 'find']);
+        Route::post('action/{id?}', [FlashDiscountController::class, 'action']);
+        Route::delete('delete/{id}', [FlashDiscountController::class, 'delete']);
+    });
+
+    Route::prefix('wallet-overview')->group(function () {
+        Route::get('all', [WalletOverviewController::class, 'all']);
+    });
+
     Route::group([
         'middleware' => ['auth:admin','scope:admin']
     ], function (){
@@ -299,6 +317,13 @@ Route::group([
         Route::post('update-password', [AdminsController::class, 'updatePassword']);
 
         Route::post('clear-cache', [AdminsController::class, 'clearCache']);
+
+        Route::prefix('gift-voucher')->group(function () {
+            Route::get('all', [GiftVoucherController::class, 'index']);
+            Route::get('find/{id}', [GiftVoucherController::class, 'show']);
+            Route::post('action/{id?}', [GiftVoucherController::class, 'store']);
+            Route::delete('delete/{id}', [GiftVoucherController::class, 'delete']);
+        });
 
         Route::group([
             'prefix' => 'admin-data'
@@ -457,6 +482,9 @@ Route::group([
 
             Route::post('miscellaneous', [SettingsController::class, 'miscellaneous']);
             Route::post('analytics', [SettingsController::class, 'analytics']);
+
+            Route::get('sumup', [SettingsController::class, 'getSumup']);
+            Route::post('sumup', [SettingsController::class, 'updateSumup']);
         });
 
         Route::group([
@@ -677,6 +705,15 @@ Route::group([
             Route::get('find/{id}', [LoyaltyGroupController::class, 'find']);
             Route::delete('delete/{id}', [LoyaltyGroupController::class, 'delete']);
         });
+
+        Route::group([
+            'prefix' => 'business-products'
+        ], function (){
+            Route::get('all', [BusinessProductsController::class, 'all']);
+            Route::post('action/{id?}', [BusinessProductsController::class, 'action']);
+            Route::get('find/{id}', [BusinessProductsController::class, 'find']);
+            Route::delete('delete/{id}', [BusinessProductsController::class, 'delete']);
+        });
 		
 		 Route::group([
             'prefix' => 'templates'
@@ -824,7 +861,8 @@ Route::group([
     'prefix' => 'v1',
     'middleware' => ['optionalAuth']
 ], function (){
-
+    Route::get('flash-discount', [FlashDiscountController::class, 'current']);
+    Route::get('business-product/{id}', [FrontendController::class, 'businessProduct']);
     Route::get('common', [FrontendController::class, 'common']);
     Route::get('home', [FrontendController::class, 'home']);
     Route::get('products', [FrontendController::class, 'products']);
@@ -845,6 +883,9 @@ Route::group([
     Route::get('payment-gateway', [FrontendController::class, "paymentGateway"]);
     Route::get('localization', [FrontendController::class, "localization"]);
     Route::get('countries-phones', [FrontendController::class, "countriesPhones"]);
+    Route::get('bundle-deals', [FrontendController::class, "bundleDeals"]);
+    Route::get('product/upsell-crosssell/{id}', [FrontendController::class, 'productCrossellUpsell']);
+    Route::post('user/save-for-later/action', [SaveForLaterController::class, 'action']);
 	Route::get('upsell/find-products/', [UpsellController::class, 'findProducts']);
 
    Route::get('/iyzico-redirect', [IyzicoPaymentController::class, 'redirect'])->name('iyzico.redirect');
@@ -863,6 +904,11 @@ Route::group([
         Route::post('update-shipping', [CartsController::class, 'updateShipping']);
     });
 
+    Route::group([
+        'prefix' => 'payment'
+    ], function (){
+        Route::get('find', [PaymentsController::class, 'find']);
+    });
 
     Route::group([
         'prefix' => 'cancellation',
@@ -942,16 +988,31 @@ Route::group([
         Route::post('update-password', [UsersController::class, 'updatePassword']);
 
         Route::get('user-vouchers', [UsersController::class, "vouchers"]);
+        Route::get('gift-vouchers', [FrontendController::class, "getGiftVouchers"]);
 
 
         Route::group([
             'middleware' =>  ['auth:user', 'scope:user']
         ], function () {
+
+            Route::get('points', [WalletController::class, 'getPoints']);
+            Route::get('wallet', [WalletController::class, "getWallet"]);
+            Route::get('wallet/transactions', [WalletController::class, 'transactions']);
+            Route::post('wallet/topup/confirm', [WalletController::class, "confirmTopup"]);
+            Route::post('purchase-gift-voucher', [WalletController::class, "purchaseGiftVoucher"]);
+
+            Route::get('product/qualifying', [FrontendController::class, "qualifyingProducts"]);
+
+
             Route::get('logout', [UsersController::class, "logout"]);
 
 
             Route::post('update-profile', [UsersController::class, "updateProfile"]);
             Route::post('update-user-password', [UsersController::class, "updateUserPassword"]);
+
+            Route::get('/recently-viewed', [RecentlyViewedController::class, 'index']);
+            Route::delete('/recently-viewed/clear', [RecentlyViewedController::class, 'clear']);
+            Route::delete('/recently-viewed/{product_id}', [RecentlyViewedController::class, 'deleteOne']);
 
 
             Route::group([

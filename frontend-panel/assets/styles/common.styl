@@ -1,5 +1,7 @@
 @import "variables.styl"
 
+.product-pricing
+  text-align center
 
 .ignore-click
   pointer-events none
@@ -99,7 +101,7 @@
   color primary-color
 
 .color-deep
-  color primary-deep
+  color #130E2B
 
 button.color-deep
   &:hover
@@ -145,6 +147,8 @@ button.color-deep
 
 .fw-400
   font-weight 400
+  font-size 16px
+  color #130E2B
 
 .b-dashed
   border 1px dashed #ddd
@@ -153,9 +157,9 @@ button.color-deep
   display none
 
 .card
-  border-radius border-radius
-  border 1px solid #eee
-  background #fff
+    border-radius border-radius
+    border: 1px solid rgba(227, 227, 239, 1);
+    background: rgba(255, 255, 255, 1);
 
   & > input[type="radio"]
     max-height 0
@@ -313,7 +317,6 @@ span
     height 20px
     width 20px
     min-width 20px
-    opacity .6
     margin 2px 5px
 
   .m-0.icon
@@ -382,13 +385,16 @@ span
 
 .two-sided
   gap 10px
-  display flex
   align-items center
+  display flex
 
   .left
-    color #888
+    color #130E2B
     width 120px
     min-width 120px
+    font-weight 600
+    font-size 16px
+    margin-bottom 10px
 
 .ellipsis-para
   max-height 110px
@@ -422,6 +428,7 @@ input.no-control[type=number]
 .f-16
   font-size 1.6em
   line-height 1.6
+  color #33319A
 
 .f-11
   font-size 1.1em
@@ -512,7 +519,7 @@ input.no-control[type=number]
   -webkit-line-clamp 1
 
 .ellipsis-2
-  -webkit-line-clamp 2
+  -webkit-line-clamp 1
 
 .ellipsis-3
   -webkit-line-clamp 3
@@ -527,7 +534,7 @@ input.no-control[type=number]
 .strike-through
   position relative
   padding 0 2px
-  color #666
+  color #6F6980
   line-height 0
   font-size .9em
   margin-right 5px
@@ -559,7 +566,7 @@ input.no-control[type=number]
   text-transform uppercase
 
 .color-lite
-  color #555
+  color #130E2B
 
 .z-1
   z-index 1
@@ -829,6 +836,7 @@ input.no-control[type=number]
 
 .semi-bold
   font-weight 600
+  font-size 14px
 
 .h-100
   height 100%
@@ -1023,6 +1031,7 @@ input.no-control[type=number]
 
 .mt-5
   margin-top 5px !important
+  color #130E2B
 
 .mt-10
   margin-top 10px !important
@@ -1071,6 +1080,7 @@ input.no-control[type=number]
 
 .ml-5
   margin-left 5px !important
+  color #130E2B
 
 .ml-10
   margin-left 10px !important
@@ -1080,6 +1090,8 @@ input.no-control[type=number]
 
 .mr-5
   margin-right 5px !important
+  font-size 14px
+  font-weight 400
 
 .mr-10
   margin-right 10px !important
@@ -1171,6 +1183,8 @@ input.no-control[type=number]
   line-height 1.6
   height auto
   text-decoration underline
+  font-size 14px
+  font-weight 500
 
   &:hover
     text-decoration none
@@ -1418,3 +1432,133 @@ input.no-control[type=number]
 
   .hide-xxs
     display none
+
+
+@media (max-width: 767px)
+
+  .steps
+    gap 20px !important
+
+  .category-content
+    p
+      font-size 15px !important
+
+    h2
+      font-size 25px !important
+
+  .category-banner
+    padding 40px 20px
+
+  .category-header
+    h4
+      font-size 25px
+
+    p
+      font-size 15px
+
+  .category-icon-image
+    height 70px
+    width 70px
+
+  .category-title
+    font-size 25px
+
+  .section-title
+    h3
+      font-size 25px
+
+    p
+      font-size 14px
+
+  .price-section
+    h3
+      font-size 25px !important
+
+    p
+      font-size 14px
+
+  .insight-title
+    font-size 25px !important
+
+  .new-address
+    width 100% !important
+
+  .save-address
+    width 100% !important
+
+  .cart-drawer
+    width auto !important
+
+  .nav-links
+    display flex !important
+    flex-direction column !important
+
+  .progress-box
+    width 100%
+
+  .btn-discount
+    width 100%
+
+  .row.g-3.mobile-list
+    display inline
+
+  .start
+    justify-content center
+
+  .card-wrapper
+    text-align center
+
+  .tile-container
+    display inline
+
+  .p-tile
+    width 100% !important
+
+  .icon-circle
+    height 85px
+    width 85px
+
+    img
+      width 50px !important
+      height 50px !important
+
+  .cart-drawer
+    border-radius 0px !important
+
+  .glide__slide
+    width 100% !important
+
+.detail-image.shimmer-wrapper
+  position relative
+  overflow visible
+
+.detail-image.shimmer-wrapper:before
+  content ""
+  background transparent
+  width 100%
+  height 65%
+  border-radius 10px
+  position absolute
+  top 0
+  left 0
+
+.mobile-menu-open 
+    overflow: hidden;
+
+.mobile-menu-open .header
+    height: 100vh;
+
+.mobile-menu-open .mobile-menu-flex-set
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
+
+.mobile-menu-open .lang-dropdown select
+    width: 100%;
+
+.mobile-menu-open .mobile-menu-cs .small-info 
+    text-align: center;
+
+.cart 
+    background: rgba(247, 247, 250, 1);

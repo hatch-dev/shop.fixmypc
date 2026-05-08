@@ -169,7 +169,7 @@
 
         this.formSubmitting = true
         try {
-          if (!process.env.apiBase.trim()) {
+          if (!(process.env.apiBase || '').trim()) {
             this.$axios.defaults.baseURL = window.location.origin + '/'
           }
 

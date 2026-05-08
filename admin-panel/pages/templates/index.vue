@@ -35,7 +35,7 @@
               <td>
                 <button
                   @click.prevent="$refs.listPage.editItem(item.id)"
-                  class="edit-btn"
+                  class="lite-btn"
                 >
                 {{ $t('category.edit') }}
                 </button>
@@ -68,14 +68,14 @@
             <td>
               <button
                 @click.prevent="$refs.listPage.editItem(item.id)"
-                class="edit-btn"
+                class="lite-btn"
               >
                 {{ $t('category.edit') }}
               </button>
 
               <button
                 @click.prevent="$refs.listPage.deleteItem(item.id)"
-                class="delete-btn"
+                class="delete-btn lite-btn"
               >
                 {{ $t('category.delete') }}
               </button>

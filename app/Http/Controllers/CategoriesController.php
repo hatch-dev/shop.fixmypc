@@ -17,6 +17,7 @@ use App\Models\ProductCategory;
 use App\Models\SubCategory;
 use App\Models\SubCategoryLang;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 
 class CategoriesController extends ControllerHelper
@@ -217,11 +218,42 @@ class CategoriesController extends ControllerHelper
         }
     }
 
+    private function saveBase64Image($base64, $folder = 'uploads')
+    {
+        if (!$base64 || !str_contains($base64, 'base64')) {
+            return null;
+        }
+
+        preg_match('/^data:image\/(\w+);base64,/', $base64, $type);
+
+        if (!isset($type[1])) return null;
+
+        $image = str_replace("data:image/{$type[1]};base64,", '', $base64);
+        $image = str_replace(' ', '+', $image);
+
+        $extension = strtolower($type[1]);
+
+        // optional: normalize avif → png (if server doesn't support)
+        if ($extension === 'avif') {
+            $extension = 'png';
+        }
+
+        $imageName = uniqid() . '.' . $extension;
+
+        $path = base_path($folder);
+        if (!file_exists($path)) {
+            mkdir($path, 0777, true);
+        }
+
+        file_put_contents($path . '/' . $imageName, base64_decode($image));
+
+        return $imageName;
+    }
+
 
     public function action(Request $request, $id = null)
     {
         try {
-
             $lang = $request->header('language');
 
             $validate = Validation::category($request);
@@ -231,6 +263,37 @@ class CategoriesController extends ControllerHelper
 
             $bySlug = Category::where('slug', $request['slug'])->first();
 
+            $data = $request->all();
+
+            if (!empty($data['icon']) && str_contains($data['icon'], 'base64')) {
+                $data['icon'] = $this->saveBase64Image($data['icon']);
+            }else{
+                unset($data['icon']);
+            }
+
+            if (!empty($data['banner']) && str_contains($data['banner'], 'base64')) {
+                $data['banner'] = $this->saveBase64Image($data['banner']);
+            }else{
+                unset($data['banner']);
+            }
+
+            if (!empty($data['gallery']) && is_array($data['gallery'])) {
+                $galleryPaths = [];
+
+                foreach ($data['gallery'] as $img) {
+                    if (str_contains($img, 'base64')) {
+                        $path = $this->saveBase64Image($img);
+                        if ($path) $galleryPaths[] = $path;
+                    } else {
+                        $galleryPaths[] = $img;
+                    }
+                }
+
+                $data['gallery'] = implode(',', $galleryPaths);
+            }else{
+                unset($data['gallery']);
+            }
+             
             if ($id) {
                 if ($can = Utils::userCan($this->user, 'category.edit')) {
                     return $can;
@@ -254,12 +317,19 @@ class CategoriesController extends ControllerHelper
 
                 }
 
-                $filtered = array_filter($request->all(), function ($element) {
-                    return '' !== trim($element);
+                if (!empty($data['icon'])) {
+                    $data['image'] = $data['icon'];
+                }
+
+                $filtered = array_filter($data, function ($value) {
+                    return $value !== null && $value !== '';
                 });
+
+                
 
                 if ($lang) {
                     [$langData, $mainData] = Utils::seperateLangData($filtered, ['title', 'meta_title', 'meta_description', 'meta_keywords']);
+                    $mainData = Arr::except($mainData, ['visible', 'featured_category', 'icon']);
                     Category::where('id', $id)->update($mainData);
                     $existingLang = CategoryLang::where('category_id', $id)
                         ->where('lang', $lang)
@@ -274,10 +344,12 @@ class CategoriesController extends ControllerHelper
                         CategoryLang::where('id', $existingLang->id)->update($langData);
                     }
                 } else {
+                    $filtered = Arr::except($filtered, ['visible', 'featured_category', 'icon']);
                     Category::where('id', $id)->update($filtered);
                 }
 
             } else {
+                
                 if ($can = Utils::userCan($this->user, 'category.create')) {
                     return $can;
                 }
@@ -286,13 +358,18 @@ class CategoriesController extends ControllerHelper
                     return response()->json(Validation::error($request->token,
                         __('lang.slug_exists', [], $lang)));
                 }
+                if (!empty($data['icon'])) {
+                    $data['image'] = $data['icon'];
+                }else{
+                    $data['image'] = Config::get('constants.media.DEFAULT_IMAGE');
+                }
+                $data['admin_id'] = $request->user()->id;
+                $data['id'] = Utils::idGenerator(new Category());
 
-                $request['image'] = Config::get('constants.media.DEFAULT_IMAGE');
-                $request['admin_id'] = $request->user()->id;
-                $request['id'] = Utils::idGenerator(new Category());
-
+                
                 if ($lang) {
-                    [$langData, $mainData] = Utils::seperateLangData($request->all(), ['title', 'meta_title', 'meta_description', 'meta_keywords']);
+                    [$langData, $mainData] = Utils::seperateLangData($data, ['title', 'meta_title', 'meta_description', 'meta_keywords']);
+                   
                     $category = Category::create($mainData);
 
                     $langData['category_id'] = $category->id;
@@ -301,7 +378,7 @@ class CategoriesController extends ControllerHelper
                     $id = $category->id;
 
                 } else {
-                    $category = Category::create($request->all());
+                    $category = Category::create($data);
                     $id = $category->id;
                 }
             }

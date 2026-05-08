@@ -2,10 +2,18 @@
   <header
     :class="{'dots-open': dotsOpen}"
   >
-    <div class="dply-felx logo-wrapper">
+    <div class="logo-wrapper">
+      <nuxt-link class="header-brand" to="/">
+        <img
+          :src="siteLogo ? getImageURL(siteLogo) : require('~/assets/images/fixmypc-icon.svg')"
+          alt="FIXMYPC"
+        >
+        <span>FIXMYPC</span>
+      </nuxt-link>
       <button
         @click.prevent="leftMenuToggle"
         class="dply-felx j-center toggle-menu-btn"
+        :aria-label="$t('util.menu') || 'Toggle navigation'"
       >
         <i
           class="ignore-click icon menu-icon mr-0"

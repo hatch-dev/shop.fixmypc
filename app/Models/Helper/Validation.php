@@ -1107,4 +1107,21 @@ class Validation
 
         return false;
     }
+
+    public static function flashDiscount($request)
+    {
+        if (!$request->type) {
+            return self::error($request->token, 'Type is required');
+        }
+
+        if (!$request->value) {
+            return self::error($request->token, 'Value is required');
+        }
+
+        if (!$request->start_time || !$request->end_time) {
+            return self::error($request->token, 'Start & End time required');
+        }
+
+        return null;
+    }
 }

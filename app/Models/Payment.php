@@ -29,7 +29,7 @@ class Payment extends Model
         'bank', 'bank_name', 'branch_name', 'account_name', 'account_number'.
         'default',
         'payfast_payment', 'payfast_base_url', 'payfast_merchant_id', 'payfast_merchant_key',
-        'payfast_passphrase', 'sumup'
+        'payfast_passphrase', 'sumup', 'sumup_api_key', 'sumup_merchant_email', 'sumup_merchant_code'
 
     ];
 

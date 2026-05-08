@@ -180,7 +180,7 @@ class ProductsController extends ControllerHelper
                     }, 'images.image']);
                 }]);
 
-                $query = $query->select('products.id', 'products.title', 'products.overview', 'products.description', 'products.procurement', 'products.slug', 'products.upsell_id', 'products.image',
+                $query = $query->select('products.id', 'products.title', 'products.overview', 'products.description', 'products.procurement', 'products.slug', 'products.upsell_id', 'products.updated_upsell_id', 'products.bundle_deal_id', 'products.image',
                     'products.unit', 'products.tax_rule_id', 'products.shipping_rule_id',
                     'products.brand_id', 'products.purchased',
                     'products.selling', 'products.discount_type', 'products.discount_value', 'products.offered', 'products.status',
@@ -278,7 +278,7 @@ class ProductsController extends ControllerHelper
                 $query = $query->with('brand');
                 $query = $query->with('tax_rules');
 
-                $query = $query->select('products.id', 'products.title', 'products.overview', 'products.description', 'products.procurement','products.slug', 'products.upsell_id', 'products.image',
+                $query = $query->select('products.id', 'products.title', 'products.overview', 'products.description', 'products.procurement','products.slug', 'products.upsell_id', 'products.updated_upsell_id', 'products.bundle_deal_id', 'products.image',
                     'products.unit', 'products.tax_rule_id', 'products.shipping_rule_id',
                     'products.brand_id', 'products.purchased', 'products.selling', 'products.discount_type', 'products.discount_value',
                     'products.offered', 'products.status', 'products.created_at', 'products.meta_title', 'products.meta_description', 'products.meta_keywords', \DB::raw('COALESCE(product_views.views, 0) as views'));
@@ -350,12 +350,10 @@ class ProductsController extends ControllerHelper
 
             $data = $query->paginate(Config::get('constants.api.PAGINATION'));
 
-            if ($request->time_zone) {
-                foreach ($data as $item) {
+            foreach ($data as $item) {
+                if ($request->time_zone) {
                     $item['created'] = Utils::formatDate(Utils::convertTimeToUSERzone($item->created_at, $request->time_zone));
-                }
-            } else {
-                foreach ($data as $item) {
+                }else{
                     $item['created'] = Utils::formatDate($item->created_at);
                 }
             }
@@ -1209,6 +1207,8 @@ class ProductsController extends ControllerHelper
             $categories = Category::whereNull('parent')->with(['child'])->get(['id', 'title']);
             $productCollections = ProductCollection::get(['id', 'title']);
             $brands = Brand::get(['id', 'title']);
+            $updated_upsells = UpdatedUpsell::where('status', 1)->get(['id', 'title']);
+            $bundles = BundleDeal::get(['id', 'title']);
             $products = Product::with('product_categories')
             ->when($categoryId, function ($q) use ($categoryId) {
                 $q->whereHas('product_categories', function($q2) use ($categoryId) {
@@ -1224,6 +1224,8 @@ class ProductsController extends ControllerHelper
                 'categories' => $categories,
                 'collections' => $productCollections,
                 'brands' => $brands,
+                'updated_upsells' => $updated_upsells,
+                'bundles' => $bundles,
                 'products' => $products
             ]);
 
@@ -1243,6 +1245,8 @@ class ProductsController extends ControllerHelper
                 'title',
                 'slug',
                 'upsell_id',
+                'updated_upsell_id',
+                'bundle_deal_id',
                 'image',
                 'unit',
                 'tax_rule_id',
@@ -1288,6 +1292,8 @@ class ProductsController extends ControllerHelper
                         'meta_keywords' => $product['meta_keywords'] ?? $exist->meta_keywords,
                         'meta_description' => $product['meta_description'] ?? $exist->meta_description,
                         'upsell_id' => $product['upsell_id'],
+                        'updated_upsell_id' => (string)$product['updated_upsell_id'] ?? null,
+                        'bundle_deal_id' => $product['bundle_deal_id'] ?? null,
                     ]);
 
                     if(isset($product['categories'])){
@@ -1379,6 +1385,8 @@ class ProductsController extends ControllerHelper
                         'meta_keywords' => $product['meta_keywords'] ?? $exist->meta_keywords,
                         'meta_description' => $product['meta_description'] ?? $exist->meta_description,
                         'upsell_id' => $product['upsell_id'],
+                        'updated_upsell_id' => (string)$product['updated_upsell_id'] ?? null,
+                        'bundle_deal_id' => $product['bundle_deal_id'] ?? null,
                     ]);
 
                     if(isset($product['categories'])){
@@ -1464,6 +1472,8 @@ class ProductsController extends ControllerHelper
                 'title',
                 'slug',
                 'upsell_id',
+                'updated_upsell_id',
+                'bundle_deal_id',
                 'image',
                 'unit',
                 'tax_rule_id',

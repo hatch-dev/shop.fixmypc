@@ -32,6 +32,64 @@
         </span>
       </div>
 
+      <div class="input-wrapper">
+        <label class="mr-10" for="">Voucher Type</label>
+        <dropdown
+          :selectedKey="`${result.apply_type}`"
+          :options="applyTypeObj"
+          @clicked="dropdownApplyType"
+        />
+      </div>
+
+      <div
+        class="input-wrapper"
+        v-if="result.apply_type == 2"
+      >
+        <label>Select Products</label>
+        <div class="dropdown-checkbox" ref="productDropdownWrapper">
+           <div
+            class="dropdown-head"
+            @click.stop="productDropdown = !productDropdown"
+          >
+            {{
+              result.product_ids.length
+                ? result.product_ids.length + ' Products Selected'
+                : 'Select Products'
+            }}
+          </div>
+          <div
+            class="dropdown-body"
+            v-if="productDropdown"
+          >
+            <div
+              class="checkbox-item"
+              v-for="product in products"
+              :key="product.id"
+            >
+              <label>
+                <input
+                  type="checkbox"
+                  :value="product.id"
+                  v-model="result.product_ids"
+                >
+                {{ product.title }}
+              </label>
+            </div>
+          </div>
+        </div>
+        <span
+          class="error"
+          v-if="
+            result.apply_type == 2 &&
+            !result.product_ids.length &&
+            hasError
+          "
+        >
+          Please select products
+        </span>
+      </div>
+
+
       <div class="dply-felx align-start j-left inputs d-block-sm">
         <div class="input-wrapper">
           <div class="flex-v-centered">
@@ -255,18 +313,20 @@
 </template>
 
 <script>
-
+  import Multiselect from 'vue-multiselect'
   import DataPage from '~/components/partials/DataPage'
   import Dropdown from '~/components/Dropdown'
   import util from '~/mixin/util'
   import datetime from 'vuejs-datetimepicker'
-  import {mapGetters} from 'vuex'
+  import {mapActions, mapGetters} from 'vuex'
 
   export default {
     name: "tax-rule",
     middleware: ['common-middleware', 'auth'],
     data() {
       return {
+        productDropdown: false,
+        products: [],
         result: {
           id: '',
           title: '',
@@ -278,17 +338,30 @@
           start_time: '',
           end_time: '',
           type: 1,
-          status: 2
-        }
+          status: 2,
+          apply_type: 1,
+          product_ids: []
+        },
       }
     },
     mixins: [util],
     components: {
       DataPage,
       Dropdown,
-      datetime
+      datetime,
+      Multiselect
     },
     computed: {
+      applyTypeObj() {
+        return {
+          1: {
+            title: 'Global'
+          },
+          2: {
+            title: 'Product Wise'
+          }
+        }
+      },
       dateValidation() {
         return new Date(this.result.end_time) > new Date(this.result.start_time)
       },
@@ -298,18 +371,122 @@
       ...mapGetters('setting', ['setting'])
     },
     methods: {
+      handleOutsideClick(event) {
+        const dropdown =
+          this.$refs.productDropdownWrapper
+        if (
+          dropdown &&
+          !dropdown.contains(event.target)
+        ) {
+          this.productDropdown = false
+        }
+      },
+      dropdownApplyType(data) {
+        this.result.apply_type = Number(data.key)
+
+        if (this.result.apply_type === 1) {
+          this.result.product_ids = []
+        }
+      },
       dropdownPriceType(data) {
         this.result.type = data.key
       },
       dropdownSelected(data) {
         this.result.status = data.key
       },
+      async fetchProducts() {
+        const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/';
+        const response = await this.$axios.get(`${baseUrl}api/admin/product/with-categories`);
+        this.products = response.data.products || [];
+      },
+      ...mapActions('common', ['getRequest'])
     },
     async mounted() {
+      await this.fetchProducts();
+      document.addEventListener(
+        'click',
+        this.handleOutsideClick
+      )
+    },
+    beforeDestroy() {
+      document.removeEventListener(
+        'click',
+        this.handleOutsideClick
+      )
     }
   }
 </script>
 
-<style scoped>
+<style>
+.dropdown-checkbox {
+  position: relative;
+}
 
+.dropdown-head {
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 12px 15px;
+  cursor: pointer;
+  background: var(--bg-color);
+  min-height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: .2s;
+}
+
+.dropdown-head:hover {
+  border-color: var(--primary-color);
+}
+
+.dropdown-head.disabled {
+  cursor: not-allowed;
+  opacity: .75;
+}
+
+.dropdown-body {
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-color);
+  max-height: 260px;
+  overflow-y: auto;
+  position: absolute;
+  width: 100%;
+  z-index: 100;
+  margin-top: 5px;
+  box-shadow: 0 8px 24px var(--shadow-color);
+}
+
+.checkbox-item {
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.checkbox-item:last-child {
+  border-bottom: none;
+}
+
+.checkbox-item label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.checkbox-item:hover {
+  background: var(--hover-color);
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.error {
+  color: var(--danger-text);
+  font-size: 12px;
+  margin-top: 5px;
+  display: block;
+}
 </style>

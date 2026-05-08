@@ -172,6 +172,22 @@
             </div>
 
             <div class="input-wrapper">
+              <label>Short Heading</label>
+              <input
+                type="text"
+                placeholder="Short Heading"
+                v-model="result.short_heading"
+                :class="{invalid: !result.short_heading && hasError}"
+              >
+               <span
+                class="error"
+                v-if="!result.short_heading && hasError"
+              >
+                {{ $t('category.req', { type: 'Short Heading' }) }}
+              </span>
+            </div>
+
+            <div class="input-wrapper">
               <label>{{ $t('category.slug') }}</label>
               <input
                 type="text"
@@ -338,6 +354,23 @@
                 <span class="checkbox-checkmark"></span>
                 <span class="checkbox-label">
                   {{ $t('prod.procurement') }}
+                </span>
+              </label>
+            </div>
+
+            <div class="input-wrapper mlr-7-5 mt-20">
+              <label class="checkbox-container">
+                <input
+                  class="checkbox-input"
+                  type="checkbox"
+                  id="back-order"
+                  v-model="result.back_order"
+                  true-value="1"
+                  false-value="0"
+                >
+                <span class="checkbox-checkmark"></span>
+                <span class="checkbox-label">
+                  Back Order
                 </span>
               </label>
             </div>
@@ -565,6 +598,52 @@
                 />
               </div>
 
+              <!-- Bundle Deals -->
+              <!-- <div class="input-wrapper mlr-7-5">
+                <label class="block">Bundle Deals</label>
+                <dropdown
+                  v-if="allBundleDeals"
+                  :default-null="true"
+                  :selectedKey="result.bundle_deal_id"
+                  :options="allBundleDeals"
+                  @clicked="bundleDealSelected"
+                />
+              </div> -->
+
+              <div class="input-wrapper mlr-7-5 pos-rel">
+                <label class="block">Bundle Deals</label>
+                <div
+                  class="custom-dropdown cp"
+                  @click="showBundleDeals = !showBundleDeals"
+                >
+                  <span>
+                    Select Bundles
+                    <i
+                      class="icon black"
+                      :class="showBundleDeals ? 'arrow-up' : 'arrow-down'"
+                    />
+                  </span>
+                </div>
+                <div
+                  v-if="showBundleDeals"
+                  class="multiple-wrap"
+                  v-outside-click="() => showBundleDeals = false"
+                >
+                  <label
+                    v-for="(item, key) in allBundleDeals"
+                    :key="key"
+                    class="bundle-item"
+                  >
+                    <input
+                      type="checkbox"
+                      :value="key"
+                      v-model="result.bundle_deal_ids"
+                    >
+                    <span class="bundle-text">{{ item.title }}</span>
+                  </label>
+                </div>
+              </div>
+
               <!-- Updated Upsell dropdown -->
               <div class="input-wrapper mlr-7-5">
                 <label class="block">Upsell</label>
@@ -774,6 +853,7 @@
     middleware: ['common-middleware', 'auth'],
     data() {
       return {
+        showBundleDeals: false,
         licence: null,
         categorySearch: '',
         excludeVAT: 0,
@@ -788,11 +868,12 @@
         setImageApi: 'setProductImage',
         setVideoApi: 'setProductVideo',
         fileKeys: ['id', 'tax_rule_id', 'shipping_rule_id'],
-        validationKeys: ['title', 'slug', 'unit', 'meta_title', 'meta_description',
+        validationKeys: ['title', 'slug', 'short_heading', 'unit', 'meta_title', 'meta_description',
           'description', 'overview', 'selling', 'purchased'],
         result: {
           id: '',
           title: '',
+          short_heading: '',
           tags: ',',
           overview: '',
           description: '',
@@ -800,7 +881,7 @@
           brand_id: '',
           primary_category_id: '',
           category_id: '',
-          bundle_deal_id: '',
+          bundle_deal_ids: [],
           unit: '',
           badge: '',
           subcategory_id: '',
@@ -823,6 +904,7 @@
           product_categories: [],
           excludeVAT: 0,
           procurement: 0,
+          back_order: 0,
           upsell_id: '',
           updated_upsell_id: '',
           wholesale_price: '',
@@ -988,9 +1070,6 @@
       brandSelected(data) {
         this.result.brand_id = data.key
       },
-      bundleDealSelected(data) {
-        this.result.bundle_deal_id = data.key
-      },
       redirectingEnable(buttonType) {
         this.redirect = buttonType === 'save'
       },
@@ -1007,6 +1086,8 @@
 
           delete this.result.created_at
           delete this.result.updated_at
+          this.result.bundle_deal_id = (this.result.bundle_deal_ids || []).join(',');
+          delete this.result.bundle_deal_ids;
           const data = await this.setById({id: this.id, params: this.result, api: this.setApi})
 
           if (data) {
@@ -1017,7 +1098,8 @@
             this.result.product_categories = [...new Set(this.result?.product_categories?.map((o) => { return o.category_id.toString() }))]
             this.result.excludeVAT = this.result.excludeVAT ? 1 : 0;
             this.result.procurement = this.result.procurement ? 1 : 0;
-            
+            this.result.back_order = this.result.back_order ? 1 : 0;
+
             // Set product ID for template customizations
             this.productId = this.result.id;
 
@@ -1045,6 +1127,7 @@
 
           this.result.product_collections = [...new Set(this.result?.product_collections?.map((o) => { return o.product_collection_id }))]
           this.result.product_categories = [...new Set(this.result?.product_categories?.map((o) => { return o.category_id.toString() }))]
+          this.result.bundle_deal_ids = this.result.bundle_deal_id ? this.result.bundle_deal_id.split(',').map(String) : [];
           this.excludeVAT = this.result.excludeVAT === 1;
           
           // Set product ID and load customizations
@@ -1426,6 +1509,25 @@
   transition:all .2s ease;
 }
 
+.bundle-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.bundle-item input {
+  margin-top: 3px;
+}
+
+.bundle-text {
+  display: block;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+  width: 100%;
+}
 
 @keyframes spin {
   0% { transform: rotate(0deg); }

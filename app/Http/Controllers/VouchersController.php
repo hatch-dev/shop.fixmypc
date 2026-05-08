@@ -28,6 +28,7 @@ class VouchersController extends ControllerHelper
             }
 
             $voucher = Voucher::where('code', $request->voucher)
+                ->where('apply_type', 1)
                 ->where('status', Config::get('constants.status.PUBLIC'))
                 ->first();
 
@@ -37,27 +38,13 @@ class VouchersController extends ControllerHelper
 
             $q = Cart::with('product_inner');
 
-
-
-
             if ($this->user) {
-
-
                 $q = $q->where('admin_id', $this->user->id);
-
-
-
             } else if ($request->user('user')) {
-
-
                 $q = $q->where('user_id', $request->user('user')->id);
-
             }  else if($request->user_token){
-
                 $q = $q->where('user_token', $request->user_token);
-
             } else {
-
                 return response()->json(Validation::errorLang($lang));
             }
 
@@ -66,44 +53,43 @@ class VouchersController extends ControllerHelper
                 ->with('updated_inventory')
                 ->get();
 
-
-
-
+            $totalAmount = $request->price;
             $totalPriceWithoutShipping = 0;
-            foreach ($existingCart as $key => $cart) {
-                if (!is_null($cart->product_inner)) {
-                //if ($cart->shipping_place_id && !is_null($cart->product_inner)) {
-                    // Selling price calculation
-                    $inventoryPrice = (float)$cart->updated_inventory->price;
-                    $selling = (float)$cart->product_inner->selling;
-                    $offered = (float)$cart->product_inner->offered;
-                    $flashPrice = 0;
-                    if (!is_null($cart->product_inner->end_time)) {
-                        $flashPrice = (float)$cart->product_inner->price;
-                    }
-                    if ($inventoryPrice > 0) {
-                        $currentPrice = $inventoryPrice;
-                    } else if ($flashPrice > 0) {
-                        $currentPrice = $flashPrice;
-                    } else if ($flashPrice > 0) {
-                        $currentPrice = $offered;
-                    } else {
-                        $currentPrice = $selling;
-                    }
-                    // Bundle calculation
-                    $bundleQtyOffer = 0;
-                    $bundleDeal = $cart->product_inner->bundle_deal;
-                    if ($bundleDeal) {
-                        if ($cart->quantity >= $bundleDeal->buy) {
-                            $bundleQtyOffer = $bundleDeal->free;
-                        }
-                    }
-                    $totalPriceWithoutShipping +=
-                        (float)$currentPrice * ((int)$cart->quantity - $bundleQtyOffer);
-                }
-            }
+            // foreach ($existingCart as $key => $cart) {
+            //     if (!is_null($cart->product_inner)) {
+            //     //if ($cart->shipping_place_id && !is_null($cart->product_inner)) {
+            //         // Selling price calculation
+            //         $inventoryPrice = (float)$cart->updated_inventory->price;
+            //         $selling = (float)$cart->product_inner->selling;
+            //         $offered = (float)$cart->product_inner->offered;
+            //         $flashPrice = 0;
+            //         if (!is_null($cart->product_inner->end_time)) {
+            //             $flashPrice = (float)$cart->product_inner->price;
+            //         }
+            //         if ($inventoryPrice > 0) {
+            //             $currentPrice = $inventoryPrice;
+            //         } else if ($flashPrice > 0) {
+            //             $currentPrice = $flashPrice;
+            //         } else if ($flashPrice > 0) {
+            //             $currentPrice = $offered;
+            //         } else {
+            //             $currentPrice = $selling;
+            //         }
+            //         // Bundle calculation
+            //         $bundleQtyOffer = 0;
+            //         $bundleDeal = $cart->product_inner->bundle_deal;
+            //         if ($bundleDeal) {
+            //             if ($cart->quantity >= $bundleDeal->buy) {
+            //                 $bundleQtyOffer = $bundleDeal->free;
+            //             }
+            //         }
+            //         $totalPriceWithoutShipping +=
+            //             (float)$currentPrice * ((int)$cart->quantity - $bundleQtyOffer);
+            //     }
+            // }
 
-            if ($totalPriceWithoutShipping < $voucher->min_spend) {
+            // if ($totalPriceWithoutShipping < $voucher->min_spend) {
+            if ($totalAmount < $voucher->min_spend) {
                 $setting = Setting::select('currency', 'currency_icon')->first();
                 return response()->json(Validation::error(null,
                     __('lang.least_spend', ['amount' => $setting->currency_icon . $voucher->min_spend], $lang)
@@ -153,16 +139,33 @@ class VouchersController extends ControllerHelper
                 if ((int)$voucher->type === (int)Config::get('constants.priceType.FLAT')) {
                     $offered = $voucher->price;
                 } else {
-                    $offered = number_format(
-                        (float)($voucher->price * $totalPriceWithoutShipping) / 100,
+                    // $offered = number_format(
+                    //     (float)($voucher->price * $totalPriceWithoutShipping) / 100,
+                    //     2, '.', ''
+                    // );
+                     $offered = number_format(
+                        (float)($voucher->price * $totalAmount) / 100,
                         2, '.', ''
                     );
                 }
                 if (!is_null($voucher->capped_price) && $offered > $voucher->capped_price) {
                     $offered = (int)$voucher->capped_price;
                 }
+                
+                foreach ($existingCart as $cart) {
+                    if ($cart->voucher_code) {
+                        Cart::where('id', $cart->id)
+                            ->update([
+                                'price' => (float) $cart->original_price,
+                                'voucher_code' => null,
+                                'voucher_discount' => 0,
+                                'original_price' => null
+                            ]);
+                    }
+                }
+
                 return response()->json(new Response($request->token,
-                    ['offered' => $offered, 'voucher' => $request->voucher]));
+                    ['offered' => $offered, 'voucher' => $request->voucher, 'apply_type' => $voucher->apply_type]));
             }
 
             return response()->json(Validation::error(null,
@@ -248,7 +251,7 @@ class VouchersController extends ControllerHelper
                 });
                 $query = $query->select('vouchers.*', 'trl.title');
             }
-            $data = $query->find($id);
+            $data = $query->with('products:id')->find($id);
 
             if ($this->isVendor && $isOwner = Utils::isDataOwner($this->user, $data)) {
                 return $isOwner;
@@ -257,6 +260,8 @@ class VouchersController extends ControllerHelper
             if (is_null($data)) {
                 return response()->json(Validation::noDataLang($lang));
             }
+
+            $data['product_ids'] = $data->products ? $data->products->pluck('id') : [];
 
             return response()->json(new Response($request->token, $data));
 
@@ -308,9 +313,21 @@ class VouchersController extends ControllerHelper
                     return $isOwner;
                 }
 
-                $filtered = array_filter($request->all(), function ($element) {
-                    return '' !== trim($element);
-                });
+                // $filtered = array_filter($request->all(), function ($element) {
+                //     return '' !== trim($element);
+                // });
+
+                $filtered = array_filter(
+                    $request->all(),
+                    function ($element) {
+
+                        if (is_array($element)) {
+                            return !empty($element);
+                        }
+
+                        return '' !== trim((string)$element);
+                    }
+                );
 
 
                 if ($lang) {
@@ -331,7 +348,17 @@ class VouchersController extends ControllerHelper
                         VoucherLang::where('id', $existingLang->id)->update($langData);
                     }
                 } else {
+                    unset($filtered['product_ids']);
+                    unset($filtered['products']);
                     Voucher::where('id', $id)->update($filtered);
+                }
+
+                if ($request->apply_type == 2) {
+                    $existing->products()->sync(
+                        $request->product_ids ?? []
+                    );
+                } else {
+                    $existing->products()->detach();
                 }
 
 
@@ -355,7 +382,11 @@ class VouchersController extends ControllerHelper
 
 
                 if ($lang) {
-                    [$langData, $mainData] = Utils::seperateLangData($request->all(), ['title']);
+                    $data = $request->except([
+                        'product_ids',
+                        'products'
+                    ]);
+                    [$langData, $mainData] = Utils::seperateLangData($data, ['title']);
                     $voucher = Voucher::create($mainData);
 
                     $langData['voucher_id'] = $voucher->id;
@@ -364,8 +395,21 @@ class VouchersController extends ControllerHelper
                     $id = $voucher->id;
 
                 } else {
-                    $voucher = Voucher::create($request->all());
+                    $data = $request->except([
+                        'product_ids',
+                        'products'
+                    ]);
+
+                    $voucher = Voucher::create($data);
                     $id = $voucher->id;
+                }
+                if (
+                    $request->apply_type == 2 &&
+                    $request->product_ids
+                ) {
+                    $voucher->products()->sync(
+                        $request->product_ids
+                    );
                 }
             }
 
@@ -378,9 +422,9 @@ class VouchersController extends ControllerHelper
                 });
                 $query = $query->select('vouchers.*', 'trl.title');
             }
-            $data = $query->find($id);
+            $data = $query->with('products:id')->find($id);
 
-
+            $data['product_ids'] = $data->products ? $data->products->pluck('id') : [];
             if ($request->time_zone) {
                 $data['created'] = Utils::formatDate(Utils::convertTimeToUSERzone($data->created_at, $request->time_zone));
                 $data['start_time'] = Utils::convertTimeToUSERzone($data->start_time, $request->time_zone);

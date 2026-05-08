@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-w-600x mlr-auto">
+  <div class="mlr-auto">
 
     <div class="mb-20 card p-20">
       <h4>{{ $t('title.epd') }}</h4>

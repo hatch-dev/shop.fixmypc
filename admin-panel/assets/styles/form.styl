@@ -2,7 +2,7 @@
 
 .form-wrapper
   position relative
-  padding 20px
+  padding 14px
 
   .dply-felx.inputs
     gap 10px
@@ -29,7 +29,7 @@
     display flex
     align-items center
     border-radius 8px
-    border 1px dashed #ddd
+    border 1px dashed border-strong
 
     input[type="file"]
       opacity 0
@@ -75,19 +75,19 @@
     border-radius 0 border-radius border-radius 0
 
 .input-wrap
-  margin-bottom 15px
+  margin-bottom 12px
 
   label
     font-size .85em
-    font-weight 600
-    margin-bottom 10px
+    font-weight 550
+    margin-bottom 6px
     display block
 
   textarea
   input
     width 100%
     display block
-    border 1px solid #ddd
+    border 1px solid border-strong
     padding 0 15px
 
   textarea
@@ -99,11 +99,11 @@
 
     & > span
       padding 0 10px
-      background #f3f4f6
+      background hover-color
       font-size .9em
       display flex
       align-items center
-      border 1px solid #ddd
+      border 1px solid border-strong
       border-radius 5px 0 0 5px !important
 
     & > input
@@ -113,7 +113,7 @@
 /* RESPONSIVE */
 @media only screen and (max-width: 992px)
   .form-wrapper
-    padding 15px
+    padding 12px
 
 @media only screen and (max-width: 768px)
   .file-wrapper
@@ -125,7 +125,7 @@
 
   .form-wrapper
     position relative
-    padding 20px
+    padding 12px
 
     .dply-felx.inputs
       .input-wrapper:last-child

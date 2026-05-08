@@ -67,6 +67,9 @@
         }
 
         this.$emit('input', newQty)
+        this.$emit('value-changed', {
+          direction: direction
+        })
       },
       ...mapActions('common', ['setToastError']),
     },

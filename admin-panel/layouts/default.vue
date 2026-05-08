@@ -115,7 +115,7 @@
       document.body.classList.add(this.currentLanguage?.direction || 'ltr')
 
       if(!this.profile){
-        if(!process.env.apiBase.trim()) {
+        if(!(process.env.apiBase || '').trim()) {
           this.$axios.defaults.baseURL = window.location.origin + '/'
         }
       }

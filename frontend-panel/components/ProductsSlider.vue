@@ -1,18 +1,11 @@
 <template>
-  <div
-    v-if="itemList.product_collections.length"
-    class="area home-section"
-  >
-    <div class="flex sided title">
-      <h4>{{ title }}</h4>
-      <nuxt-link
-        class="link"
-        :to="collectionLink(linkObj)"
-      >
-        {{ $t('featured.showAll') }}
-      </nuxt-link>
+  <div class="featured-box p-4 mb-4" v-if="itemList.product_collections.length">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0">{{ title }}</h5>
+        <nuxt-link class="small text-dark" :to="collectionLink(linkObj)">
+          {{ $t('featured.showAll') }}
+        </nuxt-link>
     </div>
-
     <div class="area-content shimmer-wrapper">
       <image-slider
         :per-view="perView"
@@ -20,8 +13,7 @@
         :responsive="perViewResponsive"
       >
         <template v-slot:content>
-
-          <li
+          <li class="product-listing"
             v-for="(value, index) in itemList.product_collections"
             :key="index"
           >
@@ -30,7 +22,6 @@
             />
           </li>
         </template>
-
       </image-slider>
     </div>
   </div>
@@ -54,12 +45,12 @@
       },
       perView: {
         type: Number,
-        default: 6
+        default: 4
       },
       perViewResponsive: {
         type: Array,
         default(){
-          return [5, 4, 3, 2, 2]
+          return [4, 3, 1, 1, 1]
         }
       },
     },
@@ -94,4 +85,16 @@
     }
   }
 </script>
+<style scoped>
+.featured-box {
+  background: #F3F5FC;
+  border-radius: 20px;
+}
+
+.product-listing {
+    background-color: #fff;
+    border-radius: 20px;
+    margin-right: 10px !important;
+}
+</style>
 

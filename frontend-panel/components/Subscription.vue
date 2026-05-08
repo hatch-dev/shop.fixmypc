@@ -1,79 +1,53 @@
 <template>
-  <div
-    class="subscription-wrapper pt-20 pb-15"
-  >
-    <div class="container">
-      <div
-        class="flex sided block-md"
-      >
-        <div class="mn-w-50 mb-10">
-          <h3 class="bold">{{ $t('home.subscribeNewsletter') }}</h3>
-          <p class="color-lite">{{ $t('home.getLatestEmail') }}</p>
+  <div class="row align-items-center mb-4">
+    <div class="col-lg-6">
+      <h4 class="subscription-text">Free Monthly Newsletter</h4>
+      <p class="small text-light subscription-description">
+        Subscribe to our newsletter for all the latest news and cool tips and tricks to keep your mobile devices safe & secure. We promise we never spam, and you can unsubscribe easily.
+      </p>
+    </div>
+    <div class="col-lg-6">
+      <form class="newsletter-box"  @submit.prevent="formSubmit">
+        <div class="d-flex gap-2 flex-wrap">
+          <input
+            type="email"
+            v-model="email"
+            :placeholder="$t('contact.your', { type: $t('contact.email') })"
+            class="form-control"
+          />
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            :disabled="formSubmitting"
+          >
+            <span v-if="formSubmitting">Loading...</span>
+            <span v-else>
+              Subscribe <i class="bi bi-arrow-right"></i>
+            </span>
+          </button>
         </div>
-        <form
-          class="flex mn-w-50 j-end j-start-md mb-10"
-          @submit.prevent="formSubmit"
+      </form>
+      <div v-if="messageSent" class="alert alert-success d-flex align-items-center">
+          <i class="bi bi-check-circle me-2"></i>
+          <span>{{ $t('home.subscribeSuccessMsg') }}</span>
+        </div>
+      <div v-if="hasFormError" class="mt-2">
+        <span
+          class="text-danger d-block"
+          v-for="(value, index) in errors"
+          :key="index"
         >
-          <div class="mx-w-400x grow">
-            <div class="grow">
-              <div
-                v-if="!messageSent"
-                class="flex grow wrap gap-10"
-              >
-                <div class="m-0 icon-input flex grow">
-                  <i
-                    class="icon email-icon"
-                  />
-                  <input
-                    type="text"
-                    v-model="email"
-                    :placeholder="$t('contact.your', { type: $t('contact.email') })"
-                    class="plr-15 grow"
-                  >
-                </div>
+          {{ value }}
+        </span>
 
+        <span class="text-danger d-block" v-if="!email">
+          {{ $t('addressPopup.isRequired', { type: $t('addressPopup.email') }) }}
+        </span>
 
-                <ajax-button
-                  class="primary-btn plr-25 plr-sm-15"
-                  :fetching-data="formSubmitting"
-                  :text="$t('home.subscribe')"
-                />
-              </div>
-              <div class="success-msg flex"  v-else>
-                <i class="mr-10 icon tick-icon"/>
-                <h4>
-                  {{ $t('home.subscribeSuccessMsg') }}
-                </h4>
-              </div>
-            </div>
-
-            <div
-              v-if="hasFormError && errors && errors.length"
-            >
-              <span
-                class="error"
-                v-for="(value, index) in errors"
-                :key="index"
-              >
-                {{ value }}
-              </span>
-            </div>
-
-            <span
-              class="error"
-              v-if="!email && hasFormError"
-            >
-              {{ $t('addressPopup.isRequired', {type: $t('addressPopup.email') }) }}
-            </span>
-            <span
-              class="error"
-              v-else-if="invalidEmail && hasFormError"
-            >
-              {{ $t('contact.invalidEmail') }}
-            </span>
-          </div>
-        </form>
-
+        <span class="text-danger d-block" v-else-if="invalidEmail">
+          {{ $t('contact.invalidEmail') }}
+        </span>
       </div>
     </div>
   </div>
@@ -134,4 +108,62 @@
     },
   }
 </script>
+
+<style scoped>
+.footer-section {
+  background: #3b33a5;
+  color: #fff;
+  padding-top: 50px;
+}
+
+.newsletter-box {
+  background: rgba(0,0,0,0.15);
+  border-radius: 50px;
+  padding: 8px;
+  align-items: center;
+}
+
+.newsletter-box input {
+  border: none;
+  background: transparent;
+  color: #fff;
+  padding: 10px 15px;
+  flex: 1;
+}
+
+.newsletter-box input::placeholder {
+  color: #ddd;
+}
+
+.newsletter-box button {
+  background: #22c55e;
+  border: none;
+  border-radius: 30px;
+  padding: 0px 20px;
+  color: #fff;
+}
+
+.subscription-text {
+    font-size: 36px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.subscription-description {
+    font-size: 14px;
+    font-weight: 400;
+    color: #C7C7EC !important;
+    line-height: 1.4em;
+}
+
+@media (max-width: 767px) {
+  .subscription-text {
+      font-size: 25px !important;
+  }
+
+  .newsletter-box{
+    margin-top: 20px;
+  }
+}
+</style>
 

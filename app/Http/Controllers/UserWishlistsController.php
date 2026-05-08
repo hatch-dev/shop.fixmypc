@@ -61,22 +61,21 @@ class UserWishlistsController extends Controller
 
 
 
-            if ($lang) {
-                $query = $query->with(['product' => function ($query) use ($lang) {
+            $query = $query->with([
+                'product' => function ($query) use ($lang) {
 
-                    $query->leftJoin('product_langs as pl', function ($join) use ($lang) {
-                        $join->on('pl.product_id', '=', 'products.id');
-                        $join->where('pl.lang', $lang);
-                    })
-                        ->select(['products.id', 'products.slug', 'pl.badge', 'pl.title',
-                            'products.selling', 'products.offered',
-                            'products.image', 'flash_sale_products.price',
-                            'flash_sales.end_time']);
+                    if ($lang) {
+                        $query->leftJoin('product_langs as pl', function ($join) use ($lang) {
+                            $join->on('pl.product_id', '=', 'products.id');
+                            $join->where('pl.lang', $lang);
+                        });
+                    }
+                },
 
-                }]);
-            } else {
-                $query = $query->with(['product']);
-            }
+                'product.product_inventories' => function ($q) {
+                    $q->select('id', 'product_id', 'quantity');
+                }
+            ]);
 
 
 

@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="banner2 || banner3 || banner4"
-    class="product-banner"
+    class="product-banner mb-4"
   >
     <banner
       v-if="banner2"

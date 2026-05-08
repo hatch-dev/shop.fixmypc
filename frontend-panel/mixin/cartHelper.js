@@ -18,13 +18,13 @@ export default {
       return this.$auth?.user?.id && this.product?.wishlisted
     },
     maxQuantity() {
+      if (this.productInventory?.is_active == 1) return 9999
       return parseInt(this.productInventory?.quantity || 0)
     },
     isInStock() {
-      if (this.inventory) {
-        return this.inventory.quantity > 0
-      }
-      return this.product?.in_stock
+      if (!this.productInventory) return false
+      if(this.productInventory.is_active == 1) return true
+      return this.productInventory.quantity > 0
     },
     ...mapGetters('common', ['currencyIcon', 'setting']),
     ...mapGetters('language', ['langCode']),
@@ -41,12 +41,19 @@ export default {
 
         this.buyingNow = true
 
+        // const finalPrice = this.finalUnitPrice || this.product.selling
+
+        const offered = Number(this.product.offered)
+        const selling = Number(this.product.selling)
+        // const finalPrice = !isNaN(offered) && offered > 0 ? offered : selling
+        const finalPrice = this.selectedVoucher ? Number(this.discountedPrice) : (offered > 0 ? offered : selling);
         await this.buyNow({
           payload: {
             user_token: await this.getUserToken(),
             product_id: this.product.id,
             inventory_id: this.productInventory.id,
-            quantity: this.quantity
+            quantity: this.quantity,
+            price: finalPrice
           },
           lang: this.langCode
         }).then(() => {
@@ -68,10 +75,12 @@ export default {
         quantity: null
       }
 
-      if (!this.isInStock) {
-        this.setToastError(this.$t('detailRight.outOfStock'))
-        return false
-      }
+
+      const inventory = this.productInventory || {}
+      const isBackOrder = inventory?.is_active == 1
+      const stockQty = Number(inventory?.quantity || 0)
+
+      
 
       if (Object.values(this.productInventory).length === 0) {
         const attr = this.product?.attribute.map(i=>{
@@ -85,8 +94,12 @@ export default {
         return false
       }
 
-      if (this.productInventory.quantity < this.quantity) {
+      if (!isBackOrder && stockQty <= 0) {
+        this.setToastError(this.$t('detailRight.outOfStock'))
+        return false
+      }
 
+      if (!isBackOrder && this.productInventory.quantity < this.quantity) {
         this.cartError.quantity = this.$t('detailRight.exceedsInventory')
         this.emitCartError()
         return false
@@ -103,10 +116,16 @@ export default {
 
       } else {
         await this.cartAdd()
+        this.$emit('added-to-cart')
       }
     },
     async cartAdd() {
       this.ajaxing = true
+      // const finalPrice = this.finalUnitPrice || this.product.selling
+      const offered = Number(this.product.offered)
+      const selling = Number(this.product.selling)
+      // const finalPrice = !isNaN(offered) && offered > 0 ? offered : selling
+      const finalPrice = this.selectedVoucher ? Number(this.discountedPrice) : (offered > 0 ? offered : selling);
       await this.cartAction({
         payload: {
           user_token: await this.getUserToken(),
@@ -114,7 +133,12 @@ export default {
             user_token: await this.getUserToken(),
             product_id: this.product.id,
             inventory_id: this.productInventory?.id,
-            quantity: this.quantity
+            quantity: this.quantity,
+
+            price: finalPrice,
+            voucher_code: this.selectedVoucher?.code || null,
+            voucher_discount: this.selectedVoucher ? Number(this.voucherDiscountAmount) : 0,
+            original_price: Number(this.product.offered) > 0 ? Number(this.product.offered) : Number(this.product.selling)
           },
           isBundle: !!this.product?.bundle_deal,
           storeVal: {
@@ -122,7 +146,10 @@ export default {
               id: this.product.id,
               title: this.product.title,
               offered: this.product.offered,
-              selling: this.product.selling,
+              selling: finalPrice,
+              voucher_code: this.selectedVoucher?.code || null,
+              voucher_discount: this.selectedVoucher ? Number(this.voucherDiscountAmount) : 0,
+              original_price: Number(this.product.offered) > 0 ? Number(this.product.offered) : Number(this.product.selling),
               image: this.product.image,
               shipping_rule: this.product.shipping_rule
             },

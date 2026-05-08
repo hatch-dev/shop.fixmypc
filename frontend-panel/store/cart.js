@@ -3,13 +3,21 @@ import Service from '@/services/service.js'
 
 const state = () => ({
   cartCount: 0,
-  cartProducts: []
+  cartProducts: [],
+  flashDiscount: null,
+  selectedAddress: null
 })
 const getters = {
   cartCount: ({ cartCount }) => cartCount,
   cartProducts: ({ cartProducts }) => cartProducts
 }
 const mutations = {
+  SET_SELECTED_ADDRESS(state, payload) {
+    state.selectedAddress = payload
+  },
+  SET_FLASH_DISCOUNT(state, payload) {
+    state.flashDiscount = payload
+  },
   UPDATE_SELECTED (state, obj) {
     state.cartProducts[obj.key].selected = obj.value
   },

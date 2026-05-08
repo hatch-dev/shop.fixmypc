@@ -20,17 +20,37 @@ export default {
       {charset: 'utf-8'},
       {
         name: 'viewport',
-        content: 'width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1'
+        content: 'width=device-width,initial-scale=1,width=device-width, initial-scale=1'
       },
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.png' },
       {
+        rel: 'preconnect',
+        href: 'https://fonts.googleapis.com'
+      },
+      {
+        rel: 'preconnect',
+        href: 'https://fonts.gstatic.com'
+      },
+      {
         rel: 'stylesheet',
         href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css'
+      },
+      {
+        rel: 'stylesheet',
+        href: 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css'
+      },
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap'
       }
     ],
     script : [
+      {
+        src: "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js",
+        defer: true
+      },
       {
         src: "https://gateway.sumup.com/gateway/ecom/card/v2/sdk.js",
         defer: true

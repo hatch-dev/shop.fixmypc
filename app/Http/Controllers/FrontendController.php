@@ -11,6 +11,9 @@ use App\Models\CustomScript;
 use App\Models\FlashSale;
 use App\Models\FlashSaleProduct;
 use App\Models\FooterImageLink;
+use App\Models\PointTransaction;
+use App\Models\GiftVoucher;
+use App\Models\RecentlyViewedProduct;
 use App\Models\FooterLink;
 use App\Models\HeaderLink;
 use App\Models\Helper\FileHelper;
@@ -19,6 +22,8 @@ use App\Models\Helper\Utils;
 use App\Models\Helper\Validation;
 use App\Models\HomeSlider;
 use App\Models\Language;
+use App\Models\BusinessProductPricing;
+use App\Models\BundleDeal;
 use App\Models\Order;
 use App\Models\Page;
 use App\Models\Payment;
@@ -36,6 +41,8 @@ use App\Models\Tag;
 use App\Models\UpdatedInventory;
 use App\Models\UserFollowStore;
 use App\Models\Voucher;
+use App\Models\Upsell;
+use App\Models\UpdatedUpsell;
 use App\Models\ProductTemplateCustomization;
 use App\Models\ProductView;
 use Illuminate\Http\Request;
@@ -47,6 +54,7 @@ use Illuminate\Support\Facades\Auth;
 
 class FrontendController extends Controller
 {
+
     public function all(Request $request)
     {
         try {
@@ -54,6 +62,7 @@ class FrontendController extends Controller
             $lang = $request->header('language');
 
             $query = Product::query();
+            $query = $query->with(['product_inventories']);
             $query = $query->leftJoin('flash_sales', function ($join) {
 
                 $join->on('products.id', '=', 'flash_sale_products.product_id');
@@ -610,7 +619,11 @@ class FrontendController extends Controller
             $lang = $request->header('language');
 
 
-            $query = Category::query()->where("categories.in_frontend",1);
+            $query = Category::query()
+            ->where("categories.in_frontend", 1)
+            ->whereNull('parent')
+            ->where('categories.status', Config::get('constants.status.PUBLIC'))
+            ->withCount('products');
 
             if ($lang) {
 
@@ -618,18 +631,23 @@ class FrontendController extends Controller
                     $join->on('scl.category_id', '=', 'categories.id');
                     $join->where('scl.lang', $lang);
                 });
-                $query = $query->select('categories.id', 'categories.slug',
-                    'categories.image', 'scl.title', 'scl.meta_title', 'scl.meta_description', 'scl.meta_keywords');
 
+                $query = $query->addSelect(
+                    'categories.id',
+                    'categories.slug',
+                    'categories.image',
+                    'scl.title',
+                    'scl.meta_title',
+                    'scl.meta_description',
+                    'scl.meta_keywords');
 
             } else {
-                $query = $query->select('title', 'image', 'slug', 'id');
+                $query->addSelect('categories.id', 'categories.title', 'categories.image', 'categories.slug');
             }
 
-
-            $query = $query->where('categories.status', Config::get('constants.status.PUBLIC'));
-		
-            $data = $query->paginate(Config::get('constants.frontend.PAGINATION'));
+            $page = $request->get('page', 1);
+            $perPage = $request->get('per_page', Config::get('constants.frontend.PAGINATION'));
+            $data = $query->paginate($perPage, ['*'], 'page', $page);
 
             return response()->json(new Response($request->token, $data));
 
@@ -668,7 +686,9 @@ class FrontendController extends Controller
 
 
             $query = $query->where('brands.status', Config::get('constants.status.PUBLIC'));
-            $data = $query->paginate(Config::get('constants.frontend.PAGINATION'));
+            $page = $request->get('page', 1);
+            $perPage = $request->get('per_page', Config::get('constants.frontend.PAGINATION'));
+            $data = $query->paginate($perPage, ['*'], 'page', $page);
 
             return response()->json(new Response($request->token, $data));
 
@@ -815,6 +835,7 @@ class FrontendController extends Controller
 
 
             $query = Product::query();
+            $query = $query->with(['product_inventories']);
             $query = $query->leftJoin('flash_sales', function ($join) {
 
                 $join->on('products.id', '=', 'flash_sale_products.product_id');
@@ -1531,6 +1552,7 @@ class FrontendController extends Controller
                     // FEATURED CATEGORIES
                     $featured_categories = Category::where('featured', Config::get('constants.status.PUBLIC'))
                         ->where('status', Config::get('constants.status.PUBLIC'))
+                        ->whereNull('parent')
                         ->where('in_frontend',1)
                         ->offset(0)
                         ->leftJoin('category_langs as cl', function ($join) use ($lang) {
@@ -1579,7 +1601,7 @@ class FrontendController extends Controller
                         'product_collections' => function ($query) use ($totalCollectionProduct, $lang) {
                             $query->take($totalCollectionProduct);
                             $query->orderBy('updated_at', 'DESC');
-
+                            $query->with(['product.product_inventories']);
                             $query->leftJoin('product_langs as avl',
                                 function ($join) use ($lang) {
                                     $join->on('products.id', '=', 'avl.product_id');
@@ -1637,6 +1659,7 @@ class FrontendController extends Controller
                     // FEATURED CATEGORIES
                     $featured_categories = Category::where('featured', Config::get('constants.status.PUBLIC'))
                         ->where('status', Config::get('constants.status.PUBLIC'))
+                        ->whereNull('parent')
                         ->offset(0)
                         ->limit(Config::get('constants.homePagePagination.FEATURED_CATEGORIES'))
                         ->get();
@@ -1657,6 +1680,7 @@ class FrontendController extends Controller
                         function ($query) use ($totalCollectionProduct) {
                             $query->take($totalCollectionProduct);
                             $query->orderBy('updated_at', 'DESC');
+                            $query->with(['product.product_inventories']);
                         }
                     ])
                         ->where('status', Config::get('constants.status.PUBLIC'))
@@ -1693,6 +1717,10 @@ class FrontendController extends Controller
 
 
                 $data['featured_categories'] = $featured_categories;
+
+                $data['categories'] = Category::whereNull('parent')
+                ->select('id', 'title', 'slug', 'image')
+                ->get();
 
 
                 $data['flash_sales'] = [];
@@ -1770,7 +1798,24 @@ class FrontendController extends Controller
         }
     }
 
-   public function product(Request $request, $id)
+    private function storeRecentlyViewed($productId)
+    {
+        $user = Auth::user();
+
+        if (!$user) return;
+
+        RecentlyViewedProduct::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'product_id' => $productId
+            ],
+            [
+                'updated_at' => now()
+            ]
+        );
+    }
+
+    public function product(Request $request, $id)
     {
         try {
 
@@ -1912,7 +1957,11 @@ class FrontendController extends Controller
                     $data['vouchers'] = Voucher::where('end_time', '>=', $currentTime)
                         ->where('start_time', '<=', $currentTime)
                         ->where('status', Config::get('constants.status.PUBLIC'))
-                        ->select('title', 'price', 'type', 'code', 'min_spend', 'usage_limit', 'limit_per_customer')
+                        ->where('apply_type', 2)
+                        ->whereHas('products', function ($q) use ($id) {
+                            $q->where('products.id', $id);
+                        })
+                        ->select('id','title', 'price', 'type', 'code', 'min_spend', 'usage_limit', 'limit_per_customer', 'apply_type')
                         ->get();
 
 
@@ -1987,7 +2036,7 @@ class FrontendController extends Controller
                     $query = Product::query();
 
                     $query = $query->with(['brand' => function ($query) {
-                        $query->select('brands.id', 'brands.title');
+                        $query->select('brands.id', 'brands.title', 'brands.image');
                     }])
                         ->with('store')
                         ->with('bundle_deal')
@@ -2097,7 +2146,11 @@ class FrontendController extends Controller
                     $data['vouchers'] = Voucher::where('end_time', '>=', $currentTime)
                         ->where('start_time', '<=', $currentTime)
                         ->where('status', Config::get('constants.status.PUBLIC'))
-                        ->select('title', 'price', 'type', 'code', 'min_spend', 'usage_limit', 'limit_per_customer')
+                        ->where('apply_type', 2)
+                        ->whereHas('products', function ($q) use ($id) {
+                            $q->where('products.id', $id);
+                        })
+                        ->select('id','title', 'price', 'type', 'code', 'min_spend', 'usage_limit', 'limit_per_customer', 'apply_type')
                         ->get();
                 }
 
@@ -2140,6 +2193,10 @@ class FrontendController extends Controller
                 return $data;
 
             });
+
+            if ($productData) {
+                $this->storeRecentlyViewed($id);
+            }
 
             return response()->json(new Response(null, $productData));
 
@@ -2637,5 +2694,261 @@ class FrontendController extends Controller
         }
 
 
+    }
+
+    public function businessProduct(Request $request, $id){
+        try{
+            $user = Auth::user();
+            if (!$user || $user->account_type !== 'business') {
+                return response()->json([
+                    'product_id' => $id,
+                    'pricing' => []
+                ]);
+            }
+            $pricing = BusinessProductPricing::where('product_id', $id)->get();
+
+            $data = [
+                'product_id' => $id,
+                'pricing' => $pricing->map(function ($item) {
+                    return [
+                        'min' => $item->min_qty,
+                        'max' => $item->max_qty,
+                        'wholesale_price' => $item->wholesale_price,
+                        'discount_type' => $item->discount_type,
+                        'discount_value' => $item->discount_value,
+                        'final_price' => $item->final_price,
+                    ];
+                })
+            ];
+
+            return response()->json(new Response(null, $data));
+
+        } catch (\Exception $e) {
+            return response()->json(Validation::error(null, $e->getMessage()));
+        }
+    }
+
+    public function bundleDeals(Request $request){
+        try{
+            $data = BundleDeal::with('products')->get();
+
+            foreach ($data as $item) {
+                $item['created'] = Utils::formatDate($item->created_at);
+                $total = $item->products->sum(function ($p) {
+                    $selling = $p->selling ?? 0;
+                    $offered = $p->offered ?? 0;
+                    return $offered > 0 ? $offered : $selling;
+                });
+
+                $discountAmount = 0;
+
+                if ($item->discount_type === 'percentage') {
+                    $discountAmount = ($total * $item->discount_value) / 100;
+                } else {
+                    $discountAmount = $item->discount_value;
+                }
+
+                $final = $total - $discountAmount;
+
+                $item['total_price'] = round($total, 2);
+                $item['discount_amount'] = round($discountAmount, 2);
+                $item['final_price'] = round(max($final, 0), 2);
+            }
+
+            return response()->json(new Response(null, $data));
+
+        } catch (\Exception $e) {
+            return response()->json(Validation::error(null, $e->getMessage()));
+        }
+    }
+
+    public function productCrossellUpsell(Request $request, $id){
+        try{
+
+            $product = Product::where('id', $id)->firstOrFail();
+
+            $mainInventory = UpdatedInventory::where(
+                'product_id',
+                $product->id
+            )->orderByDesc('quantity')->first();
+
+            $bundleData = [];
+            if (!empty($product->bundle_deal_id)) {
+                $dealIds = explode(",", (string) $product->bundle_deal_id);
+                $bundles = BundleDeal::whereIn('id', $dealIds)->with('products')->get();
+
+                foreach ($bundles as $bundle) {
+                    $bundleItems = [];
+                    $total = 0;
+                    foreach ($bundle->products as $bundleProduct) {
+
+                        $price = $bundleProduct->offered ?? 0;
+
+                        $total += $price;
+
+                        $bundleItems[] = [
+                            'id' => $bundleProduct->id,
+                            'name' => $bundleProduct->title,
+                            'price' => $price,
+                            'old_price' => $bundleProduct->selling,
+                            'image' => $bundleProduct->image
+                        ];
+                    }
+                    $discount = 0;
+
+                    if ($bundle->discount_type === 'fixed') {
+                        $discount = $bundle->discount_value;
+                    }elseif ($bundle->discount_type === 'percentage') {
+                        $discount = ($total * $bundle->discount_value) / 100;
+                    }
+
+                    $bundleData[] = [
+                        'id' => $bundle->id,
+                        'title' => $bundle->title,
+                        'description' => $bundle->description,
+                        'items' => $bundleItems,
+                        'total_price' => $total,
+                        'discount' => $discount,
+                        'final_price' => max($total - $discount, 0)
+                    ];
+                }
+
+            }
+
+            $crossSell = Upsell::where(['id' => $product->upsell_id])->with(['products.product'])->first();
+
+            $crossSellItems = [];
+
+            if ($crossSell && $crossSell->products) {
+                foreach ($crossSell->products as $item) {
+                    if ($item->product_id == $product->id) continue;
+                    if ($item->product) {
+                        $inventory = UpdatedInventory::where(
+                            'product_id',
+                            $item->product->id
+                        )->orderByDesc('quantity')->first();
+                        $crossSellItems[] = [
+                            'id' => $item->product->id,
+                            'inventory_id' => $inventory?->id,
+                            'name' => $item->product->title,
+                            'price' => $item->price ?? $item->product->offered,
+                            'old_price' => $item->product->selling,
+                            'image' => $item->product->image
+                        ];
+                    }
+                }
+            }
+
+
+            $crossSell = Upsell::where(['id' => $product->upsell_id])->with(['products.product'])->first();
+
+            $upsell = UpdatedUpsell::where(['id' => $product->updated_upsell_id])->with('items.ramOptions')->first();
+
+            $upsellServices = [];
+
+            if ($upsell) {
+                foreach ($upsell->items as $service) {
+
+                    $options = [];
+
+                    foreach ($service->ramOptions as $option) {
+                        $options[] = [
+                            'id' => $option->id,
+                            'name' => $option->name,
+                            'price' => $option->price
+                        ];
+                    }
+
+                    $upsellServices[] = [
+                        'id' => $service->id,
+                        'title' => $service->title,
+                        'type' => $service->type, // checkbox / radio
+                        'image' => $service->image,
+                        'description' => $service->description,
+                        'price' => $service->service_price,
+                        'options' => $options
+                    ];
+                }
+            }
+
+            return response()->json([
+                'main_product' => [
+                    'id' => $product->id,
+                    'inventory_id' => $mainInventory?->id,
+                    'name' => $product->title,
+                    'price' => $product->offered,
+                    'old_price' => $product->selling,
+                    'image' => $product->image,
+                ],
+                'cross_sell' => $crossSellItems,
+                'upsell_services' => $upsellServices,
+                'bundle_deal' => $bundleData
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(Validation::error(null, $e->getMessage()));
+        }
+    }
+
+    public function qualifyingProducts(Request $request)
+    {
+        $user = Auth::user();
+
+        $points = PointTransaction::where('user_id', $user->id)
+            ->selectRaw("
+                SUM(CASE WHEN type='credit' THEN points ELSE -points END) as total
+            ")
+            ->value('total') ?? 0;
+
+        $conversionRate = 100; // 100 pts = €1
+        $discountFactor = 0.2; // 20%
+
+        $perPage = 4;
+        $products = Product::select('id','title','selling', 'offered','slug','image')
+            ->orderBy('id', 'desc')
+            ->paginate($perPage);
+
+        $collection  = $products->getCollection()->transform(function ($product) use ($conversionRate, $discountFactor, $points) {
+
+            $price = $product->offered > 0 ? $product->offered : $product->selling;
+            $requiredPoints = round($price * $conversionRate * $discountFactor);
+
+            return [
+                'id' => $product->id,
+                'title' => $product->title,
+                'offered' => $product->offered,
+                'slug' => $product->slug,
+                'image' => $product->image,
+                'required_points' => $requiredPoints,
+                'is_unlocked' => $points >= $requiredPoints,
+                'points_needed' => max(0, $requiredPoints - $points)
+            ];
+        });
+
+        $sorted = $collection->sortBy([
+            ['is_unlocked', 'desc'],
+            ['points_needed', 'asc']
+        ])->values();
+
+        $products->setCollection($sorted);
+
+        return response()->json([
+            'points' => $points,
+            'data' => $products->items(),
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+            'per_page' => $products->perPage(),
+            'total' => $products->total(),
+        ]);
+    }
+
+    public function getGiftVouchers(Request $request){
+        try{
+            $vouchers = GiftVoucher::get();
+
+            return response()->json(new Response(null, $vouchers));
+
+        } catch (\Exception $e) {
+            return response()->json(Validation::error(null, $e->getMessage()));
+        }
     }
 }

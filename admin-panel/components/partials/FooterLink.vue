@@ -4,7 +4,7 @@
     <p class="info-msg mb-15 mb-sm-15">
       {{ $t('setting.linkMsg') }}
     </p>
-    <div class="dply-felx align-start f-wrap">
+    <div class="links-grid align-start f-wrap">
       <div>
         <h4 class="mb-10">
           {{ $t('setting.servLink') }}
@@ -18,7 +18,7 @@
         </button>
 
         <div
-          class="input-wrapper dply-felx start mb-15 gap-15"
+          class="input-wrapper services-tabs dply-felx start mb-15 gap-15"
           v-for="(item, index) in result.service_links"
           :key="index"
         >
@@ -31,7 +31,7 @@
 
           <button
             v-if="$can('footer_link', 'delete')"
-            class="delete-btn dply-felx"
+            class="delete-btn"
             @click.prevent="removeItem('service_links', {index})"
           >
             <i
@@ -54,7 +54,7 @@
         </button>
 
         <div
-          class="input-wrapper dply-felx start mb-15"
+          class="input-wrapper services-tabs dply-felx start mb-15"
           v-for="(item, index) in result.about_links"
           :key="index"
         >
@@ -68,7 +68,7 @@
 
           <button
             v-if="$can('footer_link', 'delete')"
-            class="delete-btn dply-felx"
+            class="delete-btn"
             @click.prevent="removeItem('about_links', {index})"
           >
             <i
@@ -155,4 +155,27 @@
     }
   }
 </script>
+<style>
+.links-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+}
+.services-tabs {
+    justify-content: space-between;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.delete-btn {
+    background: #fee2e2;
+    background: var(--danger-bg);
+    color: #b42318;
+    color: var(--danger-text);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+</style>
 

@@ -25,7 +25,7 @@
                 >
                   {{ group.title }}
                   <span class="toggle-icon">
-                    {{ sectionOpen[group.index] ? '−' : '+' }}
+                    {{ sectionOpen[group.index] ? '-' : '+' }}
                   </span>
                 </div>
 
@@ -34,6 +34,7 @@
                   <button
                     class="expand-all-btn"
                     @click.stop="toggleAllSections"
+                    :title="allSectionsOpen ? 'Collapse All' : 'Expand All'"
                   >
                     <i 
                       class="fa-solid"
@@ -53,6 +54,8 @@
                         :to="item.path ? `/${item.path}` : '/'"
                         class="menu-item"
                         :class="{ active: isCurrentRoute(item) }"
+                        :title="item.title"
+                        :aria-label="item.title"
                         >
                         <i :class="item.icon"></i>
                         <span class="menu-text">
@@ -107,9 +110,15 @@
         { path: 'product-collections', title: this.$t('error.col'), icon: 'fa-solid fa-layer-group', gate: 'product_collection' },
         { path: 'bulk-product-editor', title: this.$t('error.bulkProduct'), icon: 'fa-solid fa-list-check', gate: 'product_bulk_update' },
         { path: 'rating-reviews', title: this.$t('error.rr'), icon: 'fa-solid fa-star', gate: 'rating_review' },
+
+        { section: 'BUSINESS PRODUCT' },
+        { path: 'business-products', title: 'Business Products', icon: 'fa-solid fa-briefcase', gate: 'business_product' },
         
         { section: 'LOYALTY' },
         { path: 'loyalty-groups', title: 'Loyalty Groups', icon: 'fa-solid fa-award', gate: 'loyalty_group' },
+
+        { section: 'WALLET' },
+        { path: 'wallet-overview', title: 'Wallet Overview', icon: 'fa-solid fa-wallet', gate: 'wallet_log' },
 
         { section: 'ORDERS' },
         { path: 'orders', title: this.$t('error.orders'), icon: 'fa-solid fa-cart-shopping', gate: 'order' },
@@ -121,9 +130,11 @@
         { path: 'upsell', title: this.$t('index.upsell'), icon: 'fa-solid fa-arrow-up-right-dots' },
         { path: 'crosssell', title: this.$t('index.crosssell'), icon: 'fa-solid fa-arrow-trend-up' },
         { path: 'flash-sales', title: this.$t('error.fs'), icon: 'fa-solid fa-bolt', gate: 'flash_sale' },
+        { path: 'flash-discount', title: 'Flash Discount', icon: 'fa-solid fa-percent', gate: 'flash_discount' },
         { path: 'bundle-deals', title: this.$t('error.bd'), icon: 'fa-solid fa-gift', gate: 'bundle_deal' },
         { path: 'vouchers', title: this.$t('error.vou'), icon: 'fa-solid fa-ticket', gate: 'voucher' },
-
+        { path: 'gift-vouchers', title: 'Gift Vouchers', icon: 'fa-solid fa-gift', gate: 'gift_voucher' },
+        
         { section: 'MARKETING' },
         { path: 'subscription-email-formats', title: this.$t('error.ef'), icon: 'fa-solid fa-envelope-open-text', gate: 'subscription_email_format'},
         // { path: 'campaign', title: 'Manage Campaign', icon: 'fa-solid fa-bullhorn' },
@@ -301,7 +312,6 @@
         const target = `/${item.path}`.replace(/\/$/, '')
         return current === target || current.startsWith(target + '/')
       },
-      ...mapActions('ui', ['toggleSidebar', 'hideSidebar']),
       ...mapActions('setting', ['clearSetting']),
       ...mapActions('ui', ['hideSidebar', 'toggleSidebar', 'settingDashboardNotice'])
     },
@@ -379,10 +389,18 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
+.expand-all-btn:hover {
+  background: var(--hover-color);
+  color: var(--primary-color);
+}
 
 .expand-all-container {
-  padding: 8px 14px;
+  padding: 6px 0 8px;
 }
 </style>

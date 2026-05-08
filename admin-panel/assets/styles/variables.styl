@@ -1,34 +1,78 @@
-header-height = 55px
-header-height-sm = 50px
-sidebar-width = 250px
-sidebar-width-lg = 240px
+header-height = 56px
+header-height-sm = 52px
+sidebar-width = 248px
+sidebar-collapsed-width = 64px
+sidebar-width-lg = 232px
 sidebar-width-sm = 240px
 icon-bg = 350px
 icon-sm-bg = 200px
 
-btn-height = 42px
-btn-height-sm = 40px
+btn-height = 40px
+btn-height-sm = 38px
 
-primary-color = #4285F4
-primary-hover = #486FEF
-primary-foreground = #fff
+:root
+  --primary-color #33319A
+  --primary-hover #29277f
+  --primary-soft #efefff
+  --primary-foreground #FFFFFF
+  --bg-color #FFFFFF
+  --surface-color #FFFFFF
+  --page-bg #F6F7FB
+  --shell-bg #F1F2F4
+  --text-color #1F2937
+  --text-strong #111827
+  --text-muted #6B7280
+  --text-soft #9CA3AF
+  --border-color #E5E7EB
+  --border-strong #D1D5DB
+  --hover-color #F3F4F6
+  --shadow-color rgba(17, 24, 39, .08)
+  --overlay-color rgba(17, 24, 39, .45)
+  --success-bg #ECFDF3
+  --success-text #027A48
+  --danger-bg #FEE2E2
+  --danger-text #B42318
+  --info-bg #EFF4FF
+  --info-text #33319A
+  --warning-bg #FFF7D6
+  --warning-text #7A5A00
+  --radius-sm 6px
+  --radius-md 8px
+  --radius-lg 10px
+  --space-xs 4px
+  --space-sm 8px
+  --space-md 12px
+  --space-lg 16px
+  --space-xl 20px
 
-danger-bg-color = #F7D7DB
-danger-foreground = #A12321
+primary-color = var(--primary-color)
+primary-hover = var(--primary-hover)
+primary-foreground = var(--primary-foreground)
 
-info-bg-color = #CCE5FF
-info-foreground = #35628E
+danger-bg-color = var(--danger-bg)
+danger-foreground = var(--danger-text)
 
-success-bg-color = #D3EDDA
-success-foreground = #356842
+info-bg-color = var(--info-bg)
+info-foreground = var(--info-text)
 
-warning-bg-color = #FFF3CC
-warning-foreground = #765B18
+success-bg-color = var(--success-bg)
+success-foreground = var(--success-text)
 
-primary-lite-color = #e8f0fe
-new-record-color = #F8F8F8
+warning-bg-color = var(--warning-bg)
+warning-foreground = var(--warning-text)
 
-font-color = #333
+primary-lite-color = var(--primary-soft)
+new-record-color = var(--hover-color)
+
+font-color = var(--text-color)
+bg-color = var(--bg-color)
+surface-color = var(--surface-color)
+page-bg = var(--page-bg)
+border-color = var(--border-color)
+border-strong = var(--border-strong)
+hover-color = var(--hover-color)
+muted-color = var(--text-muted)
+shadow-color = var(--shadow-color)
 
 sprite = '~/assets/images/icons.svg'
 login-bg = '~/assets/images/login-bg.png'

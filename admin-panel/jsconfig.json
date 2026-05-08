@@ -118,6 +118,11 @@
     "setVoucher": "voucher/action",
     "voucherValidity": "voucher/validity",
 
+    "getGiftVouchers": "gift-voucher/all",
+    "deleteGiftVoucher": "gift-voucher/delete",
+    "getGiftVoucher": "gift-voucher/find",
+    "setGiftVoucher": "gift-voucher/action",
+
     "getLanguages": "language/all",
     "deleteLanguage": "language/delete",
     "getLanguage": "language/find",
@@ -301,6 +306,22 @@
     "getLoyaltyGroups": "loyalty-groups/all",
     "getLoyaltyGroup": "loyalty-groups/find",
     "setLoyaltyGroup": "loyalty-groups/action",
-    "deleteLoyaltyGroup": "loyalty-groups/delete"
+    "deleteLoyaltyGroup": "loyalty-groups/delete",
+
+
+    "getBusinessProducts": "business-products/all",
+    "getBusinessProduct": "business-products/find",
+    "setBusinessProduct": "business-products/action",
+    "deleteBusinessProduct": "business-products/delete",
+
+    "sumupFind": "setting/sumup",
+    "sumupAction": "setting/sumup",
+
+    "getFlashDiscounts": "flash-discount/all",
+    "deleteFlashDiscount": "flash-discount/delete",
+    "getFlashDiscount": "flash-discount/find",
+    "setFlashDiscount": "flash-discount/action",
+
+    "getWalletOverview": "wallet-overview/all"
   }
 }

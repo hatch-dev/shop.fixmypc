@@ -13,7 +13,8 @@ class Category extends Model
 
     protected $fillable = [
         'title', 'image', 'status', 'admin_id', 'slug', 'meta_title', 'meta_description', 'meta_keywords',
-        'parent', 'in_footer'
+        'parent', 'in_footer', 'short_description', 'description', 'banner', 'gallery', 'canonical_url', 'searchable', 'publish_at', 'display_order', 'products_per_page', 'show_in_nav',
+        'enable_filters', 'show_homepage', 'allow_promotions'
     ];
 
     protected $hidden = [

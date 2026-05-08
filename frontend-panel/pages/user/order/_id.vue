@@ -33,12 +33,12 @@
           {{ $t('order.orderRefunded') }}
         </p>
 
-        <div
+        <!-- <div
           v-if="Object.keys(ordered).length"
           class="card"
-        >
+        > -->
           <div class="p-20 p-sm-15 pt-20">
-            <div class="flex f-reverse sided block-md mb-30 mb-sm-15">
+            <!-- <div class="flex f-reverse sided block-md mb-30 mb-sm-15">
               <ul class="mx-w-400x order-details mb-md-15">
                 <li>
                   <span>
@@ -122,15 +122,167 @@
                 </span>
               </p>
 
-            </div>
+            </div> -->
 
-            <div class="mb-15">
+            <!-- <div class="mb-15">
               <ordered-status
                 :status-of-order="ordered.status"
               />
 
+            </div> -->
+
+            <div class="order-box d-flex justify-content-between align-items-center mb-4">
+                <div class="small-text-order">
+                    <strong>Order No:</strong> #{{ ordered?.order }}<br>
+                    <strong>Order Date:</strong> {{ ordered?.created }}<br>
+                </div>
+                <pay-button
+                  v-if="!orderCancelled && parseInt(ordered.payment_done) === paymentStatusIn.UNPAID
+                    && parseInt(ordered.order_method) !== orderMethods.CASH_ON_DELIVERY"
+                  class="mr-10"
+                  :order="ordered"
+                />
+
+                <button
+                  v-if="!orderCancelled && parseInt(ordered.payment_done) === paymentStatusIn.UNPAID
+                    && parseInt(ordered.order_method) === orderMethods.BANK"
+                  @click.prevent="verifyPayment = !verifyPayment"
+                  class="btn manage-btn mr-10"
+                >
+                  {{ $t('date.vp') }}
+                </button>
+
+                <button v-if="!isDelivered"
+                    aria-label="submit"
+                    class="btn manage-btn plr-30 plr-sm-15"
+                    @click="cancelPopup = true"
+                  >
+                    {{ cancellationBtnText }}
+                </button>
             </div>
-            <div class="flow-auto mtb-15">
+
+            <!-- Address -->
+            <div class="row mb-4 mt-5">
+                <div class="col-md-6">
+                    <div class="section-title-billing">Billing Address</div>
+                <ul class="billing-address">
+                    <li>{{ ordered?.address?.name }}</li>
+                    <li>
+                        {{ [
+                            ordered?.address?.address_1,
+                            ordered?.address?.address_2
+                        ].filter(Boolean).join(', ') }}
+                    </li>
+                    <li>
+                        {{ ordered?.address?.city }},
+                        {{ ordered?.address?.state }} -
+                        {{ ordered?.address?.zip }}
+                    </li>
+
+                    <li>{{ ordered?.address?.country }}</li>
+
+                    <li>{{ ordered?.address?.phone }}</li>
+
+                    <li>{{ ordered?.address?.email }}</li>
+                </ul>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="section-title-billing"">Shipping Address</div>
+                    <ul class="billing-address">
+                        <li>
+                            {{ [
+                            ordered?.ordered_products?.[0]?.shipping_place?.pickup_address_line_1,
+                            ordered?.ordered_products?.[0]?.shipping_place?.pickup_address_line_2
+                            ].filter(Boolean).join(', ') }}
+                        </li>
+
+                        <li>
+                            {{ ordered?.ordered_products?.[0]?.shipping_place?.pickup_city }}
+                            , {{ ordered?.ordered_products?.[0]?.shipping_place?.pickup_state }}
+                            - {{ ordered?.ordered_products?.[0]?.shipping_place?.pickup_zip }}
+                        </li>
+
+                        <li>{{ ordered?.ordered_products?.[0]?.shipping_place?.pickup_country }}</li>
+
+                        <li>{{ ordered?.ordered_products?.[0]?.shipping_place?.pickup_phone }}</li>
+
+                        <li>
+                            Delivery in {{ ordered?.ordered_products?.[0]?.shipping_place?.day_needed }} days
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Payment -->
+            <div class="row mb-4 payment-info">
+                <div class="col-md-6 small-text">
+                    <div class="section-title-billing">Payment Information</div>
+                <div class="d-flex gap-2">
+                    <h6>Payment Amount:</h6> <span class="text-success fw-bold"> €{{ Number(ordered?.calculated?.total_price || 0).toFixed(2) }}</span>
+                </div>
+                <div class="d-flex gap-2 mt-2">
+                    <h6>Payment Method:</h6>   <span class="payment-method"><i :class="['fa-solid', paymentMethodIcon, 'me-1']"></i>{{ paymentMethodLabel }}</span>
+                </div>
+                </div>
+
+                <div class="col-md-6 text-end small-text">
+                <div class="d-flex justify-content-end gap-2">
+                    <h6 class="mt-1">Payment Status: </h6><span class="status-badge"  :style="{
+                        background: ordered?.payment_done === 1 ? '#05B942' : '#dc3545'
+                    }">{{ paymentStatusLabel }}</span><br>
+                </div>
+                    <div class="mt-3">
+                    <h6> Payment Transaction ID: </h6><strong class="payment-id"> {{ ordered?.transaction_id || 'N/A' }}</strong><br>
+                </div>
+                
+                </div>
+            </div>
+
+            <div class="timeline">
+                <div class="steps" :style="progressStyle">
+
+                <!-- Step 1 -->
+                <div class="step"
+                    :class="{ active: orderStatusStep >= 1 }">
+                    <div class="circle">
+                    {{ orderStatusStep > 1 ? '✓' : '1' }}
+                    </div>
+                    <div class="step-label">Order Placed</div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="step"
+                    :class="{ active: orderStatusStep >= 2 }">
+                    <div class="circle">
+                    {{ orderStatusStep > 2 ? '✓' : '2' }}
+                    </div>
+                    <div class="step-label">Order Processing</div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="step"
+                    :class="{ active: orderStatusStep >= 3 }">
+                    <div class="circle">
+                    {{ orderStatusStep > 3 ? '✓' : '3' }}
+                    </div>
+                    <div class="step-label">On Delivery</div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="step"
+                    :class="{ active: orderStatusStep >= 4 }">
+                    <div class="circle">
+                    {{ orderStatusStep > 4 ? '✓' : '4' }}
+                    </div>
+                    <div class="step-label">Delivery</div>
+                </div>
+
+                </div>
+            </div>
+
+
+            <!-- <div class="flow-auto mtb-15">
               <table class="mn-w-600x no-bg w-100 mtb-0">
                 <tr class="lite-bold">
                   <th>{{ $t('order.image') }}</th>
@@ -150,14 +302,76 @@
                   :cart="value"
                   @rate-now="rateProductId = $event"
                 />
-              </table><!--table-->
+              </table>
+            </div> -->
+
+            <div 
+              v-for="(item, index) in ordered.ordered_products" 
+              :key="index"
+              class="product-thanks d-flex justify-content-between mb-20"
+            >
+              <div class="d-flex">
+                <img 
+                  :src="getImageURL(item.product?.image)" 
+                  class="ordered-product-image"
+                >
+
+                <div class="product-info ms-4 mt-2">
+                  <span class="product-thanku-tittle fw-semibold">
+                    {{ item.product?.title }}
+                  </span><br>
+
+                  <span class="product-model fw-normal">
+                    ({{ item?.updated_inventory?.inventory_attributes
+                      ?.map(i => i.attribute_value.title).join(' / ') }})
+                  </span><br>
+
+                  <span class="fw-semibold mobile-quantity">
+                    Quantity: {{ item.quantity }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="mt-2">
+                <div class="d-flex justify-content-end price-box-thanku">
+                  <p>Total Price: 
+                    <span class="fw-bold">
+                      €{{ formatPrice(item.selling) }}
+                    </span>
+                  </p>
+                </div>
+
+                <div class="d-flex justify-content-end price-box-thanku">
+                  <p>Shipping Price: 
+                    <span class="fw-bold">
+                      €{{ formatPrice(item.shipping_price) }}
+                    </span>
+                  </p>
+                </div>
+
+                <div class="d-flex justify-content-end price-box-thanku">
+                  <p>Tax Price: 
+                    <span class="fw-bold">
+                      €{{ formatPrice(item.tax_price) }}
+                    </span>
+                  </p>
+                </div>
+
+                <div class="d-flex justify-content-end price-box-thanku">
+                  <p>Subtotal: 
+                    <span class="fw-bold">
+                      €{{ formatPrice(getItemSubtotal(item)) }}
+                    </span>
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div class="flex right no-space">
               <ul
                 class="mx-w-400x order-details order-price"
               >
-                <li>
+                <!-- <li>
                   <span>
                     {{ $t('order.subtotal') }}
                   </span>
@@ -166,8 +380,8 @@
                       :price="subtotalPrice"
                     />
                   </span>
-                </li>
-                <li>
+                </li> -->
+                <!-- <li>
                   <span>
                     {{ $t('order.shippingCost') }}
                   </span>
@@ -182,8 +396,8 @@
                       :price="shippingPrice"
                     />
                   </span>
-                </li>
-                <li v-if="bundleOffer">
+                </li> -->
+                <!-- <li v-if="bundleOffer">
                   <span>
                     {{ $t('cartProductTile.bundleOffer') }}
                   </span>
@@ -192,8 +406,8 @@
                       :price="bundleOffer"
                     />
                   </span>
-                </li>
-                <li v-if="voucherPrice">
+                </li> -->
+                <!-- <li v-if="voucherPrice">
                   <span>
                      {{ $t('checkoutRight.voucher') }}
                   </span>
@@ -202,8 +416,8 @@
                       :price="voucherPrice"
                     />
                   </span>
-                </li>
-                <li v-if="taxPrice">
+                </li> -->
+                <!-- <li v-if="taxPrice">
                   <span>
                      {{ $t('cart.tax') }}
                   </span>
@@ -212,20 +426,65 @@
                       :price="taxPrice"
                     />
                   </span>
-                </li>
-                <li
-                  class="mb-0"
-                >
-                  <span>
+                </li> -->
+                <!-- <li
+                  class="mb-0" -->
+                  <!-- <span>
                     {{ $t('checkoutRight.total') }}
-                  </span>
-                  <span class="semi-bold f-11">
-                    <price-format
+                  </span> -->
+                  <!-- <span class="semi-bold f-11"> -->
+                    <!-- <price-format
                       :price="totalPrice"
-                    />
-                  </span>
-                </li>
-                <li
+                    /> -->
+                    <div class="d-flex justify-content-end price-box-thanku">
+                      <p>
+                        Subtotal:
+                        <span class="fw-bold">
+                          €{{ formatPrice(subtotalPrice) }}
+                        </span>
+                      </p>
+                    </div>
+
+                    <div class="d-flex justify-content-end price-box-thanku">
+                      <p>
+                        Shipping:
+                        <span class="fw-bold">
+                          €{{ formatPrice(shippingPrice) }}
+                        </span>
+                      </p>
+                    </div>
+
+                    <div class="d-flex justify-content-end price-box-thanku">
+                      <p>
+                        Tax:
+                        <span class="fw-bold">
+                          €{{ formatPrice(taxPrice) }}
+                        </span>
+                      </p>
+                    </div>
+
+                    <div class="d-flex justify-content-end price-box-thanku">
+                      <p>
+                        Voucher:
+                        <span class="fw-bold">
+                          <price-format
+                            :price="voucherPrice"
+                          />
+                        </span>
+                      </p>
+                    </div>
+
+                    <div class="d-flex justify-content-end price-box-thanku">
+                      <p>
+                        Total:
+                        <span class="fw-bold text-success">
+                          €{{ formatPrice(totalPrice) }}
+                        </span>
+                      </p>
+                    </div>
+                  <!-- </span> -->
+                <!-- </li> -->
+                <!-- <li
                   v-if="!isDelivered"
                   class="pb-0 mb-0 j-end mt-15 mt-sm"
                 >
@@ -236,11 +495,11 @@
                   >
                     {{ cancellationBtnText }}
                   </button>
-                </li>
+                </li> -->
               </ul>
             </div>
           </div>
-        </div>
+        <!-- </div> -->
 
         <transition name="fade" mode="out-in">
           <order-cancel-popup
@@ -313,6 +572,55 @@
     },
     mixins: [util, metaHelper, global],
     computed: {
+      paymentStatusLabel() {
+        if (parseInt(this.ordered?.order_method) === 7) {
+            return this.ordered?.payment_done === 1
+            ? 'Paid'
+            : 'Processing'
+        }
+        return this.ordered?.payment_done === 1 ? 'Paid' : 'Not Paid'
+      },
+      paymentMethodIcon() {
+        const map = {
+            1: 'fa-bolt',
+            2: 'fa-money-bill',
+            3: 'fa-cc-stripe',
+            4: 'fa-cc-paypal',
+            7: 'fa-building-columns'
+        }
+
+        return map[this.ordered?.order_method] || 'fa-credit-card'
+      },
+      paymentMethodLabel() {
+        const map = {
+            1: 'Razorpay',
+            2: 'Cash on Delivery',
+            3: 'Stripe',
+            4: 'PayPal',
+            5: 'Flutterwave',
+            6: 'Iyzico',
+            7: 'Bank Transfer',
+            8: 'Payfast',
+            9: 'Credit / Debit Card (SumUp)'
+        }
+
+        return map[this.ordered?.order_method] || 'N/A'
+      },
+      orderId() {
+        return parseInt(this.$route.params.id)
+      },
+      orderStatusStep() {
+        const status = this.ordered?.status
+
+        const map = {
+            placed: 1,
+            processing: 2,
+            shipping: 3,
+            delivered: 4
+        }
+
+        return map[status] || 1
+      },
       hasPickupPlace(){
         const index = this.ordered?.ordered_products?.findIndex(i => {
           return parseInt(i.shipping_type) === 1
@@ -386,6 +694,17 @@
       ...mapGetters('common', ['currencyIcon', 'setting'])
     },
     methods: {
+      formatPrice(value) {
+        return Number(value || 0).toFixed(2)
+      },
+      getItemSubtotal(item) {
+          const total =
+              parseFloat(item.selling || 0) +
+              parseFloat(item.shipping_price || 0) +
+              parseFloat(item.tax_price || 0)
+
+          return total.toFixed(2)
+      },
       currentImage(value){
         const invAttr = value?.updated_inventory?.inventory_attributes;
 
@@ -505,7 +824,211 @@
     },
   }
 </script>
+<style scoped>
+span.product-thanku-tittle {
+    color: #232159;
+    font-size: 22px;
+}
+span.product-model {
+    color: #232159;
+    font-size: 16px;
+}
+.mobile-quantity {
+    color: #232159;
+}
+body {
+    background: #f5f6fa;
+    font-family: 'Segoe UI', sans-serif;
+}
 
-<style>
+.main-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px 50px 40px 50px;
+    max-width: 1200px;
+    margin: 40px auto;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
 
+.order-box {
+    background: #F3F8FF;
+    border-radius: 20px;
+    padding: 20px 20px 20px 20px;
+}
+
+.manage-btn {
+    background: #33319A;
+    color: #fff;
+    border-radius: 20px;
+    padding: 6px 18px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.manage-btn:hover {
+    background: #05B942;
+    color: #Fff;
+}
+
+.section-title-billing {
+    font-weight: 500;
+    margin-bottom: 10px;
+    font-size: var( --product-font);
+    color: #232159;
+}
+
+.small-text-thanku {
+    font-size: 14px;
+    color: #415A80;
+    font-weight: 500;
+}
+
+.timeline {
+    display: flex;
+    justify-content: center;
+    margin: 25px 0;
+    gap: 9rem;
+    border-top: 1px solid #EEEEF3;
+    border-bottom: 1px solid #EEEEF3;
+    padding: 30px 0;
+}
+
+.price-box-thnaku { 
+    font-size: 13px;
+}
+
+.subtotal {
+    text-align: right;
+    font-weight: 600;
+    margin-top: 20px;
+}
+.order-placed {
+    font-size: 24px;
+    font-weight: 600;
+    color: #232159;
+}
+.small-text-order {
+    font-size: 16px;
+    font-weight: 600;
+    color: #232159;
+}
+.small-text-order strong {
+    font-weight: 500;
+}
+ul.billing-address {
+    font-size: 16px;
+    font-weight: 500;
+    color: #232159;
+    line-height: 32px;
+}
+
+.billing-address li {
+    display: flex;
+    font-size: 14px;
+    color: #232159;
+}
+.status-badge {
+    color: #fff;
+    font-size: 14px;
+    padding: 5px 17px;
+    border-radius: 100px;
+    font-weight: 600;
+}
+strong.payment-id {
+    color: #232159;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.payment-method{
+    font-size: 14px;
+    color: #232159;
+}
+.price-box-thanku p {
+    font-size: 16px;
+    font-weight: 500;
+    color: #232159;
+    margin-bottom: 3px;
+}
+
+.ordered-product-image{
+    width: 126px;
+    height: 156px;
+    object-fit: contain;
+    border-radius: 10px;
+}
+.complete-order-image{
+    width: 128px;
+    height: 100px;
+}
+
+.payment-info { 
+    border-top: 1px solid #eeeef3;
+    padding-top: 30px;
+}
+.steps {
+    display: flex;
+    align-items: center;
+    position: relative;
+    gap: 60px;
+}
+
+/* Line (full) */
+.steps::before {
+    content: "";
+    position: absolute;
+    top: 18px;
+    left: 35px;
+    right: 35px;
+    height: 2px;
+    background: #e0e0e0;
+    z-index: 0;
+}
+
+/* Active line */
+.steps::after {
+    content: "";
+    position: absolute;
+    top: 18px;
+    left: 35px;
+    height: 2px;
+    background: #4f46e5;
+    z-index: 1;
+    transition: width 0.3s ease;
+    width: var(--progress-width, 0%);
+}
+
+/* Step */
+.step {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
+
+/* Circle */
+.circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #555;
+    margin: auto;
+}
+
+/* Active / Completed */
+.step.active .circle,
+.step.completed .circle {
+    background: #33319A;
+    color: #fff;
+}
+
+/* Label */
+.step-label {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #6b7280;
+}
 </style>

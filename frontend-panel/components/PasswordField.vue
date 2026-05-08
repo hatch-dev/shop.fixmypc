@@ -1,5 +1,22 @@
 <template>
-  <div class="icon-input right-icon">
+  <div class="input-group custom-input">
+    <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+    <input
+      :type="passwordFieldType"
+      class="form-control pe-5 position-relative"
+      :placeholder="$t('contact.your', { type: $t('login.password') })"
+      v-model.trim="password"
+      :class="{ invalid: !!!password || isInvalid }"
+      @change="$emit('change', password)"
+    />
+
+    <i
+      class="icon position-absolute password-check"
+      :class="!isPasswordTypePassword ? 'eye-icon' : 'eye-close-icon'"
+      @click="passwordFieldToggle"
+    />
+  </div>
+  <!-- <div class="icon-input right-icon">
     <i
       class="icon lock-icon"
     />
@@ -15,7 +32,7 @@
       :class="!isPasswordTypePassword ? 'eye-icon' : 'eye-close-icon'"
       @click="passwordFieldToggle"
     />
-  </div>
+  </div> -->
 </template>
 
 <script>
@@ -57,4 +74,15 @@
     }
   }
 </script>
+<style scoped>
 
+ span.input-group-text {
+      background-color: transparent;
+      padding: 10px 16px;
+    }
+
+    .password-check {
+    right: 10px;
+    margin-top: 10px;
+}
+</style>

@@ -236,7 +236,7 @@ class PosOrdersController extends ControllerHelper
                     );
                     $error = true;
                 }
-                if ((int)$c->updated_inventory->quantity < 1) {
+                if ((int)$c->updated_inventory->quantity < 1 && (int)$c->updated_inventory->is_active !== 1) {
                     array_push($productErr,
                         __('lang.out_stock_product', ['product' => $c->product->title], $lang)
                     );

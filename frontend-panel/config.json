@@ -35,6 +35,10 @@
     "userWishlistAll": "user/wishlist/all",
     "userWishlistAction": "user/wishlist/action",
 
+    "userRecentlyViewed": "user/recently-viewed",
+    "clearRecentlyViewed": "user/recently-viewed/clear",
+    "deleteRecentlyViewed": "user/recently-viewed",
+
     "compareListAll": "user/compare-list/all",
     "compareListAction": "user/compare-list/action",
 

@@ -7,8 +7,20 @@
 .inline-pop-wrapper
   position relative
 
+  & > button
+    height 36px
+    line-height 34px
+    border 1px solid border-color
+    border-radius var(--radius-md)
+    background surface-color
+    color font-color
+    padding 0 12px
+
+    &:hover
+      background hover-color
+
   .pop-header
-    border-bottom 1px solid #eee
+    border-bottom 1px solid border-color
 
   .inline-pop-over
     overflow hidden
@@ -16,9 +28,10 @@
     top 100%
     right 0
     z-index 3
-    box-shadow 0 5px 15px rgba(0,0,0,.2)
-    border-radius 8px
-    background #fff
+    box-shadow none
+    border 1px solid border-color
+    border-radius var(--radius-md)
+    background surface-color
     min-width 300px
 
     .pop-content
@@ -27,7 +40,7 @@
       position relative
 
     .pop-footer
-      border-top 1px solid #eee
+      border-top 1px solid border-color
 
 //RESPONSIVE
 @media only screen and (max-width: 768px)

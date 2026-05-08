@@ -7,14 +7,7 @@
         class="home-section"
       />
 
-      <static-section
-        v-if="hasSiteFeatures"
-        :site-features="siteFeatures"
-      />
-
-      <flashSale
-        :flash-sales="flashSales"
-      />
+      <category-section :featured_categories="featuredCategories"/>
 
       <product-banner
         :banner-data="bannerData"
@@ -24,13 +17,6 @@
         v-for="(value, index) in productCollection"
         :key="index"
         :collection="value"
-      />
-
-      <featured
-        class="category-wrapper"
-        :title="$t('searchPopup.categories')"
-        type="subCategory"
-        :item-list="featuredCategories"
       />
       <div
         class="brands-wrapper"
@@ -55,11 +41,16 @@
         </div>
       </div>
 
+      <static-section
+        v-if="hasSiteFeatures"
+        :site-features="siteFeatures"
+      />
+
       <div
         v-if="productGrid"
-        class="area home-section grid-product-wrapper">
-        <div class="flex sided title">
-          <h4>{{ productGrid.title }}</h4>
+        class="trending-box">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="section-title mb-0">{{ productGrid.title }}</h5>
           <nuxt-link
             class="link"
             :to="collectionLink(collectionLinkObj)"
@@ -68,7 +59,7 @@
           </nuxt-link>
         </div>
         <client-only>
-          <div class="search-product-tile">
+          <div class="row g-3">
             <searched-product-tile
               v-for="(value, index) in this.productGrid?.product_collections"
               :key="`prod-${index}`"
@@ -84,18 +75,13 @@
         :banner="banner5"
       />
 
-      <lazy-area
-        v-slot:default="{renderArea}"
-        class="mn-h-400x"
-      >
-        <discover
-          v-if="renderArea"
-        />
-      </lazy-area>
+      <flashSale
+        :flash-sales="flashSales"
+      />
 
       <banner
         v-if="banner6"
-        class="home-section mt-0 br-primary flow-hidden"
+        class="home-section mt-0 br-primary flow-hidden mt-4"
         :banner="banner6"
       />
     </div>
@@ -123,6 +109,7 @@
   import SearchedProductTile from "~/components/SearchedPorductTile"
   import Banner from "../components/Banner";
   import ProductBanner from "../components/ProductBanner";
+  import CategorySection from '../components/CategorySection.vue'
 
   export default {
     middleware: ['common-middleware'],
@@ -154,6 +141,7 @@
       ProductBanner,
       Banner,
       SearchedProductTile,
+      CategorySection,
       StaticSection,
       HomeHero,
       ImageSlider,
@@ -212,7 +200,7 @@
         })
         return banner
       },
-      ...mapGetters('home', ['featuredCategories', 'flashSales', 'collections',
+      ...mapGetters('home', ['categories','featuredCategories', 'flashSales', 'collections',
         'featuredBrands', 'slider', 'banners', 'siteFeatures'])
     },
     methods: {},
@@ -234,4 +222,17 @@
     },
   }
 </script>
+<style>
+a.block.banner-wrapper.home-section.mt-0.br-primary.flow-hidden.mt-4{
+  margin-top: 20px !important
+}
+.area.home-section.featured-brands {
+    border: 1px solid #E3E2F1;
+}
+.trending-box {
+  background: #e9ecf5;
+  border-radius: 12px;
+  padding: 20px;
+}
+</style>
 

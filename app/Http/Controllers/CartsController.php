@@ -215,14 +215,18 @@ class CartsController extends ControllerHelper
 
             if ($existingCart) {
                 $inventory = UpdatedInventory::find($request->inventory_id);
-
-                if ($request->quantity > $inventory->quantity) {
+                $isBackOrder = $inventory->is_active == 1;
+                if (!$isBackOrder && $request->quantity > $inventory->quantity) {
                     return response()->json(Validation::error($request->token,
                         __('lang.quantity_exceeds', [], $lang)
                     ));
                 }
                 Cart::where('id', $existingCart->id)->update([
                     'quantity' => $request->quantity,
+                    'price' => $request->price,
+                    'voucher_code' => $request->voucher_code,
+                    'voucher_discount' => $request->original_price - $request->price,
+                    'original_price' => $request->original_price,
                     'selected' => Config::get('constants.status.PUBLIC')
                 ]);
 
@@ -251,7 +255,9 @@ class CartsController extends ControllerHelper
                         ]);
                     }
                 }
-
+                $request['voucher_discount'] = $request->original_price - $request->price;
+                $request['voucher_code'] = $request->voucher_code ?? null;
+                $request['original_price'] = $request->original_price ?? $request->price;
                 $cart = Cart::create($request->all());
             }
 
@@ -314,13 +320,21 @@ class CartsController extends ControllerHelper
 
                 $inventory = UpdatedInventory::find($request->inventory_id);
 
-                if ($existingCart->quantity + $request->quantity > $inventory->quantity) {
-                    return response()->json(Validation::error($request->token,
-                        __('lang.quantity_exceeds', [], $lang)
-                    ));
+                $isBackOrder = $inventory->is_active == 1;
+
+                if (!$isBackOrder) {
+                    if ($existingCart->quantity + $request->quantity > $inventory->quantity) {
+                        return response()->json(Validation::error($request->token,
+                            __('lang.quantity_exceeds', [], $lang)
+                        ));
+                    }
                 }
                 Cart::where('id', $existingCart->id)->update([
-                    'quantity' => $existingCart->quantity + $request->quantity
+                    'quantity' => $existingCart->quantity + $request->quantity,
+                    'price' => $request->price,
+                    'voucher_code' => $request->voucher_code,
+                    'voucher_discount' => $request->original_price - $request->price,
+                    'original_price' => $request->original_price
                 ]);
 
                 $existingCart->quantity = $existingCart->quantity + $request->quantity;
@@ -349,7 +363,9 @@ class CartsController extends ControllerHelper
                     }
                 }
 
-				
+				$request['voucher_discount'] = $request->original_price - $request->price;
+                $request['voucher_code'] = $request->voucher_code ?? null;
+                $request['original_price'] = $request->original_price ?? $request->price;
                 $cart = Cart::create($request->all());
             }
 
@@ -406,7 +422,7 @@ class CartsController extends ControllerHelper
                         $c->product->title . __('lang.uncheck_cart', [], $lang));
                     $error = true;
                 }
-                if ((int)$c->updated_inventory->quantity < 1) {
+                if ((int)$c->updated_inventory->quantity < 1 && (int)$c->updated_inventory->is_active !== 1) {
                     array_push($productErr,
                         $c->product->title . __('lang.stock_out', [], $lang));
                     $error = true;

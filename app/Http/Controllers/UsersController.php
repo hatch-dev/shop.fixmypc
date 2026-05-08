@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Hash;
 use Laravel\Passport\Passport;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class UsersController extends ControllerHelper
 {
@@ -95,11 +96,11 @@ class UsersController extends ControllerHelper
 
             $query = User::query()
             ->leftJoin('orders', 'users.id', '=', 'orders.user_id')
-            ->leftJoin('points_transactions', 'users.id', '=', 'points_transactions.user_id')
+            ->leftJoin('point_transactions', 'users.id', '=', 'point_transactions.user_id')
             ->select(
                 'users.*',
                 DB::raw('COALESCE(SUM(orders.total_amount),0) as total_spend'),
-                DB::raw('COALESCE(SUM(points_transactions.points),0) as total_points'))
+                DB::raw('COALESCE(SUM(point_transactions.points),0) as total_points'))
             ->groupBy('users.id');
                 
             if ($request->q) {
@@ -359,33 +360,61 @@ class UsersController extends ControllerHelper
 
             if ($request->user_token) {
 
-                GuestUser::where('user_token', $request->user_token)->update([
-                    'name' => $user->name,
-                    'email' => $user->email
-                ]);
-
-                Cart::where('user_id', null)
+                $guestCarts = Cart::whereNull('user_id')
                     ->where('user_token', $request->user_token)
+                    ->get();
+
+                foreach ($guestCarts as $guestCart) {
+
+                    $existingUserCart = Cart::where('user_id', $user->id)
+                        ->where('product_id', $guestCart->product_id)
+                        ->where('inventory_id', $guestCart->inventory_id)
+                        ->first();
+
+                    if ($existingUserCart) {
+
+                        $existingUserCart->update([
+                            'quantity' =>
+                                $existingUserCart->quantity +
+                                $guestCart->quantity
+                        ]);
+
+                        $guestCart->delete();
+
+                    } else {
+
+                        $guestCart->update([
+                            'user_id' => $user->id,
+                            'user_token' => null
+                        ]);
+                    }
+                }
+
+                GuestUser::where('user_token', $request->user_token)
                     ->update([
-                        'user_id' => $user->id
+                        'name' => $user->name,
+                        'email' => $user->email
                     ]);
 
-                Order::where('user_id', null)
+                Order::whereNull('user_id')
                     ->where('user_token', $request->user_token)
                     ->update([
-                        'user_id' => $user->id
+                        'user_id' => $user->id,
+                        'user_token' => null
                     ]);
 
-                UserAddress::where('user_id', null)
+                UserAddress::whereNull('user_id')
                     ->where('user_token', $request->user_token)
                     ->update([
-                        'user_id' => $user->id
+                        'user_id' => $user->id,
+                        'user_token' => null
                     ]);
 
-                Cancellation::where('user_id', null)
+                Cancellation::whereNull('user_id')
                     ->where('user_token', $request->user_token)
                     ->update([
-                        'user_id' => $user->id
+                        'user_id' => $user->id,
+                        'user_token' => null
                     ]);
             }
 
@@ -599,11 +628,22 @@ class UsersController extends ControllerHelper
                 return response()->json($validator);
             }
 
-            User::where('id', Auth::user()->id)->update([
-                'name' => $request->name
-            ]);
+            $user = Auth::user();
 
-            return Validation::success($request, __('lang.profile_updated', [], $lang), ['name' => $request->name]);
+            if ($request->hasFile('image')) {
+
+                $file = $request->file('image');
+                $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+                $file->move(base_path('uploads'), $filename);
+
+                $user->image = $filename;
+            }
+
+            $user->name = $request->name;
+            $user->phone = $request->phone;
+            $user->save();
+
+            return Validation::success($request, __('lang.profile_updated', [], $lang), ['name' => $request->name, 'phone' => $request->phone, 'image' => $user->image]);
 
         } catch (\Exception $ex) {
             return response()->json(Validation::error($request->token, $ex->getMessage()));
@@ -687,6 +727,20 @@ class UsersController extends ControllerHelper
                 return response()->json($validate);
             }
 
+            if (!$request->name) {
+                $request['name'] = trim(($request->first_name ?? '') . ' ' . ($request->last_name ?? ''));
+            }
+
+            if ($request->default == 1) {
+                if ($request->user('user')) {
+                    UserAddress::where('user_id', $request->user('user')->id)
+                        ->update(['default' => 0]);
+                } else if ($request->user_token) {
+                    UserAddress::where('user_token', $request->user_token)
+                        ->update(['default' => 0]);
+                }
+            }
+
             $userAddress = null;
 
 
@@ -730,7 +784,7 @@ class UsersController extends ControllerHelper
                         $query = $query->where('user_id', $request->user_id);
                     } else {
 
-                        if(Auth::user() && count(Auth::user()->roles) > 0 && Auth::user()->roles[0]->guard_name == 'admin'){
+                        if(Auth::user() && !empty(Auth::user()->roles) && count(Auth::user()->roles) > 0 && Auth::user()->roles[0]->guard_name == 'admin'){
 
                         } else {
                             $query = $query->where('user_id', $request->user('user')->id);
@@ -760,7 +814,7 @@ class UsersController extends ControllerHelper
 
 
 
-                        if(Auth::user() && count(Auth::user()->roles) > 0 && Auth::user()->roles[0]->guard_name == 'admin'){
+                        if(Auth::user() && !empty(Auth::user()->roles) && count(Auth::user()->roles) > 0 && Auth::user()->roles[0]->guard_name == 'admin'){
 
 
                             $userByEmail = User::where('email', $request->email)->first();
@@ -798,29 +852,31 @@ class UsersController extends ControllerHelper
                     return response()->json(Validation::errorLang($lang));
                 }
 
+                $data = $request->all();
+                unset($data['first_name'], $data['last_name'], $data['user']);
                 $userAddress = UserAddress::create($request->all());
 
                 $message = __('lang.created', [], $lang);
 
             } else {
 
-                $userAddress = $request->all();
-                $request['created'] = null;
-                $request['id'] = null;
+                $data = $request->all();
+                unset($data['first_name'], $data['last_name'], $data['created'], $data['id'], $data['user']);
 
-                $filtered = array_filter($request->all(), function ($element) {
-                    return !is_array($element) && '' !== trim($element);
+                $filtered = array_filter($data, function ($value) {
+                    return $value !== null && $value !== '';
                 });
 
-                UserAddress::where('id', $userAddress['id'])
-                    ->update(array_filter($filtered));
+                UserAddress::where('id', $request->id)->update($filtered);
 
-                $userAddress = UserAddress::find($userAddress['id']);
+                $userAddress = UserAddress::find($request->id);
 
                 $message = __('lang.updated', [], $lang);
             }
 
             $ua = UserAddress::with('user')->where('id', $userAddress->id)->first();
+            $ua->first_name = explode(' ', $ua->name)[0] ?? '';
+            $ua->last_name = trim(str_replace($ua->first_name, '', $ua->name));
 
             return Validation::success($request,
                 __('lang.address_message', ['message' => $message], $lang), $ua);
@@ -958,10 +1014,10 @@ class UsersController extends ControllerHelper
 
 
             $query = Voucher::query();
-            $query = $query->where('end_time', '>=', $currentTime);
-            $query = $query->where('start_time', '<=', $currentTime);
-            $query = $query->orderBy($request->order_by, $request->type);
-            $query = $query->where('status', Config::get('constants.status.PUBLIC'));
+            // $query = $query->where('end_time', '>=', $currentTime);
+            // $query = $query->where('start_time', '<=', $currentTime);
+            $query = $query->where('apply_type', 1)->orderBy($request->order_by, $request->type);
+            // $query = $query->where('status', Config::get('constants.status.PUBLIC'));
 
 
             if ($lang) {

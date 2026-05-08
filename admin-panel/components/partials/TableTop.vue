@@ -1,7 +1,7 @@
 <template>
   <div :class="{
     'hidden': ($route.path === '/bulk-product-editor' || $route.path === '/bulk-product-editor/')
-  }" class="align-start dply-felx reverse block-md gap-10 p-20">
+  }" class="table-top align-start dply-felx reverse block-md gap-10 p-20">
     <div
       v-if="enableSearch"
       class="grow dply-felx block-xs"

@@ -1,73 +1,99 @@
 @import "variables.styl"
 
-
-
 header
   left 0
   right 0
-  z-index 6
+  top 0
+  z-index 20
   display flex
-  padding 0
+  padding 0 12px 0 0
   position fixed
-  background #fff
+  background surface-color
   align-items center
   height header-height
   justify-content space-between
+  border-bottom 1px solid border-color
+
+  .logo-wrapper
+    gap 12px
+    align-items center
+    min-width sidebar-width
+    height 100%
+    padding-left 16px
+    display flex
+    justify-content space-between
+
+  .header-brand
+    display flex
+    align-items center
+    gap 10px
+    min-width 0
+    font-size 13px
+    font-weight 700
+    color var(--text-strong)
+
+    img
+      width 24px
+      height 24px
+      object-fit contain
+      border-radius 6px
+
+    span
+      line-height 1
+      white-space nowrap
+
+  .toggle-menu-btn
+    min-width 40px
+    margin-left 0
+    border 0
+    border-radius var(--radius-md)
+    box-shadow none!important
+    background transparent
+    height auto
+
+    &:hover
+      background hover-color
+
+  i.icon
+    transform scale(.82)
 
   .right-wrap
-    padding 0 20px
+    padding 0
+    justify-content flex-end
+    min-width 0
+
+  .right-wrap > .dply-felx
+    gap 6px
+    align-items center
+
+  .lang-down
+    min-width auto
+
+    .icon
+      opacity .65
+      transform scale(1)
+
+    span
+      height 36px
+      line-height 34px
+      padding 0 10px
+      background surface-color
+      border 1px solid border-color
+      border-radius var(--radius-md)
 
   .clear-cache
     min-width 115px
 
     span
-      font-size .9rem
-
-  .lang-down
-    .icon
-      opacity .7
-      transform scale(1.1)
-
-    span
-      padding 0 10px
-      background none
-      border none
-
-
-  .logo-wrapper
-    justify-content start
-    min-width sidebar-width
-
-  i.icon
-    transform scale(.85)
-
-  .toggle-menu-btn
-    height header-height
-    width header-height
-    border-radius 0
-    box-shadow none!important
-
-  &:after
-    content ''
-    position absolute
-    left 0
-    right 0
-    top 100%
-    height 4px
-    background linear-gradient(180deg, rgba(9, 30, 66, .13) 0, rgba(9, 30, 66, .13) 1px, rgba(9, 30, 66, .08) 1px, rgba(9, 30, 66, .0) 4px)
-
-  .logo
-    display flex
-    align-items center
-    height 100%
-
-    img
-      height 35px
-      width auto
+      font-size .85rem
 
   .dots-btn
     display none
     padding 0
+    width 38px
+    min-width 38px
+    height 38px
+    border-radius var(--radius-md)
 
     i
       margin-right 0
@@ -82,16 +108,28 @@ header
     border none
     padding 0 10px
 
-//RESPONSIVE
+.sidebar-closed
+  header
+    .logo-wrapper
+      min-width 190px
+
+    .header-brand
+      span
+        display inline-block
+
 @media only screen and (max-width: 1200px)
   header
     .logo-wrapper
       min-width sidebar-width-lg
 
+  .sidebar-closed
+    header
+      .logo-wrapper
+        min-width 190px
+
 @media only screen and (max-width: 992px)
   .rtl header .right-wrap
     justify-content left
-
 
   header
     .right-wrap
@@ -101,7 +139,11 @@ header
       padding 0 5px
 
     .logo-wrapper
-      min-width 0
+      min-width 150px
+
+
+    .header-brand span
+      display none
 
 @media only screen and (max-width: 768px)
   .rtl header .right-area
@@ -112,17 +154,20 @@ header
     padding-left 15px
     padding-right 15px
 
-
   header
     padding 0 10px 0 0
     height header-height-sm
+
+    .logo-wrapper
+      min-width auto
 
     .clear-cache
       display none
 
     .toggle-menu-btn
-      height header-height-sm
-      width header-height-sm
+      height 40px
+      width 40px
+      min-width 40px
 
     .dots-btn
       display flex
@@ -136,27 +181,20 @@ header
       position absolute
       top 100%
       right 0
-      background #fff
+      background surface-color
       z-index 1
-      box-shadow 0 5px 15px rgba(0,0,0,.2)
-      border-radius 8px
+      box-shadow 0 12px 28px shadow-color
+      border 1px solid border-color
+      border-radius var(--radius-md)
       display none
-      padding 0
+      padding 4px
 
       button
         padding-left 10px
         padding-right 20px
         width 100%
-        border-radius 0
+        border-radius var(--radius-sm)
 
   .dots-open
     .right-area
       display block
-
-@media only screen and (max-width: 576px)
-  header
-    .logo
-      display none
-
-    button
-      padding 0 5px

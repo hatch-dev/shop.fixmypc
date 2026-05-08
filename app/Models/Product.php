@@ -25,11 +25,11 @@ class Product extends Model
 
 
     protected $fillable = [
-        'id', 'title', 'purchased', 'selling', 'wholesale_price', 'wholesale_discount_type', 'wholesale_discount_value', 'vatInclusivePrice', 'discount_type', 'discount_value', 'offered','vatInclusiveOfferedPrice', 'image', 'unit', 'video', 'video_thumb', 'badge',
+        'id', 'title', 'short_heading', 'purchased', 'selling', 'wholesale_price', 'wholesale_discount_type', 'wholesale_discount_value', 'vatInclusivePrice', 'discount_type', 'discount_value', 'offered','vatInclusiveOfferedPrice', 'image', 'unit', 'video', 'video_thumb', 'badge',
         'status', 'admin_id', 'subcategory_id', 'category_id', 'brand_id', 'warranty', 'refundable',
         'description', 'overview', 'tags', 'tax_rule_id', 'shipping_rule_id', 'meta_title', 'meta_description',
         'meta_keywords',
-        'review_count', 'rating', 'bundle_deal_id', 'slug', 'excludeVAT' , 'upsell_id', 'procurement'
+        'review_count', 'rating', 'bundle_deal_id', 'slug', 'excludeVAT' , 'upsell_id', 'updated_upsell_id', 'procurement', 'back_order'
     ];
 
     protected $hidden = [];
@@ -152,6 +152,14 @@ class Product extends Model
         );
     }
 
+    public function vouchers()
+    {
+        return $this->belongsToMany(
+            Voucher::class,
+            'voucher_products'
+        );
+    }
+
     protected static function booted()
     {
         static::addGlobalScope('withReviews', function ($query) {
@@ -159,13 +167,13 @@ class Product extends Model
                 ->withAvg('ratingReviews as rating', 'rating');
         });
 
-        static::addGlobalScope('withWholesaleColumns', function ($query) {
-            $query->addSelect([
-                'products.wholesale_price',
-                'products.wholesale_discount_type',
-                'products.wholesale_discount_value'
-            ]);
-        });
+        // static::addGlobalScope('withWholesaleColumns', function ($query) {
+        //     $query->addSelect([
+        //         'products.wholesale_price',
+        //         'products.wholesale_discount_type',
+        //         'products.wholesale_discount_value'
+        //     ]);
+        // });
     }
 
     public function getRatingAttribute($value)
@@ -173,40 +181,40 @@ class Product extends Model
         return $value ? round($value, 1) : 0;
     }
 
-    public function getSellingAttribute($value)
-    {
-        $user = Auth::user();
+    // public function getSellingAttribute($value)
+    // {
+    //     $user = Auth::user();
 
-        if ($user && $user->account_type === 'business' && $this->wholesale_price) {
-            return (float) $this->wholesale_price;
-        }
+    //     if ($user && $user->account_type === 'business' && $this->wholesale_price > 0) {
+    //         return (float) $this->wholesale_price;
+    //     }
 
-        return (float) $value;
-    }
+    //     return (float) $value;
+    // }
 
-    public function getOfferedAttribute($value)
-    {
-        $user = Auth::user();
+    // public function getOfferedAttribute($value)
+    // {
+    //     $user = Auth::user();
 
-        if ($user && $user->account_type === 'business' && $this->wholesale_price) {
+    //     if ($user && $user->account_type === 'business' && $this->wholesale_price > 0) {
 
-            $price = (float) $this->wholesale_price;
-            $discountValue = (float) $this->wholesale_discount_value;
-            $discountType = $this->wholesale_discount_type;
+    //         $price = (float) $this->wholesale_price;
+    //         $discountValue = (float) $this->wholesale_discount_value;
+    //         $discountType = $this->wholesale_discount_type;
 
-            if ($discountType === 'percentage') {
-                return (float) $price - ($price * $discountValue / 100);
-            }
+    //         if ($discountType === 'percentage') {
+    //             return (float) $price - ($price * $discountValue / 100);
+    //         }
 
-            if ($discountType === 'fixed') {
-                return (float) $price - $discountValue;
-            }
+    //         if ($discountType === 'fixed') {
+    //             return (float) $price - $discountValue;
+    //         }
 
-            return (float) $price;
-        }
+    //         return (float) $price;
+    //     }
 
-        return (float) $value;
-    }
+    //     return (float) $value;
+    // }
 
 	
 }

@@ -23,7 +23,15 @@
         />
       </div>
 
-      <div v-if="!loading">
+      <div v-if="loadError" class="danger-msg mb-15" role="alert">
+        <b>{{ $t('error.err') || 'Unable to load this record' }}</b>
+        <p>{{ loadError }}</p>
+        <button class="outline-btn xs mt-10" @click.prevent="fetchingData">
+          {{ $t('util.retry') || 'Retry' }}
+        </button>
+      </div>
+
+      <div v-if="!loading && !loadError">
         <div
           v-if="fileKeys.length && (!gate || $can(gate, 'edit') || $can(gate, 'create'))"
         >
@@ -52,6 +60,7 @@
       </div>
 
       <form
+        v-if="!loadError"
         @submit.prevent="formSubmit"
         :class="{'has-error': hasError}"
       >
@@ -104,7 +113,8 @@
         redirect: false,
         formSubmitting: false,
         fileUploading: false,
-        hasError: false
+        hasError: false,
+        loadError: ''
       }
     },
     props: {
@@ -256,19 +266,23 @@
             this.$refs["formWrapper"].scrollIntoView({behavior: "smooth"})
           }
         } catch (e) {
-          return this.$nuxt.error(e)
+          this.$store.dispatch('ui/setToastError', e?.message || this.$t('error.err') || 'Unable to save')
+        } finally {
+          this.formSubmitting = false
         }
-        this.formSubmitting = false
 
       },
       async fetchingData() {
         try {
           this.loading = true
+          this.loadError = ''
           this.$emit('result',
             Object.assign({}, await this.getById({id: this.id, params: {time_zone: this.timeZone}, api: this.getApi})))
-          this.loading = false
         } catch (e) {
-          return this.$nuxt.error(e)
+          this.loadError = e?.message || this.$t('error.err') || 'Unable to load this record'
+          this.$store.dispatch('ui/setToastError', this.loadError)
+        } finally {
+          this.loading = false
         }
       },
       ...mapActions('common', ['getById', 'setById', 'setImageById', 'emptyAllList'])

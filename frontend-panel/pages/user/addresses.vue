@@ -6,24 +6,7 @@
   >
     <template v-slot:rightArea>
         <div>
-          <transition
-            name="fade"
-            mode="out-in"
-          >
-            <address-popup
-              v-if="addressPopup"
-              :address="editingAddress"
-              @close="closingPopup"
-            />
-          </transition>
-          <button
-            aria-label="submit"
-            class="primary-btn plr-20 mb-15"
-            @click.prevent="adding"
-          >
-            {{ $t('addresses.addAddress') }}
-          </button>
-          <user-address
+          <user-account-address
             ref="userAddress"
             @editing="editing"
           />
@@ -37,6 +20,7 @@
   import LazyImage from '~/components/LazyImage'
   import AddressPopup from '~/components/AddressPopup'
   import UserAddress from '~/components/UserAddress'
+  import UserAccountAddress from '~/components/UserAccountAddress'
   import AccountLayout from '~/components/AccountLayout'
 
   import addressHelper from '~/mixin/addressHelper'
@@ -65,7 +49,8 @@
       LazyImage,
       AddressPopup,
       AccountLayout,
-      UserAddress
+      UserAddress,
+      UserAccountAddress
     },
     mixins: [util, productHelper, addressHelper, global],
     computed: {

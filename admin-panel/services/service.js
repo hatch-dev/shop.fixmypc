@@ -1,7 +1,21 @@
 import axios from 'axios'
 import json from '~/jsconfig.json'
 
-const apiBase = !process.env.apiBase.trim() ? window.location.origin + '/' : process.env.apiBase
+const normalizeBaseUrl = () => {
+  const configuredBase = (process.env.apiBase || '').trim()
+
+  if (configuredBase) {
+    return configuredBase.endsWith('/') ? configuredBase : `${configuredBase}/`
+  }
+
+  if (process.client && window?.location?.origin) {
+    return `${window.location.origin}/`
+  }
+
+  return '/'
+}
+
+const apiBase = normalizeBaseUrl()
 
 const apiClient = axios.create({
   baseURL: apiBase + json.api.url,

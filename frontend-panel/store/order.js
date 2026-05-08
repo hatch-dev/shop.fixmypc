@@ -31,7 +31,7 @@ const actions = {
     commit('UPDATE_ORDERED', payload)
   },
   async voucherValidity ({ commit }, {payload, lang}) {
-    const {data} = await Service.voucherValidity(payload, this.$auth.strategy.token.get(), lang)
+    const {data} = await Service.voucherValidity(payload, null, lang)
     return data
   },
   async getOrderByUser ({ commit }, {payload, lang}) {

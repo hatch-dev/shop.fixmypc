@@ -92,13 +92,13 @@
           </div>
           <div
             v-if="products.length"
-            class="mb-15"
+            class="mb-15 trending-box"
           >
             <h4 class="bold">
               {{ $t('searchPopup.products') }}
             </h4>
             <div
-              class="search-section search-product-tile"
+              class="row g-3"
             >
               <searched-product-tile
                 v-for="(value, index) in products"

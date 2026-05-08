@@ -1,32 +1,34 @@
 <template>
-  <ul class="pagination" v-if="totalPage > 1">
-    <li
-      :class="{disabled: currentPage === 1}"
-      @click.prevent="navigate(-1)"
-    >
-      <i
-        class="icon arrow-left black"
-      />
-    </li>
-    <li
-      class="page"
-      :class="{disabled: currentPage === value}"
-      v-for="(value, index) in allPages.slice(getActivePages[0], getActivePages[1])"
-      :key="index"
-      @click.prevent="paginate(value)">
-      <span>
-        {{ value }}
-      </span>
-    </li>
-    <li
-      :class="{disabled: currentPage === totalPage}"
-      @click.prevent="navigate(1)"
-    >
-      <i
-        class="icon arrow-right black"
-      />
-    </li>
-  </ul>
+  <div class="pagination-container">
+    <ul class="pagination" v-if="totalPage > 1">
+      <li
+        :class="{disabled: currentPage === 1}"
+        @click.prevent="navigate(-1)"
+      >
+        <i
+          class="icon arrow-left black"
+        />
+      </li>
+      <li
+        class="page"
+        :class="{disabled: currentPage === value}"
+        v-for="(value, index) in allPages.slice(getActivePages[0], getActivePages[1])"
+        :key="index"
+        @click.prevent="paginate(value)">
+        <span>
+          {{ value }}
+        </span>
+      </li>
+      <li
+        :class="{disabled: currentPage === totalPage}"
+        @click.prevent="navigate(1)"
+      >
+        <i
+          class="icon arrow-right black"
+        />
+      </li>
+    </ul>
+  </div>
 </template>
 
 <script>
@@ -189,3 +191,9 @@
     }
   }
 </script>
+<style scoped>
+.pagination-container{
+  justify-content: center;
+  display: flex;
+}
+</style>

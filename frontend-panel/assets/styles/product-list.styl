@@ -76,11 +76,16 @@
 
     .tile-container
       .p-tile
-        min-width 20%
-        width 20%
+        min-width 25%
+        padding 10px
+        display flex
+        flex-direction column
+        height 100%
 
   .left-area
-    min-width 250px
+    min-width: 300px;
+    padding-right: 20px;
+    border-right: 1px solid rgba(232, 232, 238, 1);
 
     .sticky
       top 30px
@@ -210,25 +215,36 @@
         min-height 0
 
     .left-area
-      position fixed
-      top 0
+      background rgba(0, 0, 0, .4)
       bottom 0
       left 0
+      position fixed
+      top 0
       width 100%
-      z-index 10
+      z-index 9999 !important
+      -webkit-transform translateZ(0)
+      transform translateZ(0)
 
       .layer
         display block
 
       .sticky
-        top auto
-        box-shadow 0 -2px 20px rgba(0, 0, 0, .2)
-        border-radius 20px 20px 0 0
         background #fff
-        position absolute
+        border-radius 20px 20px 0 0
         bottom 0
+        box-shadow 0 -2px 20px rgba(0, 0, 0, .2)
         left 0
         right 0
+        top auto
+        position fixed
+        z-index 10000 !important  
+        overflow-y auto
+        -webkit-overflow-scrolling touch
+        max-height 85vh
+        padding-bottom env(safe-area-inset-bottom)
+        pointer-events auto !important
+        -webkit-transform translateZ(0)
+        transform translateZ(0)
 
         .close-btn-wrapper
           display block
@@ -262,3 +278,17 @@
             ul
               li
                 display inline-block
+                
+.product-list
+  .sidebar-section
+    .title
+      font-size: 16px;
+      font-weight: 700;
+      color: #130e2b;
+      margin: 20px 0px 10px 0px;
+
+.product-list .left-area .sidebar .star-filter
+  button
+    display block
+    height unset
+    line-height 1.5em

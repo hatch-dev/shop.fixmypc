@@ -30,6 +30,7 @@
                 :has-shipping="true"
                 :hide-btn="true"
                 @calculated-price="calculatedPrice"
+                class="col-lg-12"
             >
             </checkout-right>
         </div>
@@ -219,7 +220,7 @@ export default {
 
                     await this.paymentDoneFn(res.data.id, res.data.id, this.orderMethods.SUMUP)
 
-                    this.$router.push(`/user/order/${res.data.id}`);
+                    this.$router.push(`/user/order/complete/${res.data.id}`);
                 }
             }catch(err){
                 this.setToastError('Order creation failed')

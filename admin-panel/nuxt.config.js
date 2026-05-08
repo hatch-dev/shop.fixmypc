@@ -1,7 +1,9 @@
 const configJson = require('./jsconfig.json')
 
 const isDemo = process.env.IS_DEMO === 'true'
-let apiBase = !process.env.API_BASE.trim() ? '/' : process.env.API_BASE
+const configuredApiBase = (process.env.API_BASE || '').trim()
+let apiBase = configuredApiBase || '/'
+apiBase = apiBase.endsWith('/') ? apiBase : `${apiBase}/`
 apiBase += configJson.api.url
 
 export default {
@@ -25,6 +27,10 @@ export default {
       {
         rel: 'stylesheet',
         href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css'
+      },
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap'
       }
     ]
   },

@@ -1,55 +1,44 @@
 @import "./variables.styl"
 
-.rtl
-  .main
-    .content
-      padding header-height + 20px 75px 20px 20px
-
-
 .main
-  background #F1F1F1
+  background var(--shell-bg)
   min-height 100vh
 
   .content
-    background #F4F6F9
+    background var(--shell-bg)
     position relative
-    padding header-height + 00px 00px 20px 55px
-    transition all .08s
+    margin-left sidebar-collapsed-width
+    padding header-height + 12px 16px 18px
+    transition margin .16s ease, padding .16s ease
     min-height 100vh
     height 100vh
     overflow-y auto
-    box-shadow: -2px 1px 2px rgba(9, 30, 66, .1), -1px 1px 1px rgba(9, 30, 66, .05), -1px 1px 1px rgba(9, 30, 66, .02), -4px 1px 4px rgba(9, 30, 66, .01)
+    box-shadow none
 
 .sidebar-opened
   .content
-    margin-left 270px
-    padding-left 0px
-  .sidebar
-    width 270px
-    overflow-y auto
+    margin-left sidebar-width
 
 .rtl
+  .main
+    .content
+      margin-left 0
+      margin-right sidebar-collapsed-width
+
   .sidebar-opened
     .content
       margin-left 0
       margin-right sidebar-width
-      padding-right 20px
 
-
-//RESPONSIVE
 @media only screen and (max-width: 1200px)
   .sidebar-opened
     .content
       margin-left sidebar-width-lg
 
-@media only screen and (max-width: 992px)
-  .main
-    .content
-      padding-left 75px
-
-  .sidebar-opened.main
-    .content
-      padding-left 20px
+  .rtl
+    .sidebar-opened
+      .content
+        margin-right sidebar-width-lg
 
 @media only screen and (max-width: 768px)
   .p-sm-15
@@ -58,21 +47,21 @@
   .pl-sm-0
     padding-left 0 !important
 
-  .rtl .main .content
-    padding header-height-sm + 15px 15px 15px 15px
-
   .main
     .content
-      padding header-height-sm + 15px 15px 15px 15px
-
-  .rtl .sidebar-opened .content
-    margin-right 0
+      margin-left 0
+      padding header-height-sm + 10px 10px 12px
 
   .sidebar-opened
     .content
       margin-left 0
 
-@media only screen and (max-width: 576px)
-  .main
-    .content
-      padding header-height-sm + 15px 15px 15px 15px
+  .rtl
+    .main
+      .content
+        margin-right 0
+        padding header-height-sm + 10px 10px 12px
+
+    .sidebar-opened
+      .content
+        margin-right 0

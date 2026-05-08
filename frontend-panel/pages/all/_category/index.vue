@@ -4,6 +4,7 @@
       :result-title="category.title"
       :has-breadcrumb="true"
       :categories="[category]"
+      :category="category"
       :fetching-product-data="fetchingProductData"
       @fetch-data="fetchingData"
     />

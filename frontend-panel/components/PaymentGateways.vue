@@ -63,7 +63,160 @@
       <div
         class="heading-tab-wrapper"
       >
-        <div
+
+        <div class="payment-options mt-10">
+
+          <!-- SUMUP -->
+          <div 
+            v-if="parseInt(paymentGateway.sumup) === status.PUBLIC"
+            class="payment-option"
+            :class="{ active: paymentType === orderMethods.SUMUP }"
+            @click="paymentType = orderMethods.SUMUP"
+          >
+            <div class="payment-left">
+              <input 
+                type="radio" 
+                name="payment"
+                :value="orderMethods.SUMUP"
+                v-model="paymentType"
+              >
+              <div>
+                <div class="payment-title">Credit / Debit Card (SumUp)</div>
+                <div class="payment-sub">Pay securely with your Visa, Mastercard or Amex.</div>
+              </div>
+            </div>
+            <div class="payment-logo">
+              <i class="fa-brands fa-cc-visa"></i>
+              <i class="fa-brands fa-cc-mastercard ms-2"></i>
+              <i class="fa-brands fa-cc-stripe ms-2"></i>
+            </div>
+          </div>
+
+          <!-- STRIPE -->
+          <div 
+            v-if="parseInt(paymentGateway.stripe) === status.PUBLIC"
+            class="payment-option"
+            :class="{ active: paymentType === orderMethods.STRIPE }"
+            @click="paymentType = orderMethods.STRIPE"
+          >
+            <div class="payment-left">
+              <input 
+                type="radio" 
+                name="payment"
+                :value="orderMethods.STRIPE"
+                v-model="paymentType"
+              >
+              <div>
+                <div class="payment-title">Stripe Payment</div>
+                <div class="payment-sub">Pay securely with your Visa, Mastercard or Amex.</div>
+              </div>
+            </div>
+            <div class="payment-logo">
+              <i class="fa-brands fa-stripe"></i>
+            </div>
+          </div>
+
+          <!-- PAYPAL -->
+          <div 
+            v-if="parseInt(paymentGateway.paypal) === status.PUBLIC"
+            class="payment-option"
+            :class="{ active: paymentType === orderMethods.PAYPAL }"
+            @click="paymentType = orderMethods.PAYPAL"
+          >
+            <div class="payment-left">
+              <input 
+                type="radio" 
+                name="payment"
+                :value="orderMethods.PAYPAL"
+                v-model="paymentType"
+              >
+              <div>
+                <div class="payment-title">PayPal</div>
+                <div class="payment-sub">Pay with your PayPal balance or linked account.</div>
+              </div>
+            </div>
+            <div class="payment-logo">
+              <i class="fa-brands fa-paypal"></i>
+            </div>
+          </div>
+
+          <!-- CASH -->
+          <div 
+            v-if="parseInt(paymentGateway.cash_on_delivery) === status.PUBLIC"
+            class="payment-option"
+            :class="{ active: paymentType === orderMethods.CASH_ON_DELIVERY }"
+            @click="paymentType = orderMethods.CASH_ON_DELIVERY"
+          >
+            <div class="payment-left">
+              <input 
+                type="radio" 
+                name="payment"
+                :value="orderMethods.CASH_ON_DELIVERY"
+                v-model="paymentType"
+              >
+              <div>
+                <div class="payment-title">Cash</div>
+                <div class="payment-sub">Pay when you receive your order.</div>
+              </div>
+            </div>
+            <div class="payment-logo">
+              <i class="fa-solid fa-money-bill-1"></i>
+            </div>
+          </div>
+
+          <!-- BANK -->
+          <div 
+            v-if="parseInt(paymentGateway.bank) === status.PUBLIC"
+            class="payment-option"
+            :class="{ active: paymentType === orderMethods.BANK }"
+            @click="paymentType = orderMethods.BANK"
+          >
+            <div class="payment-left">
+              <input 
+                type="radio" 
+                name="payment"
+                :value="orderMethods.BANK"
+                v-model="paymentType"
+              >
+              <div>
+                <div class="payment-title">Bank Transfer</div>
+                <div class="payment-sub">Pay via direct bank transfer.</div>
+              </div>
+            </div>
+            <div class="payment-logo">
+              <i class="fa-solid fa-building-columns"></i>
+            </div>
+          </div>
+
+          <!-- WALLET -->
+          <div 
+            class="payment-option mb-2"
+            :class="{ active: paymentType === orderMethods.WALLET }"
+            @click="paymentType = orderMethods.WALLET"
+          >
+            <div class="payment-left">
+              <input 
+                type="radio" 
+                name="payment"
+                :value="orderMethods.WALLET"
+                v-model="paymentType"
+              >
+              <div>
+                <div class="payment-title">Wallet</div>
+                <div class="payment-sub">
+                  Available Balance: {{ currencyIcon }}{{ walletBalance }}
+                </div>
+              </div>
+            </div>
+
+            <div class="payment-logo">
+              <i class="fa-solid fa-wallet"></i>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- <div
           class="tab-heading"
         >
 
@@ -227,10 +380,10 @@
             <span>{{ $t('date.bt') }}</span>
           </label>
 
-        </div>
+        </div> -->
 
         <div
-          class="tab-content"
+          class="tab-content mb-10" v-if="!hideConfirmBtn"
         >
           <ajax-button
             v-if="paymentType === orderMethods.STRIPE"
@@ -294,16 +447,18 @@
           </div>
 
 
+          <div
+            v-else-if="paymentType === orderMethods.BANK"
+          >
             <ajax-button
-              v-else-if="paymentType === orderMethods.BANK"
-              class="primary-btn  plr-30 plr-sm-15"
+              class="primary-btn plr-30 plr-sm-15"
               type="button"
               :fetching-data="placingOrder"
               :disabled="!totalPrice || noPaymentMethod"
               :text="$t('checkout.confirmOrder')"
-              @clicked="confirmOrder"
+              @clicked="confirmBankOrder"
             />
-
+          </div>
 
           <div
             v-else-if="paymentType === orderMethods.IYZICO_PAYMENT"
@@ -344,6 +499,21 @@
           </div>
 
           <div
+            v-else-if="paymentType === orderMethods.WALLET"
+          >
+            <ajax-button
+              class="primary-btn plr-30 plr-sm-15"
+              type="button"
+              :fetching-data="placingOrder"
+              :disabled="!totalPrice || walletBalance < totalPrice"
+              :text="walletBalance >= totalPrice 
+                ? paymentBtnText 
+                : 'Insufficient Wallet Balance'"
+              @clicked="payWithWallet"
+            />
+          </div>
+
+          <div
             v-if="parseInt(paymentGateway.paypal) === status.PUBLIC"
             class="paypal-tab"
             :class="{'paypal-active': paymentType === orderMethods.PAYPAL}"
@@ -376,6 +546,8 @@
     middleware: ['auth'],
     data() {
       return {
+        wallet: null,
+        walletBalance: 0,
         loading: false,
         payFastLoader: false,
         payFastData: null,
@@ -392,6 +564,10 @@
       }
     },
     props: {
+      hideConfirmBtn: {
+        type: Boolean,
+        default: false
+      },
       voucher: {
         type: Object,
         default() {
@@ -497,6 +673,54 @@
       ...mapGetters('cart', ['cartProducts']),
     },
     methods: {
+      async payWithWallet() {
+        try {
+          this.placingOrder = true
+
+          if (this.walletBalance < this.totalPrice) {
+            this.setToastError('Insufficient wallet balance')
+            return
+          }
+
+          await this.confirmOrder()
+
+          await this.paymentDoneFn(
+            this.orderId,
+            this.orderId,
+            this.orderMethods.WALLET
+          )
+
+          this.orderPlaced('success', this.orderId)
+
+        } catch (e) {
+          console.log('Wallet error:', e)
+          this.setToastError('Wallet payment failed')
+        } finally {
+          this.placingOrder = false
+        }
+      },
+      async fetchWallet() {
+        try {
+          const token = this.$auth?.strategy?.token?.get()
+          const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/'
+
+          const { data } = await this.$axios.get(
+            `${baseUrl}api/v1/user/wallet`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`
+              }
+            }
+          )
+
+          this.wallet = data
+          this.walletBalance = data?.balance || 0
+
+        } catch (e) {
+          console.error('Wallet fetch error:', e)
+          this.walletBalance = 0
+        }
+      },
       async initSumup(){
         try {
           this.placingOrder = true
@@ -526,6 +750,33 @@
           console.log(e.message)
           this.setToastError('Payment initialization failed')
         }finally {
+          this.placingOrder = false
+        }
+      },
+      async confirmBankOrder() {
+        try {
+          this.placingOrder = true
+
+          if (!this.orderData) {
+            await this.confirmOrder()
+          }
+
+          const orderId = this.orderData?.id || this.order?.id
+
+          await this.paymentDoneFn(
+            orderId,
+            orderId,
+            this.orderMethods.BANK
+          )
+
+          this.setToastMessage("Order placed. Please complete bank transfer.")
+
+          this.$router.push('/user/order/bank/' + orderId)
+
+        } catch (e) {
+          console.log("BANK ERROR:", e)
+          this.setToastError("Bank payment failed")
+        } finally {
           this.placingOrder = false
         }
       },
@@ -675,7 +926,7 @@
           }
 
           if (redirect) {
-            this.$router.push({path: '/user/order/' + event})
+            this.$router.push({path: '/user/order/complete/' + event})
           }
 
           this.$emit('order-status', true)
@@ -830,6 +1081,7 @@
       } else {
         this.flutterwaveLoaded = true
       }
+      this.fetchWallet()
     },
   }
 </script>
@@ -838,5 +1090,50 @@
   font-weight: bold;
   margin-top: 5px;
   opacity: 0.8;
+}
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-option {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 15px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.3s;
+}
+
+.payment-option:hover {
+  border-color: #6366f1;
+}
+
+.payment-option.active {
+  border: 2px solid #33319A;
+  background: #f9fafb;
+}
+
+.payment-left {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.payment-title {
+  font-weight: 600;
+}
+
+.payment-sub {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.payment-logo i {
+  font-size: 22px;
+  color: #9ca3af;
 }
 </style>

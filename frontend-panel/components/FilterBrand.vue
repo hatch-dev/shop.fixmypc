@@ -21,13 +21,13 @@
         {{ value.title }}
       </label>
     </div>
-    <button
+    <!-- <button
       aria-label="Show/Hide"
       @click.prevent="brandExpanded =! brandExpanded"
       class="link mt-15"
     >
       {{ brandExpanded ? $t('filter.hideAll') : $t('featured.showAll') }}
-    </button>
+    </button> -->
   </div>
 </template>
 
@@ -79,5 +79,12 @@
 </script>
 
 <style scoped>
-
+.collapsible {
+  margin-left: -10px;
+  max-height: 200px;
+  overflow: hidden;
+  padding-left: 10px;
+  transition: all .2s;
+  overflow-y: auto;
+}
 </style>

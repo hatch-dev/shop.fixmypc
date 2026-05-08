@@ -90,7 +90,7 @@
 <style lang="stylus">
   .banner-table
     img
-      max-width 300px
-      max-height 300px
+      width 100px
+      height auto
 </style>
 

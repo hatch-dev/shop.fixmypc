@@ -5,7 +5,7 @@
         v-if="suggested1.length"
         :title="$t('suggestedProducts.recommendedForYou')"
         :item-list="suggested1"
-        :per-page="perPageSuggested1"
+        :per-page="4"
         :total-item="totalSuggested1"
         @change="change(1, $event)"
         class="b-t pt-20 pt-sm-15 npb-5"
@@ -16,7 +16,7 @@
         :title="$t('suggestedProducts.alsoViewed')"
         :item-list="suggested2"
         :total-item="totalSuggested2"
-        :per-page="perPageSuggested2"
+        :per-page="4"
         @change="change(2, $event)"
         class="b-t pt-20 pt-sm-15 pb-15 pb-sm-5"
       />

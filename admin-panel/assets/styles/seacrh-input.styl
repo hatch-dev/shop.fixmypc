@@ -8,12 +8,12 @@
   li
     .custom-dropdown
       span
-        border-radius 100px 0 0 100px
+        border-radius var(--radius-md) 0 0 var(--radius-md)
 
     & > div:last-child
       span
         border-left 0 !important
-        border-radius 0 100px 100px 0
+        border-radius 0 var(--radius-md) var(--radius-md) 0
 
 .rtl
   .table-heading
@@ -29,7 +29,7 @@
         span
           border-left 1px solid #bbb!important
 
-          border-radius 100px 0 0 100px
+          border-radius var(--radius-md) 0 0 var(--radius-md)
 
 .rtl .search-input input
   padding-left 10px
@@ -45,20 +45,20 @@
 .search-input
   display flex
   flex-grow 1
-  border-radius 50px
+  border-radius var(--radius-md)
   position relative
-  border 1px solid #ddd
+  border 1px solid border-strong
   max-width 600px
   z-index 1
   margin 0
 
   input
     padding-left 20px
-    height btn-height
-    line-height btn-height - 2px
-    border-radius 50px !important
+    height 36px
+    line-height 34px
+    border-radius var(--radius-md) !important
     border 0!important
-    background #fff
+    background surface-color
 
   button
     border 0
@@ -74,7 +74,7 @@
       right 0
       z-index -1
       box-shadow 0 0 0 2px primary-color
-      border-radius 50px
+      border-radius var(--radius-md)
       opacity 0
       transition all .1s
 

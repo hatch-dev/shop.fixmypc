@@ -1,169 +1,198 @@
 <template>
   <client-only>
-    <div class="container-fluid mtb-20 mtb-sm-15">
-      <div class="product-detail checkout-detail">
-        <div
-          class="detail-left ptb-10 plr-20 plr-sm-15 mr-sm area mr-20 mb-sm-15"
-        >
-          <div class="b-b pb-10 mb-10 flex sided">
-            <h5 class="bold">
-              {{ $t('cart.shoppingCart') }}
-            </h5>
-            <p v-if="!checked.length">
-              {{ $t('cart.noSelected') }}
-              <button
-                aria-label="submit"
-                class="link ml-10 f-9"
-                @click.prevent="selectAllItems"
-              >
-                {{ $t('cart.selectItems') }}
-              </button>
-            </p>
-            <p v-else>
-              <button
-                aria-label="submit"
-                class="link f-9"
-                @click.prevent="deselectAllItems"
-              >
-                {{ $t('cart.deselectItems') }}
-              </button>
-            </p>
-          </div>
+    <div>
+     <Breadcrumbs />
+      <navigation-step /> 
+      <div class="container-fluid my-5">
+        <div class="row g-4">
+          <div class="col-lg-8">
+            <div class="d-flex justify-content-between mb-3">
+              <h5>Shopping Cart</h5>
 
-          <cart-list
-            :cart-products="cartProducts"
-            :ajaxing="ajaxing"
-            :checked="checked"
-          />
-          <div class="flex sided pb-5">
-            <h5 class="price">
-              {{ $t('cart.subtotal', { items: cartPrice.totalItems }) }}
-            </h5>
-            <h4 class="price">
-              <price-format
-                :price="cartPrice.totalPriceWithOffer"
-              />
-            </h4>
-          </div>
-        </div>
+              <div>
+                <button
+                  v-if="checked.length !== cartProducts.length"
+                  class="btn btn-link p-0"
+                  @click.prevent="selectAllItems"
+                >
+                  Select All
+                </button>
 
-        <checkout-right
-          :disabled="preventGoing"
-          :checked-product="checkedProduct"
-          @calculated-price="cartPrice = $event"
-          @go-next="showUpsellPopup"
-        />
-
-        <!-- Upsell Popup -->
-        <div v-if="showUpsellModal" class="modal-overlay">
-          <div class="modal-content upsell-modal">
-            <div class="modal-header">
-              <h3>{{ $t('cart.upsellTitle') }}</h3>
-              <button class="modal-close" @click="closeUpsellPopup">
-                <i class="icon close"></i>
-              </button>
-            </div>
-            
-            <div class="modal-body">
-              <div v-if="loadingUpsells" class="loading-spinner">
-                <spinner :radius="30" color="primary" />
+                <button
+                  v-else
+                  class="btn btn-link p-0"
+                  @click.prevent="deselectAllItems"
+                >
+                  Deselect All
+                </button>
               </div>
-              
-              <!-- Error Message -->
-              <div v-if="upsellError" class="error-message">
-                <i class="icon error"></i>
-                <p>{{ upsellError }}</p>
-                <button class="retry-btn" @click="loadUpsellProducts">
-                  {{ $t('cart.retry') }}
+            </div>
+            <cart-list
+              :cart-products="cartProducts"
+              :ajaxing="ajaxing"
+              :checked="checked"
+            />
+            <div class="accordion mt-3 mb-3" id="deliveryAccordion">
+              <div class="accordion-item ">
+                <h5 class="accordion-header"  id="headingAddress">
+                  <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#collapseAddress" aria-expanded="false" aria-controls="collapseAddress">
+                    <span class="delivery-heading">Delivery Address</span>
+                  </button>
+                </h5>
+                <div id="collapseAddress" class="accordion-collapse collapse" aria-labelledby="headingAddress" data-bs-parent="#deliveryAccordion">
+                  <div class="container mt-2">
+                    <div class="container ">
+                      <div class="row g-3">
+                        <user-address
+                          ref="shippingAddress"
+                          :has-radio="true"
+                          @editing="editAddress"
+                          @selected-address="selectedCurrentAddress = $event"
+                          @add-address="addressPopup = true"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="accordion mt-3 mb-3" id="paymentAccordion">
+              <div class="accordion-item ">
+                <h5 class="accordion-header"  id="headingPayment">
+                  <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#collapsePayment" aria-expanded="false" aria-controls="collapsePayment">
+                    <span class="delivery-heading">Payment Method</span>
+                  </button>
+                </h5>
+                <div id="collapsePayment" class="accordion-collapse collapse" aria-labelledby="headingPayment" data-bs-parent="#paymentAccordion">
+                  <div class="container mt-2">
+                    <div class="container ">
+                      <div class="row g-3">
+                        <payment-gateways
+                          ref="paymentGateways"
+                          :total-price="totalPrice"
+                          :voucher="voucherResult"
+                          :hide-confirm-btn="true"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <checkout-right
+            :disabled="preventGoing"
+            :checked-product="checkedProduct"
+            @calculated-price="cartPrice = $event"
+            @go-next="goToAddress"
+          />
+          <!-- Upsell Popup -->
+          <div v-if="showUpsellModal" class="modal-overlay">
+            <div class="modal-content upsell-modal">
+              <div class="modal-header">
+                <h3>{{ $t('cart.upsellTitle') }}</h3>
+                <button class="modal-close" @click="closeUpsellPopup">
+                  <i class="icon close"></i>
                 </button>
               </div>
               
-              <div v-else-if="upsellProducts.length" class="upsell-products">
-                <div class="upsell-product" v-for="product in upsellProducts" :key="product.id">
-                  <div class="product-image">
-                    <img 
-                      :src="getImageURL(product.image)" 
-                      :alt="product.title"
-                      @error="handleImageError($event, product)"
-                      :class="{ 'image-error': !product.imageLoaded }"
-                    >
-                    <div v-if="!product.imageLoaded" class="image-placeholder">
-                      <i class="icon image"></i>
-                    </div>
-                  </div>
-                  
-                  <div class="product-info">
-                    <h4>{{ product.title }}</h4>
-                      
-                      <!-- Show original price with strikethrough if there's a discount -->
-                      <template v-if="hasDiscount(product)">
-                        <price-format 
-                          :price="getOriginalPrice(product)" 
-                          class="original-price strike-through"
-                        />
-                        <span class="discount-percent">
-                          {{ getDiscountPercent(product) }}% OFF
-                        </span>
-                      </template>
-                      
-                      <!-- Price display with discount information -->
-                      <div class="product-price">
-                      <price-format 
-                        :price="getUpsellPrice(product)" 
-                        class="current-price"
-                      />
+              <div class="modal-body">
+                <div v-if="loadingUpsells" class="loading-spinner">
+                  <spinner :radius="30" color="primary" />
+                </div>
+                
+                <div v-if="upsellError" class="error-message">
+                  <i class="icon error"></i>
+                  <p>{{ upsellError }}</p>
+                  <button class="retry-btn" @click="loadUpsellProducts">
+                    {{ $t('cart.retry') }}
+                  </button>
+                </div>
+                
+                <div v-else-if="upsellProducts.length" class="upsell-products">
+                  <div class="upsell-product" v-for="product in upsellProducts" :key="product.id">
+                    <div class="product-image">
+                      <img 
+                        :src="getImageURL(product.image)" 
+                        :alt="product.title"
+                        @error="handleImageError($event, product)"
+                        :class="{ 'image-error': !product.imageLoaded }"
+                      >
+                      <div v-if="!product.imageLoaded" class="image-placeholder">
+                        <i class="icon image"></i>
+                      </div>
                     </div>
                     
-                    <p v-if="product.inventoryError" class="inventory-error">
-                      {{ product.inventoryError }}
-                    </p>
-                    <p v-if="product.addToCartError" class="add-to-cart-error">
-                      {{ product.addToCartError }}
-                    </p>
+                    <div class="product-info">
+                      <h4>{{ product.title }}</h4>
+                        
+                        <template v-if="hasDiscount(product)">
+                          <price-format 
+                            :price="getOriginalPrice(product)" 
+                            class="original-price strike-through"
+                          />
+                          <span class="discount-percent">
+                            {{ getDiscountPercent(product) }}% OFF
+                          </span>
+                        </template>
+                        
+                        <div class="product-price">
+                        <price-format 
+                          :price="getUpsellPrice(product)" 
+                          class="current-price"
+                        />
+                      </div>
+                      
+                      <p v-if="product.inventoryError" class="inventory-error">
+                        {{ product.inventoryError }}
+                      </p>
+                      <p v-if="product.addToCartError" class="add-to-cart-error">
+                        {{ product.addToCartError }}
+                      </p>
+                    </div>
+                    
+                    <div class="product-actions">
+                      <button 
+                        class="add-to-cart-btn ajax-btn w-100 w-sm-50 primary-btn mtb-10 mlr-sm-2-5"
+                        :class="{
+                          'added-to-cart': product.addedToCart,
+                          'adding-to-cart': addingToCart === product.id,
+                          'error-state': product.inventoryError || product.addToCartError
+                        }"
+                        @click="addUpsellToCart(product)"
+                        :disabled="addingToCart === product.id || product.addedToCart || product.inventoryError"
+                      >
+                        <span v-if="addingToCart === product.id">
+                          <spinner :radius="15" color="white" />
+                        </span>
+                        <span v-else-if="product.addedToCart">
+                          {{ $t('cart.addedToCart') }}
+                        </span>
+                        <span v-else-if="product.inventoryError || product.addToCartError">
+                          {{ $t('cart.unavailable') }}
+                        </span>
+                        <span v-else>{{ $t('cart.addToCart') }}</span>
+                      </button>
+                    </div>
                   </div>
-                  
-                  <div class="product-actions">
+
+                  <div class="upsell-footer">
                     <button 
-                      class="add-to-cart-btn ajax-btn w-100 w-sm-50 primary-btn mtb-10 mlr-sm-2-5"
-                      :class="{
-                        'added-to-cart': product.addedToCart,
-                        'adding-to-cart': addingToCart === product.id,
-                        'error-state': product.inventoryError || product.addToCartError
-                      }"
-                      @click="addUpsellToCart(product)"
-                      :disabled="addingToCart === product.id || product.addedToCart || product.inventoryError"
+                      class="skip-btn ajax-btn w-100 w-sm-50 primary-btn mtb-10 mlr-sm-2-5"
+                      @click="closeUpsellPopup"
+                      :disabled="addingToCart !== null"
                     >
-                      <span v-if="addingToCart === product.id">
-                        <spinner :radius="15" color="white" />
-                      </span>
-                      <span v-else-if="product.addedToCart">
-                        {{ $t('cart.addedToCart') }}
-                      </span>
-                      <span v-else-if="product.inventoryError || product.addToCartError">
-                        {{ $t('cart.unavailable') }}
-                      </span>
-                      <span v-else>{{ $t('cart.addToCart') }}</span>
+                      {{ hasAddedItems ? $t('cart.continueToCheckout') : $t('cart.skipOffer') }}
                     </button>
                   </div>
                 </div>
-
-                <!-- Single Skip Button at Bottom -->
-                <div class="upsell-footer">
-                  <button 
-                    class="skip-btn ajax-btn w-100 w-sm-50 primary-btn mtb-10 mlr-sm-2-5"
-                    @click="closeUpsellPopup"
-                    :disabled="addingToCart !== null"
-                  >
-                    {{ hasAddedItems ? $t('cart.continueToCheckout') : $t('cart.skipOffer') }}
+                
+                <div v-else class="no-upsells">
+                  <p>{{ $t('cart.noUpsellsAvailable') }}</p>
+                  <button class="continue-btn ajax-btn primary-btn w-100" @click="goToAddress">
+                    {{ $t('cart.continueToCheckout') }}
                   </button>
                 </div>
-              </div>
-              
-              <div v-else class="no-upsells">
-                <p>{{ $t('cart.noUpsellsAvailable') }}</p>
-                <button class="continue-btn ajax-btn primary-btn w-100" @click="goToAddress">
-                  {{ $t('cart.continueToCheckout') }}
-                </button>
               </div>
             </div>
           </div>
@@ -184,13 +213,21 @@
   import global from '~/mixin/global'
   import Spinner from '~/components/Spinner'
   import productPriceHelper from '~/mixin/productPriceHelper'
+  import NavigationStep from '../components/NavigationStep.vue'
+  import Breadcrumbs from '../components/Breadcrumbs.vue'
+  import UserAddress from '~/components/UserAddress'
+  import PaymentGateways from "~/components/PaymentGateways";
 
   export default {
     middleware: ['common-middleware'],
     data() {
       return {
+        voucherResult: null,
+        addressPopup: false,
+        editing: 0,
         preventGoing: true,
         checked: [],
+        // bundleList: [],
         ajaxing: false,
         isMounting: false,
         hasBundle: false,
@@ -198,6 +235,18 @@
           totalItems: 0,
           totalPriceWithOffer: 0,
           totalPrice: 0,
+        },
+        addressData: {
+          id: '',
+          name: '',
+          phone: '',
+          city: '',
+          country: '',
+          state: '',
+          zip: '',
+          address_1: '',
+          address_2: '',
+          delivery_instruction: ''
         },
         // Upsell popup data
         showUpsellModal: false,
@@ -214,10 +263,15 @@
       AjaxButton,
       CheckoutRight,
       CartList,
-      Spinner
+      Spinner,
+      UserAddress,
+      PaymentGateways
     },
     mixins: [util, productHelper, global, productPriceHelper],
     computed: {
+      totalPrice() {
+        return this.cartPrice?.totalPrice || 0
+      },
       checkedProduct() {
         this.checked = []
         let checkedP = []
@@ -242,6 +296,13 @@
       ...mapGetters('cart', ['cartProducts'])
     },
     methods: {
+      editAddress(value) {
+        this.addressPopup = true
+        this.editing = value.id
+        this.addressData = Object.assign({}, value)
+        this.states = this.countryList[value.country].states
+      },
+
       // Price calculation methods for upsell products
       getUpsellPrice(product) {
         // Use offered_price if available, otherwise use price or current_price
@@ -281,6 +342,13 @@
       },
       
       async showUpsellPopup() {
+        if (!this.$auth?.user) {
+          this.$router.push({
+            path: '/login',
+            query: { redirect: '/cart' } // or '/shipping'
+          })
+          return
+        }
         const productWithUpsell = this.cartProducts.find(product => 
           product.upsell_id && parseInt(product.selected) === 1
         );
@@ -293,6 +361,17 @@
           this.goToAddress();
         }
       },
+
+      // async loadBundleDeals(){
+      //   try{
+      //     const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/';
+      //     const response = await this.$axios.get(`${baseUrl}api/v1/bundle-deals`);
+      //     const data = response?.data?.data;
+      //     this.bundleList = data;
+      //   }catch(error){
+      //     console.error("error", error);
+      //   }
+      // },
       
       async loadUpsellProducts() {
         this.loadingUpsells = true;
@@ -440,6 +519,13 @@
       },
       
       goToAddress() {
+        if (!this.$auth?.user) {
+          this.$router.push({
+            path: '/login',
+            query: { redirect: '/shipping' }
+          })
+          return
+        }
         this.$router.push('/shipping');
       },
       
@@ -465,6 +551,7 @@
           },
           lang: this.langCode
         })
+        await this.cartChangedApi()
       },
       
       async cartChangedApi(bundleDeal = false) {
@@ -504,10 +591,10 @@
         }
         this.ajaxing = false
       },
-      
-      ...mapActions('common', ['fetchLocation']),
-      ...mapActions('cart', ['getCartByUser', 'cartChanged']),
-      ...mapActions('user', ['getUserToken'])
+      ...mapActions('resource', ['setCountryList', 'setPhoneList']),
+      ...mapActions('common', ['fetchLocation', 'setToastMessage', 'setToastError', 'getRequest']),
+      ...mapActions('cart', ['getCartByUser', 'cartChanged', 'updateCartShipping']),
+      ...mapActions('user', ['getUserToken', 'userAddressAction'])
     },
     beforeDestroy() {
       // Clean up any pending timers when component is destroyed
@@ -523,17 +610,25 @@
             return false
           }
         }
+        if(!store.state.common.paymentGateway){
+          const data = await store.dispatch('common/getRequest', {
+            params: {},
+            api: 'paymentGateway'
+          })
+          store.commit('common/SET_PAYMENT_GATEWAY', data.data)
+        }
       } catch (e) {
         error(e)
       }
     },
     async mounted() {
       await this.fetchingData()
+      // await this.loadBundleDeals();
     }
   }
 </script>
 
-<style scoped>
+<style>
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -766,6 +861,97 @@
 
 .strike-through {
   text-decoration: line-through;
+}
+
+.save-address {
+ width: 330px;
+}
+
+.address-card {
+  border: 1px solid #dcdde1;
+  border-radius: 12px;
+  padding: 18px;
+  position: relative;
+  background: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+  height: 100%;
+}
+
+.address-card.active {
+  border: 2px solid #333199;
+  background: #f3f4ff;
+}
+
+.check-icon {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #333199;
+  color: #fff;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.address-card.active .check-icon {
+  display: flex;
+}
+
+.new-address {
+  width: 160px;
+}
+
+.add-card {
+  border: 2px dashed #dcdde1;
+  border-radius: 16px;
+  background: #f8f9fc;
+  cursor: pointer;
+  min-height: 180px;
+  transition: 0.3s;
+}
+
+.add-card:hover {
+  background: #eef0ff;
+  border-color: #4b4bff;
+}
+
+.plus-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #dcdde1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #333;
+}
+
+.form-label {
+    margin-bottom: 10px;
+    color: #130E2B;
+    font-size: 14px;
+    font-weight: 500;
+}
+.delivery-filed {
+    padding: 12px 12px !important;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #8C8999;
+}
+span.default-address {
+    font-size: 14px;
+    font-weight: 500;
+    color: #130E2B;
+}
+.cart-product-list-card .add-cart-small-text{
+      margin-top: 35px !important;
 }
 
 @media (max-width: 768px) {

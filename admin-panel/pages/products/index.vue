@@ -14,7 +14,7 @@
 
   <template v-slot:extra-filters>
     <!-- Filters -->
-      <div class="flex gap-15 align-center f-wrap category-filter">
+      <div class="product-filter-bar">
         <select
           v-model="filters.category_id"
           class="border p-2 custom-dropdown"
@@ -56,7 +56,7 @@
           <option value="2">Private</option>
         </select>
 
-        <div class="stock-filters flex gap-10 align-center">
+        <div class="stock-filters">
           <label class="stock-chip">
             <input
               type="checkbox"
@@ -100,17 +100,17 @@
           <td class="w-50x mx-w-50x">
             <input type="checkbox" :value="value.id" v-model="cbList">
           </td>
-          <td>
+          <td class="product-cell">
             <nuxt-link
-              class="dply-felx j-left link"
+              class="product-link"
               :to="`/products/${value.id}`"
             >
               <lazy-image
-                class="mr-20"
-                :data-src="getThumbImageURL(value.image)"
+                class="product-thumb"
+                :lazy-src="getThumbImageURL(value.image)"
                 :alt="value.title"
               />
-              <h5 class="mx-w-400x">{{ value.title }}</h5>
+              <span class="product-title">{{ value.title }}</span>
             </nuxt-link>
           </td>
           <td
@@ -131,7 +131,7 @@
           </td>
 
           <td>
-            <span class="dply-felx f-wrap gap-10 mx-w-300x j-left">
+            <span class="product-categories">
                <nuxt-link
                  v-for="(data, index) in value.product_categories"
                  :key="index"
@@ -140,6 +140,9 @@
                >
                 {{ data.category.title }}
               </nuxt-link>
+              <!-- <span v-if="value.product_categories.length > 2" class="muted-more">
+                +{{ value.product_categories.length - 2 }} -->
+              <!-- </span> -->
             </span>
 
           </td>
@@ -163,46 +166,83 @@
           </td>
           <td>{{ value.views }}</td>
           <td>{{ value.created }}</td>
-          <td class="flex">
-            <select class="lite-btn custom-dropdown" @change="onActionChange($event, value.id)">
-              <option value="" selected disabled>Select Action</option>
-              <option value="view">
-                {{ $t('fSale.view') }}
-              </option>
-              <option value="reviews">
-                {{ $t('prod.reviews') }}
-              </option>
+          <td class="product-actions">
+            <div class="action-dropdown-wrapper">
 
-              <option
-                v-if="$can('product', 'create')"
-                value="duplicate"
+              <button
+                class="action-icon-btn"
+                @click.stop="toggleActionDropdown(value.id)"
               >
-                {{ $t('prod.duplicate') }}
-              </option>
+                <i class="fa fa-pencil"></i>
+              </button>
 
-              <option
-                v-if="$can('product', 'edit')"
-                value="edit"
+              <div
+                v-if="activeDropdown === value.id"
+                class="action-dropdown-menu"
               >
-                {{ $t('category.edit') }}
-              </option>
 
-              <option
-                v-if="$can('product', 'delete')"
-                value="delete"
-              >
-                {{ $t('category.delete') }}
-              </option>
-              <option value="seo">
-                {{ 'SEO' }}
-              </option>
-              <option value="draft">
-                {{ 'Draft' }}
-              </option>
-              <option value="embed">
-                {{ 'Embed' }}
-              </option>
-            </select>
+                <button
+                  class="dropdown-item"
+                  @click="handleAction('view', value.id)"
+                >
+                  {{ $t('fSale.view') }}
+                </button>
+
+                <button
+                  class="dropdown-item"
+                  @click="handleAction('reviews', value.id)"
+                >
+                  {{ $t('prod.reviews') }}
+                </button>
+
+                <button
+                  v-if="$can('product', 'create')"
+                  class="dropdown-item"
+                  @click="handleAction('duplicate', value.id)"
+                >
+                  {{ $t('prod.duplicate') }}
+                </button>
+
+                <button
+                  v-if="$can('product', 'edit')"
+                  class="dropdown-item"
+                  @click="handleAction('edit', value.id)"
+                >
+                  {{ $t('category.edit') }}
+                </button>
+
+                <button
+                  v-if="$can('product', 'delete')"
+                  class="dropdown-item text-danger"
+                  @click="handleAction('delete', value.id)"
+                >
+                  {{ $t('category.delete') }}
+                </button>
+
+                <button
+                  class="dropdown-item"
+                  @click="handleAction('seo', value.id)"
+                >
+                  SEO
+                </button>
+
+                <button
+                  class="dropdown-item"
+                  @click="handleAction('draft', value.id)"
+                >
+                  Draft
+                </button>
+
+                <button
+                  class="dropdown-item"
+                  @click="handleAction('embed', value.id)"
+                >
+                  Embed
+                </button>
+
+              </div>
+
+            </div>
           </td>
         </tr>
     </template>
@@ -282,6 +322,7 @@
     middleware: ['common-middleware', 'auth'],
     data(){
       return {
+        activeDropdown: null,
         filters: {
           category_id: '',
           subcategory_id: '',
@@ -347,12 +388,28 @@
     }
     },
     methods: {
+      closeDropdown() {
+        this.activeDropdown = null
+      },
+      toggleActionDropdown(id) {
+        this.activeDropdown =
+          this.activeDropdown === id
+            ? null
+            : id
+      },
+      handleAction(action, id) {
+        this.activeDropdown = null
+        this.onActionChange({
+          target: {
+            value: action
+          }
+        }, id)
+      },
       openEmbedModal(productId) {
         this.selectedProductId = productId
         this.borderType = 'solid'
         this.showEmbedModal = true
       },
-
       closeEmbed() {
         this.showEmbedModal = false
         this.selectedProductId = null
@@ -496,40 +553,50 @@
           : '',
         stock: this.$route.query.stock ? this.$route.query.stock : ''
       }
-    }
+      document.addEventListener('click', this.closeDropdown)
+    },
+    beforeDestroy() {
+      document.removeEventListener('click', this.closeDropdown)
+    },
   }
 </script>
 
 <style scoped>
-.duplicate-btn {
-  background-color: #4CAF50;
-  color: white;
+.product-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.duplicate-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 select.custom-dropdown {
-    cursor: pointer;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
-    padding: 0 15px 0 20px;
-    height: 42px;
-    line-height: 42px;
-    background: linear-gradient(to bottom, #f7f8fa, #e7e9ec);
-    border: 1px solid #bbb;
-    border-radius: 50px;
-    font-size: 0.95em;
-    min-width: 80px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: all 0.1s;
+  cursor: pointer;
+  user-select: none;
+  padding: 0 32px 0 12px;
+  height: 36px;
+  line-height: 34px;
+  background: var(--surface-color);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--text-color);
+  font-size: 13px;
+  min-width: 116px;
+  max-width: 165px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.12s ease;
+}
+
+select.custom-dropdown:hover,
+select.custom-dropdown:focus {
+  border-color: var(--primary-color);
+  box-shadow: none;
 }
 
 .stock-filters {
+  display: flex;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -537,16 +604,16 @@ select.custom-dropdown {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1px solid #d0d5dd;
-  border-radius: 20px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
   font-size: 13px;
   cursor: pointer;
   user-select: none;
-  background: #fff;
-  color: #344054;
-  transition: all 0.2s ease;
+  background: var(--surface-color);
+  color: var(--text-muted);
+  transition: all 0.12s ease;
 }
 
 .stock-chip input {
@@ -556,54 +623,80 @@ select.custom-dropdown {
 }
 
 .stock-chip:hover {
-  border-color: #4CAF50;
-  background: #f6fff8;
+  border-color: var(--primary-color);
+  background: var(--hover-color);
 }
 
 .stock-chip input:checked + span {
-  font-weight: 600;
-  color: #1b5e20;
+  font-weight: 650;
+  color: var(--primary-color);
 }
 
-.stock-chip input:checked ~ span,
-.stock-chip input:checked + span {
-  color: #1b5e20;
-}
-
-.stock-chip input:checked ~ span::before,
 .stock-chip input:checked + span::before {
-  content: "✓";
-  margin-right: 6px;
-  font-size: 12px;
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  vertical-align: 1px;
 }
 
-.stock-chip input:checked ~ span {
-  background: transparent;
+.product-cell {
+  min-width: 230px;
 }
 
-.stock-chip input:checked {
+.product-link {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  color: var(--text-strong);
+  text-decoration: none;
+  text-align: left;
 }
 
-.stock-chip input[value="out"]:checked + span {
-  color: #b42318;
+.product-thumb {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  background: var(--hover-color);
 }
 
-.stock-chip input[value="out"]:checked + span::before {
-  content: "✕";
+.product-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-weight: 650;
+  line-height: 18px;
 }
 
-.dply-felx {
-    align-items: baseline;
+.product-actions {
+  text-align: center;
 }
 
-.category-filter {
-    display: flex;
-    align-items: anchor-center;
+.action-select {
+  width: 132px;
+  min-width: 132px;
 }
 
-.stock-chip {
-    padding: 12px 25px !IMPORTANT;
-    background: linear-gradient(to bottom, #f7f8fa, #e7e9ec) !important;
+.product-categories {
+  display: inline-block;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.muted-more {
+  color: var(--text-muted);
+  margin-left: 3px;
 }
 
 /* ===== Overlay ===== */
@@ -621,11 +714,11 @@ select.custom-dropdown {
 
 /* ===== Modal Container ===== */
 .embed-modal {
-  background: #ffffff;
+  background: var(--surface-color);
   width: 100%;
   max-width: 1150px;
-  border-radius: 16px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  box-shadow: none;
   overflow: hidden;
   animation: modalFade 0.25s ease;
 }
@@ -636,31 +729,31 @@ select.custom-dropdown {
   justify-content: space-between;
   align-items: center;
   padding: 22px 28px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .embed-header h2 {
   font-size: 20px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-strong);
   margin: 0;
 }
 
 /* Close Button */
 .close-btn {
-  background: #111827;
-  color: #fff;
+  background: var(--text-strong);
+  color: var(--primary-foreground);
   border: none;
   width: 34px;
   height: 34px;
-  border-radius: 50%;
+  border-radius: 8px;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .close-btn:hover {
-  background: #ef4444;
+  background: var(--danger-text);
   transform: scale(1.05);
 }
 
@@ -673,17 +766,17 @@ select.custom-dropdown {
 
 /* ===== Preview Card ===== */
 .embed-preview {
-  background: #f9fafb;
-  border-radius: 14px;
+  background: var(--hover-color);
+  border-radius: 8px;
   padding: 18px;
-  box-shadow: inset 0 0 0 1px #e5e7eb;
+  box-shadow: inset 0 0 0 1px var(--border-color);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .embed-preview iframe {
-  border-radius: 10px;
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 
@@ -697,17 +790,17 @@ select.custom-dropdown {
 
 /* ===== Configuration Card ===== */
 .config-box {
-  background: #f9fafb;
-  border-radius: 14px;
+  background: var(--hover-color);
+  border-radius: 8px;
   padding: 20px;
-  box-shadow: inset 0 0 0 1px #e5e7eb;
+  box-shadow: inset 0 0 0 1px var(--border-color);
 }
 
 .config-box h3 {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 14px;
-  color: #111827;
+  color: var(--text-strong);
 }
 
 .config-box label {
@@ -715,7 +808,7 @@ select.custom-dropdown {
   align-items: center;
   gap: 10px;
   font-size: 14px;
-  color: #374151;
+  color: var(--text-color);
   margin-bottom: 10px;
   cursor: pointer;
 }
@@ -728,8 +821,8 @@ select.custom-dropdown {
 
 /* ===== Code Card ===== */
 .code-box {
-  background: #0f172a;
-  border-radius: 14px;
+  background: var(--text-strong);
+  border-radius: 8px;
   padding: 20px;
   color: #f8fafc;
   position: relative;
@@ -747,9 +840,8 @@ select.custom-dropdown {
   height: 130px;
   resize: none;
   padding: 14px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: none;
-  font-family: "Fira Code", monospace;
   font-size: 13px;
   background: #1e293b;
   color: #e2e8f0;
@@ -761,10 +853,10 @@ select.custom-dropdown {
   margin-top: 14px;
   width: 42px;
   height: 42px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: none;
-  background: #ffffff;
-  color: #111827;
+  background: var(--surface-color);
+  color: var(--text-strong);
   font-size: 16px;
   display: flex;
   align-items: center;
@@ -774,7 +866,7 @@ select.custom-dropdown {
 }
 
 .copy-btn:hover {
-  background: #e5e7eb;
+  background: var(--border-color);
   transform: scale(1.05);
 }
 
@@ -788,6 +880,57 @@ select.custom-dropdown {
 }
 .embed-preview {
     width: fit-content;
+}
+
+.action-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.action-icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid #D7D7E0;
+  background: #fff;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.action-icon-btn:hover {
+  background: #f4f4f8;
+}
+
+.action-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 45px;
+  min-width: 180px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  z-index: 999;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0px 15px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background: #f5f5fa;
+}
+
+.text-danger {
+  color: #dc2626;
 }
  
 @media only screen and (max-width:980px) {

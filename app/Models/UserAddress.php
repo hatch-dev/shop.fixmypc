@@ -10,7 +10,7 @@ class UserAddress extends Model
     use HasFactory;
 
     protected $fillable = [
-        'id', 'country', 'state', 'city', 'zip', 'address_1', 'address_2' , 'user_id', 'name', 'phone',
+        'id', 'country', 'state', 'city', 'zip', 'address_1', 'address_2' , 'user_id', 'name', 'phone', 'type',
         'default', 'delivery_instruction', 'user_token', 'email'
     ];
 

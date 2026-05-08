@@ -37,24 +37,42 @@
       v-if="!gate || $can(gate, 'view')"
       name="fade" mode="out-in"
     >
-      <div class="p-20" v-if="!loading">
-        <h5 class="mt-20 mt-sm-15">{{ resultText }}</h5>
-
-        <div class="card">
-        <div class="table-wrapper">
-          <table class="mn-w-600x">
-            <slot
-              name="table"
-              v-bind:list="list"
-            />
-          </table>
-        </div>
+      <div class="list-page-body p-20" v-if="!loading">
+        <div v-if="errorMessage" class="empty-state danger-msg" role="alert">
+          <h5>{{ $t('error.err') || 'Unable to load data' }}</h5>
+          <p>{{ errorMessage }}</p>
+          <button class="outline-btn xs mt-10" @click.prevent="fetchingData">
+            {{ $t('util.retry') || 'Retry' }}
+          </button>
         </div>
 
-        <pagination
-          :total-page="totalPage"
-        />
-      </div>
+        <template v-else>
+          <div class="list-summary sided f-wrap gap-10">
+            <h5>{{ resultText }}</h5>
+          </div>
+
+          <div v-if="hasRows" class="n-product-table">
+          <div class="table-wrapper">
+            <table class="mn-w-600x">
+              <slot
+                name="table"
+                v-bind:list="list"
+              />
+            </table>
+          </div>
+          </div>
+
+          <div v-else class="empty-state card">
+            <h5>{{ $t('list.noData', { data: name}) }}</h5>
+            <p>{{ $t('list.sh') }}</p>
+          </div>
+
+          <pagination
+            v-if="totalPage > 1"
+            :total-page="totalPage"
+          />
+        </template>
+        </div>
       <shimmer
         v-else
       />
@@ -119,6 +137,7 @@
         deleting: false,
         loading: true,
         result: null,
+        errorMessage: '',
       }
     },
     components: {
@@ -139,7 +158,10 @@
         return this.$t('list.loadn') + '...'
       },
       list() {
-        return this.result?.data
+        return this.result?.data || []
+      },
+      hasRows() {
+        return Array.isArray(this.list) && this.list.length > 0
       },
       totalPage() {
         return this.result?.last_page
@@ -154,6 +176,7 @@
         try {
           this.settingRouteParam()
           this.loading = true
+          this.errorMessage = ''
           this.result = await this.getRequest({
             params: {
               ...this.$route.query,
@@ -164,10 +187,11 @@
           })
 
           this.$emit('list', this.list)
-
-          this.loading = false
         } catch (e) {
-          return this.$nuxt.error(e)
+          this.errorMessage = e?.message || this.$t('error.err') || 'Something went wrong'
+          this.$store.dispatch('ui/setToastError', this.errorMessage)
+        } finally {
+          this.loading = false
         }
       },
       editItem(id) {
@@ -180,10 +204,11 @@
             await this.deleteData({params: id, api: this.deleteApi })
             this.emptyAllList(this.emptyStoreVariable)
             this.$emit('deleted')
-            this.deleting = false
             await this.fetchingData()
           }catch (e) {
-            return this.$nuxt.error(e)
+            this.$store.dispatch('ui/setToastError', e?.message || this.$t('error.err') || 'Unable to delete')
+          } finally {
+            this.deleting = false
           }
         }
       },
@@ -198,5 +223,28 @@
 </script>
 
 <style scoped>
+.list-page-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
+.list-summary {
+  min-height: 32px;
+}
+
+.empty-state {
+  padding: 24px;
+  text-align: center;
+}
+
+.empty-state h5 {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.empty-state p {
+  color: var(--text-muted);
+  line-height: 1.5;
+}
 </style>

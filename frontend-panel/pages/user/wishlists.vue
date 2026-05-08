@@ -7,24 +7,47 @@
     <template v-slot:rightArea>
 
       <transition name="fade" mode="out-in">
-        <div
-          class="spinner-wrapper flex"
-          v-if="fetchingWishlistData"
-        >
-          <spinner
-            :radius="100"
-          />
+        <div class="spinner-wrapper flex" v-if="fetchingWishlistData">
+          <spinner :radius="100" />
         </div>
       </transition>
 
-      <div
-        v-if="currentWishLists && !currentWishLists.length"
-        class="info-msg"
-      >
-        {{ $t('wishlist.noWishlist') }}
+      <div class="card-box p-4 mb-4 d-flex justify-content-between align-items-center flex-wrap my-orders-box">
+          <div>
+              <h5 class="mb-1">My Wishlist</h5>
+              <small class="text-muted">View and manage your wishlist items.</small>
+          </div>
+          <a href="#" class="share-link d-flex align-items-center share-whishlist" >
+              <i class="fa-solid fa-share-nodes" style="color: rgb(107, 114, 128);"></i><span class="ms-2 ">Share Wishlist</span>
+          </a>
+      </div>
+      <div class="Frequently-card-box p-0 mb-4">
+        <div class="section-header d-flex justify-content-between align-items-center">
+            <span>Active Wishlist</span>
+            <small class="text-muted">🛡️ Account is secure</small>
+        </div>
+        <div class="p-3">
+            <div v-if="currentWishLists && !currentWishLists.length" class="info-msg">
+              {{ $t('wishlist.noWishlist') }}
+            </div>
+            <div v-else>
+              <product-view-list
+                v-for="(value, index) in currentWishLists"
+                  :key="index"
+                  :product="value.product"
+                  :index="index"
+                  type="wishlist"
+                  @removed="fetchingData"
+                />
+            </div>
+        </div>
       </div>
 
-      <div
+      
+
+      
+
+      <!-- <div
         v-else
         class="area"
       >
@@ -45,7 +68,7 @@
             </template>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <pagination
         class="mt-20 mt-sm-15"
@@ -72,6 +95,7 @@
   import Spinner from "~/components/Spinner";
   import TileShimmer from "~/components/TileShimmer";
   import global from '~/mixin/global'
+import ProductViewList from '../../components/ProductViewList.vue'
 
   export default {
 
@@ -157,6 +181,33 @@
   }
 </script>
 
-<style>
+<style scoped>
+.section-header {
+    background: #F3F3FA;
+    padding: 12px 20px;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    font-weight: 400;
+    font-size: 18px;
+    color: #130E2B;
+}
 
+.Frequently-card-box {
+    background-color: #fff;
+    border: 1px solid #E3E3EF;
+    border-radius: 14px;
+}
+
+.my-orders-box {
+    background-color: #fff;
+    border: 1px solid #E3E3EF;
+    border-radius: 14px;
+}
+
+a.share-whishlist {
+    font-size: 14px;
+    font-weight: 400;
+    color: #6B7280;
+    text-decoration: none;
+}   
 </style>
