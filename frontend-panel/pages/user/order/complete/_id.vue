@@ -169,7 +169,7 @@
                         </div>
                     </div>
 
-                    <div class="mt-2">
+                    <!-- <div class="mt-2">
                         <div class="d-flex justify-content-end price-box-thanku">
                             <p>Total Price: <span class="fw-bold">€{{ item.selling }}</span></p>
                         </div>
@@ -182,12 +182,122 @@
                         <div class="d-flex justify-content-end price-box-thanku">
                             <p> Subtotal:<span class="fw-bold">€{{ getItemSubtotal(item) }}</span></p><br>
                         </div>
+                    </div> -->
+
+                    <div class="mt-2">
+
+                        <div class="d-flex justify-content-end price-box-thanku">
+                            <p>
+                                Original Price:
+                                <span class="fw-bold">
+                                    €{{
+                                        (
+                                            Number(item.actual_price || 0)
+                                            * Number(item.quantity || 0)
+                                        ).toFixed(2)
+                                    }}
+                                </span>
+                            </p>
+                        </div>
+
+                        <div
+                            class="d-flex justify-content-end price-box-thanku"
+                        >
+                            <p>
+                                Product Discount:
+                                <span class="fw-bold text-success">
+                                    - €{{
+                                        (
+                                            (
+                                                Number(item.actual_price || 0)
+                                                - Number(item.selling || 0)
+                                            )
+                                            * Number(item.quantity || 0)
+                                        ).toFixed(2)
+                                    }}
+                                </span>
+                            </p>
+                        </div>
+
+                        <div
+                            class="d-flex justify-content-end price-box-thanku"
+                        >
+                            <p>
+                                Voucher Discount:
+                                <span class="fw-bold text-success">
+                                    - €{{
+                                        (Number(item.product_voucher_discount_applied || 0) * Number(item.quantity || 0)).toFixed(2)
+                                    }}
+                                </span>
+                            </p>
+                        </div>
+
+                        <div class="d-flex justify-content-end price-box-thanku">
+                            <p>
+                                Shipping:
+                                <span class="fw-bold">
+                                    + €{{ Number(item.shipping_price || 0).toFixed(2) }}
+                                </span>
+                            </p>
+                        </div>
+
                     </div>
                 </div>
 
                 <!-- Final Total -->
-                <div class="d-flex justify-content-end price-box-thanku">
+                <!-- <div class="d-flex justify-content-end price-box-thanku">
                     <p>Subtotal:<span class="fw-bold"> €{{ order?.total_amount }}</span></p><br>
+                </div> -->
+                <!-- Order Summary -->
+                <div class="order-summary-box mt-4">
+
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span>€{{ order?.calculations?.subtotal || 0 }}</span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Product Discount</span>
+                        <span class="text-success">
+                            - €{{ order?.calculations?.discount || 0 }}
+                        </span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Flash Discount</span>
+                        <span class="text-success">
+                            - €{{ order?.calculations?.flash_discount || 0 }}
+                        </span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Voucher Discount</span>
+                        <span class="text-success">
+                            - €{{ order?.calculations?.voucher || 0 }}
+                        </span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Shipping</span>
+                        <span>
+                            + €{{ order?.calculations?.shipping || 0 }}
+                        </span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Tax</span>
+                        <span>
+                            + €{{ order?.calculations?.tax || 0 }}
+                        </span>
+                    </div>
+
+                    <div class="summary-row total-row">
+                        <span>Total</span>
+                        <span>
+                            €{{ order?.calculations?.total || 0 }}
+                        </span>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -503,5 +613,44 @@ strong.payment-id {
     margin-top: 8px;
     font-size: 14px;
     color: #6b7280;
+}
+
+.order-summary-box {
+    width: 100%;
+    max-width: 420px;
+    margin-left: auto;
+    border-top: 1px solid #EEEEF3;
+    padding-top: 20px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 15px;
+    color: #232159;
+}
+
+.total-row {
+    border-top: 1px solid #EEEEF3;
+    padding-top: 15px;
+    margin-top: 15px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.text-success {
+    color: #05B942;
+}
+
+.total-product-price {
+    border-top: 1px solid #EEEEF3;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+.text-success {
+    color: #05B942;
 }
 </style>

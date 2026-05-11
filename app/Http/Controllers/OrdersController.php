@@ -19,6 +19,10 @@ use App\Models\Helper\Validation;
 use App\Models\IyzicoPayment;
 use App\Models\Licence;
 use App\Models\Order;
+use App\Models\OrderedVoucher;
+use App\Models\OrderedProductsInventory;
+use App\Models\OrderedFlashDiscount;
+use App\Models\FlashDiscount;
 use App\Models\OrderedProduct;
 use App\Models\Payment;
 use App\Models\Plugin;
@@ -969,11 +973,79 @@ class OrdersController extends ControllerHelper
                     return response()->json(Validation::errorLang($lang));
                 }
 
-
                 $order['user'] = $order->user_info;
                 unset($order->user_info);
                 $order['calculated'] = Utils::calcPrice($order);
                 $order['created'] = Utils::formatDate(Utils::convertTimeToUSERzone($order->created_at, $request->time_zone));
+
+                $subtotal = 0;
+                $discount = 0;
+                $flashDiscount = 0;
+                $shipping = 0;
+                $voucher = 0;
+                $tax = 0;
+                $total = 0;
+
+                $orderedInventories = OrderedProductsInventory::where(
+                    'order_id',
+                    $order->id
+                )->get();
+
+                foreach ($order->ordered_products as $product) {
+                    $inventoryData = $orderedInventories
+                        ->where('product_id', $product->product_id)
+                        ->where('inventory_id', $product->inventory_id)
+                        ->first();
+                    if ($inventoryData) {
+
+                        $actualPrice = (float)$inventoryData->actual_price;
+                        $finalPrice = (float)$inventoryData->price;
+                        $shippingPrice = (float)$inventoryData->shipping_price;
+                        $voucherDiscount = (float)$inventoryData->product_voucher_discount_applied;
+                        $productSubtotal = $actualPrice * $product->quantity;
+                        $productDiscount = $productSubtotal - ($finalPrice * $product->quantity);
+                        if ($productDiscount < 0) {
+                            $productDiscount = 0;
+                        }
+
+                        $subtotal += $productSubtotal;
+                        $discount += $productDiscount;
+                        $shipping += $shippingPrice;
+
+                        $product['actual_price'] = $actualPrice;
+                        $product['price'] = $finalPrice;
+                        $product['shipping_price'] = $shippingPrice;
+                        $product['product_voucher_discount_applied'] = $voucherDiscount;
+                    } else {
+                        $product['actual_price'] = 0;
+                        $product['price'] = 0;
+                        $product['shipping_price'] = 0;
+                        $product['product_voucher_discount_applied'] = 0;
+                    }
+                    $tax += ((float)$product->tax_price * (int)$product->quantity);
+                }
+
+                $flashDiscount = OrderedFlashDiscount::where(
+                    'order_id',
+                    $order->id
+                )->sum('discount');
+
+                $voucher = OrderedVoucher::where(
+                    'order_id',
+                    $order->id
+                )->sum('discount');
+
+                $total = ($subtotal + $shipping + $tax) - $discount - $flashDiscount - $voucher;
+
+                $order['calculations'] = [
+                    'subtotal' => number_format($subtotal, 2, '.', ''),
+                    'discount' => number_format($discount, 2, '.', ''),
+                    'flash_discount' => number_format($flashDiscount, 2, '.', ''),
+                    'shipping' => number_format($shipping, 2, '.', ''),
+                    'tax' => number_format($tax, 2, '.', ''),
+                    'voucher' => number_format($voucher, 2, '.', ''),
+                    'total' => number_format($total, 2, '.', ''),
+                ];
 
                 return response()->json(new Response($request->token, $order));
 
@@ -1459,6 +1531,27 @@ class OrdersController extends ControllerHelper
                 ->with('updated_inventory')
                 ->get();
 
+            
+            $totalItemsPrice = $existingCart->sum(function ($item) {
+                return ($item->price * $item->quantity);
+            });
+
+            $shippingItemsPrice = $existingCart->sum(function ($item) {
+                if (!$item->shipping_place_id) {
+                    return 0;
+                }
+                if((int)$item->shipping_type === Config::get('constants.shippingTypeIn.LOCATION')){
+                    return (float)$item->shipping_place->price;
+                }
+                if((int)$item->shipping_type === Config::get('constants.shippingTypeIn.PICKUP')){
+                    return (float)$item->shipping_place->pickup_price;
+                }
+                return 0;
+            });
+
+            $totalOrderedAmount = $totalItemsPrice + $shippingItemsPrice;
+
+
             $totalPriceWithoutShipping = 0;
             foreach ($existingCart as $key => $cart) {
                 if ($cart->shipping_place_id && !is_null($cart->product_inner)) {
@@ -1669,6 +1762,15 @@ class OrdersController extends ControllerHelper
 
                 $order = Order::create($orderArr);
 
+                if ($voucher && $offeredVoucher > 0) {
+
+                    OrderedVoucher::create([
+                        'order_id' => $order->id,
+                        'voucher_id' => $voucher->id,
+                        'discount' => $offeredVoucher
+                    ]);
+                }
+
                 $orderedProducts = [];
                 $totalPrice = 0;
 
@@ -1679,6 +1781,8 @@ class OrdersController extends ControllerHelper
                 }*/
 
                 $shippingId = [];
+
+                $totalCartPrice = 0;
 
                 foreach ($existingCart as $key => $cart) {
                     if ($cart->shipping_place_id && !is_null($cart->product_inner)) {
@@ -1744,7 +1848,8 @@ class OrdersController extends ControllerHelper
                         // Tax calculation
                         $taxQtyOffer = 0;
                         $taxRule = $cart->product_inner->tax_rules;
-                        if ($taxRule) {
+                        $excludeVAT = Product::where(['id' => $cart->product_inner->id])->value('excludeVAT');
+                        if ($taxRule && $excludeVAT == 1) {
                             if ((int)$taxRule->type === (int)Config::get('constants.priceType.FLAT')) {
                                 $taxQtyOffer = $taxRule->price;
                             } else {
@@ -1760,6 +1865,24 @@ class OrdersController extends ControllerHelper
 
                         $totalPrice += $total;
 
+                        $productVoucherDiscount = 0;
+
+                        if($cart->voucher_code){
+                            $productVoucherDiscount = $cart->voucher_discount;
+                        }
+
+                        OrderedProductsInventory::create([
+                            'product_id' => $cart->product_inner->id,
+                            'inventory_id' => $cart->inventory_id,
+                            'quantity' => $cart->quantity,
+                            'actual_price' => $cart->product_inner->selling,
+                            'price' => $cart->price,
+                            'shipping_price' => $shippingPrice,
+                            'product_voucher_discount_applied' => $productVoucherDiscount,
+                            'order_id' => $order->id,
+                        ]);
+
+                        $totalCartPrice += ($cart->product_inner->selling * $cart->quantity);
 
                         $commission = $cart->product_inner->admin->commission;
 
@@ -1785,6 +1908,45 @@ class OrdersController extends ControllerHelper
 
 
                         UpdatedInventory::where('id', $cart->inventory_id)->decrement('quantity', $cart->quantity);
+                    }
+                }
+
+                $flashDiscountAmount = 0;
+                $flash = FlashDiscount::active()->first();
+                if($flash){
+                    if ($totalCartPrice >= $flash->min_cart_value) {
+                        if ($flash->type === 'percentage') {
+                            $flashDiscountAmount = (
+                                $totalCartPrice * $flash->value
+                            ) / 100;
+                        }else{
+                            $flashDiscountAmount = $flash->value;
+                        }
+                    }
+
+                    if (
+                        !is_null($flash->max_discount) &&
+                        $flashDiscountAmount > $flash->max_discount
+                    ) {
+                        $flashDiscountAmount = $flash->max_discount;
+                    }
+
+                    $flashDiscountAmount = number_format(
+                        $flashDiscountAmount,
+                        2,
+                        '.',
+                        ''
+                    );
+
+                    $flashDiscountId = $flash->id;
+
+                    if ($flashDiscountId && $flashDiscountAmount > 0) {
+
+                        OrderedFlashDiscount::create([
+                            'order_id' => $order->id,
+                            'flash_discount_id' => $flashDiscountId,
+                            'discount' => $flashDiscountAmount
+                        ]);
                     }
                 }
 

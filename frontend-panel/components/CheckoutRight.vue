@@ -243,8 +243,8 @@ export default {
       this.checkedProduct.forEach((curr) => {
         // Check if this product has an upsell price
         const hasUpsellPrice = curr?.upsell_price && parseFloat(curr.upsell_price) > 0;
-        // const productPrice = hasUpsellPrice ? parseFloat(curr.upsell_price) : this.currentInventoryPriceCalc(curr?.updated_inventory, curr?.flash_product);
-        const productPrice = hasUpsellPrice ? parseFloat(curr.upsell_price) : parseFloat(curr.price || 0);
+        const productPrice = hasUpsellPrice ? parseFloat(curr.upsell_price) : this.currentInventoryPriceCalc(curr?.updated_inventory, curr?.flash_product);
+        // const productPrice = hasUpsellPrice ? parseFloat(curr.upsell_price) : parseFloat(curr?.price || 0);
 
         const currentShippingId = curr?.shipping_place?.shipping_rule?.id;
         const shippingIdExists = shippingId[currentShippingId]

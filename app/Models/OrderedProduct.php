@@ -65,4 +65,5 @@ class OrderedProduct extends Model
     {
         return $this->hasMany(ProductImageAttribute::class, 'product_id', 'product_id');
     }
+
 }

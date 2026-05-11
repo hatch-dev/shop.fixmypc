@@ -329,12 +329,9 @@ class CartsController extends ControllerHelper
                         ));
                     }
                 }
+                $updatedQuantity = $existingCart->quantity + $request->quantity;
                 Cart::where('id', $existingCart->id)->update([
-                    'quantity' => $existingCart->quantity + $request->quantity,
-                    'price' => $request->price,
-                    'voucher_code' => $request->voucher_code,
-                    'voucher_discount' => $request->original_price - $request->price,
-                    'original_price' => $request->original_price
+                    'quantity' => $updatedQuantity,
                 ]);
 
                 $existingCart->quantity = $existingCart->quantity + $request->quantity;
