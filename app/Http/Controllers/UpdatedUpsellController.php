@@ -7,6 +7,7 @@ use App\Models\UpdatedUpsellProductService;
 use App\Models\UpdatedUpsellProductServiceItems;
 use App\Models\Helper\ControllerHelper;
 use App\Models\Product;
+use App\Models\UpdatedInventory;
 use Illuminate\Http\Request;
 use App\Models\Helper\Response;
 use App\Models\Helper\Utils;
@@ -121,10 +122,7 @@ class UpdatedUpsellController extends ControllerHelper
                     if ($item) {
 
                         $updateData = [
-                            'type' => $upsell['type'],
                             'title' => $upsell['item_title'],
-                            'description' => $upsell['description'] ?? null,
-                            'service_price' => $upsell['price'] ?? null,
                             'updated_at' => $now,
                         ];
 
@@ -138,11 +136,8 @@ class UpdatedUpsellController extends ControllerHelper
                 }else{
                     $item = UpdatedUpsellProductService::create([
                         'updated_upsells_id' => $id,
-                        'type' => $upsell['type'],
                         'title' => $upsell['item_title'],
                         'image' => $imagePath,
-                        'description' => $upsell['description'] ?? null,
-                        'service_price' => $upsell['price'] ?? null,
                         'created_at' => $now,
                         'updated_at' => $now,
                     ]);
@@ -153,23 +148,49 @@ class UpdatedUpsellController extends ControllerHelper
                     $item->id
                 )->delete();
 
-                if ($upsell['type'] === 'product' && !empty($upsell['ram_options'])) {
+                if (!empty($upsell['upgrade_groups'])) {
+                    foreach ($upsell['upgrade_groups'] as $group) {
 
-                    foreach ($upsell['ram_options'] as $ram) {
-                        UpdatedUpsellProductServiceItems::create([
-                            'updated_upsell_product_service_id' => $item->id,
-                            'name' => $ram['name'],
-                            'price' => $ram['price'],
-                            'created_at' => $now,
-                            'updated_at' => $now,
-                        ]);
+                        foreach ($group['options'] as $option) {
+
+                            $product = Product::create([
+                                'title' => $upsell['item_title'] . '-' . $option['title'],
+                                'image' => $imagePath,
+                                'selling' => $option['price'] ?? 0,
+                                'status' => 1,
+                                'admin_id' => 1,
+                                'tax_rule_id' => 1,
+                                'shipping_rule_id' => 1,
+                            ]);
+                        
+                            $inventory = UpdatedInventory::create([
+                                'product_id' => $product->id,
+                                'quantity' => 100,
+                                'price' => $option['price'] ?? 0,
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ]);
+                        
+                            UpdatedUpsellProductServiceItems::create([
+                                'updated_upsell_product_service_id' => $item->id,
+                                'attribute_id' => $group['attribute_id'] ?? null,
+                                'attribute_name' => $group['title'] ?? null,
+                                'value_id' => $option['value_id'] ?? null,
+                                'product_id' => $product->id,
+                                'inventory_id' => $inventory->id,
+                                'name' => $option['title'] ?? null,
+                                'price' => $option['price'] ?? 0,
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ]);
+                        }
                     }
                 }
             }
 
             $data = UpdatedUpsell::with([
                 'items',
-                'items.ramOptions'
+                'items.upgradeOptions'
             ])->findOrFail($id);
 
             return response()->json(new Response($request->token, $data));
@@ -191,7 +212,7 @@ class UpdatedUpsellController extends ControllerHelper
             // Load relations
             $query->with([
                 'items',
-                'items.ramOptions'
+                'items.upgradeOptions'
             ]);
 
             $data = $query->find($id);

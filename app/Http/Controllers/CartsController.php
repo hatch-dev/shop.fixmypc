@@ -131,7 +131,7 @@ class CartsController extends ControllerHelper
 
             $query = $query->with('shipping_place.shipping_rule');
             $query = $query->select('id', 'product_id', 'user_id', 'inventory_id', 'quantity',
-                    'selected', 'shipping_place_id', 'shipping_type','price as upsell_price');
+                    'selected', 'shipping_place_id', 'shipping_type', 'upgrades', 'price as upsell_price');
             $data = $query->get();
 			
 					 // MANUALLY ADD UPSELL PRODUCTS AFTER GETTING THE DATA

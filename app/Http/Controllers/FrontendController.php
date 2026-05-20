@@ -87,20 +87,38 @@ class FrontendController extends Controller
 
                 $queryCat = Category::query();
 
+                $queryCat = $queryCat->withCount([
+                    'products as products_count' => function ($q) {
+                        $q->where('status', Config::get('constants.status.PUBLIC'));
+                    }
+                ]);
 
-                $queryCat = $queryCat->leftJoin('category_langs as cl', function ($join) use ($lang) {
-                    $join->on('cl.category_id', '=', 'categories.id');
-                    $join->where('cl.lang', $lang);
-                });
-                $queryCat = $queryCat->select('categories.*', 'cl.title');
+                // $queryCat = $queryCat->leftJoin('category_langs as cl', function ($join) use ($lang) {
+                //     $join->on('cl.category_id', '=', 'categories.id');
+                //     $join->where('cl.lang', $lang);
+                // });
+                // $queryCat = $queryCat->select('categories.*', 'cl.title');
 
-                $queryCat = $queryCat->with(['child' => function ($queryCat) use ($lang) {
-                    $queryCat->leftJoin('category_langs as cl', function ($join) use ($lang) {
-                        $join->on('cl.category_id', '=', 'categories.id');
-                        $join->where('cl.lang', $lang);
-                    });
-                    $queryCat->select('categories.*', 'cl.title');
-                }]);
+                $queryCat = $queryCat->with([
+                    'child' => function ($queryCat) use ($lang) {
+
+                        $queryCat->leftJoin('category_langs as cl', function ($join) use ($lang) {
+                            $join->on('cl.category_id', '=', 'categories.id');
+                            $join->where('cl.lang', $lang);
+                        });
+
+                        $queryCat->select('categories.*', 'cl.title')
+                                ->withCount('products');
+                    }
+                ]);
+
+                // $queryCat = $queryCat->with(['child' => function ($queryCat) use ($lang) {
+                //     $queryCat->leftJoin('category_langs as cl', function ($join) use ($lang) {
+                //         $join->on('cl.category_id', '=', 'categories.id');
+                //         $join->where('cl.lang', $lang);
+                //     });
+                //     $queryCat->select('categories.*', 'cl.title');
+                // }]);
 
 
                 $queryCat = $queryCat->orderBy('categories.created_at', 'desc')
@@ -166,7 +184,20 @@ class FrontendController extends Controller
 
                 } else */
 
-                $category = Category::with('child')
+                $category = Category::withCount([
+                    'products as products_count' => function ($q) {
+                        $q->where('status', Config::get('constants.status.PUBLIC'));
+                    }
+                ])
+                    ->with([
+                        'child' => function ($q) {
+                            $q->withCount([
+                                'products as products_count' => function ($query) {
+                                    $query->where('status', Config::get('constants.status.PUBLIC'));
+                                }
+                            ]);
+                        }
+                    ])
                     ->orderBy('created_at', 'desc')
                     ->where('status', Config::get('constants.status.PUBLIC'))
                     ->where('in_frontend',1)
@@ -2842,7 +2873,7 @@ class FrontendController extends Controller
 
             $crossSell = Upsell::where(['id' => $product->upsell_id])->with(['products.product'])->first();
 
-            $upsell = UpdatedUpsell::where(['id' => $product->updated_upsell_id])->with('items.ramOptions')->first();
+            $upsell = UpdatedUpsell::where(['id' => $product->updated_upsell_id])->with('items.upgradeOptions')->first();
 
             $upsellServices = [];
 
@@ -2851,21 +2882,27 @@ class FrontendController extends Controller
 
                     $options = [];
 
-                    foreach ($service->ramOptions as $option) {
+                    foreach ($service->upgradeOptions as $option) {
                         $options[] = [
                             'id' => $option->id,
+                            'attribute_id' =>
+                                $option->attribute_id,
+
+                            'attribute_name' =>
+                                $option->attribute_name,
+                            'value_id' =>
+                                $option->value_id,
                             'name' => $option->name,
-                            'price' => $option->price
+                            'price' => $option->price,
+                            'product_id' => $option->product_id,
+                            'inventory_id' => $option->inventory_id
                         ];
                     }
 
                     $upsellServices[] = [
                         'id' => $service->id,
                         'title' => $service->title,
-                        'type' => $service->type, // checkbox / radio
                         'image' => $service->image,
-                        'description' => $service->description,
-                        'price' => $service->service_price,
                         'options' => $options
                     ];
                 }

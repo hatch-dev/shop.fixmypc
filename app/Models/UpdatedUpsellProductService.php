@@ -25,7 +25,7 @@ class UpdatedUpsellProductService extends Model
         return $this->belongsTo(UpdatedUpsell::class, 'updated_upsells_id');
     }
 
-    public function ramOptions()
+    public function upgradeOptions()
     {
         return $this->hasMany(
             UpdatedUpsellProductServiceItems::class,

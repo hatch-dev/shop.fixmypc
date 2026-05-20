@@ -61,7 +61,7 @@
         >
         <div class="upsell-header" @click="toggleExpand(index)">
           <h4 class="upsell-title">
-            {{ upsell.item_title || (upsell.type === 'service' ? 'Service' : 'Product') }}
+            {{ upsell.item_title || 'Product Upgrade' }}
           </h4>
           <div class="header-actions">
             <span
@@ -80,16 +80,6 @@
           </div>
         </div>
          <div v-show="upsell.expanded" class="upsell-body">
-          <div class="radio-group">
-            <label>
-              <input type="radio" value="service" v-model="upsell.type">
-              Service
-            </label>
-            <label>
-              <input type="radio" value="product" v-model="upsell.type">
-              Product
-            </label>
-          </div>
           <div class="input-wrapper">
             <label>Item Title</label>
             <input
@@ -121,88 +111,78 @@
               {{ upsell.errors.image }}
             </span>
           </div>
-          <div v-if="upsell.type === 'service'">
-            <div class="input-wrapper">
-              <label>Description</label>
-              <textarea
-                rows="3"
-                v-model="upsell.description"
-                placeholder="Add description..."
-              ></textarea>
-              <span class="error" v-if="upsell.errors?.description">
-                {{ upsell.errors.description }}
-              </span>
-            </div>
-            <div class="input-wrapper price-field">
-              <label>Price</label>
-              <div class="price-input">
-                <span>{{ currencyIcon }}</span>
-                <input
-                  type="number"
-                  v-model="upsell.price"
-                  min="0"
-                  step="0.01"
-                >
-                
-              </div>
-              <span class="error" v-if="upsell.errors?.price">
-                  {{ upsell.errors.price }}
-                </span>
-            </div>
-          </div>
-          <div v-if="upsell.type === 'product'" class="ram-section">
+          <div class="upgrade-section">
             <div class="ram-add-row">
-              <select v-model="upsell.selected_ram">
-                <option disabled value="">Select RAM</option>
-                <option value="4GB">4GB</option>
-                <option value="8GB">8GB</option>
-                <option value="16GB">16GB</option>
-                <option value="32GB">32GB</option>
+              <select v-model.number="upsell.selected_attribute_id" @change="onAttributeChange(index)">
+                <option disabled value="">
+                  Select Attribute
+                </option>
+                <option
+                  v-for="attribute in availableAttributes(upsell)"
+                  :key="attribute.id"
+                  :value="attribute.id"
+                >
+                  {{ attribute.title }}
+                </option>
               </select>
-
+              <select v-model.number="upsell.selected_value_id">
+                <option disabled value="">
+                  Select Value
+                </option>
+                <option
+                  v-for="value in upsell.attribute_values"
+                  :key="value.id"
+                  :value="value.id"
+                >
+                  {{ value.title }}
+                </option>
+              </select>
               <button
                 type="button"
                 class="ajax-btn primary-btn"
-                @click="addRam(index)"
+                @click="addUpgradeOption(index)"
               >
                 Add
               </button>
             </div>
-            <span class="error" v-if="upsell.errors?.ram">
-              {{ upsell.errors.ram }}
-            </span>
             <div
-              v-for="(ram, rIndex) in upsell.ram_options"
-              :key="rIndex"
-              class="ram-item"
+              v-for="(group, gIndex) in upsell.upgrade_groups"
+              :key="gIndex"
+              class="upgrade-group"
             >
-              <span class="ram-name">{{ ram.name }}</span>
-
-              <div class="price-input">
-                <span>{{ currencyIcon }}</span>
-                <input
-                  type="number"
-                  v-model="ram.price"
-                  min="0"
-                  step="0.01"
-                >
-              </div>
-
-              <button
-                type="button"
-                class="remove-btn"
-                @click="removeRam(index, rIndex)"
+              <h4 class="group-title">
+                {{ group.title }}
+              </h4>
+              <div
+                v-for="(option, oIndex) in group.options"
+                :key="oIndex"
+                class="ram-item"
               >
-                ✕
-              </button>
-              <span class="error" v-if="upsell.errors?.[`ram_${rIndex}`]">
-                {{ upsell.errors[`ram_${rIndex}`] }}
-              </span>
+                <span class="ram-name">
+                  {{ option.title }}
+                </span>
+                <div class="price-input">
+                  <span>{{ currencyIcon }}</span>
+
+                  <input
+                    type="number"
+                    v-model="option.price"
+                    min="0"
+                    step="0.01"
+                  >
+                </div>
+                <button
+                  type="button"
+                  class="remove-btn"
+                  @click="removeOption(index, gIndex, oIndex)"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           </div>
          </div>
         </div>
-      </div><!--dply-felx inputs-->
     </template>
   </data-page>
 </template>
@@ -227,6 +207,8 @@
     middleware: ['common-middleware', 'auth'],
     data() {
       return {
+        attributes: [],
+        loadingAttributes: false,
         upsellError: '',
         result: {
           upsells: [],
@@ -255,6 +237,12 @@
       }, 700)
     },
     computed: {
+      filteredAttributes() {
+        return this.attributes.filter(attribute => {
+          const title = attribute.title.toLowerCase()
+          return ['ram', 'storage'].includes(title)
+        })
+      },
       dateValidation() {
        // return new Date(this.result.end_time) > new Date(this.result.start_time)
       },
@@ -264,6 +252,69 @@
       ...mapGetters('setting', ['setting']),
     },
     methods: {
+      availableAttributes(upsell) {
+
+        if (
+          upsell.upgrade_groups &&
+          upsell.upgrade_groups.length > 0
+        ) {
+
+          const firstGroup = upsell.upgrade_groups[0]
+
+          return this.filteredAttributes.map(attribute => ({
+            ...attribute,
+            disabled:
+              Number(attribute.id) !==
+              Number(firstGroup.attribute_id)
+          }))
+
+        }
+
+        return this.filteredAttributes.map(attribute => ({
+          ...attribute,
+          disabled: false
+        }))
+      },
+      onAttributeChange(index) {
+        const upsell = this.result.upsells[index]
+        const attribute = this.attributes.find(
+          a => a.id === upsell.selected_attribute_id
+        )
+        if (!attribute) {
+          upsell.attribute_values = []
+          return
+        }
+        upsell.attribute_values = attribute.values || []
+        upsell.selected_value_id = ''
+      },
+      removeOption(upsellIndex, groupIndex, optionIndex) {
+        this.result
+          .upsells[upsellIndex]
+          .upgrade_groups[groupIndex]
+          .options
+          .splice(optionIndex, 1)
+      },
+      async fetchAttributes() {
+        this.loadingAttributes = true
+        try {
+          const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/';
+          const response = await this.$axios.get(
+            `${baseUrl}api/admin/attribute/all`,
+            {
+              params: {
+                type: 'desc',
+                orderby: 'created_at',
+                page: 1,
+                time_zone: this.timeZone
+              }
+            }
+          )
+          this.attributes = response.data?.data?.data || []
+        } catch (e) {
+          console.log(e)
+        }
+        this.loadingAttributes = false
+      },
       toggleExpand(index) {
         this.result.upsells[index].expanded =
           !this.result.upsells[index].expanded
@@ -283,28 +334,12 @@
       },
       preparePayload() {
 
-        const cleanedUpsells = this.result.upsells.map(u => {
-          if (u.type === 'service') {
-            return {
-              id: u.id || null,
-              type: u.type,
-              item_title: u.item_title,
-              description: u.description,
-              image: u.image,
-              price: u.price
-            }
-          }
-
-          if (u.type === 'product') {
-            return {
-              id: u.id || null,
-              type: u.type,
-              item_title: u.item_title,
-              image: u.image,
-              ram_options: u.ram_options
-            }
-          }
-        })
+        const cleanedUpsells = this.result.upsells.map(u => ({
+          id: u.id || null,
+          item_title: u.item_title,
+          image: u.image,
+          upgrade_groups: u.upgrade_groups
+        }))
 
         return {
           id: this.result.id,
@@ -342,67 +377,73 @@
             isValid = false
           }
 
-          if (upsell.type === 'service') {
 
-            if (!upsell.description || !upsell.description.trim()) {
-              this.$set(upsell.errors, 'description', 'Description is required')
-              isValid = false
-            }
-
-            // if (!upsell.price || Number(upsell.price) <= 0) {
-            //   this.$set(upsell.errors, 'price', 'Price must be greater than 0')
-            //   isValid = false
-            // }
-
-          }
-
-          if (upsell.type === 'product') {
-
-            if (!upsell.ram_options || upsell.ram_options.length === 0) {
-              this.$set(upsell.errors, 'ram', 'Add at least one RAM option')
-              isValid = false
-            }
-
-            // upsell.ram_options.forEach((ram, rIndex) => {
-            //   if (!ram.price || Number(ram.price) <= 0) {
-            //     this.$set(
-            //       upsell.errors,
-            //       `ram_${rIndex}`,
-            //       'RAM price must be greater than 0'
-            //     )
-            //     isValid = false
-            //   }
-            // })
-
+          if (!upsell.upgrade_groups || upsell.upgrade_groups.length === 0) {
+            this.$set(upsell.errors, 'ram', 'Add at least one RAM option')
+            isValid = false
           }
 
         })
 
         return isValid
       },
-      addRam(index) {
+      addUpgradeOption(index) {
         const upsell = this.result.upsells[index]
 
-        if (!upsell.selected_ram) {
-          this.$set(upsell, 'errors', { ram: 'Select RAM first' })
+        if (
+          !upsell.selected_attribute_id ||
+          !upsell.selected_value_id
+        ) {
           return
         }
 
-        const exists = upsell.ram_options.find(
-          r => r.name === upsell.selected_ram
+        const attribute = this.attributes.find(
+          a => a.id === upsell.selected_attribute_id
         )
-        if (exists) return
 
-        upsell.ram_options.push({
-          name: upsell.selected_ram,
+        if (!attribute) {
+          return
+        }
+
+        const value = attribute.values.find(
+          v => v.id === upsell.selected_value_id
+        )
+
+        if (!value) {
+          return
+        }
+
+        let group = upsell.upgrade_groups.find(
+          g => g.attribute_id === attribute.id
+        )
+
+        if (!group) {
+          group = {
+            attribute_id: attribute.id,
+            title: attribute.title,
+            options: []
+          }
+          upsell.upgrade_groups.push(group)
+        }
+
+        const exists = group.options.find(
+          o => o.value_id === value.id
+        )
+
+        if (exists) {
+          return
+        }
+
+        group.options.push({
+          value_id: value.id,
+          title: value.title,
           price: 0
         })
 
-        upsell.selected_ram = ''
+        upsell.selected_value_id = ''
       },
-
       removeRam(upsellIndex, ramIndex) {
-        this.result.upsells[upsellIndex].ram_options.splice(ramIndex, 1)
+        this.result.upsells[upsellIndex].upgrade_groups.splice(ramIndex, 1)
       },
       onImageChange(e, index) {
         const file = e.target.files[0]
@@ -416,28 +457,81 @@
       },
       toggleUpsellBox() {
         this.result.upsells.push({
-          type: 'service',
           item_title: '',
-          description: '',
           image: '',
-          price: 0,
-          ram_options: [],
-          selected_ram: '',
+          selected_attribute_id: '',
+          selected_value_id: '',
+          attribute_values: [],
+          upgrade_groups: [],
           errors: {},
           expanded: true
         })
       },
       settingResult(evt) {
         const mappedUpsells = (evt.items || []).map(item => {
+          const groupedOptions = [];
+          (item.upgrade_options || []).forEach(option => {
+            let group = groupedOptions.find(
+              g => g.title.toLowerCase() === item.title
+                .replace(' Upgrade', '')
+                .toLowerCase()
+            )
+
+            const attributeTitle = item.title
+            .replace(/upgrade/i, '')
+            .trim()
+
+            const attribute = this.filteredAttributes.find(
+              a =>
+                a.title.trim().toLowerCase() ===
+                attributeTitle.trim().toLowerCase()
+            )
+            if (!group) {
+
+              group = {
+                attribute_id: attribute ? attribute.id : '',
+                title: attributeTitle,
+                options: []
+              }
+
+              groupedOptions.push(group)
+
+            }
+
+            const matchedValue = (attribute?.values || []).find(
+              v =>
+                v.title.trim().toLowerCase() ===
+                option.name.trim().toLowerCase()
+            )
+
+            group.options.push({
+              id: option.id,
+              value_id: matchedValue?.id || null,
+              title: option.name,
+              price: Number(option.price || 0)
+            })
+          });
+
+          const firstGroup = groupedOptions[0] || null
+          let attributeValues = []
+          if (firstGroup?.attribute_id) {
+            const attribute = this.attributes.find(
+              a => a.id === firstGroup.attribute_id
+            )
+
+            attributeValues = attribute?.values || []
+          }
           return {
             id: item.id,
-            type: item.type,
             item_title: item.title,
-            description: item.description,
-            image: item.image ? '/' + item.image : '',
-            price: item.service_price,
-            ram_options: item.ram_options || [],
-            selected_ram: '',
+            image: item.image
+              ? '/' + item.image
+              : '',
+            selected_attribute_id:
+              Number(firstGroup?.attribute_id) || '',
+            selected_value_id: '',
+            attribute_values: attributeValues,
+            upgrade_groups: groupedOptions,
             errors: {},
             expanded: false
           }
@@ -450,6 +544,7 @@
           upsells: mappedUpsells,
           time_zone: this.timeZone
         }
+
       },
       dropdownSelected(data) {
         this.result.status = data.key
@@ -457,6 +552,7 @@
       ...mapActions('common', ['getById'] )
     },
     async mounted() {
+      await this.fetchAttributes()
     },
   }
 </script>
@@ -469,11 +565,6 @@
   border-radius 6px
   background #fafafa
   margin-bottom 10px
-
-.radio-group
-  display flex
-  gap 20px
-  margin-bottom 20px
 
 .image-upload-wrapper
   margin 15px 0

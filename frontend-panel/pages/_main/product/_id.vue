@@ -185,6 +185,33 @@
                        <span v-if="isInStock" class="badge-success">In Stock</span>
                        <span v-else class="badge-danger">Out of Stock</span>
                        <span v-if="isBackOrder" class="badge-secondary">Back Order</span>
+
+                        <div
+                          v-if="selectedInventory && selectedInventory.id"
+                          class="selected-config-box mb-15"
+                        >
+                          <div class="config-header">
+                            Selected Configuration
+                          </div>
+                          <div class="config-values">
+                            <span
+                              v-for="(attr, index) in selectedInventory.inventory_attributes"
+                              :key="index"
+                              class="config-pill"
+                            >
+                              {{
+                                getAttributeTitle(attr.attribute_value_id)
+                              }}
+                            </span>
+                          </div>
+                          <div
+                            v-if="selectedInventory.sku"
+                            class="config-sku"
+                          >
+                            SKU:
+                            <strong>{{ selectedInventory.sku }}</strong>
+                          </div>
+                        </div>
                     </div>
                     <!-- <div
                       v-if="bundleDeal"
@@ -452,16 +479,12 @@
                               <span class="badge bg-success">● In Stock</span>
                           </div>
                           <!-- BATTERY UPGRADE -->
-                          <div  v-for="service in productData.upsell_services" :key="service.id" class="p-3 mb-3" style="background:#fff; border-radius:10px;">
+                          <div  v-for="service in productData.upsell_services" :key="service.id" class="mb-3" style="background:#fff; border-radius:10px;">
                               <div class="d-flex align-items-center mb-2">
                                 <strong class="ms-2">{{ service.title }}</strong>
                               </div>
-                              <p v-if="service.description" class="small-text mb-2">
-                                {{ service.description }}
-                              </p>
                               <div class="small-text">
-                                <!-- <div class="d-flex justify-content-between align-items-center mb-2"> -->
-                                  <template v-if="service.type === 'product'">
+                                  <template>
                                     <div
                                       v-for="opt in service.options"
                                       :key="opt.id"
@@ -472,7 +495,6 @@
                                           type="checkbox"
                                           :value="opt.id"
                                           v-model="selectedServiceOptions[service.id]"
-                                          :checked="Number(opt.price) === 0"
                                           :disabled="Number(opt.price) === 0"
                                           class="me-2"
                                         >
@@ -486,28 +508,6 @@
                                       </div>
                                     </div>
                                   </template>
-                                  <template v-else>
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                      <div>
-                                        <input
-                                          type="checkbox"
-                                          :value="service.id"
-                                          v-model="selectedServices"
-                                          :checked="Number(service.price) === 0"
-                                          :disabled="Number(service.price) === 0"
-                                          class="me-2"
-                                        >
-                                        {{ service.title }}
-                                        <span v-if="Number(service.price) === 0">
-                                          (Included)
-                                        </span>
-                                      </div>
-                                      <div>
-                                        <strong>(+€{{ service.price }})</strong>
-                                      </div>
-                                    </div>
-                                  </template>
-                                <!-- </div> -->
                               </div>
                           </div>
                         </div>
@@ -819,21 +819,13 @@
           }
         })
         this.productData.upsell_services?.forEach(service => {
+          const selectedOptIds  = this.selectedServiceOptions[service.id] || []
 
-          if (service.type === 'service') {
-            if (this.selectedServices.includes(service.id)) {
-              total += Number(service.price)
+          service.options.forEach(opt => {
+            if (selectedOptIds.includes(opt.id) || selectedOptIds.includes(String(opt.id))) {
+              total += Number(opt.price)
             }
-          }
-          if (service.type === 'product') {
-            const selectedOptIds  = this.selectedServiceOptions[service.id] || []
-
-            service.options.forEach(opt => {
-              if (selectedOptIds.includes(opt.id) || selectedOptIds.includes(String(opt.id))) {
-                total += Number(opt.price)
-              }
-            })
-          }
+          })
         })
 
         if (this.selectedBundle && this.productData.bundle_deal) {
@@ -959,6 +951,17 @@
     },
     methods: {
       ...mapActions('user', ['getUserToken']),
+      getAttributeTitle(attributeValueId) {
+        for (const attribute of this.product.attribute || []) {
+          const value = attribute.values.find(v =>
+            Number(v.attribute_value_id) === Number(attributeValueId)
+          )
+          if (value) {
+            return value.title
+          }
+        }
+        return ''
+      },
       applyVoucher(voucher) {
         if (
           this.selectedVoucher &&
@@ -1052,7 +1055,7 @@
         const data = {
           cross_sell: [],
           services: [],
-          options: [],
+          upgrades: [],
           bundle: null
         }
 
@@ -1069,18 +1072,24 @@
             }
           }
 
-          if (service.type === 'product') {
-            const selectedOpts = this.selectedServiceOptions[service.id] || []
-
-            service.options.forEach(opt => {
-              if (
-                selectedOpts.includes(opt.id) ||
-                selectedOpts.includes(String(opt.id))
-              ) {
-                data.options.push(opt)
-              }
-            })
-          }
+          const selectedOpts =
+            this.selectedServiceOptions[service.id] || []
+          service.options.forEach(opt => {
+            if ((
+              selectedOpts.includes(opt.id) ||
+              selectedOpts.includes(String(opt.id))
+            ) && Number(opt.price) > 0) {
+              data.upgrades.push({
+                service_id: service.id,
+                service_title: service.title,
+                option_id: opt.id,
+                option_name: opt.name,
+                price: Number(opt.price),
+                product_id: Number(opt.product_id),
+                inventory_id: Number(opt.inventory_id)
+              })
+            }
+          })
         })
 
         if (this.selectedBundle && this.productData.bundle_deal) {
@@ -1093,25 +1102,6 @@
         try {
           const user_token = await this.getUserToken()
           const extras = this.getCartExtras()
-
-          // if (extras.bundle) {
-          //   await this.cartAction({
-          //     payload: {
-          //       user_token,
-          //       apiVal: {
-          //         user_token,
-          //         bundle_id: extras.bundle.id,
-          //         quantity: 1
-          //       },
-          //       isBundle: true
-          //     },
-          //     lang: this.langCode
-          //   })
-
-          //   this.showSuccessBanner()
-          //   return
-          // }
-
           await this.cartAction({
             payload: {
               user_token,
@@ -1128,6 +1118,25 @@
             },
             lang: this.langCode
           })
+
+          for (const item of extras.upgrades) {
+            await this.cartAction({
+              payload: {
+                user_token,
+                storeVal: {
+                  quantity: 1
+                },
+                apiVal: {
+                  user_token,
+                  product_id: item.product_id,
+                  inventory_id: item.inventory_id,
+                  price: Number(item.price),
+                  quantity: 1
+                }
+              },
+              lang: this.langCode
+            })
+          }
 
           for (const item of extras.cross_sell) {
             await this.cartAction({
@@ -1147,34 +1156,6 @@
               lang: this.langCode
             })
           }
-
-          // for (const service of extras.services) {
-          //   await this.cartAction({
-          //     payload: {
-          //       user_token,
-          //       apiVal: {
-          //         user_token,
-          //         service_id: service.id,
-          //         quantity: 1
-          //       }
-          //     },
-          //     lang: this.langCode
-          //   })
-          // }
-
-          // for (const opt of extras.options) {
-          //   await this.cartAction({
-          //     payload: {
-          //       user_token,
-          //       apiVal: {
-          //         user_token,
-          //         product_option_id: opt.id,
-          //         quantity: 1
-          //       }
-          //     },
-          //     lang: this.langCode
-          //   })
-          // }
 
           this.showSuccessBanner()
 
@@ -1234,11 +1215,15 @@
             }
             this.selectedServiceOptions = {}
             this.productData.upsell_services.forEach(service => {
-              if (service.type === 'product') {
-                this.$set(this.selectedServiceOptions, service.id, [])
-              }
+              const includedOption = service.options.find(
+                opt => Number(opt.price) === 0
+              )
+              this.$set(
+                this.selectedServiceOptions,
+                service.id,
+                includedOption ? [includedOption.id] : []
+              )
             })
-            console.log("UPSELL/CROSSSELL DATA", this.productData)
             this.selectedItems = [this.productData.main_product.id]
         } catch (e) {
           this.bulkPricing = [];
@@ -1457,9 +1442,47 @@
       this.emptyVoucher()
       this.emptySuggestedProducts()
       //Checking if the product has no attribute
-      if (this.product?.inventory?.length === 1 && this.product?.inventory[0]?.inventory_attributes?.length === 0) {
+      // if (this.product?.inventory?.length === 1 && this.product?.inventory[0]?.inventory_attributes?.length === 0) {
 
-        this.selectedInventory = this.product?.inventory[0]
+      //   this.selectedInventory = this.product?.inventory[0]
+      // }
+
+      if (this.product?.inventory?.length) {
+        const defaultInventory = [...this.product.inventory].filter(i =>
+          Number(i.quantity) > 0
+        ).sort((a, b) =>
+          Number(b.quantity || 0) -
+          Number(a.quantity || 0)
+        )[0]
+        if (defaultInventory) {
+          this.selectedInventory = defaultInventory
+          this.productInventory = defaultInventory
+          this.optionChange = true
+          const attrMap = {}
+          defaultInventory.inventory_attributes.forEach(attr => {
+
+            const attribute = this.product.attribute.find(a =>
+              a.values.some(v =>
+                Number(v.attribute_value_id) === Number(attr.attribute_value_id)
+              )
+            )
+
+            if (!attribute) return
+
+            const value = attribute.values.find(v =>
+              Number(v.attribute_value_id) === Number(attr.attribute_value_id)
+            )
+
+            if (!value) return
+
+            attrMap[value.attribute_id] = {
+              ...value,
+              attribute_value_id: value.attribute_value_id
+            }
+            this.clickedAttributes[value.attribute_id] = value.id
+          })
+          this.currentAttributes = attrMap
+        }
       }
 
       document.body.classList.add('detail-page')
@@ -1788,6 +1811,41 @@
 
 .voucher-final-price {
   margin-top: 10px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.selected-config-box {
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 14px;
+  background: #F9FAFB;
+}
+
+.config-header {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #111827;
+}
+
+.config-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.config-pill {
+  background: #EEF2FF;
+  color: #4338CA;
+  padding: 6px 10px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.config-sku {
+  margin-top: 12px;
   font-size: 13px;
   color: #374151;
 }

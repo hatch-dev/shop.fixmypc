@@ -78,7 +78,10 @@ class UpdatedInventoriesController extends Controller
 
             $now = Carbon::now();
             $product = Product::where('id', $productId)->select(['offered', 'selling'])->first();
-            $currentPrice = $product->offered > 0 ? $product->offered : $product->selling;
+            $currentPrice = 0;
+            if ($product) {
+                $currentPrice = $product->offered > 0 ? $product->offered : $product->selling;
+            }
 
             $data = UpdatedInventory::with('inventory_attributes.attribute_value')
                 ->where('product_id', $productId)->get();
@@ -106,14 +109,8 @@ class UpdatedInventoriesController extends Controller
                 }
             }
 
-
-
-
-
-
             // Add / edit / delete inventories
             foreach ($request->inventories as $i) {
-
 
 
                 if(!key_exists('values', $i)){
@@ -134,7 +131,7 @@ class UpdatedInventoriesController extends Controller
                     UpdatedInventory::where('id', $i['id'])->update([
                         'quantity' => $i['quantity'],
                         'sku' => $i['sku'],
-                        'price' => $price,
+                        'price' => $i['price'],
                         'imei' => $i['imei'] ?? null,
                         'barcode' => $i['barcode'] ?? null,
                         'is_active' => $i['is_active'] ?? 0
@@ -202,7 +199,7 @@ class UpdatedInventoriesController extends Controller
                         'product_id' => $productId,
                         'quantity' => $i['quantity'],
                         'sku' => $i['sku'],
-                        'price' => $price,
+                        'price' => $i['price'],
                         'imei' => $i['imei'] ?? null,
                         'barcode' => $i['barcode'] ?? null,
                         'is_active' => $i['is_active'] ?? 0

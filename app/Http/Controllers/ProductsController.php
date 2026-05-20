@@ -73,6 +73,8 @@ class ProductsController extends ControllerHelper
 
             $query = Product::query();
 
+            $query->whereNotNull('slug');
+
             $query->leftJoin('product_views', 'products.id', '=', 'product_views.product_id');
 
             $query->orderBy('products.' . $orderBy, $type);

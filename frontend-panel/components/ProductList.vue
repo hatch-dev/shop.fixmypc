@@ -1,14 +1,34 @@
 <template>
-  <div>
+  <div :key="$route.fullPath">
     <div class="container-fluid my-5" v-if="category?.child && category?.child.length">
+      <breadcrumb v-if="hasBreadcrumb" class="mb-15 mt-0" :page="resultTitle" :slugs="slugs" />
       <h4 class="category-title">{{ category?.title }}</h4>
       <div class="mobile-list">
         <client-only>
-          <ImageSlider :per-view="perView" :gap="20" :responsive="perViewResponsive">
+          <ImageSlider class="sub_cat-gl_slider" :per-view="perView" :gap="20" :responsive="perViewResponsive">
             <template v-slot:content>
+              <li class="product-listing">
+                <nuxt-link :to="categoryLink(category)" :title="`All ${category?.title}`">
+                  <div class="category-box">
+                    <span class="category-count">
+                      {{ category?.products_count || 0 }}
+                    </span>
+                    <lazy-image
+                      :data-src="getImageURL(category.image)"
+                      :title="`All ${category?.title}`"
+                      :ALT="`All ${category?.title}`"
+                      class="category-icon-image"
+                    />
+                    <p>All {{ category?.title }}</p>
+                  </div>
+                </nuxt-link>
+              </li>
               <li v-for="(cat, index) in category?.child" :key="index" class="product-listing">
                 <nuxt-link :to="categoryLink(cat)" :title="cat.title">
                   <div class="category-box">
+                    <span class="category-count">
+                      {{ cat?.products_count || 0 }}
+                    </span>
                     <lazy-image :data-src="getImageURL(cat.image)" :title="cat.title" :alt="cat.title" class="category-icon-image" />
                     <p>{{ cat.title }}</p>
                   </div>
@@ -95,8 +115,11 @@
              <tile-shimmer v-for="index in 20" :key="index" />
           </div>
           <div class="pos-rel" v-else>
-            <div class="tile-container">
-              <product-tile v-for="(value, index) in currentItems" :key="index" :product="value" />
+            <div class="tile-container" v-if="currentItems.length">
+              <product-tile v-for="(value, index) in currentItems" :key="value.id || index" :product="value" />
+            </div>
+            <div v-else class="empty-product">
+              No products found
             </div>
             <pagination class="mt-30" ref="productPagination" :total-page="totalPage" @fetching-data="fetchingData" />
           </div>
@@ -140,8 +163,21 @@ export default {
   },
   mixins: [util, routeParamHelper],
   watch: {
-    '$route.query'() {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+    '$route.fullPath': {
+      immediate: true,
+      handler() {
+
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        })
+
+        this.fetchingData()
+
+        this.$nextTick(() => {
+          this.$forceUpdate()
+        })
+      }
     }
   },
   props: {
@@ -246,7 +282,7 @@ export default {
       //return `${this.$t('listingLayout.loading')}...`
     },
     currentItems() {
-      return this.products?.data || null
+      return this.products?.data || []
     },
     totalPage() {
       return this.products?.last_page
@@ -255,8 +291,12 @@ export default {
     ...mapGetters('listing', ['products', 'brands', 'shippingRules', 'collections']),
   },
   methods: {
-    goingBack() {
-      this.$router.go(-1)
+    async goingBack() {
+      await this.$router.go(-1)
+
+      this.$nextTick(() => {
+        this.fetchingData()
+      })
     },
     // openFilter() {
     //   this.filterPopup = true
@@ -384,6 +424,27 @@ export default {
 
 .glide__slides {
   padding: 20px 0px !important;
+}
+
+.category-box {
+  position: relative;
+}
+
+.category-count {
+    position: absolute;
+    background: red;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 2;
+    right: -15px;
+    top: -15px;
 }
 
 @media(max-width:768px) {

@@ -65,7 +65,7 @@
           >
             <div class="dply-felx f-column gap-15 ">
               <div class="inventory-row header">
-                  <div></div>
+                  <div>Back Order</div>
                   <div class="col-attr">{{ $t('list.attr') }}</div>
                   <div>Images</div>
                   <div>{{ $t('title.sku') }}</div>
@@ -136,7 +136,7 @@
             </div>
           </div>
 
-          <div
+          <!-- <div
             v-if="$can('product', 'edit') || $can('product', 'create')"
             class="dply-felx j-right"
           >
@@ -152,11 +152,9 @@
               :text="$t('setting.sv')"
               :fetching-data="formSubmitting && redirect"
             />
-          </div>
+          </div> -->
         </form>
       </div>
-
-
     </div>
     
     <!-- Images Modal -->
@@ -254,7 +252,11 @@
       productPrice: {
         type: Number,
         default: 0
-      }
+      },
+      productId: {
+        type: [String, Number],
+        default: null
+      },
     },
     mixins: [util, validation],
     components: {
@@ -269,12 +271,123 @@
       currencyIcon() {
         return this.setting?.currency_icon || '$'
       },
-      productId() {
-        return this.$route.params.id
-      },
       ...mapGetters('setting', ['setting'])
     },
+    watch: {
+      async productId(newVal, oldVal) {
+        if (!newVal) return
+        await this.fetchingData()
+        await this.mappingData()
+        await this.fetchVariantImages(newVal)
+      }
+    },
     methods: {
+      async validateInventoryBeforeSubmit() {
+
+        this.inventoryValidationError = ''
+
+        // Require at least one attribute
+        if (
+          !this.selectedAttributeValues ||
+          !this.selectedAttributeValues.length
+        ) {
+
+          this.inventoryValidationError =
+            'Please select inventory attributes'
+
+          this.$toast.error(this.inventoryValidationError)
+
+          this.$emit('has-error')
+
+          return false
+        }
+
+        // Require combinations
+        if (!this.combinations || !this.combinations.length) {
+
+          this.inventoryValidationError =
+            'Please create inventory combinations'
+
+          this.$toast.error(this.inventoryValidationError)
+
+          this.$emit('has-error')
+
+          return false
+        }
+
+        // Require valid SKU
+        const invalidCombination = this.combinations.find(combo =>
+          !combo.sku ||
+          !combo.sku.trim() ||
+          !combo.values ||
+          !combo.values.length
+        )
+
+        // Validate each combination
+        for (const combo of this.combinations) {
+          if (!combo.values || !combo.values.length) {
+            this.inventoryValidationError = 'Please select attribute values for all combinations'
+            this.$toast.error(this.inventoryValidationError)
+            this.$emit('has-error')
+            return false
+          }
+
+          // SKU missing
+          if (!combo.sku || !combo.sku.trim()) {
+            this.inventoryValidationError = 'SKU is required for all inventory combinations'
+            this.$toast.error(this.inventoryValidationError)
+            this.$emit('has-error')
+            return false
+          }
+
+          // Quantity validation
+          if (
+            combo.quantity === '' ||
+            combo.quantity === null
+          ) {
+
+            this.inventoryValidationError = 'Valid quantity is required for all inventory combinations'
+            this.$toast.error(this.inventoryValidationError)
+            this.$emit('has-error')
+            return false
+          }
+
+          // Price validation
+          if (
+            combo.price === '' ||
+            combo.price === null ||
+            Number(combo.price) < 0
+          ) {
+
+            this.inventoryValidationError =
+              'Valid price is required for all inventory combinations'
+
+            this.$toast.error(this.inventoryValidationError)
+
+            this.$emit('has-error')
+
+            return false
+          }
+        }
+
+        // Duplicate SKU validation
+        const skuList = this.combinations.map(
+          combo => combo.sku.trim()
+        )
+
+        const duplicateSku = skuList.find(
+          (sku, index) => skuList.indexOf(sku) !== index
+        )
+
+        if (duplicateSku) {
+          this.inventoryValidationError =
+            'Duplicate SKU found'
+          this.$toast.error(this.inventoryValidationError)
+          this.$emit('has-error')
+          return false
+        }
+        return true
+      },
       async uploadNewImages(e) {
         const files = Array.from(e.target.files)
         if (!files.length) return
@@ -466,8 +579,28 @@
           return this.$nuxt.error(e)
         }
       },
-      async saveInventory() {
-        this.redirectingEnable(event.submitter.name)
+      async submitInventory() {
+        if (!this.productId) {
+          this.$toast.error('Please save product details first')
+          return false
+        }
+        if (
+          this.selectedAttributes.length &&
+          !this.selectedAttributeValues.length
+        ) {
+          this.$toast.error('Please select inventory attributes')
+          this.$emit('has-error')
+          return
+        }
+        const invalidCombination = this.combinations.find(combo =>
+          !(combo.values && combo.values.length)
+        )
+        if (invalidCombination) {
+          this.$toast.error('Inventory attribute combination is required')
+          this.$emit('has-error')
+          return
+        }
+
         this.formSubmitting = true
         try {
           let formData = new FormData();
@@ -511,6 +644,7 @@
               })
             }
           });
+          
 
           const data = await this.setById({
             id: this.productId,
@@ -521,9 +655,10 @@
           if (data) {
             this.result = data
             await this.mappingData()
-            this.$router.push({path: `/products${this.redirect ? '' : '/' + this.productId}`})
+            return true
           } else {
             this.$emit('has-error');
+            return false
           }
         } catch (e) {
           return this.$nuxt.error(e)
@@ -536,6 +671,9 @@
         return attribute.map(i => i.title).join(' + ')
       },
       combos(list, n = 0, result = [], current = []) {
+        if (!list || !list.length) {
+          return []
+        }
         if (n === list.length) {
           result.push({
             id: "",
@@ -576,6 +714,10 @@
           this.selected[attributeValue.attribute_id] = (this.selected[attributeValue.attribute_id] || []).filter(i => i?.id !== attributeValue?.id);
           if (!this.selected[attributeValue.attribute_id]?.length) {
             delete this.selected[attributeValue.attribute_id];
+            if (!Object.keys(this.selected).length) {
+              this.combinations = []
+              return
+            }
             this.selectedAttributes = (this.selectedAttributes || []).filter(id => id !== attributeValue?.attribute_id);
           }
         }
@@ -613,8 +755,17 @@
           this.selectedAttributeValues = [...new Set([...(this.selectedAttributeValues || []), ...valueIds])];
         } else {
           const valueIds = (this.selected[attribute.id] || []).map(i => i?.id).filter(Boolean);
-          this.selected = this.selected || {};
+          this.selectedAttributeValues =
+            (this.selectedAttributeValues || [])
+              .filter(id => !valueIds.includes(id))
           delete this.selected[attribute.id];
+          this.selectedAttributes =
+          (this.selectedAttributes || [])
+            .filter(id => id !== attribute.id)
+          if (!Object.keys(this.selected).length) {
+            this.combinations = []
+            return
+          }
           
           this.selectedAttributeValues = (this.selectedAttributeValues || []).filter(id => !valueIds.includes(id));
         }
@@ -695,15 +846,7 @@
           this.selectedAttributeValues = [...new Set(selectedAttrValues)]
         } else {
           // Default combination
-          this.combinations = [{
-            price: this.productPrice,
-            quantity: 0,
-            sku: '',
-            imei: '',
-            barcode: '',
-            images: [],
-            values: []
-          }]
+          this.combinations = []
         }
       },
       ...mapActions('common', ['getById', 'setById'])
@@ -715,9 +858,11 @@
     created() {
     },
     async mounted() {
-      await this.fetchingData()
-      await this.mappingData()
-      await this.fetchVariantImages(this.productId)
+      if (this.productId) {
+        await this.fetchingData()
+        await this.mappingData()
+        await this.fetchVariantImages(this.productId)
+      }
     }
   }
 </script>

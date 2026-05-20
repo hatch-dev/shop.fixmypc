@@ -14,6 +14,8 @@ class UpdatedUpsellProductServiceItems extends Model
     protected $fillable = [
         'updated_upsell_product_service_id',
         'name',
-        'price'
+        'price',
+        'product_id',
+        'inventory_id',
     ];
 }

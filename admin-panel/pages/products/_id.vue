@@ -255,10 +255,12 @@
               <!-- Discount Type -->
               <div class="input-wrapper mlr-7-5">
                 <label>Discount Type</label>
-                <select v-model="result.wholesale_discount_type">
-                  <option value="fixed">Fixed</option>
-                  <option value="percentage">Percentage</option>
-                </select>
+                <div class="">
+                  <select v-model="result.wholesale_discount_type">
+                    <option value="fixed">Fixed</option>
+                    <option value="percentage">Percentage</option>
+                  </select>
+                </div>
               </div>
 
               <div class="input-wrapper mlr-7-5">
@@ -358,7 +360,7 @@
               </label>
             </div>
 
-            <div class="input-wrapper mlr-7-5 mt-20">
+            <!-- <div class="input-wrapper mlr-7-5 mt-20">
               <label class="checkbox-container">
                 <input
                   class="checkbox-input"
@@ -373,7 +375,7 @@
                   Back Order
                 </span>
               </label>
-            </div>
+            </div> -->
 
             <div class="input-wrapper mlr-7-5">
               <label class="block">{{ $t('dataPage.shipRule') }}</label>
@@ -789,7 +791,7 @@
               </p>
             </div>
 
-            <div
+            <!-- <div
               v-if="validLicence && ($can('product', 'edit') || $can('product', 'create')) "
               class="dply-felx j-right gap-15"
             >
@@ -805,7 +807,7 @@
                 :text="$t('setting.sv')"
                 :fetching-data="formSubmitting && redirect"
               />
-            </div>
+            </div> -->
           </form>
         </div>
 
@@ -814,15 +816,38 @@
 
       <div
         class="tab-sidebar mt-15"
-        v-if="!isAdding"
         ref="productInventory"
       >
         <product-inventory
-          v-if="currentPrice"
+          ref="inventoryComponent"
+          :product-id="result.id"
           :attributes="allAttributes"
           :product-price="parseFloat(currentPrice)"
           @has-error="scrollToTop('productInventory')"
         />
+      </div>
+
+      <div
+        v-if="validLicence && ($can('product', 'edit') || $can('product', 'create'))"
+        class="dply-felx j-right gap-15 mt-20"
+      >
+
+        <ajax-button
+          name="save-edit"
+          class="primary-btn"
+          :text="$t('list.svn')"
+          :fetching-data="formSubmitting && !redirect"
+          @click.native="submitAll('save-edit')"
+        />
+
+        <ajax-button
+          name="save"
+          class="primary-btn"
+          :text="$t('setting.sv')"
+          :fetching-data="formSubmitting && redirect"
+          @click.native="submitAll('save')"
+        />
+
       </div>
 
     </div><!--left-area-->
@@ -986,6 +1011,43 @@
         'allBrands','allProductCollections','allBundleDeals', 'allShippingRules', 'allUpdatedUpsells']),
     },
     methods: {
+      async submitAll(type) {
+        this.redirectingEnable(type)
+        await this.checkForm()
+      },
+      refreshProductMedia(payload = {}) {
+
+        this.result = {
+          ...this.result,
+          ...payload
+        }
+
+        this.$nextTick(() => {
+          this.$forceUpdate()
+        })
+      },
+      updateProductState(data) {
+        this.result = {
+          ...this.result,
+          ...data
+        }
+
+        this.result.product_collections = [
+          ...new Set(
+            (this.result?.product_collections || []).map(
+              o => o.product_collection_id || o
+            )
+          )
+        ]
+
+        this.result.product_categories = [
+          ...new Set(
+            (this.result?.product_categories || []).map(
+              o => o.category_id?.toString() || o
+            )
+          )
+        ]
+      },
       updatedUpsellSelected(data) {
         this.result.updated_upsell_id = data.key
       },
@@ -1034,8 +1096,8 @@
           this.result.product_images = evt
         })
       },
-      imageInputChanged(evt) {
-        this.uploadFile(null, evt)
+      imageInputChanged(file) {
+        this.uploadFile(file)
       },
       addTag(tag){
         if (!this.result.tags){
@@ -1080,7 +1142,6 @@
           this.hasError = true
           return false
         }
-        this.redirectingEnable(event.submitter.name)
         this.formSubmitting = true
         try {
 
@@ -1088,20 +1149,40 @@
           delete this.result.updated_at
           this.result.bundle_deal_id = (this.result.bundle_deal_ids || []).join(',');
           delete this.result.bundle_deal_ids;
+          const inventoryComponent = this.$refs.inventoryComponent
+          const inventoryValid = await inventoryComponent.validateInventoryBeforeSubmit()
+          if (!inventoryValid) {
+            this.formSubmitting = false
+            this.scrollToTop('productInventory')
+            return
+          }
           const data = await this.setById({id: this.id, params: this.result, api: this.setApi})
 
           if (data) {
 
-            this.result = Object.assign({}, data)
+            // this.result = Object.assign({}, data)
+            this.updateProductState(data)
+            await this.$nextTick()
 
-            this.result.product_collections = [...new Set(this.result?.product_collections?.map((o)=>{return o.product_collection_id}))]
-            this.result.product_categories = [...new Set(this.result?.product_categories?.map((o) => { return o.category_id.toString() }))]
-            this.result.excludeVAT = this.result.excludeVAT ? 1 : 0;
-            this.result.procurement = this.result.procurement ? 1 : 0;
-            this.result.back_order = this.result.back_order ? 1 : 0;
+            
+            // this.result.product_collections = [...new Set(this.result?.product_collections?.map((o)=>{return o.product_collection_id || o}))]
+            // this.result.product_categories = [...new Set(this.result?.product_categories?.map((o) => { return (o.category_id || o)?.toString() }))]
+            // this.result.excludeVAT = this.result.excludeVAT ? 1 : 0;
+            // this.result.procurement = this.result.procurement ? 1 : 0;
+            // this.result.back_order = this.result.back_order ? 1 : 0;
 
             // Set product ID for template customizations
             this.productId = this.result.id;
+
+            const inventorySaved =
+              await this.$refs.inventoryComponent.submitInventory()
+
+            if (!inventorySaved) {
+              this.formSubmitting = false
+              this.scrollToTop('productInventory')
+              return
+            }
+
 
             if (this.productCustomizations.length) {
               await this.saveTemplateCustomizations()
@@ -1164,11 +1245,11 @@
           const data = await this.setImageById({id: this.id, params: params, api: this.setVideoApi})
 
           if (data) {
-            this.result = Object.assign({}, data)
-            this.result.product_collections = [...new Set(this.result?.product_collections?.map((o)=>{return o.product_collection_id}))]
-            this.result.product_categories = [...new Set(this.result?.product_categories?.map((o) => { return o.category_id.toString() }))]
-
-            await this.$router.push({path: `/${this.routeName}/${this.result.id}`})
+            // this.result = Object.assign({}, data)
+            this.refreshProductMedia({
+              video: data.video,
+              video_thumb: data.video_thumb
+            })
           }
         } catch (e) {
           return this.$nuxt.error(e)
@@ -1179,29 +1260,22 @@
         this.fileUploading = true
         try {
 
-          let params = {}
-          if(file) {
-            const fd = new FormData()
-            this.fileKeys.forEach(i => {
-              fd.append(i, this.result[i])
-            })
-            fd.append('photo', file)
-            params = fd
-          } else {
-            this.fileKeys.forEach(i=>{
-              params[i] = this.result[i]
-            })
-            params['photo'] = name
-          }
+          const fd = new FormData()
+          
+          this.fileKeys.forEach(i => {
+            fd.append(i, this.result[i])
+          })
 
-          const data = await this.setImageById({id: this.id, params: params, api: this.setImageApi})
+          fd.append('photo', file)
+
+          const data = await this.setImageById({id: this.id, params: fd, api: this.setImageApi})
 
           if (data) {
-            this.result = Object.assign({}, data)
-            this.result.product_collections = [...new Set(this.result?.product_collections?.map((o)=>{return o.product_collection_id}))]
-            this.result.product_categories = [...new Set(this.result?.product_categories?.map((o) => { return o.category_id.toString() }))]
-
-            await this.$router.push({path: `/${this.routeName}/${this.result.id}`})
+            this.refreshProductMedia({
+              image: data.image,
+              product_images:
+                data.product_images || this.result.product_images
+            })
           }
         }catch (e) {
           return this.$nuxt.error(e)
@@ -1232,7 +1306,8 @@
             const data = await this.setWysiwygImage(fd)
             if(data){
               if (!this.result.id) {
-                await this.$router.push({path: `/${this.routeName}/${data.item_id}`})
+                // await this.$router.push({path: `/${this.routeName}/${data.item_id}`})
+                this.result.id = data.item_id
               } else {
                 Editor.insertEmbed(cursorLocation, "image", data.url);
                 resetUploader();
