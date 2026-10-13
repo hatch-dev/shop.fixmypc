@@ -12,7 +12,10 @@ return [
     ],
     'auth' => [
         'EXPIRATION_IN_HOURS' => 12,
-        'EXPIRATION_IN_DAYS' => 30
+        // A customer who ticked "Keep me signed in".
+        'EXPIRATION_IN_DAYS' => 30,
+        // A customer who did not: signed out within a day.
+        'SESSION_HOURS' => 24
     ],
     'pagination' => [
         'FRONTEND_PRODUCT_RATING' => 6,
@@ -101,6 +104,13 @@ return [
         'CASH_ON_DELIVERY' => 2,
         'OFFLINE' => 3
     ],
+    /*
+     * How long an unpaid bank transfer order is held before
+     * orders:cancel-unpaid-transfers cancels it. The bank details page counts
+     * down to the same moment.
+     */
+    'bankTransferHoldHours' => (int)env('BANK_TRANSFER_HOLD_HOURS', 24),
+
     'paymentMethod' => [
         'RAZORPAY' => 1,
         'CASH_ON_DELIVERY' => 2,
@@ -110,7 +120,8 @@ return [
         'IYZICO_PAYMENT' => 6,
         'BANK' => 7,
         'PAYFAST' => 8,
-        'SUMUP' => 9
+        'SUMUP' => 9,
+        'WALLET' => 10
     ],
     'paymentMethodIn' => [
         1 => 'Razorpay',
@@ -121,7 +132,8 @@ return [
         6 => 'Iyzico Payment',
         7 => 'Bank Payment',
         8 => 'PayFast',
-        9 => 'Sumup'
+        9 => 'Sumup',
+        10 => 'Wallet'
     ],
     'paymentMethodKLangIn' => [
         1 => 'rp',
@@ -132,14 +144,44 @@ return [
         6 => 'ip',
         7 => 'bp',
         8 => 'payfast',
-        9 => 'sumup'
+        9 => 'sumup',
+        10 => 'wallet'
+    ],
+    /*
+     * QA audit ORD-01. There was no terminal state other than DELIVERED, which
+     * is why cancellation had to be carried on a separate boolean column and
+     * cancelled orders kept showing as PENDING in every admin list.
+     */
+    /*
+     * Inventory alerting.
+     *
+     * A variant is 'low' at or below this many units. There is no per-product
+     * threshold column and no stored setting, so this is the single place the
+     * figure is defined - it was previously a bare 5 inside the dashboard
+     * controller, invisible to anyone configuring the shop.
+     */
+    'inventory' => [
+        'lowStockThreshold' => (int)env('LOW_STOCK_THRESHOLD', 5),
     ],
     'orderStatus' => [
         'PENDING' => 1,
         'CONFIRMED' => 2,
         'PICKED_UP' => 3,
         'ON_THE_WAY' => 4,
-        'DELIVERED' => 5
+        'DELIVERED' => 5,
+        'CANCELLED' => 6,
+        'RETURNED' => 7,
+        'REFUNDED' => 8
+    ],
+    'orderStatusIn' => [
+        1 => 'Pending',
+        2 => 'Confirmed',
+        3 => 'Picked up',
+        4 => 'On the way',
+        5 => 'Delivered',
+        6 => 'Cancelled',
+        7 => 'Returned',
+        8 => 'Refunded'
     ],
     'withdraw' => [
         'MIN_AMOUNT' => 50

@@ -200,6 +200,16 @@ class Utils
         return config('env.url.CLIENT_BASE_URL') . config('env.redirect.FRONTEND_SOCIAL_REDIRECT');
     }
 
+    /**
+     * Where the reset email points. The token identifies the request; the
+     * email is carried alongside so the page can show whose account it is.
+     */
+    public static function passwordResetLink($token, $email){
+        return rtrim(config('env.url.CLIENT_BASE_URL'), '/')
+            . '/reset-password?token=' . urlencode($token)
+            . '&email=' . urlencode($email);
+    }
+
     public static function backendSocialRedirect(){
         return config('env.url.APP_URL') . config('env.redirect.BACKEND_SOCIAL_REDIRECT');
     }
@@ -225,6 +235,17 @@ class Utils
     public static function cacheRemember($cacheKey, $query, $expiration = 60 * 60 * 24){
 
         return cache()->remember($cacheKey, $expiration, $query);
+    }
+
+    /**
+     * Drop a cached entry.
+     *
+     * Needed so a "product not found" result is not held for the full 24-hour
+     * window — publishing the product would otherwise leave it unreachable.
+     */
+    public static function cacheForget($cacheKey){
+
+        return cache()->forget($cacheKey);
     }
 
     public static function convertTimeToUTCzone($str, $userTimezone, $format = 'Y-m-d H:i:s'){
@@ -283,6 +304,42 @@ class Utils
     }
 
 
+    /**
+     * A password for an account the customer never asked to set one for.
+     *
+     * It has to satisfy the same rule the signup form enforces - ten or more
+     * characters with a capital and a digit - or they could not later re-enter
+     * it anywhere the rule is applied. The alphabet drops the characters that
+     * are easily misread when a password is copied out of an email by hand:
+     * no O/0, no I/l/1.
+     */
+    public static function readablePassword($length = 14)
+    {
+        $upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+        $lower = 'abcdefghijkmnpqrstuvwxyz';
+        $digits = '23456789';
+        $alphabet = $upper . $lower . $digits;
+
+        // Seeded so the required classes are present whatever the draw gives.
+        $characters = [
+            $upper[random_int(0, strlen($upper) - 1)],
+            $lower[random_int(0, strlen($lower) - 1)],
+            $digits[random_int(0, strlen($digits) - 1)]
+        ];
+
+        for ($i = count($characters); $i < max($length, 10); $i++) {
+            $characters[] = $alphabet[random_int(0, strlen($alphabet) - 1)];
+        }
+
+        // Without this the first three positions are always upper/lower/digit.
+        for ($i = count($characters) - 1; $i > 0; $i--) {
+            $j = random_int(0, $i);
+            [$characters[$i], $characters[$j]] = [$characters[$j], $characters[$i]];
+        }
+
+        return implode('', $characters);
+    }
+
     public static function formatErrors($errors)
     {
         $errors_arr = [];
@@ -299,42 +356,65 @@ class Utils
         return self::formatDate($item->created_at, 'Ydm') . $item->id . $item->user_id . $item->status;
     }
 
-    public static function calcPrice($order) {
-        $subtotal = 0;
-        $shipping_price = 0;
-        $tax = 0;
-        $bundle_offer = 0;
+    /**
+     * The money on an order, in the key names this application has always used
+     * for it (the invoice PDF, the order emails, the admin order screen and the
+     * POS all read these).
+     *
+     * Every figure now comes from OrderSummary, which reads only what the order
+     * recorded. Two things used to be re-derived here from live configuration:
+     *
+     *  - the voucher discount was recalculated from the voucher's current type,
+     *    rate and cap, so editing a coupon rewrote the discount on every past
+     *    order that had used it;
+     *  - tax was multiplied by the ordered quantity rather than the payable
+     *    quantity, so an order carrying a "buy X get Y free" bundle printed
+     *    more VAT on its receipt than the customer was charged.
+     *
+     * `subtotal` keeps its original meaning - the goods at the price actually
+     * charged - because the templates reading it present it as the line tax and
+     * shipping are added to. `original_subtotal` and `discount` are the two
+     * extra rows that let a receipt show the same "Subtotal / Product Discount"
+     * pair the customer approved at checkout.
+     */
+    public static function calcPrice($order, $inventories = null) {
 
-        foreach ($order->ordered_products as $item){
-            $subtotal += (float)$item->selling * (int)$item->quantity;
-            $shipping_price += (float)$item->shipping_price;
-            $tax += (float)$item->tax_price * (int)$item->quantity;
-            $bundle_offer += (float)$item->bundle_offer * (int)$item->selling;
-        }
+        // $inventories lets a caller summarising a page of orders fetch every
+        // line price in one query; see OrderSummary::inventoriesFor().
+        $summary = OrderSummary::for($order, $inventories);
 
-        $calculated['subtotal'] = $subtotal;
-        $calculated['shipping_price'] = $shipping_price;
-        $calculated['bundle_offer'] = $bundle_offer;
-        $calculated['tax'] = round($tax, 2);
+        $calculated = [];
 
-        // Voucher price calculation
-        $voucher = $order->voucher;
-        $voucherPrice = 0;
-        $totalPriceWithoutShipping = $calculated['subtotal'] - $calculated['bundle_offer'];
-        if($voucher){
-            if((int)$voucher->type == (int)Config::get('constants.priceType.FLAT')){
-                $voucherPrice = $voucher->price;
-            } else {
-                $voucherPrice = number_format((float)($voucher->price * $totalPriceWithoutShipping) / 100, 2, '.', '');
-            }
-            if(!is_null($voucher->capped_price) && $voucherPrice > $voucher->capped_price){
-                $voucherPrice = (int) $voucher->capped_price;
-            }
-        }
-        $calculated['voucher_price'] = $voucherPrice;
-
-        $calculated['total_price'] = $totalPriceWithoutShipping + $calculated['shipping_price']
-            + (float)$calculated['tax'] - $voucherPrice;
+        $calculated['original_subtotal'] = $summary['subtotal'];
+        $calculated['discount'] = $summary['discount'];
+        $calculated['subtotal'] = $summary['goods'];
+        $calculated['shipping_price'] = $summary['shipping'];
+        $calculated['bundle_offer'] = $summary['bundle_offer'];
+        $calculated['tax'] = $summary['tax'];
+        $calculated['voucher_price'] = $summary['voucher'];
+        $calculated['flash_discount'] = $summary['flash_discount'];
+        // Beside the other order-wide discounts, so the email and the PDF can
+        // print a row for it rather than leaving a gap in the total.
+        $calculated['bundle_discount'] = $summary['bundle_discount'];
+        $calculated['loyalty_discount'] = $summary['loyalty_discount'];
+        $calculated['loyalty_label'] = $summary['loyalty_label'];
+        $calculated['points_discount'] = $summary['points_discount'];
+        /*
+         * The same order as a VAT document states it. Emails and the
+         * server-rendered invoice read these so they say the same thing
+         * as the storefront and the admin, from the same split.
+         */
+        $calculated['ex_vat'] = $summary['ex_vat'];
+        $calculated['vat'] = $summary['vat'];
+        $calculated['inc_vat'] = $summary['inc_vat'];
+        /* The goods gross: subtotal_inc_vat - discount_inc_vat = inc_vat. */
+        $calculated['subtotal_inc_vat'] = $summary['subtotal_inc_vat'];
+        $calculated['discount_inc_vat'] = $summary['discount_inc_vat'];
+        $calculated['vat_breakdown'] = $summary['vat_breakdown'];
+        $calculated['total_price'] = $summary['total'];
+        // A split payment: the wallet part, and what the order's method took.
+        $calculated['wallet_paid'] = $summary['wallet_paid'];
+        $calculated['amount_due'] = $summary['amount_due'];
 
         return $calculated;
     }

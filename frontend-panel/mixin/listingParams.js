@@ -21,6 +21,12 @@ export default {
       shippingFromRoute() {
         return this.$route.query.shipping || ''
       },
+      stockFromRoute() {
+        return this.$route.query.stock === 'true' ? 'true' : ''
+      },
+      offerFromRoute() {
+        return this.$route.query.offer === 'true' ? 'true' : ''
+      },
       minPriceFromRoute() {
         if(!isNaN(this.$route?.query?.min)){
           return this.$route?.query?.min || 0

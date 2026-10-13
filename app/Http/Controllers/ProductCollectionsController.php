@@ -25,7 +25,11 @@ class ProductCollectionsController extends ControllerHelper
             }
 
             $query = ProductCollection::query();
-            $query = $query->orderBy('product_collections.' . $request->orderby, $request->type);
+
+            $orderby = $request->orderby ?? 'sort_order';
+            $type = $request->type ?? 'asc';
+
+            $query = $query->orderBy('product_collections.' . $orderby, $type);
 
             if ($this->isVendor) {
                 $query = $query->where('admin_id', $this->user->id);
@@ -61,6 +65,33 @@ class ProductCollectionsController extends ControllerHelper
 
         } catch (\Exception $ex) {
             return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+
+    public function updateSortOrder(Request $request)
+    {
+        try {
+            foreach ($request->items as $item) {
+                ProductCollection::where('id', $item['id'])
+                    ->update([
+                        'sort_order' => $item['sort_order']
+                    ]);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Sort order updated successfully'
+            ]);
+
+        } catch (\Exception $ex) {
+
+            return response()->json(
+                Validation::error(
+                    $request->token,
+                    $ex->getMessage()
+                )
+            );
         }
     }
 
@@ -282,5 +313,55 @@ class ProductCollectionsController extends ControllerHelper
         }
 
 
+    }
+
+    public function image(Request $request, $id)
+    {
+        try {
+
+            $lang = $request->header('language');
+
+            $collection =
+                ProductCollection::find($id);
+
+            if (is_null($collection)) {
+
+                return response()->json(
+                    Validation::nothingFoundLang($lang)
+                );
+            }
+
+            if ($request->hasFile('photo')) {
+
+                $image = time() . '.' .
+                    $request->photo->extension();
+
+                $request->photo->move(
+                    base_path('uploads'),
+                    $image
+                );
+
+                $collection->image =
+                    $image;
+
+                $collection->save();
+            }
+
+            return response()->json(
+                new Response(
+                    $request->token,
+                    $collection
+                )
+            );
+
+        } catch (\Exception $ex) {
+
+            return response()->json(
+                Validation::error(
+                    $request->token,
+                    $ex->getMessage()
+                )
+            );
+        }
     }
 }

@@ -342,7 +342,8 @@
     "voucherCode": "कोड",
     "confirmOrderAnd": "आदेश की पुष्टि करें और अभी भुगतान करें ({amount})",
     "confirmOrder": "आदेश की पुष्टि करें",
-    "noPayment": "वर्तमान में कोई भुगतान विधि उपलब्ध नहीं है"
+    "noPayment": "वर्तमान में कोई भुगतान विधि उपलब्ध नहीं है",
+    "goToPayment": "भुगतान पर जाएं"
   },
   "forgotPassword": {
     "errorOccurred": "निम्नलिखित त्रुटि हुई",
@@ -369,7 +370,15 @@
     "haveAccount": "पहले से ही एक खाता है?",
     "sentEmail": "हमने आपको एक कोड के साथ ईमेल भेजा है। कृपया अपना खाता सत्यापित करने के लिए नीचे कोड पेस्ट करें।"
   },
+  "tabs": {
+    "home": "होम",
+    "shop": "शॉप",
+    "search": "खोज",
+    "basket": "बास्केट",
+    "account": "खाता"
+  },
   "shipping": {
+    "addContactDetails": "Please enter your name, email and phone number so we can contact you about your collection.",
     "instruction": "डिलीवरी निर्देश",
     "ordered": "आदेशित उत्पाद",
     "addAddress": "कृपया पहले एक पता जोड़ें।",

@@ -1,0 +1,345 @@
+/*
+ *  Cross-sell: "Complete Your Setup", the block shown after an add.
+ *
+ *  Built to sit over whatever page opened it, so it takes its colours from the
+ *  panel's own variables rather than assuming the product page's.
+ */
+
+.xs-overlay
+  position fixed
+  inset 0
+  z-index 2000
+  display flex
+  align-items center
+  justify-content center
+  padding 20px
+  background rgba(17, 17, 26, .55)
+  overflow-y auto
+
+.xs-panel
+  position relative
+  width 100%
+  max-width 520px
+  max-height calc(100vh - 40px)
+  display flex
+  flex-direction column
+  padding 26px 24px 20px
+  border-radius 16px
+  background #fff
+  box-shadow 0 24px 60px rgba(17, 17, 26, .22)
+
+.xs-close
+  position absolute
+  top 10px
+  right 12px
+  width 34px
+  height 34px
+  font-size 26px
+  line-height 1
+  color #6B7280
+  border 0
+  border-radius 50%
+  background transparent
+  cursor pointer
+
+  &:hover
+    background #F3F4F6
+
+  // A 34px target is below the 44px minimum for a thumb, so the tap area is
+  // grown without moving the glyph.
+  &:before
+    content ''
+    position absolute
+    inset -6px
+
+.xs-panel-head
+  padding-right 30px
+  margin-bottom 16px
+  text-align center
+
+  h3
+    margin 0 0 6px
+    font-size 19px
+    font-weight 700
+
+  p
+    margin 0
+    font-size 13.5px
+    line-height 1.5
+    color #6B7280
+
+// ---- the rows ------------------------------------------------------------
+
+.xs-rows
+  flex 1 1 auto
+  overflow-y auto
+  margin 0 -4px
+  padding 0 4px
+
+.xs-row
+  display flex
+  align-items flex-start
+  gap 12px
+  padding 12px 10px
+  border 1px solid #ECECF2
+  border-radius 12px
+
+  & + .xs-row
+    margin-top 8px
+
+  &.is-selected
+    border-color #05B942
+    background rgba(5, 185, 66, .04)
+
+  &.is-skeleton
+    align-items center
+    border-color #F1F1F5
+
+.xs-check
+  flex 0 0 auto
+  width 20px
+  height 20px
+  margin-top 16px
+  accent-color #05B942
+  cursor pointer
+
+  &:disabled
+    cursor not-allowed
+    opacity .45
+
+.xs-row-img
+  flex 0 0 auto
+  width 56px
+  height 56px
+  object-fit cover
+  border-radius 8px
+  background #F4F4F9
+
+.xs-row-main
+  flex 1 1 auto
+  min-width 0
+
+.xs-row-name
+  display block
+  font-size 14px
+  font-weight 600
+  line-height 1.35
+  cursor pointer
+
+.xs-row-sku
+  display block
+  margin-top 2px
+  font-size 11.5px
+  color #9CA3AF
+
+.xs-row-option
+  width 100%
+  max-width 220px
+  height 34px
+  margin-top 8px
+  padding 0 10px
+  font-size 13px
+  border 1px solid #E2E2EA
+  border-radius 8px
+  background #fff
+
+.xs-row-stock
+  display inline-block
+  margin-top 6px
+  font-size 11.5px
+  color #9A6B12
+
+.xs-row-qty
+  display inline-flex
+  align-items center
+  gap 2px
+  margin-top 8px
+  border 1px solid #E2E2EA
+  border-radius 8px
+  overflow hidden
+
+  button
+    width 30px
+    height 30px
+    font-size 15px
+    line-height 1
+    color #374151
+    border 0
+    background #F7F7FB
+    cursor pointer
+
+    &:disabled
+      opacity .4
+      cursor not-allowed
+
+  span
+    min-width 30px
+    font-size 13px
+    font-weight 600
+    text-align center
+
+.xs-row-price
+  flex 0 0 auto
+  display flex
+  flex-direction column
+  align-items flex-end
+  gap 2px
+  padding-top 2px
+
+  s
+    font-size 11.5px
+    color #9CA3AF
+
+  strong
+    font-size 14.5px
+    font-weight 700
+    white-space nowrap
+
+.xs-from
+  font-size 11px
+  font-weight 500
+  color #6B7280
+
+// ---- empty and error -----------------------------------------------------
+
+.xs-state
+  padding 26px 10px
+  text-align center
+
+  p
+    margin 0 0 8px
+    font-size 14px
+    color #4B5563
+
+.xs-link
+  font-size 13px
+  font-weight 600
+  color #05B942
+  border 0
+  background transparent
+  text-decoration underline
+  cursor pointer
+
+// ---- the footer ----------------------------------------------------------
+
+.xs-panel-foot
+  flex 0 0 auto
+  margin-top 14px
+  padding-top 14px
+  border-top 1px solid #ECECF2
+
+.xs-totals
+  display flex
+  align-items baseline
+  justify-content space-between
+  gap 10px
+  margin-bottom 12px
+  font-size 13.5px
+  color #6B7280
+
+  strong
+    font-size 15px
+    color #111827
+
+.xs-actions
+  display flex
+  flex-direction column
+  gap 8px
+
+.xs-btn
+  width 100%
+  height 46px
+  font-size 14.5px
+  font-weight 600
+  border-radius 10px
+  border 1px solid transparent
+  cursor pointer
+
+  &.primary
+    color #fff
+    background #05B942
+
+    &:disabled
+      opacity .5
+      cursor not-allowed
+
+  &.ghost
+    color #374151
+    background #fff
+    border-color #E2E2EA
+
+// ---- open and close ------------------------------------------------------
+
+.xs-fade-enter-active, .xs-fade-leave-active
+  transition opacity .18s ease
+
+.xs-fade-enter, .xs-fade-leave-to
+  opacity 0
+
+// Respect a reader who has asked for less motion; the panel still appears.
+@media (prefers-reduced-motion: reduce)
+  .xs-fade-enter-active, .xs-fade-leave-active
+    transition none
+
+// ---- phone ---------------------------------------------------------------
+
+@media (max-width: 575px)
+  .xs-overlay
+    padding 0
+    align-items flex-end
+
+  .xs-panel
+    max-width none
+    max-height 92vh
+    border-radius 16px 16px 0 0
+    padding 22px 16px 16px
+
+  .xs-row
+    padding 10px 8px
+
+  .xs-row-img
+    width 48px
+    height 48px
+
+  .xs-row-option
+    max-width none
+
+// ---- the basket page's inline block --------------------------------------
+
+/*
+ *  Same rows, same footer, no overlay.
+ *
+ *  A modal is right after an add -- the customer has just acted and is
+ *  deciding what comes next. On the basket page they are reviewing, so the
+ *  recommendations sit in the page rather than over it.
+ */
+.xs-inline
+  margin-top 20px
+  border 1px solid #ECECF2
+  border-radius 14px
+  background #fff
+
+  .xs-panel
+    max-width none
+    max-height none
+    box-shadow none
+    padding 20px 18px 16px
+
+  .xs-panel-head
+    padding-right 0
+    text-align left
+
+  .xs-close
+    display none
+
+  .xs-rows
+    overflow visible
+
+  .xs-actions
+    flex-direction row
+
+    .xs-btn.ghost
+      display none
+
+  .xs-btn
+    max-width 260px

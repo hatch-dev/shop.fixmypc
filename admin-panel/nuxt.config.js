@@ -55,7 +55,9 @@ export default {
     {src: '~/plugins/dompurify.js'},
     {src: '~/plugins/nuxt-client-init.js', ssr: false},
     {src: '~/plugins/back-handler.js', mode: 'client'},
-    { src: '~/plugins/toast.js', mode: 'client' }
+    { src: '~/plugins/toast.js', mode: 'client' },
+    // A placeholder wherever an image fails to load.
+    { src: '~/plugins/image-placeholder.js', mode: 'client' }
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components

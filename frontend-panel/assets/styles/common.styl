@@ -7,7 +7,6 @@
   pointer-events none
 
 .page-link
-  padding 2px 2px 0
   position relative
 
   &:active:before
@@ -39,9 +38,20 @@
   height 100%
   width 100%
 
+/* Lazy images fade in once decoded - LazyImage.vue adds .is-loaded on the load
+   event. Opacity only, deliberately: `.img-wrapper img` centres images with
+   transform translate(-50%, -50%), and any transform here outranks it and
+   throws every centred image out of its box. */
 .lazy-img
-  transition none
   opacity 0
+  transition opacity .45s ease
+
+.lazy-img.is-loaded
+  opacity 1
+
+@media (prefers-reduced-motion: reduce)
+  .lazy-img
+    transition none
 
 .scale-8
   transform scale(.8)
@@ -115,11 +125,6 @@ button.color-deep
   &:hover
     text-decoration none
 
-.info-msg
-  padding 12.5px 15px
-  border-radius border-radius
-  background info-bg-color
-  color info-foreground
 
 .warning-msg
   padding 12.5px 15px
@@ -157,15 +162,9 @@ button.color-deep
   display none
 
 .card
-    border-radius border-radius
-    border: 1px solid rgba(227, 227, 239, 1);
-    background: rgba(255, 255, 255, 1);
-
-  & > input[type="radio"]
-    max-height 0
-    max-width 0
-    opacity 0
-    display none
+  border-radius border-radius
+  border: 1px solid rgba(227, 227, 239, 1);
+  background: rgba(255, 255, 255, 1);
 
 label.card
   transition all .1s
@@ -383,19 +382,6 @@ span
     &:after
       display none
 
-.two-sided
-  gap 10px
-  align-items center
-  display flex
-
-  .left
-    color #130E2B
-    width 120px
-    min-width 120px
-    font-weight 600
-    font-size 16px
-    margin-bottom 10px
-
 .ellipsis-para
   max-height 110px
   position relative
@@ -533,11 +519,9 @@ input.no-control[type=number]
 
 .strike-through
   position relative
-  padding 0 2px
-  color #6F6980
+  color #75748F
   line-height 0
-  font-size .9em
-  margin-right 5px
+  font-weight 500
 
   &:after
     content ''
@@ -757,8 +741,8 @@ input.no-control[type=number]
   font-size 1em
   height btn-height
   line-height btn-height - 2px
-  border 1px solid #bbb
-  background linear-gradient(to bottom, #f7f8fa, #e7e9ec)
+  border 1px solid rgba(215, 215, 224, 1)
+  background rgba(247, 247, 250, 1)
   box-shadow 0 1px 0 rgba(255, 255, 255, .3) inset
 
   &:hover
@@ -770,7 +754,7 @@ input.no-control[type=number]
 .primary-btn
   border-radius border-radius
   text-align center
-  font-size 1em
+  font-size 16px
   background primary-color
   /*border 1px solid primary-hover*/
   font-weight 700
@@ -1519,49 +1503,61 @@ input.no-control[type=number]
     width 85px
 
     img
-      width 50px !important
-      height 50px !important
+      width 30px !important
+      height 30px !important
 
   .cart-drawer
     border-radius 0px !important
 
-  .glide__slide
-    width 100% !important
-
 .detail-image.shimmer-wrapper
   position relative
   overflow visible
-
-.detail-image.shimmer-wrapper:before
-  content ""
-  background transparent
-  width 100%
-  height 65%
-  border-radius 10px
-  position absolute
-  top 0
-  left 0
-
-.mobile-menu-open 
-    overflow: hidden;
-
-.mobile-menu-open .header
-    height: 100vh;
-
-.mobile-menu-open .mobile-menu-flex-set
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    justify-content: space-between;
-
-.mobile-menu-open .lang-dropdown select
-    width: 100%;
-
-.mobile-menu-open .mobile-menu-cs .small-info 
-    text-align: center;
 
 .cart 
     background: rgba(247, 247, 250, 1);
 .sub_cat-gl_slider
   .glide__slides
     padding 22px 0 !important
+/* ---------------------------------------------------------------------------
+   Lazy media placeholders
+
+   An image that has not been fetched yet leaves a hole: LazyImage holds the
+   <img> at opacity 0 until it decodes, so whatever is behind it shows through.
+   These rules put a sweep in that hole instead, panel-wide rather than only on
+   the home page, so a listing, a basket line and a brand rail all read the same
+   while they wait.
+
+   :has() carries the state up from the <img> to its box, which is the only
+   place with a size to fill. Browsers without :has() drop the rule and keep the
+   flat ground - the image still arrives, it simply does not shimmer first.
+   --------------------------------------------------------------------------- */
+@keyframes lazy-media-shimmer
+  0%
+    background-position 100% 50%
+  100%
+    background-position 0 50%
+
+.img-wrapper:has(> .lazy-img:not(.is-loaded))
+.p-tile-img-link:has(> .lazy-img:not(.is-loaded))
+.detail-image:has(> .lazy-img:not(.is-loaded))
+.lazy-media:has(> .lazy-img:not(.is-loaded))
+  background-image linear-gradient(90deg, #F1F2F9 25%, #FAFBFE 37%, #F1F2F9 63%)
+  background-size 400% 100%
+  animation lazy-media-shimmer 1.4s ease infinite
+
+@media (prefers-reduced-motion: reduce)
+  .img-wrapper:has(> .lazy-img:not(.is-loaded))
+  .p-tile-img-link:has(> .lazy-img:not(.is-loaded))
+  .detail-image:has(> .lazy-img:not(.is-loaded))
+  .lazy-media:has(> .lazy-img:not(.is-loaded))
+    animation none
+
+/* The source and the fallback both failed. Showing the browser's broken-image
+   glyph at whatever size the box happens to be is worse than showing a plain
+   tile, so the element keeps its space and says nothing. */
+.lazy-img.is-broken
+  background-color #F1F2F9
+  object-fit contain
+  /* hides the broken-image glyph and any alt text spilling out of the box */
+  color transparent
+  font-size 0

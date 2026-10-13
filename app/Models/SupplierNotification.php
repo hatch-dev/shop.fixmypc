@@ -25,4 +25,18 @@ class SupplierNotification extends Model
     {
         return $this->belongsTo(UpdatedInventory::class);
     }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
+    /**
+     * The supplier's answer, if they have given one. One per notified line --
+     * see the unique index on supplier_bids.
+     */
+    public function bid()
+    {
+        return $this->hasOne(SupplierBid::class, 'supplier_notification_id');
+    }
 }

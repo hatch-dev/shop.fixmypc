@@ -1,6 +1,52 @@
 @import "./variables.styl"
 
 .dashboard
+  .dashboard-head
+    display flex
+    align-items flex-start
+    justify-content space-between
+    gap 15px
+
+    .dashboard-title
+      font-size 26px
+      font-weight 700
+      color var(--text-strong)
+      margin 0
+
+    .dashboard-subtitle
+      margin 4px 0 0
+      font-size 14px
+      color muted-color
+
+  .stat-top
+    display flex
+    align-items flex-start
+    justify-content space-between
+    gap 10px
+
+  .stat-label
+    margin 0
+    font-size 11px
+    font-weight 600
+    letter-spacing .04em
+    text-transform uppercase
+    color muted-color
+
+  .stat-value
+    margin 6px 0 0
+    font-size 28px
+    font-weight 700
+    line-height 1.15
+    color var(--text-strong)
+
+  // Money the headline figure deliberately leaves out, e.g. cash not yet
+  // collected on a delivery order.
+  .stat-note
+    margin 4px 0 0
+    font-size 11.5px
+    font-weight 600
+    color var(--warning-text)
+
   .order-status-wrapper
     display flex
     gap 20px
@@ -10,6 +56,21 @@
       flex 1 1 250px
       max-width 100%
 
+    .stat-mini
+      display flex
+      flex-direction column
+
+  // The six order-status cards used to share the flex row above, where a 250px
+  // basis meant they broke 4 + 2 (or 5 + 1) below ~1600px and the leftovers
+  // stretched to fill the whole line. A grid keeps them evenly sized at every
+  // width, so a partial last row stays card-width instead of ballooning.
+  .order-status-wrapper.status-cards
+    display grid
+    grid-template-columns repeat(auto-fit, minmax(155px, 1fr))
+
+    .card
+      flex none
+
   .card-wrapper
     display flex
     flex-wrap wrap
@@ -17,37 +78,29 @@
 
     .dashboard-card
       flex 1 1 200px
+      // Stretch the card itself, not just its slot: one card carrying an
+      // extra line (cash still to collect) otherwise grew taller than the
+      // other three and broke the row.
+      display flex
 
       .card-inner
+        flex 1
+        display flex
+        flex-direction column
         overflow hidden
-        padding 20px 30px
-        background #FEF7DA
+        padding 20px
         position relative
-
-        i
-          height 120px
-          width 120px
-          opacity .04
-          top -20%
-          right 5%
-          position absolute
-          background-size 1450% 1450%
-
-      &:nth-child(2)
-        .card-inner
-          background #E9FDFB
-
-      &:nth-child(3)
-        .card-inner
-          background #FEECED
-
-      &:nth-child(4)
-        .card-inner
-          background #DEF1FF
 
 //RESPONSIVE
 @media only screen and (max-width: 768px)
   .dashboard
+    .dashboard-head
+      .dashboard-title
+        font-size 22px
+
+    .stat-value
+      font-size 24px
+
     .order-status-wrapper
       gap 15px
 
@@ -58,7 +111,7 @@
       gap 15px
 
       .dashboard-card
-        min-width 50%
+        min-width 45%
 
 @media only screen and (max-width: 576px)
   .dashboard

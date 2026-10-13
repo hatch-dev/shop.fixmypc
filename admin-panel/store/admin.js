@@ -91,6 +91,20 @@ const actions = {
       return Promise.reject({statusCode: data.status, message: data.message })
     }
   },
+  async updateProfileImage ({ commit, dispatch }, formData) {
+    dispatch('ui/setErrors', null, { root: true })
+    const {data} = await Service.setImageById('', formData, this.$auth.strategy.token.get(), 'setProfileImage')
+    if(data.status === 200){
+      commit('SET_PROFILE', data.data)
+      dispatch('ui/setToastMessage', null, { root: true })
+      return data
+    } else if(data.status === 201) {
+      dispatch('ui/setErrors', data.data, { root: true })
+      return data
+    } else {
+      return Promise.reject({statusCode: data.status, message: data.message })
+    }
+  },
   async setPassword ({ commit, dispatch  }, params) {
     dispatch('ui/setErrors', null, { root: true })
     const {data} = await Service.setRequest(params, this.$auth.strategy.token.get(), 'setPassword')
@@ -135,6 +149,54 @@ const actions = {
       id,
       this.$auth.strategy.token.get(),
       'deleteSupplier'
+    )
+
+    return data
+  },
+
+  // Procurement -> Sourcing: orders with lines still to be sourced.
+  async getSourcingBoard(_, payload) {
+    const { data } = await Service.getRequest(
+      payload,
+      this.$auth.strategy.token.get(),
+      'getSourcingBoard'
+    )
+
+    return data
+  },
+
+  /*
+   * Both writes address one quote, so the id is a path segment:
+   * suppliers/quotes/{id}/decide. Service.setById appends whatever it is
+   * given to the mapped url, so the segment and the action travel together
+   * rather than adding a suffix parameter to a service every screen shares.
+   */
+  async decideProcurementQuote(_, { id, ...payload }) {
+    const { data } = await Service.setById(
+      `${id}/decide`,
+      payload,
+      this.$auth.strategy.token.get(),
+      'decideProcurementQuote'
+    )
+
+    return data
+  },
+
+  async payProcurementQuote(_, { id, ...payload }) {
+    const { data } = await Service.setById(
+      `${id}/pay`,
+      payload,
+      this.$auth.strategy.token.get(),
+      'payProcurementQuote'
+    )
+
+    return data
+  },
+  async getSupplierCategories(_, payload) {
+    const { data } = await Service.getRequest(
+      payload,
+      this.$auth.strategy.token.get(),
+      'getSupplierCategories'
     )
 
     return data

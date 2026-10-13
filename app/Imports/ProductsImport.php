@@ -14,6 +14,7 @@ use App\Models\Category;
 use App\Models\CategoryLang;
 use App\Models\CollectionWithProduct;
 use App\Models\Helper\Utils;
+use App\Models\Helper\Shipping;
 use App\Models\InventoryAttribute;
 use App\Models\OrderedProduct;
 use App\Models\Product;
@@ -210,19 +211,6 @@ class ProductsImport implements ToCollection
                     $brandsArr[trim($row[15])] = $br->id;
                 }
 
-                if (!key_exists(trim($row[16]), $shippingRulesArr)) {
-                    $sr = ShippingRule::create([
-                        'admin_id' => $adminId,
-                        'title' => "",
-                    ]);
-
-                    ShippingRuleLang::create([
-                        'shipping_rule_id' => $sr->id, 'title' => trim($row[16]), 'lang' => $lang
-                    ]);
-
-                    $shippingRulesArr[trim($row[16])] = $sr->id;
-                }
-
                 if (!key_exists(trim($row[17]), $bundleDealsArr)) {
                     $bd = BundleDeal::create([
                         'admin_id' => $adminId,
@@ -265,14 +253,6 @@ class ProductsImport implements ToCollection
                         'title' => trim($row[15])
                     ]);
                     $brandsArr[$br->title] = $br->id;
-                }
-
-                if (!key_exists(trim($row[16]), $shippingRulesArr)) {
-                    $sr = ShippingRule::create([
-                        'admin_id' => $adminId,
-                        'title' => trim($row[16])
-                    ]);
-                    $shippingRulesArr[$sr->title] = $sr->id;
                 }
 
                 if (!key_exists(trim($row[17]), $bundleDealsArr)) {
@@ -326,7 +306,14 @@ class ProductsImport implements ToCollection
                 'tags' => $row[13],
                 'tax_rule_id' => $taxRulesArr[trim($row[14])],
                 'brand_id' => trim($row[15]) == '' ? null : $brandsArr[trim($row[15])],
-                'shipping_rule_id' => $shippingRulesArr[trim($row[16])],
+                /*
+                 * Column 16 was the product's shipping rule. Products are not
+                 * assigned one any more; the column is now "Sell only in", as
+                 * country codes ("IE" or "IE,GB"). A file exported before the
+                 * change holds a rule title there, which is no country code
+                 * and so reads as "anywhere" - it never creates a rule.
+                 */
+                'sell_countries' => Shipping::normaliseCountries($row[16]),
                 'bundle_deal_id' => trim($row[17]) == '' ? null : $bundleDealsArr[trim($row[17])],
                 'purchased' => $row[18],
                 'selling' => $row[19],

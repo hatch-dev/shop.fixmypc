@@ -44,6 +44,7 @@
         ref="listPage"
         list-api="getOrders"
         delete-api="deleteOrder"
+        :delete-message="$t('fSale.dltOrder')"
         route-name="orders"
         :name="$t('fSale.orderD')"
         :order-options="orderByOrders"
@@ -54,89 +55,93 @@
         <template
           v-slot:table-top="{orderOptions}"
         >
-          <div class="dply-felx gap-10 f-wrap mb-15">
+          <div class="table-top filter-toolbar orders-toolbar">
 
+            <div class="orders-toolbar__row">
+              <div class="orders-toolbar__left">
+                <table-sort
+                  :order-by-options="orderOptions"
+                />
 
-            <div class="dply-felx gap-10 f-wrap">
-
-              <table-sort
-                :order-by-options="orderOptions"
-              />
-
-              <inline-pop-over
-                :arrow="true"
-                class="bulk-action mt-md-10"
-                ref="bulkDelete"
-              >
-                <template
-                  v-slot:button
+                <inline-pop-over
+                  :arrow="true"
+                  class="bulk-action"
+                  ref="bulkDelete"
                 >
-                  {{ $t('title.act') }}
-                </template>
-                <template
-                  v-slot:content
-                >
-                  <button @click.prevent="deleteAll" class="outline-btn">
-                    {{ $t('category.delete') }}
-                  </button>
+                  <template
+                    v-slot:button
+                  >
+                    {{ $t('title.act') }}
+                  </template>
+                  <template
+                    v-slot:content
+                  >
+                    <button @click.prevent="deleteAll" class="outline-btn">
+                      {{ $t('category.delete') }}
+                    </button>
 
-                  <button @click.prevent="downloadPdf" class="outline-btn">
-                    {{ $t('setting.pi') }}
-                  </button>
-                </template>
-              </inline-pop-over>
+                    <button @click.prevent="downloadPdf" class="outline-btn">
+                      {{ $t('setting.pi') }}
+                    </button>
+                  </template>
+                </inline-pop-over>
+              </div>
 
-
+              <div class="orders-toolbar__right">
+                <date-filter
+                  @date-changed="filterChanged"
+                />
+              </div>
             </div>
 
-
-
-
-
-            <date-filter
-              @date-changed="filterChanged"
-            />
-          </div>
-
-
-
-          <ul class="order-cb">
-            <li
-              v-for="v in filterOptions"
-              :key="v.key"
-            >
-              <input
-                class="styled-checkbox"
-                :id="`checkbox-${v.key}`"
-                type="checkbox"
-                :value="v.key"
-                v-model="checkedFilter"
-                @change="filterChanged"
-              >
+            <div class="orders-toolbar__chips">
               <label
-                :for="`checkbox-${v.key}`"
+                v-for="v in filterOptions"
+                :key="v.key"
+                class="order-chip"
+                :class="{ 'is-active': checkedFilter.includes(v.key) }"
               >
-                {{ v.title }}
+                <input
+                  type="checkbox"
+                  :value="v.key"
+                  v-model="checkedFilter"
+                  @change="filterChanged"
+                >
+                <span>{{ v.title }}</span>
               </label>
-            </li>
-          </ul>
+            </div>
 
-
+          </div>
 
         </template>
 
-        <template v-slot:table="{list}">
+        <template v-slot:table="{list, from}">
           <tr class="lite-bold">
             <th>
               <input type="checkbox" @change="checkAll">
             </th>
+            <th class="w-50x mx-w-50x">#</th>
+            <!--
+              Customer and account type sit beside the order number, because
+              "who is this and what are they entitled to" is the question the
+              list is scanned for. The money is broken out far enough to see a
+              discounted order at a glance without opening it.
+            -->
             <th>{{ $t('fSale.orderUp') }}</th>
+            <th>{{ $t('fSale.user') }}</th>
+            <th>{{ $t('fSale.accountType') }}</th>
             <th>{{ $t('category.status') }}</th>
             <th>{{ $t('fSale.pMethod') }}</th>
             <th>{{ $t('fSale.pStatus') }}</th>
-            <th>{{ $t('fSale.voucher') }}</th>
-            <th>{{ $t('fSale.user') }}</th>
-            <th>{{ $t('fSale.amount') }}({{ currencyIcon }})</th>
+            <th>{{ $t('fSale.fulfilment') }}</th>
+            <th>{{ $t('fSale.poNo') }}</th>
+            <th>{{ $t('fSale.discount') }}({{ currencyIcon }})</th>
+            <th>{{ $t('fSale.tax') }}({{ currencyIcon }})</th>
+            <!--
+              "Amount" said nothing about whether the figure included VAT.
+              It is the total the customer pays, so it says so.
+            -->
+            <th>{{ $t('fSale.totalIncVat') }}({{ currencyIcon }})</th>
             <th>{{ $t('category.created') }}</th>
             <th />
           </tr>
@@ -149,6 +154,7 @@
             <td>
               <input type="checkbox" :value="item.id" v-model="cbList">
             </td>
+            <td class="w-50x mx-w-50x">{{ from + index }}</td>
             <td>
               <nuxt-link
                 class="dply-felx j-left link"
@@ -158,17 +164,39 @@
               </nuxt-link>
 
             </td>
-            <td>{{ orderStatus[item.status].title }}</td>
+            <td>
+              <span class="ellipsis mx-w-150x" :title="customerEmail(item)">{{ userStr(item) }}</span>
+              <small class="row-sub">{{ customerEmail(item) }}</small>
+            </td>
+            <td>
+              <span class="account-pill" :class="'is-' + accountType(item)">
+                {{ accountTypeLabel(item) }}
+              </span>
+            </td>
+            <!--
+              statusTitle, not orderStatus[...].title: the map stops at 5, so a
+              cancelled, returned or refunded order read `.title` off undefined
+              and took the whole list down with a TypeError.
+            -->
+            <td>{{ statusTitle(item.status) }}</td>
             <td class="mn-w-80x">{{ paymentTypes[item.order_method] }}</td>
             <td
               :class="{'color-success': parseInt(item.payment_done) === status.PUBLIC}"
             >
               {{ parseInt(item.payment_done) === status.PUBLIC ? $t('fSale.paid') : $t('fSale.unpaid') }}
             </td>
-            <td>{{ voucherStr(item) }}</td>
+            <td>{{ fulfilmentLabel(item) }}</td>
             <td>
-              <span class="ellipsis mx-w-150x">{{ userStr(item) }}</span>
+              <span v-if="item.purchase_order_number">{{ item.purchase_order_number }}</span>
+              <span v-else class="color-muted">{{ $t('prod.na') }}</span>
             </td>
+            <td class="mn-w-90x">
+              <span v-if="discountOf(item) > 0" class="color-success">
+                - {{ discountOf(item).toFixed(2) }}
+              </span>
+              <span v-else class="color-muted">&mdash;</span>
+            </td>
+            <td class="mn-w-90x">{{ Number(item.calculated && item.calculated.tax || 0).toFixed(2) }}</td>
             <td class="mn-w-90x">{{ item.total_amount }}</td>
             <td class="mn-w-90x">{{ item.created }}</td>
             <td class="ptb-10">
@@ -241,6 +269,16 @@
           {
             key: 'paypal',
             title: this.$t('fSale.paypal')
+          },
+          {
+            key: 'bank_transfer',
+            title: 'Bank transfer'
+          },
+          {
+            // Bank transfer, unpaid, not cancelled: the ones to check the
+            // bank account for. Includes those with a reference in.
+            key: 'awaiting_transfer',
+            title: 'Awaiting transfer'
           },
           {
             key: 'paid',
@@ -339,14 +377,54 @@
           }
         })
       },
+      /*
+       * The customer, decided server-side: the account first, then the contact
+       * captured at checkout, then the address. This read `address.name` and
+       * fell back to `address.email`, so every click-and-collect order - which
+       * has no address, because nothing is being posted - showed a blank
+       * Customer cell.
+       */
       userStr(order) {
-        return order?.address?.name ?? order?.address?.email
+        return order?.customer?.name || order?.customer?.email || this.$t('prod.na')
       },
-      voucherStr(order) {
-        if(order.voucher) {
-          return `${order.offered} (${order.voucher})`
+      customerEmail(order) {
+        return order?.customer?.email || ''
+      },
+      accountType(order) {
+        return order?.customer?.account_type || 'personal'
+      },
+      accountTypeLabel(order) {
+        return {
+          business: this.$t('fSale.business'),
+          trade: this.$t('fSale.trade'),
+          personal: this.$t('fSale.personal'),
+          guest: this.$t('fSale.guest')
+        }[this.accountType(order)] || this.$t('fSale.personal')
+      },
+      /* Every line on an order shares one fulfilment type; 2 is collection. */
+      fulfilmentLabel(order) {
+        return parseInt(order?.ordered_products?.[0]?.shipping_type) === this.shippingTypeIn.pickup
+          ? this.$t('fSale.collection')
+          : this.$t('fSale.delivery')
+      },
+      /* The product discount frozen on the order, not recomputed from today. */
+      discountOf(order) {
+        return Number(order?.calculated?.discount || 0)
+      },
+      /*
+       * util.orderStatus only maps 1-5. Cancelled, returned and refunded are
+       * statuses orders genuinely reach.
+       */
+      statusTitle(status) {
+        const key = parseInt(status)
+
+        const terminal = {
+          [this.orderStatusIn.CANCELLED]: this.$t('index.orderCan'),
+          [this.orderStatusIn.RETURNED]: this.$t('fSale.returned'),
+          [this.orderStatusIn.REFUNDED]: this.$t('fSale.refUp')
         }
-        return this.$t('prod.na')
+
+        return this.orderStatus[key]?.title || terminal[key] || ''
       },
       ...mapActions('dashboard', ['emptyDashboard'])
     },
@@ -363,5 +441,79 @@
 </script>
 
 <style scoped>
+.orders-toolbar__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
 
+.orders-toolbar__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.orders-toolbar__right {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.orders-toolbar__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
+}
+
+.order-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+  background: var(--surface-color);
+  color: var(--text-muted);
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.order-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.order-chip:hover {
+  border-color: var(--primary-color);
+  background: var(--hover-color);
+}
+
+.order-chip.is-active {
+  background: var(--primary-soft);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.order-chip.is-active span::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  vertical-align: 1px;
+}
 </style>

@@ -1,0 +1,942 @@
+diff --git a/app/Http/Controllers/FrontendController.php b/app/Http/Controllers/FrontendController.php
+index 5c3ee77..0e0abf1 100644
+--- a/app/Http/Controllers/FrontendController.php
++++ b/app/Http/Controllers/FrontendController.php
+@@ -22,6 +22,7 @@ use App\Models\RecentlyViewedProduct;
+ use App\Models\FooterLink;
+ use App\Models\HeaderLink;
+ use App\Models\Helper\FileHelper;
++use App\Models\Helper\ListingPrices;
+ use App\Models\Helper\Pricing;
+ use App\Models\Helper\Response;
+ use App\Models\Helper\Utils;
+@@ -2876,6 +2877,26 @@ class FrontendController extends Controller
+ 
+                     $data = $query->paginate(Config::get('constants.frontend.PAGINATION'));
+ 
++                    /*
++                     * The sale's end time belongs to the sale, not to each
++                     * row, and Pricing reads it off the product to recognise
++                     * the flash price as a live override. Carry it across
++                     * before pricing.
++                     */
++                    foreach ($data as $row) {
++                        $row->end_time = $flashSale->end_time;
++                    }
++
++                    /*
++                     * A sale price and a quantity band are not alternatives.
++                     * Pricing::displayRange settles the precedence once: the
++                     * sale price wins over the retail ladder, and a band may
++                     * still take it lower but never raises it — so a trade
++                     * account is not quietly charged more than a walk-up
++                     * shopper during a promotion. This page priced neither.
++                     */
++                    ListingPrices::decorate($data->getCollection());
++
+                     return response()->json(new Response(null, $data));
+                 }
+ 
+@@ -3745,37 +3766,18 @@ class FrontendController extends Controller
+     }
+ 
+ 
++    /**
++     * The price every tile in this response should advertise.
++     *
++     * The calculation lives in ListingPrices, which every other surface
++     * showing a product card uses too — the wishlist, recently viewed, the
++     * compare list and a flash sale among them. It was private to this
++     * controller, so those four shipped products.offered and advertised the
++     * retail price to accounts entitled to their own.
++     */
+     private function decorateDisplayPrices($items)
+     {
+-        if (is_null($items)) {
+-            return;
+-        }
+-
+-        $tierMap = $this->entitledTierMap($items);
+-
+-        foreach ($items as $product) {
+-            if (!is_object($product)) {
+-                continue;
+-            }
+-
+-            // Listings expose the relation as product_inventories; the detail
+-            // endpoint reshapes the same rows onto `inventory`.
+-            $inventories = $product->product_inventories ?? null;
+-
+-            if (is_null($inventories)) {
+-                $inventories = $product->inventory ?? null;
+-            }
+-
+-            $range = Pricing::displayRange(
+-                $product, $inventories, $tierMap->get($product->id ?? null)
+-            );
+-
+-            $product->display_price = $range['min'];
+-            $product->display_price_max = $range['max'];
+-            $product->display_compare_price = $range['compare'];
+-            $product->is_variable = $range['variable'];
+-            $product->in_stock = $range['in_stock'];
+-        }
++        ListingPrices::decorate($items);
+     }
+ 
+ 
+@@ -3791,18 +3793,7 @@ class FrontendController extends Controller
+      */
+     private function entitledTierMap($items)
+     {
+-        $ids = collect($items)
+-            ->filter(function ($item) { return is_object($item); })
+-            ->pluck('id')
+-            ->filter()
+-            ->unique()
+-            ->values();
+-
+-        if ($ids->isEmpty()) {
+-            return collect();
+-        }
+-
+-        return BusinessProductPricing::tierMap(Auth::user(), $ids);
++        return ListingPrices::tierMap($items);
+     }
+ 
+ 
+
+diff --git a/app/Http/Controllers/UserWishlistsController.php b/app/Http/Controllers/UserWishlistsController.php
+index ee6cf60..d0c10ba 100644
+--- a/app/Http/Controllers/UserWishlistsController.php
++++ b/app/Http/Controllers/UserWishlistsController.php
+@@ -3,6 +3,7 @@
+ namespace App\Http\Controllers;
+ 
+ use App\Models\GuestUser;
++use App\Models\Helper\ListingPrices;
+ use App\Models\Helper\Response;
+ use App\Models\Helper\Utils;
+ use App\Models\Helper\Validation;
+@@ -115,8 +116,19 @@ class UserWishlistsController extends Controller
+                     }
+                 },
+ 
++                /*
++                 * The price and the backorder flag, not just the stock count.
++                 *
++                 * The headline price is the cheapest variation a customer can
++                 * actually buy (Pricing::displayRange), and it cannot work
++                 * that out from rows with no price on them — it fell back to
++                 * the product-level offer, which on a variation product is a
++                 * figure nobody can pay. withCount is how a row is recognised
++                 * as a real variation without loading every attribute.
++                 */
+                 'product.product_inventories' => function ($q) {
+-                    $q->select('id', 'product_id', 'quantity');
++                    $q->select('id', 'product_id', 'quantity', 'price', 'is_active')
++                        ->withCount('inventory_attributes');
+                 }
+             ]);
+ 
+@@ -135,6 +147,16 @@ class UserWishlistsController extends Controller
+                 }
+             }
+ 
++            /*
++             * The wishlist renders the same product tile as the shop listing,
++             * and that tile shows whatever price it is given. It was given
++             * products.offered, so a business or approved-trade customer was
++             * advertised the retail price on everything they had saved —
++             * while the product page, the basket and the till all used the
++             * rate their account is entitled to.
++             */
++            ListingPrices::decorateRelation($data);
++
+             return response()->json(new Response($request->token, $data));
+ 
+ 
+
+diff --git a/app/Http/Controllers/RecentlyViewedController.php b/app/Http/Controllers/RecentlyViewedController.php
+index 4c60476..44525f8 100644
+--- a/app/Http/Controllers/RecentlyViewedController.php
++++ b/app/Http/Controllers/RecentlyViewedController.php
+@@ -1,6 +1,7 @@
+ <?php
+ 
+ namespace App\Http\Controllers;
++use App\Models\Helper\ListingPrices;
+ use App\Models\RecentlyViewedProduct;
+ use Illuminate\Http\Request;
+ use Illuminate\Support\Facades\Auth;
+@@ -18,8 +19,14 @@ class RecentlyViewedController extends Controller
+             'product' => function ($query) {
+                 $query->select('products.*');
+             },
++            /*
++             * The price and the backorder flag too: the headline price is the
++             * cheapest variation a customer can actually buy, and rows with no
++             * price on them made it fall back to the product-level offer.
++             */
+             'product.product_inventories' => function ($q) {
+-                $q->select('id', 'product_id', 'quantity');
++                $q->select('id', 'product_id', 'quantity', 'price', 'is_active')
++                    ->withCount('inventory_attributes');
+             }
+ 
+         ]);
+@@ -43,6 +50,15 @@ class RecentlyViewedController extends Controller
+             ->orderBy($request->order_by ?? 'updated_at', $request->type ?? 'desc')
+             ->paginate(Config::get('constants.api.PAGINATION'));
+ 
++        /*
++         * Before the `price` assignment below, which overwrites the flash-sale
++         * column Pricing reads. This renders the same tile as the shop
++         * listing, and the tile was being handed products.offered — so a
++         * business or approved-trade customer saw the retail price on
++         * everything they had just been looking at.
++         */
++        ListingPrices::decorateRelation($data, 'product', $user);
++
+         foreach ($data as $item) {
+             $item['created'] = $request->time_zone
+                 ? Utils::formatDate(Utils::convertTimeToUSERzone($item->updated_at, $request->time_zone))
+
+diff --git a/app/Http/Controllers/CompareListsController.php b/app/Http/Controllers/CompareListsController.php
+index 6e5303c..c35de43 100644
+--- a/app/Http/Controllers/CompareListsController.php
++++ b/app/Http/Controllers/CompareListsController.php
+@@ -3,6 +3,7 @@
+ namespace App\Http\Controllers;
+ 
+ use App\Models\CompareList;
++use App\Models\Helper\ListingPrices;
+ use App\Models\Helper\Response;
+ use App\Models\Helper\Utils;
+ use App\Models\Helper\Validation;
+@@ -76,6 +77,16 @@ class CompareListsController extends Controller
+                 $query = $query->with(['product']);
+             }
+ 
++            /*
++             * The variations, so the tile advertises the cheapest one a
++             * customer can actually buy rather than the product-level offer —
++             * the same relation the shop listing loads for the same reason.
++             */
++            $query = $query->with(['product.product_inventories' => function ($q) {
++                $q->select('id', 'product_id', 'quantity', 'price', 'is_active')
++                    ->withCount('inventory_attributes');
++            }]);
++
+ 
+             $data = $query->where('user_id', $user->id)
+                 ->orderBy($request->order_by, $request->type)
+@@ -92,6 +103,13 @@ class CompareListsController extends Controller
+                 }
+             }
+ 
++            /*
++             * A comparison whose prices are not the customer's own prices is
++             * the one place a wrong figure is guaranteed to be read carefully.
++             * Same calculation as every other tile.
++             */
++            ListingPrices::decorateRelation($data, 'product', $user);
++
+             return response()->json(new Response($request->token, $data));
+ 
+ 
+
+diff --git a/app/Models/Helper/ListingPrices.php b/app/Models/Helper/ListingPrices.php
+index e69de29..6fed7ae 100644
+--- /dev/null
++++ b/app/Models/Helper/ListingPrices.php
+@@ -0,0 +1,146 @@
++<?php
++
++namespace App\Models\Helper;
++
++use App\Models\BusinessProductPricing;
++use Illuminate\Support\Facades\Auth;
++
++/**
++ * The price a product tile advertises, for whoever is looking at it.
++ *
++ * Every surface that shows a product card asks this: the shop listing, a
++ * category, search, the home rails, the wishlist, recently viewed, the compare
++ * list and a flash sale. They used to answer it in whichever way their own
++ * controller happened to, and most of them did not answer it at all — they
++ * shipped products.offered and the tile rendered that, so a business or
++ * approved-trade account was advertised the retail price on the surfaces that
++ * had been missed while the product page, the basket and the till all used its
++ * own rate.
++ *
++ * There is one calculation, in Pricing::displayRange, and this is the one
++ * place that feeds it the customer's entitlement. It sits here rather than in
++ * a controller so a controller cannot be written without it.
++ *
++ * Pricing itself stays free of database access, which is why the band lookup
++ * lives here and the arithmetic lives there.
++ */
++class ListingPrices
++{
++    /**
++     * Decorate a collection of products with the price to advertise.
++     *
++     * Writes display_price, display_price_max, display_compare_price,
++     * is_variable and in_stock onto each row — the fields the storefront tile
++     * reads, in preference to the raw offer price.
++     *
++     * A listing advertises the price of buying one, so the bands are applied
++     * at quantity 1. The basket and checkout price the quantity the customer
++     * actually chose; a tile has no quantity to speak of.
++     */
++    public static function decorate($items, $user = null)
++    {
++        if (is_null($items)) {
++            return $items;
++        }
++
++        $tierMap = self::tierMap($items, $user);
++
++        foreach ($items as $product) {
++            if (!is_object($product)) {
++                continue;
++            }
++
++            /*
++             * Listings expose the variations as product_inventories; the
++             * detail endpoint reshapes the same rows onto `inventory`.
++             */
++            $inventories = $product->product_inventories ?? null;
++
++            if (is_null($inventories)) {
++                $inventories = $product->inventory ?? null;
++            }
++
++            $range = Pricing::displayRange(
++                $product, $inventories, $tierMap->get($product->id ?? null)
++            );
++
++            $product->display_price = $range['min'];
++            $product->display_price_max = $range['max'];
++            $product->display_compare_price = $range['compare'];
++            $product->is_variable = $range['variable'];
++            $product->in_stock = $range['in_stock'];
++        }
++
++        return $items;
++    }
++
++
++    /**
++     * Decorate products that hang off a wrapper row.
++     *
++     * A wishlist, a compare list and a recently-viewed list are lists of
++     * *references*; the product is on a relation. The tile is given the
++     * product, so the product is what has to carry the price.
++     *
++     * $relation is the property holding it — 'product' for all three today.
++     */
++    public static function decorateRelation($rows, $relation = 'product', $user = null)
++    {
++        if (is_null($rows)) {
++            return $rows;
++        }
++
++        $products = [];
++
++        foreach ($rows as $row) {
++            if (!is_object($row)) {
++                continue;
++            }
++
++            $product = $row->{$relation} ?? null;
++
++            if (is_object($product)) {
++                $products[] = $product;
++            }
++        }
++
++        self::decorate($products, $user);
++
++        return $rows;
++    }
++
++
++    /**
++     * The quantity bands this caller is entitled to, keyed by product id.
++     *
++     * Empty for guests, personal accounts, trade accounts still waiting on
++     * approval, rejected ones and suspended ones —
++     * BusinessProductPricing::tierMap answers that from
++     * User::hasBusinessPricing(), the same test the basket and the order use.
++     * A tile cannot advertise a rate the till will not honour.
++     *
++     * One query per listing rather than one per tile.
++     */
++    public static function tierMap($items, $user = null)
++    {
++        $ids = collect($items)
++            ->filter(function ($item) { return is_object($item); })
++            ->pluck('id')
++            ->filter()
++            ->unique()
++            ->values();
++
++        if ($ids->isEmpty()) {
++            return collect();
++        }
++
++        /*
++         * Auth::user() by default, so a controller does not have to remember
++         * to pass it. Explicit only where the caller already holds the model,
++         * or is pricing on someone else's behalf.
++         */
++        return BusinessProductPricing::tierMap(
++            $user ?: Auth::user(), $ids
++        );
++    }
++}
+
+diff --git a/tests/Feature/ListingPricingTest.php b/tests/Feature/ListingPricingTest.php
+index e69de29..8eee930 100644
+--- /dev/null
++++ b/tests/Feature/ListingPricingTest.php
+@@ -0,0 +1,537 @@
++<?php
++namespace Tests\Feature;
++
++use App\Models\BusinessProductPricing;
++use App\Models\CompareList;
++use App\Models\Helper\Pricing;
++use App\Models\Product;
++use App\Models\RecentlyViewedProduct;
++use App\Models\User;
++use App\Models\UserWishlist;
++use Illuminate\Foundation\Testing\DatabaseTransactions;
++use Laravel\Passport\Passport;
++use Tests\TestCase;
++
++/**
++ * Every surface that shows a product card, priced for whoever is looking.
++ *
++ * PricingConsistencyTest covers the shop listing, search and the product page.
++ * This covers the rest — the wishlist, recently viewed, the compare list and a
++ * flash sale — which rendered the same tile and never priced it at all, so an
++ * entitled account was advertised the retail price on all four while the
++ * product page, the basket and the till used its own rate.
++ *
++ * A tile advertises the price of buying one, so a band is applied at quantity
++ * 1. That is the whole quantity story on a listing; the basket prices the
++ * quantity the customer actually chose.
++ */
++class ListingPricingTest extends TestCase
++{
++    use DatabaseTransactions;
++
++    private $product;
++
++    /** A published product with a band that covers a single unit. */
++    private function bandedProduct()
++    {
++        if ($this->product) {
++            return $this->product;
++        }
++
++        $row = collect($this->getJson('/api/v1/products')->json('data.result.data'))
++            ->first(function ($item) {
++                return (float)($item['selling'] ?? 0) > 0;
++            });
++
++        $product = $row ? Product::find($row['id']) : null;
++
++        if (!$product) {
++            $this->markTestSkipped('No published product on the shop listing.');
++        }
++
++        BusinessProductPricing::where('product_id', $product->id)->delete();
++
++        /*
++         * A band from 1, because a tile is a quantity of one — a rate card
++         * that starts at 5 would make every surface here show retail and the
++         * assertions would pass without testing anything.
++         */
++        $band = new BusinessProductPricing([
++            'product_id' => $product->id,
++            'min_qty' => 1,
++            'max_qty' => 0,
++            'wholesale_price' => round((float)$product->selling * 0.5, 2),
++            'discount_type' => 'fixed',
++            'discount_value' => 0,
++        ]);
++        $band->final_price = $band->computedFinalPrice();
++        $band->save();
++
++        return $this->product = $product->fresh();
++    }
++
++    private function bandPrice($product)
++    {
++        return Pricing::round((float)$product->selling * 0.5);
++    }
++
++    private function retailPrice($product)
++    {
++        return Pricing::round(Pricing::displayRange(
++            Product::pricingRecord($product->id),
++            $product->product_inventories,
++            null
++        )['min']);
++    }
++
++    private function customer($attributes = [])
++    {
++        return User::create(array_merge([
++            'name' => 'Listing Fixture',
++            'email' => 'listing.' . uniqid() . '@example.test',
++            'phone' => '08' . random_int(10000000, 99999999),
++            'password' => bcrypt('Abcdefghij1'),
++            'account_type' => 'personal',
++            'verified' => true,
++            'status' => User::STATUS_ACTIVE,
++        ], $attributes))->fresh();
++    }
++
++    /**
++     * Who is entitled to a band and who is not — the same question
++     * User::hasBusinessPricing answers for the basket and the till.
++     */
++    public function accounts()
++    {
++        return [
++            'personal' => [['account_type' => 'personal'], false],
++            'business' => [['account_type' => 'business'], true],
++            'trade approved' => [
++                ['account_type' => 'trade', 'trade_status' => User::TRADE_APPROVED], true
++            ],
++            'trade pending' => [
++                ['account_type' => 'trade', 'trade_status' => User::TRADE_PENDING], false
++            ],
++            'trade rejected' => [
++                ['account_type' => 'trade', 'trade_status' => User::TRADE_REJECTED], false
++            ],
++            'trade suspended' => [
++                ['account_type' => 'trade', 'trade_status' => User::TRADE_APPROVED,
++                 'status' => User::STATUS_SUSPENDED], false
++            ],
++            'business suspended' => [
++                ['account_type' => 'business', 'status' => User::STATUS_SUSPENDED], false
++            ],
++        ];
++    }
++
++    /** flash_sales.admin_id is NOT NULL; any staff row will do as the author. */
++    private function anyAdminId()
++    {
++        $id = \App\Models\Admin::query()->value('id');
++
++        if (!$id) {
++            $this->markTestSkipped('No admin row to author a flash sale with.');
++        }
++
++        return $id;
++    }
++
++    private function signIn($attributes)
++    {
++        $customer = $this->customer($attributes);
++
++        Passport::actingAs($customer, ['user'], 'user');
++
++        return $customer;
++    }
++
++    private function expected($product, $entitled)
++    {
++        return $entitled ? $this->bandPrice($product) : $this->retailPrice($product);
++    }
++
++    /** Pull one product's card price out of a listing response. */
++    private function cardPrice($rows, $productId, $relation = null)
++    {
++        $row = collect($rows)->first(function ($item) use ($productId, $relation) {
++            $product = $relation ? ($item[$relation] ?? null) : $item;
++
++            return $product && (int)($product['id'] ?? 0) === (int)$productId;
++        });
++
++        if (!$row) {
++            return null;
++        }
++
++        $product = $relation ? $row[$relation] : $row;
++
++        return array_key_exists('display_price', $product)
++            ? (float)$product['display_price']
++            : null;
++    }
++
++    // ------------------------------------------------------- the shop listing
++
++    /** @dataProvider accounts */
++    public function test_the_shop_listing_prices_the_card($attributes, $entitled)
++    {
++        $product = $this->bandedProduct();
++
++        $this->signIn($attributes);
++
++        $this->assertSame(
++            $this->expected($product, $entitled),
++            $this->cardPrice(
++                $this->getJson('/api/v1/products')->json('data.result.data'), $product->id
++            )
++        );
++    }
++
++    public function test_the_shop_listing_gives_a_guest_the_retail_price()
++    {
++        $product = $this->bandedProduct();
++
++        $this->assertSame(
++            $this->retailPrice($product),
++            $this->cardPrice(
++                $this->getJson('/api/v1/products')->json('data.result.data'), $product->id
++            )
++        );
++    }
++
++    /** @dataProvider accounts */
++    public function test_search_prices_the_card($attributes, $entitled)
++    {
++        $product = $this->bandedProduct();
++
++        $this->signIn($attributes);
++
++        $this->assertSame(
++            $this->expected($product, $entitled),
++            $this->cardPrice(
++                $this->getJson('/api/v1/search?q=' . urlencode($product->title))
++                    ->json('data.product'),
++                $product->id
++            )
++        );
++    }
++
++    // --------------------------------------------------------- the wishlist
++
++    /** @dataProvider accounts */
++    public function test_the_wishlist_prices_the_card($attributes, $entitled)
++    {
++        $product = $this->bandedProduct();
++
++        $customer = $this->signIn($attributes);
++
++        UserWishlist::create(['user_id' => $customer->id, 'product_id' => $product->id]);
++
++        $rows = $this->getJson('/api/v1/user/wishlist/all')->json('data.data');
++
++        $this->assertNotNull($rows, 'the wishlist did not answer');
++
++        $this->assertSame(
++            $this->expected($product, $entitled),
++            $this->cardPrice($rows, $product->id, 'product'),
++            'the wishlist tile'
++        );
++    }
++
++    // --------------------------------------------------- recently viewed
++
++    /** @dataProvider accounts */
++    public function test_recently_viewed_prices_the_card($attributes, $entitled)
++    {
++        $product = $this->bandedProduct();
++
++        $customer = $this->signIn($attributes);
++
++        RecentlyViewedProduct::create([
++            'user_id' => $customer->id,
++            'product_id' => $product->id,
++        ]);
++
++        $response = $this->getJson('/api/v1/user/recently-viewed');
++
++        /*
++         * A suspended account is refused the account area outright, so there
++         * is no tile to price. That is the correct answer, not a gap — assert
++         * it rather than stepping over it.
++         */
++        if (($attributes['status'] ?? null) === User::STATUS_SUSPENDED) {
++            $this->assertNotSame(
++                200, $response->status(),
++                'a suspended account reached the account area'
++            );
++            return;
++        }
++
++        $response->assertStatus(200);
++
++        $this->assertSame(
++            $this->expected($product, $entitled),
++            $this->cardPrice($response->json('data.data'), $product->id, 'product'),
++            'the recently viewed tile'
++        );
++    }
++
++    // ------------------------------------------------------ the compare list
++
++    /** @dataProvider accounts */
++    public function test_the_compare_list_prices_the_card($attributes, $entitled)
++    {
++        $product = $this->bandedProduct();
++
++        $customer = $this->signIn($attributes);
++
++        CompareList::create(['user_id' => $customer->id, 'product_id' => $product->id]);
++
++        $response = $this->getJson('/api/v1/user/compare-list/all?order_by=id&type=desc');
++
++        // As above: a suspended account has no account area to be priced in.
++        if (($attributes['status'] ?? null) === User::STATUS_SUSPENDED) {
++            $this->assertNotSame(200, $response->status());
++            return;
++        }
++
++        $response->assertStatus(200);
++
++        $this->assertSame(
++            $this->expected($product, $entitled),
++            $this->cardPrice($response->json('data.data'), $product->id, 'product'),
++            'the compare tile'
++        );
++    }
++
++    // ------------------------------------------- listing agrees with the page
++
++    /** @dataProvider accounts */
++    public function test_the_card_and_the_product_page_agree($attributes, $entitled)
++    {
++        $product = $this->bandedProduct();
++
++        $this->signIn($attributes);
++
++        $card = $this->cardPrice(
++            $this->getJson('/api/v1/products')->json('data.result.data'), $product->id
++        );
++
++        $page = (float)$this->getJson("/api/v1/product/{$product->id}")
++            ->json('data.display_price');
++
++        $this->assertSame($card, $page, 'the card and the product page disagree');
++    }
++
++    /**
++     * A tile is one unit. The basket's quantity must not leak into it — a
++     * customer with 30 in the basket still sees the single-unit price on a
++     * category page.
++     */
++    public function test_a_card_is_priced_at_one_unit_not_at_the_basket_quantity()
++    {
++        $product = $this->bandedProduct();
++
++        // A second, deeper band that only a large order reaches.
++        $deep = new BusinessProductPricing([
++            'product_id' => $product->id,
++            'min_qty' => 10,
++            'max_qty' => 0,
++            'wholesale_price' => round((float)$product->selling * 0.25, 2),
++            'discount_type' => 'fixed',
++            'discount_value' => 0,
++        ]);
++        $deep->final_price = $deep->computedFinalPrice();
++        $deep->save();
++
++        // The 1+ band now has to stop at 9, or the two overlap.
++        BusinessProductPricing::where('product_id', $product->id)
++            ->where('min_qty', 1)
++            ->update(['max_qty' => 9]);
++
++        $this->signIn(['account_type' => 'business']);
++
++        $this->assertSame(
++            $this->bandPrice($product),
++            $this->cardPrice(
++                $this->getJson('/api/v1/products')->json('data.result.data'), $product->id
++            ),
++            'the card was priced at a quantity nobody asked for'
++        );
++    }
++
++    // ------------------------------------------------------- a flash sale
++
++    /**
++     * A sale price and a quantity band are not alternatives.
++     *
++     * Pricing::displayRange settles the precedence: the sale price overrides
++     * the retail ladder, and a band may take it lower still but never raises
++     * it — so a trade account is not quietly charged more than a walk-up
++     * shopper during a promotion. The flash sale page applied neither.
++     */
++    public function test_a_flash_sale_card_is_priced_for_the_customer()
++    {
++        $product = $this->bandedProduct();
++
++        $sale = \App\Models\FlashSale::create([
++            'title' => 'Listing fixture sale',
++            'status' => 1,
++            'admin_id' => $this->anyAdminId(),
++            'start_time' => now()->subDay(),
++            'end_time' => now()->addDay(),
++        ]);
++
++        // A sale price between the band price and retail, so the three
++        // possible answers are all different and the test can tell them apart.
++        $salePrice = Pricing::round($this->bandPrice($product) * 1.2);
++
++        \App\Models\FlashSaleProduct::create([
++            'flash_sale_id' => $sale->id,
++            'product_id' => $product->id,
++            'admin_id' => $this->anyAdminId(),
++            'price' => $salePrice,
++        ]);
++
++        $read = function () use ($sale, $product) {
++            return $this->cardPrice(
++                $this->getJson("/api/v1/flash-sale/{$sale->id}")->json('data.data'),
++                $product->id
++            );
++        };
++
++        // A guest and a personal account pay the sale price.
++        $this->assertSame($salePrice, $read(), 'a guest');
++
++        Passport::actingAs($this->customer(), ['user'], 'user');
++        $this->assertSame($salePrice, $read(), 'a personal account');
++
++        // A business account's band undercuts it, so the band wins.
++        $this->signIn(['account_type' => 'business']);
++        $this->assertSame($this->bandPrice($product), $read(), 'a business account');
++    }
++
++    public function test_a_flash_sale_never_charges_a_band_customer_more()
++    {
++        $product = $this->bandedProduct();
++
++        $sale = \App\Models\FlashSale::create([
++            'title' => 'Deep sale',
++            'status' => 1,
++            'admin_id' => $this->anyAdminId(),
++            'start_time' => now()->subDay(),
++            'end_time' => now()->addDay(),
++        ]);
++
++        // This time the sale is cheaper than the agreed wholesale rate.
++        $salePrice = Pricing::round($this->bandPrice($product) * 0.5);
++
++        \App\Models\FlashSaleProduct::create([
++            'flash_sale_id' => $sale->id,
++            'product_id' => $product->id,
++            'admin_id' => $this->anyAdminId(),
++            'price' => $salePrice,
++        ]);
++
++        $this->signIn(['account_type' => 'business']);
++
++        $this->assertSame(
++            $salePrice,
++            $this->cardPrice(
++                $this->getJson("/api/v1/flash-sale/{$sale->id}")->json('data.data'),
++                $product->id
++            ),
++            'the band was applied over a cheaper sale price'
++        );
++    }
++
++    // ----------------------------------------------------------- the cache
++
++    /**
++     * Listing responses are shared. The price has to be decided per request,
++     * or whoever loads the page first decides what everyone else is quoted.
++     */
++    public function test_a_business_visit_does_not_leave_its_price_behind()
++    {
++        $product = $this->bandedProduct();
++
++        $this->signIn(['account_type' => 'business']);
++
++        $banded = $this->cardPrice(
++            $this->getJson('/api/v1/products')->json('data.result.data'), $product->id
++        );
++
++        Passport::actingAs($this->customer(), ['user'], 'user');
++
++        $retail = $this->cardPrice(
++            $this->getJson('/api/v1/products')->json('data.result.data'), $product->id
++        );
++
++        $this->assertSame($this->bandPrice($product), $banded);
++        $this->assertSame(
++            $this->retailPrice($product), $retail,
++            'a personal account was served the business visit price'
++        );
++    }
++
++    public function test_a_guest_visit_does_not_deny_a_business_account_its_price()
++    {
++        $product = $this->bandedProduct();
++
++        $guest = $this->cardPrice(
++            $this->getJson('/api/v1/products')->json('data.result.data'), $product->id
++        );
++
++        $this->signIn(['account_type' => 'business']);
++
++        $banded = $this->cardPrice(
++            $this->getJson('/api/v1/products')->json('data.result.data'), $product->id
++        );
++
++        $this->assertSame($this->retailPrice($product), $guest);
++        $this->assertSame($this->bandPrice($product), $banded);
++    }
++
++    // --------------------------------------------- filters, sorting, paging
++
++    /**
++     * The price is decided from the rows a query returns, so it cannot depend
++     * on which rows those are — but the filters each take their own code path
++     * through the listing, and a path that skipped the decoration would send
++     * the card back to retail on the second click.
++     */
++    public function test_filtering_sorting_and_paging_keep_the_price()
++    {
++        $product = $this->bandedProduct();
++
++        $this->signIn(['account_type' => 'business']);
++
++        $expected = $this->bandPrice($product);
++
++        $queries = [
++            '',
++            '?page=1',
++            '?per_page=50',
++            '?orderby=price&type=asc',
++            '?orderby=price&type=desc',
++            '?orderby=created_at&type=desc',
++            '?q=' . urlencode($product->title),
++            '?in_stock=1',
++            '?brand=' . (int)$product->brand_id,
++        ];
++
++        foreach ($queries as $query) {
++            $rows = $this->getJson('/api/v1/products' . $query)->json('data.result.data');
++
++            $price = $this->cardPrice($rows, $product->id);
++
++            if (is_null($price)) {
++                // The filter excluded the fixture; nothing to compare.
++                continue;
++            }
++
++            $this->assertSame($expected, $price, 'listing' . $query);
++        }
++    }
++}

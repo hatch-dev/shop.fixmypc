@@ -1,0 +1,2017 @@
+/* ==========================================================================
+   Product detail screen — port of reference/index.html (desktop) and
+   reference/mobile.html (phone) onto the theme that is already live.
+
+   Every rule is scoped under .pd-page (pages/_main/product/_id.vue) so the
+   rest of the shop is untouched. Brand tokens map onto the integrated theme
+   variables (--primary-color / --primary-hover-color and the #05B942 green)
+   rather than the raw hexes of the reference.
+   ========================================================================== */
+
+.pd-page
+  --ink #130E2B
+  --ink-soft #3A3C6E
+  --brand var(--primary-color)
+  --brand-700 var(--primary-hover-color)
+  --brand-50 #F1F1FC
+  --go #05B942
+  --go-700 #049937
+  --wash #F7F7FD
+  --line #E6E7F3
+  --line-strong #CFD1E8
+  --muted #6B7191
+  --danger #C8324B
+  --amber #B26A00
+  --star #FFA41C
+  --mint #E9F8EE
+  --radius 14px
+  --radius-lg 18px
+  --shadow-sm 0 1px 3px rgba(22, 23, 74, .06)
+  --shadow-md 0 10px 30px rgba(22, 23, 74, .10)
+
+  color var(--ink)
+
+/* ─────────── breadcrumb bar ─────────── */
+.pd-page .p_detail-breadcrumb
+  padding 0
+  background var(--wash)
+  border-bottom 1px solid var(--line)
+
+.pd-page .p_detail-breadcrumb nav[aria-label="breadcrumb"]
+  margin 0 !important
+
+.pd-page .p_detail-breadcrumb .breadcrumb
+  align-items center
+  padding 13px 0
+  font-size 13.5px
+  color var(--muted)
+
+.pd-page .p_detail-breadcrumb .breadcrumb li a
+  font-size 13.5px
+  font-weight 400
+  color var(--ink-soft)
+
+.pd-page .p_detail-breadcrumb .breadcrumb li a:hover
+  color var(--brand)
+  text-decoration underline
+
+.pd-page .p_detail-breadcrumb .breadcrumb li:last-child
+  font-weight 600
+  color var(--brand)
+
+/* ─────────── three column shell ─────────── */
+.pd-page .all-product-info.section
+  padding 24px 0 40px
+
+.pd-page .product-detail
+  position relative
+  padding-right 330px
+
+.pd-page .product-detail .detail-right
+  width 330px
+
+.pd-page .product-detail .detail-right .sticky-right
+  top 120px
+
+.pd-page .product-detail .product-main
+  gap 30px
+  align-items flex-start
+
+.pd-page .product-detail .product-main .detail-image-wrapper
+  min-width 360px
+  max-width 360px
+
+.pd-page .product-detail .pl-30
+  padding-left 0
+
+/* ─────────── gallery ─────────── */
+.pd-page .detail-image .zoomer-base-container,
+.pd-page .detail-image .pleceholder-zoomer-base-container
+  border 1px solid var(--line)
+  border-radius var(--radius-lg)
+  background var(--wash)
+  overflow hidden
+
+.pd-page .detail-image .zoomer-base-container > img,
+.pd-page .detail-image .pleceholder-zoomer-base-container > img
+  height 358px
+  padding 26px
+
+/* The roll-over-to-zoom caption under the thumbnail strip. Its top margin is
+   the only thing separating it from the thumbs - .thumb-list below drops the
+   bottom margin detail-images.styl gives it - so the gap lives here.
+   Matched by class rather than as a direct child: client-only may wrap it. */
+.pd-page .detail-image p.center-text
+  margin 24px 0 0 !important
+  padding-bottom 0 !important
+  font-size 13px
+  line-height 1.4 !important
+  color var(--muted)
+
+.pd-page .detail-image .thumb-list,
+.pd-page .detail-image .pleceholder-thumb-list
+  gap 9px
+  margin 12px 0 12px 0
+
+.pd-page .detail-image .thumb-list .responsive-image,
+.pd-page .detail-image .pleceholder-thumb-list .responsive-image
+  height 60px !important
+  width 64px !important
+  margin 0
+  padding 7px
+  border 1.5px solid var(--line-strong)
+  border-radius 11px
+  background var(--wash)
+  opacity .6
+  transition border-color .15s, opacity .15s
+
+.pd-page .detail-image .thumb-list .responsive-image:hover
+  opacity 1
+
+.pd-page .detail-image .thumb-list .zoomer-control.responsive-image
+  height 30px !important
+  width 30px !important
+  padding 0
+  border 1px solid var(--line-strong)
+  border-radius 50%
+  background #fff
+  opacity 1
+
+.pd-page .detail-image .thumb-list .choosed-thumb
+  box-shadow none !important
+  border-color var(--brand) !important
+  background var(--brand-50)
+  opacity 1
+
+/* ─────────── detail accordions ─────────── */
+
+/* They sit after the specifications table, so they read as the tail of the
+   page rather than furniture beside the gallery. */
+.pd-page .pd-accordions
+  margin-bottom 48px
+
+.pd-page .detail-image-wrapper .accordion
+  margin-top 20px
+
+.pd-page .accordion-item
+  margin-bottom 11px
+  padding 15px 16px !important
+  border 1px solid var(--line) !important
+  border-radius var(--radius) !important
+  background #fff
+
+.pd-page .accordion-header .accordion-button
+  gap 10px
+  padding 0
+  font-size 14.5px
+  font-weight 700
+  line-height 1.35
+  color var(--ink)
+  background none
+
+.pd-page .accordion-header .accordion-button::after
+  width 15px
+  height 15px
+  margin-left auto
+  background-size 15px
+  opacity .55
+
+.pd-page .accordion-header .accordion-button:not(.collapsed)
+  color var(--brand) !important
+
+.pd-page .accordion-body
+  margin-top 14px !important
+  padding 0
+  font-size 13.5px
+  line-height 1.6
+  color var(--ink-soft)
+
+.pd-page .accordion-body p
+  font-size 13.5px
+  color var(--ink-soft)
+
+/* ─────────── bulk pricing ─────────── */
+.pd-page .bulk-pricing-box
+  padding 16px
+  border 1px solid var(--line)
+  border-radius var(--radius)
+  background #fff
+  box-shadow var(--shadow-sm)
+
+.pd-page .bulk-header
+  display flex
+  align-items center
+  justify-content space-between
+  margin-bottom 12px
+
+.pd-page .bulk-header h4
+  font-size 15px
+  font-weight 700
+  color var(--ink)
+
+.pd-page .bulk-tag
+  padding 4px 10px
+  border-radius 999px
+  background var(--brand-50)
+  font-size 11px
+  font-weight 700
+  color var(--brand)
+
+.pd-page .bulk-table
+  display flex
+  flex-direction column
+  gap 8px
+
+.pd-page .bulk-row
+  display flex
+  align-items center
+  justify-content space-between
+  padding 12px
+  border 1px solid transparent
+  border-radius 10px
+  background var(--wash)
+  transition background .15s, border-color .15s
+
+.pd-page .bulk-row:hover
+  border-color var(--line-strong)
+
+.pd-page .bulk-left
+  display flex
+  flex-direction column
+
+.pd-page .bulk-left .qty
+  font-size 14px
+  font-weight 600
+
+.pd-page .bulk-left .label
+  font-size 11px
+  color var(--muted)
+
+.pd-page .bulk-right
+  font-size 16px
+  font-weight 800
+  color var(--ink)
+
+.pd-page .bulk-row.best
+  border-color var(--brand)
+  background var(--brand-50)
+
+.pd-page .bulk-row.best .bulk-right
+  color var(--brand)
+
+/* ─────────── main column head ─────────── */
+
+/* The brand kicker above the title. reference/index.html has no such line on
+   the desktop layout, so it only shows at phone width - see the 768 block. */
+.pd-page .pd-brandline
+  display none
+  font-size 10.5px
+  font-weight 800
+  letter-spacing .09em
+  text-transform uppercase
+  color var(--muted)
+
+/* headline specs as chips, straight from reference/mobile.html */
+.pd-page .pd-chips
+  display flex
+  flex-wrap wrap
+  gap 7px
+  margin 14px 0 0
+  padding 0
+  list-style none
+
+.pd-page .pd-chip
+  display inline-flex
+  align-items center
+  padding 7px 11px
+  border 1px solid var(--line)
+  border-radius 10px
+  font-size 12.5px
+  line-height 1.3
+  color var(--ink)
+
+.pd-page .product-detail h1
+  margin 0 0 6px
+  font-size 26px !important
+  font-weight 700
+  line-height 1.22
+  letter-spacing -.025em
+  color var(--brand)
+
+.pd-page .config-values
+  gap 6px
+  margin 8px 0 10px
+  font-size 13.5px
+  font-weight 400
+  color var(--muted)
+
+/* The SKU sits in the meta row beside the stock pill, as a wash pill -
+   reference/index.html and reference/mobile.html both carry it there. */
+.pd-page .config-sku
+  padding 5px 12px
+  border-radius 999px
+  background var(--wash)
+  font-size 12px
+  font-weight 700
+  line-height 1.35
+  color var(--muted)
+  white-space nowrap
+
+.pd-page .config-sku strong
+  font-weight 700
+  color var(--muted)
+
+.pd-page .review-and-badges
+  gap 12px
+  flex-wrap wrap
+  margin-top 12px !important
+  font-size 13px
+  color var(--muted)
+
+.pd-page .review-and-badges > div
+  display flex
+  align-items center
+  gap 8px
+
+.pd-page .review-and-badges .rating-stars
+  font-size 14px
+
+.pd-page .review-and-badges .f-10
+  font-size 13px
+
+.pd-page .order-badge
+  display flex
+  align-items center
+  gap 8px
+
+.pd-page .order-badge span
+  padding 5px 12px !important
+  border-radius 999px
+  font-size 12px
+  font-weight 700
+  line-height 1.35
+
+.pd-page .order-badge .badge-success
+  border 1px solid var(--go)
+  background #fff
+  color var(--go)
+
+.pd-page .order-badge .badge-danger
+  border 1px solid var(--danger)
+  background #fff
+  color var(--danger)
+
+.pd-page .order-badge .badge-secondary
+  margin-bottom 0
+  border 1px solid var(--line-strong)
+  background var(--wash)
+  color var(--muted)
+
+.pd-page .product-detail .devider
+  height 1px
+  margin 18px 0 !important
+  background var(--line)
+  font-size 0
+  line-height 0
+
+/* flash sale strip */
+.pd-page .warning-msg
+  border 1px solid #F0DCB6
+  border-radius var(--radius)
+  background #FFF6E6
+  color var(--amber)
+
+.pd-page .countdown-display
+  font-weight 700
+
+/* ─────────── attributes, vouchers, colour ─────────── */
+.pd-page .fmpc-attributes-title
+  margin-bottom 10px
+  font-size 14.5px
+  font-weight 700
+  line-height 1.3
+  color var(--ink)
+
+.pd-page .fmpc-detail-side-by-side-attributes
+  display grid
+  grid-template-columns 1fr 1fr
+  gap 18px 24px
+  margin 20px 0
+
+.pd-page .rd-attr .input-content
+  padding 9px 14px
+  border 1.5px solid var(--line-strong)
+  border-radius 10px
+  background #fff
+  font-size 13.5px
+  font-weight 600
+  color var(--ink-soft)
+  transition border-color .15s, background .15s, color .15s
+
+.pd-page .rd-attr .rd-checkmark
+  display none
+
+.pd-page .rd-attr:hover .input-content
+  border-color var(--brand)
+  color var(--brand)
+
+.pd-page .rd-attr input:checked ~ .input-content
+  border-color var(--brand)
+  background var(--brand-50)
+  color var(--brand)
+
+.pd-page .rd-attr.disabled-attr
+  opacity .45
+  background none
+  cursor not-allowed
+
+.pd-page .fmpc-vouchers
+  padding 14px
+  border 1px solid #F0DCB6
+  border-radius var(--radius)
+  background #FFF9E9
+
+.pd-page .fmpc-vouchers .fmpc-attributes-title
+  color var(--amber)
+
+.pd-page .fmpc-voucher-pills .info-msg
+  padding 8px 13px
+  border 1.5px solid var(--line-strong)
+  border-radius 10px
+  background #fff
+  font-size 13px
+  font-weight 700
+  color var(--amber)
+
+.pd-page .fmpc-voucher-pills .info-msg.active
+  border-color var(--go)
+  background #EFFAF3
+  color var(--go-700)
+
+/* Colour swatches, painted from each attribute value's own colour code.
+   The selected ring is driven by :checked rather than a bound class, the way
+   the text pills next to them work, so it needs no reactive state. */
+.pd-page .fmpc-color-atrr-list
+  display flex
+  flex-wrap wrap
+  align-items center
+  gap 10px
+
+/* The ring, the white gap and the swatch are all drawn by one element: an
+   inset hairline so a pale colour still has an edge, then a white spread,
+   then the ring itself. Driving it from the circle rather than the label's
+   border is what lets :checked reach it without a bound class. */
+.pd-page .fmpc-color-atrr-item
+  position relative
+  display grid
+  place-items center
+  width 38px
+  height 38px
+  padding 0
+  border 0
+  border-radius 50%
+  background none
+  cursor pointer
+
+.pd-page .fmpc-color-atrr-item input
+  position absolute
+  width 100%
+  height 100%
+  margin 0
+  opacity 0
+  cursor inherit
+
+.pd-page .fmpc-color-atrr-circle
+  width 28px
+  height 28px
+  border 0
+  border-radius 50%
+  box-shadow inset 0 0 0 1px rgba(19, 14, 43, .10), 0 0 0 3px #fff, 0 0 0 5px var(--line-strong)
+  transition box-shadow .15s
+
+/* the value name is there for screen readers and the title tooltip */
+.pd-page .fmpc-color-atrr-name
+  position absolute
+  width 1px
+  height 1px
+  overflow hidden
+  clip rect(0 0 0 0)
+  white-space nowrap
+
+.pd-page .fmpc-color-atrr-item:hover .fmpc-color-atrr-circle
+  box-shadow inset 0 0 0 1px rgba(19, 14, 43, .10), 0 0 0 3px #fff, 0 0 0 5px var(--brand)
+
+.pd-page .fmpc-color-atrr-item input:checked ~ .fmpc-color-atrr-circle,
+.pd-page .fmpc-color-atrr-item input:focus-visible ~ .fmpc-color-atrr-circle
+  box-shadow inset 0 0 0 1px rgba(19, 14, 43, .10), 0 0 0 3px #fff, 0 0 0 5px var(--brand), 0 0 0 8px rgba(45, 45, 160, .12)
+
+.pd-page .fmpc-color-atrr-item.disabled-attr
+  opacity .4
+  background none
+  cursor not-allowed
+
+/* the chosen value shown beside an attribute's name */
+.pd-page .fmpc-attributes-note
+  font-weight 500
+  color var(--muted)
+
+/* ─────────── spec bullets under the options ─────────── */
+.pd-page .fmpc-detail-p-description
+  margin-top 22px !important
+
+.pd-page .fmpc-detail-p-description ul
+  display grid
+  gap 8px
+  margin 0
+  padding-left 22px
+  list-style disc
+  list-style-position outside
+
+.pd-page .fmpc-detail-p-description li
+  display list-item
+  font-size 14.5px
+  line-height 1.5
+  color var(--ink-soft)
+
+.pd-page .fmpc-detail-p-description li b,
+.pd-page .fmpc-detail-p-description li strong
+  color var(--ink)
+
+/* ─────────── frequently bought together and upsells ─────────── */
+.pd-page .accessories-and-upsell-main-card
+  margin-top 24px
+  padding 18px
+  border 1px solid #DCDDF7
+  border-radius var(--radius-lg)
+  background var(--brand-50)
+
+.pd-page .accessories-and-upsell-main-card .frequently-bought-together-title
+  margin-bottom 14px
+  font-size 16px
+  font-weight 700
+  color var(--ink)
+
+.pd-page .frequently-bought-together-grid
+  gap 16px
+  margin-top 0
+
+.pd-page .f-b-t-image-plus img
+  width 96px
+  height 96px
+  padding 10px
+  border 1px solid var(--line)
+  border-radius 12px
+  background #fff
+  object-fit contain
+
+.pd-page .frequently-bought-together-grid-text-div p
+  font-size 14px
+  color var(--ink-soft)
+
+.pd-page .accessories-and-upsell-main-card .text-danger
+  font-size 19px
+  font-weight 800
+  color var(--danger) !important
+
+.pd-page .add-basket-extras
+  padding 13px 26px
+  border-radius 999px
+  background var(--brand)
+  font-size 14px
+  font-weight 700
+  color #fff
+
+.pd-page .add-basket-extras:hover
+  background var(--brand-700)
+  color #fff
+
+.pd-page .accessories-and-upsell-main-card hr
+  margin 14px 0
+  border 0
+  border-top 1px solid #DCDDF7
+  opacity 1
+
+.pd-page .accessories-upgrades-text
+  gap 0
+
+.pd-page .p_dt_checkbox-list
+  gap 12px
+  align-items center
+  padding 9px 0
+  border-top 1px solid #DCDDF7
+  font-size 14px
+  color var(--ink)
+
+.pd-page .accessories-upgrades-text .p_dt_checkbox-list:first-child
+  border-top 0
+
+.pd-page .accessories-upgrades-checkbox-span input
+  width 19px
+  height 19px
+  min-width 19px
+  border 2px solid var(--line-strong)
+  border-radius 5px
+
+.pd-page .accessories-upgrades-checkbox-span input:checked
+  border-color var(--go)
+  background var(--go)
+
+.pd-page .accessories-upgrades-price-span
+  white-space nowrap
+
+.pd-page .accessories-upgrades-price-span strong
+  font-weight 800
+
+.pd-page .accessories-upgrades-price-span .text-muted
+  font-size 12.5px
+  color var(--muted) !important
+
+.pd-page .accessories-upgrades-card-header
+  gap 12px
+  margin-top 22px
+  margin-bottom 14px
+
+.pd-page .accessories-upgrades-card-header h6
+  font-size 16px
+  font-weight 700
+  color var(--ink)
+
+.pd-page .accessories-upgrades-card-header .badge.bg-instock
+  padding 5px 11px !important
+  border-radius 999px
+  background var(--go) !important
+  font-size 11.5px
+  font-weight 700
+
+.pd-page .accessories-upgrades-cards
+  padding 16px
+  border 1px solid var(--line)
+  border-radius var(--radius)
+  background #fff
+
+.pd-page .accessories-upgrades-cards-service-title
+  margin-bottom 12px
+  font-size 15px
+  font-weight 700
+  color var(--ink)
+
+.pd-page .essentials-bundle-div p
+  margin-bottom 12px
+  font-size 13.5px
+  font-style italic
+  color var(--muted)
+
+.pd-page .essentials-bundle-plus-img
+  display flex
+  flex-wrap wrap
+  align-items center
+  gap 8px
+
+.pd-page .essentials-bundle-plus-img .img-fluid
+  width 72px
+  height 72px
+  padding 8px
+  border 1px solid var(--line)
+  border-radius 11px
+  background var(--wash)
+  object-fit contain
+
+/* ─────────── right hand buy box ─────────── */
+.pd-page .product-detail .detail-right .sticky-right .content
+  padding 16px !important
+  border 1px solid var(--line-strong)
+  border-radius var(--radius-lg)
+  background #fff
+  box-shadow var(--shadow-md)
+
+.pd-page .detail-right .price-wrapper
+  align-items baseline
+  gap 10px
+  margin-bottom 5px
+
+.pd-page .detail-right .price-wrapper .price
+  font-size 29px
+  font-weight 800
+  letter-spacing -.03em
+  color var(--ink)
+
+.pd-page .detail-right .price-wrapper .strike-through
+  font-size 15px !important
+  font-weight 500
+  color var(--muted)
+
+.pd-page .detail-right .voucher-save-text
+  margin-bottom 6px
+  font-size 13px
+  font-weight 700
+  color var(--go)
+
+.pd-page .detail-right .content button.semi-bold
+  font-size 13.5px
+  font-weight 700
+  color var(--ink)
+
+/* delivery facts under a dashed rule - reference .deliv */
+.pd-page .detail-right .bb-deliv
+  display grid
+  gap 7px
+  margin-top 11px
+  padding-top 11px
+  border-top 1px dashed var(--line-strong)
+  font-size 12.5px
+  color var(--ink-soft)
+
+.pd-page .detail-right .bb-deliv-row
+  display flex
+  gap 8px
+
+.pd-page .detail-right .bb-deliv-row svg
+  flex 0 0 auto
+  margin-top 2px
+  color var(--brand)
+
+.pd-page .detail-right .bb-deliv-row b
+  font-weight 700
+  color var(--ink)
+
+.pd-page .detail-right .bb-deliv-row .color-free
+  color var(--go)
+
+// "Sold only in ..." when the visitor's own country is not one of them
+.pd-page .detail-right .bb-deliv-row.bb-deliv-warn
+  color #a12321
+
+.pd-page .detail-right .bb-deliv-row.bb-deliv-warn svg,
+.pd-page .detail-right .bb-deliv-row.bb-deliv-warn b
+  color #a12321
+
+.pd-page .quantity-area-with-text
+  display flex
+  align-items center
+  gap 14px
+  flex-wrap wrap
+  padding 14px 0 4px
+  font-size 14px
+
+.pd-page .quantity-area button
+  height 40px
+  line-height 40px
+  width 38px
+  border-color var(--line-strong)
+  font-size 18px
+  color var(--ink-soft)
+
+.pd-page .quantity-area button:hover
+  background var(--brand-50)
+  color var(--brand)
+
+.pd-page .quantity-area .no-control
+  height 40px
+  line-height 40px
+  width 44px
+  border-color var(--line-strong)
+  font-size 15px
+  font-weight 700
+
+.pd-page .detail-right .primary-btn,
+.pd-page .detail-right .outline-btn
+  height 48px
+  line-height 46px
+  border-radius 999px
+  font-size 15px
+  font-weight 700
+
+.pd-page .detail-right .primary-btn
+  background var(--brand)
+  box-shadow none
+
+.pd-page .detail-right .primary-btn:hover
+  background var(--brand-700)
+
+.pd-page .detail-right .outline-btn
+  border 1px solid var(--line)
+  background var(--wash)
+  color var(--ink)
+
+.pd-page .detail-right .outline-btn:hover
+  border-color var(--brand)
+  background var(--brand-50)
+  color var(--brand)
+
+.pd-page .detail-right .wishlist-btn
+  border 0 !important
+  background var(--go) !important
+  color #fff !important
+  box-shadow 0 6px 16px rgba(5, 185, 66, .22)
+
+.pd-page .detail-right .wishlist-btn:hover
+  background var(--go-700) !important
+  color #fff !important
+
+.pd-page .detail-right .lock-icon
+  opacity 1 !important
+
+.pd-page .detail-right .social-share
+  padding-top 6px
+
+.pd-page .detail-right .store-tile
+  margin-top 14px
+
+/* ─────────── shipping and fee breakdown sheet ─────────── */
+.pd-page .pop-over .pop-heading h5
+  font-size 15px
+  font-weight 700
+  color var(--ink)
+
+.pd-page .pop-over .pop-over-content p
+  padding 7px 0
+  font-size 13.5px
+  line-height 1.4
+  color var(--ink-soft)
+
+.pd-page .pop-over .pop-over-content .right-text p
+  font-weight 600
+  white-space nowrap
+  color var(--ink)
+
+.pd-page .pop-over .pop-footer
+  background var(--wash)
+
+.pd-page .pop-over .pop-footer h5
+  font-size 15px
+  font-weight 700
+  color var(--ink)
+
+/* ─────────── added to cart strip ─────────── */
+.pd-page .cart-success-bar
+  padding 12px 16px
+  border 1px solid var(--go)
+  border-radius var(--radius)
+  background #F4FFF6
+  font-size 14px
+  color var(--ink)
+
+.pd-page .view-cart-btn
+  font-size 14px
+  font-weight 600
+  color var(--go)
+
+/* ─────────── benefits band ─────────── */
+.pd-page .fmpc-trust-info
+  margin-top 40px
+  padding 34px 0
+  background var(--mint)
+
+.pd-page .fmpc-trust-info__grid
+  max-width none
+  gap 26px
+
+.pd-page .fmpc-trust-info__icon
+  width auto
+  height 56px
+  margin 0 auto 12px
+
+.pd-page .fmpc-trust-info__icon img
+  height 56px
+
+.pd-page .fmpc-trust-info__title
+  margin 0 0 6px
+  font-size 19px
+  font-weight 700
+  line-height 1.25
+  letter-spacing -.01em
+  color var(--brand)
+
+.pd-page .fmpc-trust-info__description
+  max-width 34ch
+  font-size 14px
+  line-height 1.5
+  color var(--ink-soft)
+
+/* ─────────── features write up ─────────── */
+.pd-page .product-intro-section
+  padding 40px 0 10px
+  text-align center
+
+.pd-page .product-intro-section .intro-title
+  margin 0 0 14px
+  font-size 28px
+  font-weight 700
+  letter-spacing -.02em
+  color var(--ink)
+
+.pd-page .intro-description
+  max-width 88ch
+  margin 0 auto
+
+.pd-page .intro-description p
+  font-size 15px
+  line-height 1.6
+  color var(--ink-soft)
+
+.pd-page .feature-images-wrapper
+  gap 24px
+  margin-top 32px
+
+.pd-page .feature-image
+  border-radius var(--radius-lg)
+
+/* ─────────── technical specifications ─────────── */
+.pd-page .spec-technical-specifications
+  margin-top 48px
+  margin-bottom 56px
+
+.pd-page .spec-title
+  margin 0 0 24px
+  font-size 28px
+  font-weight 700
+  letter-spacing -.02em
+  color var(--ink)
+
+.pd-page .spec-table-wrapper
+  border 1px solid var(--line)
+  border-radius var(--radius-lg)
+
+.pd-page .spec-table thead th
+  padding 15px 22px
+  border-bottom 1px solid var(--line)
+  background var(--wash)
+  font-size 14px
+  font-weight 700
+  color var(--ink)
+
+.pd-page .spec-table tbody td
+  padding 14px 22px
+  border-bottom 1px solid var(--line)
+  font-size 14.5px
+
+.pd-page .spec-table th:first-child,
+.pd-page .spec-table td:first-child
+  border-right 1px solid var(--line)
+
+.pd-page .spec-group
+  font-weight 700
+  color var(--ink)
+
+.pd-page .spec-value
+  color var(--ink-soft)
+
+.pd-page .spec-mobile-card
+  border 1px solid var(--line)
+  border-radius var(--radius)
+
+.pd-page .spec-mobile-card h4
+  padding 13px 15px
+  background var(--wash)
+  font-size 14.5px
+  font-weight 700
+  color var(--ink)
+
+.pd-page .spec-mobile-item
+  padding 13px 15px
+  border-top 1px solid var(--line)
+  font-size 13.5px
+  color var(--ink-soft)
+
+/* ─────────── sticky price dock ─────────── */
+.pd-page .sticky-cart-wrap
+  border-top 1px solid var(--line)
+  background rgba(255, 255, 255, .98)
+  box-shadow 0 -8px 28px rgba(22, 23, 74, .12)
+
+.pd-page .sticky-cart
+  gap 18px
+  padding 11px 0
+
+.pd-page .sticky-cart .sticky-title img
+  height 44px
+  width 44px
+  padding 6px
+  border 1px solid var(--line)
+  border-radius 11px
+  background var(--wash)
+
+.pd-page .sticky-cart .sticky-title h5
+  font-size 14px
+  font-weight 700
+  color var(--ink)
+
+.pd-page .sticky-cart .btn-wrap
+  gap 14px
+
+.pd-page .sticky-cart .price-wrapper .price
+  font-size 20px
+  font-weight 800
+  letter-spacing -.02em
+  color var(--ink)
+
+.pd-page .sticky-cart .price-wrapper .strike-through
+  color var(--muted)
+
+/* the dock's only call to action, so it carries the primary treatment */
+.pd-page .sticky-cart .add-cart-bt
+  flex 0 0 auto
+  height 46px
+  line-height 46px
+  padding 0 28px
+  border 0
+  border-radius 999px
+  background var(--go)
+  font-size 15px
+  font-weight 700
+  color #fff
+  box-shadow 0 6px 16px rgba(5, 185, 66, .22)
+  transition background .15s
+
+.pd-page .sticky-cart .add-cart-bt:hover
+  background var(--go-700)
+  color #fff
+
+.pd-page .sticky-cart .compare-btn
+  display grid
+  place-items center
+  flex 0 0 auto
+  width 42px
+  height 42px
+  border 1px solid var(--line-strong)
+  border-radius 50%
+  background #fff
+  color var(--ink-soft)
+  transition border-color .15s, background .15s, color .15s
+
+.pd-page .sticky-cart .compare-btn:hover
+  border-color var(--brand)
+  background var(--brand-50)
+  color var(--brand)
+
+/* ─────────── recommendation rail ─────────── */
+.pd-page .suggested-container
+  padding-top 10px
+  padding-bottom 20px
+
+/* Framed like the home page rails (ProductsSlider .featured-box). */
+.pd-page .suggested-container .rail-box
+  margin-bottom 24px
+  padding 24px
+  border 1px solid #E3E2F1
+  border-radius 30px
+  background #F3F5FC
+
+.pd-page .suggested-container .rail-box .flex.sided
+  margin-bottom 20px !important
+
+/* every tile in a row ends level */
+.pd-page .suggested-container .c_slider__container > li
+  display flex
+
+/* ── product tile, every width ────────────────────────────────────────────
+   The category listing's card (category-listing.styl, `.category-listing
+   .body .tile-container .p-tile`), re-scoped to these rows: 180px wash image
+   panel, title, stars, price, then a full-width pill. Same specificity as the
+   phone block further down, which comes later and so still wins there. */
+.pd-page .suggested-container .p-tile
+  display flex
+  width 100%
+  min-width 0
+
+.pd-page .suggested-container .p-tile .card-wrapper
+  flex 1
+  display flex
+  flex-direction column
+  overflow hidden
+  border 1px solid var(--line)
+  border-radius var(--radius-lg)
+  background #fff
+  text-align left
+  transition box-shadow .15s, transform .15s, border-color .15s
+
+.pd-page .suggested-container .p-tile .card-wrapper:hover
+  border 1px solid var(--line-strong)
+  box-shadow var(--shadow-md)
+  transform translateY(-2px)
+
+.pd-page .suggested-container .p-tile .p-tile-img-link
+  display block
+  padding 0
+
+.pd-page .suggested-container .p-tile .img-wrapper
+  position relative
+  display flex
+  align-items center
+  justify-content center
+  height 180px
+  padding 0
+  border-bottom 1px solid var(--line)
+  background var(--wash)
+
+.pd-page .suggested-container .p-tile .img-wrapper img
+  max-height 78%
+  max-width 78%
+
+.pd-page .suggested-container .p-tile .img-wrapper .wishlist-icon
+  top 8px
+  right 8px
+  width 32px
+  height 32px
+  border 1px solid var(--line)
+  border-radius 50%
+  background #fff
+  box-shadow none
+  color var(--muted)
+
+.pd-page .suggested-container .p-tile .img-wrapper .wishlist-icon:hover,
+.pd-page .suggested-container .p-tile .img-wrapper .wishlist-icon.active
+  border-color #EFC3CC
+  background #fff
+
+.pd-page .suggested-container .p-tile .badge-stack
+  top 10px
+  left 10px
+  gap 5px
+  max-width calc(100% - 48px)
+
+.pd-page .suggested-container .p-tile .badge-same
+  margin 0
+  padding 3px 8px
+  border 0
+  border-radius 999px
+  background var(--go)
+  color #fff
+  font-size 10.5px
+  font-weight 800
+  line-height 1.4
+
+.pd-page .suggested-container .p-tile .badge-flash-sale.badge-same,
+.pd-page .suggested-container .p-tile .badge-clearance.badge-same
+  background var(--brand)
+
+.pd-page .suggested-container .p-tile .badge-new.badge-same
+  background var(--ink)
+
+.pd-page .suggested-container .p-tile .product-tile-content
+  display flex
+  flex 1
+  flex-direction column
+  gap 7px
+  padding 13px 14px 14px
+  border-top 0
+  background none
+
+.pd-page .suggested-container .p-tile .item-title
+  display flex
+  flex 1
+  flex-direction column
+  gap 7px
+  margin 0
+
+.pd-page .suggested-container .p-tile h5.ellipsis.ellipsis-2
+  margin 0
+  font-size 14px
+  font-weight 700
+  line-height 1.35
+  color var(--ink)
+
+.pd-page .suggested-container .p-tile .tile-rating-div
+  display flex
+  align-items center
+  gap 7px
+  margin 0
+  font-size 12px
+  color var(--muted)
+
+.pd-page .suggested-container .p-tile .tile-rating-div .rating-stars svg
+  width 72px
+  height auto
+
+.pd-page .suggested-container .p-tile .tile-rating-div .color-lite
+  font-size 11.5px
+  color var(--muted)
+
+/* price, then the VAT line, then the pill: stacked, pinned to the foot */
+.pd-page .suggested-container .p-tile .ptile-price-and-reducedpercent
+  display flex
+  flex-direction column
+  align-items stretch
+  gap 10px
+  margin-top auto
+
+.pd-page .suggested-container .p-tile .price-wrapper
+  display flex
+  align-items baseline
+  gap 9px
+  margin 0
+
+.pd-page .suggested-container .p-tile .price-wrapper .price span
+  font-size 17px
+  font-weight 700
+  letter-spacing -.01em
+  color var(--ink)
+
+.pd-page .suggested-container .p-tile .price-wrapper .strike-through span
+  font-size 13px
+  font-weight 400
+  color var(--muted)
+
+.pd-page .suggested-container .p-tile .price-vat-alt
+  margin -4px 0 0
+  font-size 11.5px
+
+.pd-page .suggested-container .p-tile .add-to-cart-btn
+  display block
+  width 100%
+  padding 0
+  border 0
+  border-radius 0
+
+.pd-page .suggested-container .p-tile .add-to-cart-btn:hover
+  background none
+
+.pd-page .suggested-container .p-tile .add-to-cart-btn button
+  width 100%
+  height auto !important
+  line-height 1.4 !important
+  padding 8px 14px
+  border 0
+  border-radius 999px
+  background var(--go)
+  color #fff
+  font-size 13px
+  font-weight 700
+  cursor pointer
+  transition .15s
+
+.pd-page .suggested-container .p-tile .add-to-cart-btn button:hover
+  background var(--go-700) !important
+
+/* the solid out-of-stock chip, over the global `button:disabled` opacity */
+.pd-page .suggested-container .p-tile .add-to-cart-btn button.out-of-stock,
+.pd-page .suggested-container .p-tile .add-to-cart-btn button:disabled
+  border 1px solid var(--line-strong)
+  background #fff !important
+  color var(--muted) !important
+  opacity 1
+  cursor not-allowed
+
+/* Phone carousels: two tiles a page with dots, the same affordance the home
+   page uses (assets/styles/home-mobile.styl). .m-dots is display:none
+   globally, so it only turns on here. */
+@media only screen and (max-width: 991px)
+  .pd-page .m-dots
+    display flex
+    gap 6px
+    justify-content center
+    margin 12px 0 0
+
+  .pd-page .m-dot
+    width 6px
+    height 6px
+    padding 0
+    border 0
+    border-radius 999px
+    background var(--line-strong)
+    line-height 0
+    transition width .2s, background .2s
+
+  .pd-page .m-dot.on
+    width 18px
+    background var(--brand)
+
+  /* the arrows are a pointer affordance - the dots and the drag replace them */
+  .pd-page .suggested-container .c_slider__nav
+    display none
+
+  /* the home page's phone section shell (home-mobile.styl .featured-box) */
+  .pd-page .suggested-container .rail-box
+    margin-bottom 14px
+    padding 14px
+    border-radius 18px
+
+  .pd-page .suggested-container .rail-box .p-tile .card-wrapper
+    border-radius 16px
+
+  .pd-page .suggested-container .flex.sided
+    margin-bottom 12px !important
+
+  .pd-page .suggested-container .slider-collection-heading
+    font-size 16px
+    line-height 1.3
+
+  .pd-page .suggested-container .mn-w-90x
+    font-size 12px
+    color var(--muted)
+
+  /* ── product tile ─────────────────────────────────────────────────────
+     These are the declarations from home-mobile.styl
+     `.home-page .p-tile`, re-scoped to the recommendation rail, so the
+     shared ProductTile renders identically on both screens - 180px wash
+     image panel, solid green pill, one type scale. Change one, change the
+     other. Without them the desktop tile puts the action beside the price,
+     which at half width squeezes "Out of Stock" into a circle of wrapped
+     words.                                                               */
+  .pd-page .suggested-container .p-tile
+    display flex
+    min-width 0
+    width 100%
+
+  .pd-page .suggested-container .p-tile .card-wrapper
+    display flex
+    flex 1
+    flex-direction column
+    overflow hidden
+    border 1px solid var(--line)
+    border-radius 16px
+    background #fff
+    text-align left
+
+  .pd-page .suggested-container .p-tile .p-tile-img-link
+    display block
+    padding 0
+
+  /* padding 0 also clears the global .img-wrapper padding-bottom hack */
+  .pd-page .suggested-container .p-tile .img-wrapper
+    display flex
+    position relative
+    align-items center
+    justify-content center
+    height 180px
+    padding 0
+    border-bottom 1px solid var(--line)
+    background var(--wash)
+
+  .pd-page .suggested-container .p-tile .img-wrapper img
+    max-height 78%
+    max-width 78%
+
+  .pd-page .suggested-container .p-tile .img-wrapper .wishlist-icon
+    width 28px
+    height 28px
+    top 8px
+    right 8px
+    border 1px solid var(--line)
+    border-radius 50%
+    background #fff
+    box-shadow none
+    color var(--muted)
+
+  .pd-page .suggested-container .p-tile .img-wrapper .wishlist-icon.active
+    border-color #EFC3CC
+    background #fff
+
+  /* The stack runs from the left edge to just short of the wishlist button.
+     Trimming that button to 28px buys the badges back ~4px of the row. */
+  .pd-page .suggested-container .p-tile .badge-stack
+    gap 4px
+    top 8px
+    left 8px
+    max-width calc(100% - 44px)
+
+  /* Sized so a discount and a sale flag sit on one line in a half-width
+     tile. flex-shrink 0 matters: .badge-same is overflow:hidden, so a badge
+     with no room left would shrink to a stub of bare background rather than
+     wrap - a third badge drops to its own line at full width instead. */
+  .pd-page .suggested-container .p-tile .badge-same
+    flex 0 0 auto
+    max-width 100%
+    margin 0
+    padding 2px 7px
+    border 0
+    border-radius 999px
+    background var(--go)
+    font-size 9.5px
+    font-weight 800
+    letter-spacing -.01em
+    line-height 1.45
+    color #fff
+
+  .pd-page .suggested-container .p-tile .badge-flash-sale.badge-same,
+  .pd-page .suggested-container .p-tile .badge-clearance.badge-same
+    background var(--brand)
+
+  .pd-page .suggested-container .p-tile .badge-new.badge-same
+    background var(--ink)
+
+  .pd-page .suggested-container .p-tile .card-wrapper .product-tile-content
+    display flex
+    flex 1
+    flex-direction column
+    gap 7px
+    padding 13px 14px 14px
+    border-top 0
+    background none
+
+  .pd-page .suggested-container .p-tile .item-title
+    display flex
+    flex 1
+    flex-direction column
+    gap 7px
+    margin 0
+
+  .pd-page .suggested-container .p-tile h5.ellipsis.ellipsis-2
+    margin 0
+    font-size 14px
+    font-weight 700
+    line-height 1.35
+    color var(--ink)
+
+  /* two tiles across leaves ~140px of content width, so the row must not
+     wrap - a long review count truncates rather than dropping to a line of
+     its own under the stars */
+  .pd-page .suggested-container .p-tile .block.tile-rating-div
+    display flex
+    flex-wrap nowrap
+    align-items center
+    gap 6px
+    margin 0
+    font-size 12px
+    color var(--muted)
+
+  /* the stars are a fixed 88x15 svg (RatingStar.vue), so font-size does
+     nothing to them - the svg itself has to be sized */
+  .pd-page .suggested-container .p-tile .block.tile-rating-div .rating-stars
+    flex 0 0 auto
+
+  .pd-page .suggested-container .p-tile .block.tile-rating-div .rating-stars svg
+    width 64px
+    height auto
+
+  .pd-page .suggested-container .p-tile .block.tile-rating-div .color-lite
+    overflow hidden
+    min-width 0
+    font-size 11px
+    white-space nowrap
+    text-overflow ellipsis
+    color var(--muted)
+
+  /* margin-top auto bottom-aligns the pill however tall the titles run */
+  .pd-page .suggested-container .p-tile .ptile-price-and-reducedpercent
+    display flex
+    flex-direction column
+    align-items stretch
+    gap 10px
+    margin-top auto
+
+  .pd-page .suggested-container .p-tile .price-wrapper
+    display flex
+    align-items baseline
+    gap 9px
+    margin 0
+
+  .pd-page .suggested-container .p-tile .price-wrapper .price span
+    font-size 17px
+    font-weight 700
+    letter-spacing -.01em
+    color var(--ink)
+
+  .pd-page .suggested-container .p-tile .price-wrapper .strike-through span
+    font-size 13px
+    font-weight 400
+    color var(--muted)
+
+  .pd-page .suggested-container .p-tile .add-to-cart-btn
+    display block
+    width 100%
+    padding 0
+    border 0
+    border-radius 0
+
+  .pd-page .suggested-container .p-tile .add-to-cart-btn button
+    width 100%
+    height auto !important
+    padding 8px 14px
+    border 0
+    border-radius 999px
+    background var(--go)
+    font-size 13px
+    font-weight 700
+    line-height 1.4 !important
+    color #fff
+
+  /* beats the global `button:disabled { opacity: .6 }` in ajax-button.styl */
+  .pd-page .suggested-container .p-tile .add-to-cart-btn button.out-of-stock,
+  .pd-page .suggested-container .p-tile .add-to-cart-btn button:disabled
+    border 1px solid var(--line-strong)
+    background #fff
+    color var(--muted)
+    opacity 1
+    cursor not-allowed
+
+
+/* ══════════════════════ RESPONSIVE ══════════════════════ */
+
+@media only screen and (max-width: 1400px)
+  .pd-page .product-detail
+    padding-right 300px
+
+  .pd-page .product-detail .detail-right
+    width 300px
+
+  .pd-page .product-detail .product-main .detail-image-wrapper
+    min-width 320px
+    max-width 320px
+
+@media only screen and (max-width: 1200px)
+  .pd-page .product-detail
+    padding-right 280px
+
+  .pd-page .product-detail .detail-right
+    width 280px
+
+  .pd-page .product-detail .product-main .detail-image-wrapper
+    min-width 300px
+    max-width 300px
+
+/* below the three column breakpoint the buy box drops under the copy */
+@media only screen and (max-width: 992px)
+  .pd-page .product-detail
+    padding-right 0
+
+  .pd-page .product-detail .detail-right
+    position static
+    width 100%
+
+  .pd-page .product-detail .detail-right .sticky-right
+    position static
+
+  /* .detail-right is a flex item here, so detail-right.styl's z-index 2 (set
+     while a pop-over holds the body in no-scroll) opens a stacking context
+     that traps the pop-over below the WhatsApp button (11), the cart dock
+     (46) and the tab bar (45). Lift the context over all three so the sheet
+     and its dimmer sit on top, as they do on desktop. */
+  .no-scroll .pd-page .product-detail .detail-right
+    z-index 60
+
+  .pd-page .product-detail .detail-left
+    padding-right 0 !important
+
+  .pd-page .product-detail .product-main .detail-image-wrapper
+    min-width 0
+    max-width 100%
+    width 100%
+
+  /* Stacking order, matching reference/mobile.html: gallery, then the whole
+     product story, then the reviews / payment accordions last.
+
+     The desktop markup nests the accordions inside the gallery column, so
+     source order alone puts "Reviews" directly under the images. Flattening
+     the wrapper boxes with display:contents lifts every block up to
+     .product-detail, where `order` can sequence them. The wrappers only carry
+     layout on desktop, so nothing visual is lost by dropping their boxes. */
+  .pd-page .product-detail
+    display flex
+    flex-direction column
+    gap 18px
+
+  .pd-page .product-detail .detail-left,
+  .pd-page .product-detail .detail-left > .flex,
+  .pd-page .product-detail .product-main,
+  .pd-page .product-detail .detail-image-wrapper,
+  .pd-page .product-detail .pl-30
+    display contents
+
+  .pd-page .product-detail .detail-image-inner
+    order 10
+    padding-bottom 26px
+
+  /* brand, title, variant line, rating row and chips travel together as one
+     flex item, so the 18px column gap does not open up between them - their
+     spacing is set inside .pd-head instead */
+  .pd-page .product-detail .pl-30 > .pd-head
+    order 20
+
+  .pd-page .product-detail .pd-head .pd-brandline
+    margin 0
+
+  .pd-page .product-detail .pd-head h1
+    margin 6px 0 0
+
+  .pd-page .product-detail .pd-head .config-values
+    margin 7px 0 0
+
+  .pd-page .product-detail .pd-head .review-and-badges
+    margin-top 10px !important
+
+  .pd-page .product-detail .pd-head .pd-chips
+    margin-top 14px
+
+  .pd-page .product-detail .pl-30 > .devider
+    order 50
+
+  .pd-page .product-detail .pl-30 > .warning-msg
+    order 60
+
+  /* the price panel sits with the headline facts, the way the phone
+     reference has it, rather than at the foot of the column */
+  .pd-page .product-detail .detail-right
+    order 70
+
+  /* addons, colour, the spec bullets and the bundles keep source order.
+     Their own stacking margins are dropped so the column gap alone spaces
+     the blocks - otherwise every gap is a margin plus 18px */
+  .pd-page .product-detail .pl-30 > *
+    order 80
+    margin-top 0 !important
+    margin-bottom 0 !important
+
+  /* only the bulk pricing panel is left in the gallery column now */
+  .pd-page .product-detail .col-lg-12
+    order 90
+
+  .pd-page .pd-accordions
+    margin-bottom 32px
+    padding-top 20px
+    border-top 8px solid var(--wash)
+
+  .pd-page .product-intro-section .intro-title,
+  .pd-page .spec-title
+    font-size 24px
+
+@media only screen and (max-width: 768px)
+  /* the gallery sits inside the page gutters and centres in them */
+  .pd-page .detail-image
+    text-align center
+
+  .pd-page .detail-image .zoomer-base-container,
+  .pd-page .detail-image .pleceholder-zoomer-base-container
+    margin-left auto
+    margin-right auto
+
+  .pd-page .detail-image .zoomer-base-container > img,
+  .pd-page .detail-image .pleceholder-zoomer-base-container > img
+    height 320px
+    padding 18px
+    margin-left auto
+    margin-right auto
+
+  .pd-page .detail-image .thumb-list,
+  .pd-page .detail-image .pleceholder-thumb-list
+    justify-content center !important
+
+  .pd-page .pd-brandline
+    display block
+
+  .pd-page .product-detail h1
+    font-size 20px !important
+    line-height 1.28
+
+  .pd-page .config-values
+    font-size 12.5px
+
+  /* Stars, review count, stock and SKU stay on one line. They only just fit
+     the 360px of content width, so the type and gaps come down and the row
+     scrolls rather than wraps when a SKU runs long. */
+  .pd-page .review-and-badges
+    gap 8px
+    flex-wrap nowrap
+    overflow-x auto
+    scrollbar-width none
+    font-size 11px
+
+  .pd-page .review-and-badges::-webkit-scrollbar
+    display none
+
+  .pd-page .review-and-badges > div
+    flex 0 0 auto
+    gap 6px
+
+  .pd-page .review-and-badges .rating-stars
+    font-size 11px
+
+  .pd-page .review-and-badges .f-10
+    font-size 10.5px
+
+  .pd-page .order-badge
+    flex-wrap nowrap
+    gap 6px
+
+  /* stock reads as a soft filled pill rather than an outline. This also
+     sizes the SKU pill, which now sits in the same group. */
+  .pd-page .order-badge span
+    padding 3px 8px !important
+    font-size 10px
+    white-space nowrap
+
+  .pd-page .order-badge .badge-success
+    border-color transparent
+    background #EAF9F0
+    color #0B6B3A
+
+  .pd-page .pd-chip
+    padding 6px 10px
+    font-size 12px
+
+  /* Option blocks, matched to reference/mobile.html .optblock / .addon:
+     13.5px heading with 9px under it, 13px pills at 8px/13px on a 1.5px
+     line-strong border, 8px between them. */
+  .pd-page .fmpc-detail-side-by-side-attributes
+    gap 16px
+
+  .pd-page .fmpc-attributes-title
+    margin 0 0 9px
+    font-size 13.5px
+
+  .pd-page .fmpc-detail-side-by-side-attributes .flex.wrap
+    gap 8px
+
+  .pd-page .rd-attr .input-content
+    padding 8px 13px
+    font-size 13px
+
+  /* reference .speclist */
+  .pd-page .fmpc-detail-p-description ul
+    gap 7px
+    padding-left 20px
+
+  .pd-page .fmpc-detail-p-description li
+    font-size 13.5px
+    line-height 1.45
+
+  /* The price panel becomes the phone pricebox card of reference/mobile.html:
+     the price leads, the delivery facts sit under a dashed rule, and the
+     actions are separated from both. The column gap already spaces the card,
+     so detail-right.styl's own top margin comes off. */
+  .pd-page .product-detail .detail-right .sticky-right .content
+    margin-top 0
+    padding 14px !important
+    border 1px solid var(--line)
+    border-radius var(--radius)
+    background #fff
+    box-shadow none
+
+  .pd-page .detail-right .price-wrapper
+    margin-bottom 0 !important
+
+  /* reference .price b */
+  .pd-page .detail-right .price-wrapper .price
+    font-size 27px
+    letter-spacing -.03em
+
+  .pd-page .detail-right .price-wrapper .strike-through
+    font-size 14px !important
+
+  /* the Details disclosure gets real padding so it is a comfortable tap
+     target, not just small text */
+
+  .pd-page .detail-right .content button.semi-bold
+    margin-top 2px !important
+    padding 4px 0
+    font-size 12.5px
+    color var(--brand)
+
+  /* the actions sit below a dashed rule, as the reference divides its card
+     with .deliv - same 11px above and below, same dashed line-strong */
+  .pd-page .quantity-area-with-text
+    gap 10px
+    margin-top 11px
+    padding-top 11px
+    border-top 1px dashed var(--line-strong)
+    font-size 13.5px
+
+  .pd-page .quantity-area button
+    height 32px
+    line-height 32px
+    width 32px
+    font-size 16px
+
+  .pd-page .quantity-area .no-control
+    height 32px
+    line-height 32px
+    width 38px
+    font-size 14px
+
+  /* Stack the two actions full width, as reference/index.html's buy box does.
+     Side by side halves each target and crops the labels. */
+  .pd-page .detail-right .content .flex-sm
+    display block
+    margin-left 0
+    margin-right 0
+
+  /* mtb-10 puts 10px above and below each button, which stacked reads as a
+     20px trough between them - 4px is enough to tell them apart */
+  .pd-page .detail-right .content .flex-sm .w-sm-50
+    width 100%
+    margin 4px 0 !important
+
+  .pd-page .detail-right .primary-btn,
+  .pd-page .detail-right .outline-btn
+    height 42px
+    line-height 40px
+    font-size 14.5px
+
+  /* Buy now is the secondary action, not a disabled one - it needs a border
+     it can be seen by and full strength label text */
+  .pd-page .detail-right .outline-btn
+    border 1px solid var(--line-strong)
+    background #fff
+    color var(--ink)
+
+  .pd-page .detail-right .content button.color-deep
+    margin 6px 0 0 !important
+    font-size 12.5px
+    color var(--muted)
+
+  /* Frequently bought together, matched to reference/mobile.html .fbt:
+     15px padding on --radius, a 15px heading, then one row of thumbnail,
+     total and button, then the 13px pick list. */
+  .pd-page .accessories-and-upsell-main-card
+    padding 15px
+    border-radius var(--radius)
+
+  .pd-page .accessories-and-upsell-main-card .frequently-bought-together-title
+    margin 0 0 12px
+    font-size 15px
+
+  .pd-page .frequently-bought-together-grid
+    display flex
+    align-items center
+    gap 12px
+    margin-bottom 12px
+
+  .pd-page .f-b-t-image-plus img
+    width 60px
+    height 60px
+    padding 8px
+    border-radius 11px
+
+  /* the label and the price stack, then sit opposite the button */
+  .pd-page .frequently-bought-together-grid-text-div
+    flex 1
+    min-width 0
+    flex-direction row
+    align-items center
+    justify-content space-between
+    gap 12px
+
+  .pd-page .frequently-bought-together-grid-text-div p
+    display flex
+    flex-direction column
+    gap 2px
+    margin 0
+    font-size 12.5px
+    color var(--ink-soft)
+
+  .pd-page .accessories-and-upsell-main-card .text-danger
+    font-size 19px
+    font-weight 800
+
+  .pd-page .add-basket-extras
+    flex 0 0 auto
+    padding 11px 18px
+    font-size 13.5px
+
+  /* reference .fbt-row */
+  .pd-page .p_dt_checkbox-list
+    gap 11px
+    padding 9px 0
+    font-size 13px
+
+  .pd-page .accessories-upgrades-checkbox-span
+    gap 11px
+
+  .pd-page .accessories-upgrades-checkbox-span input
+    width 18px
+    height 18px
+    min-width 18px
+
+  .pd-page .accessories-upgrades-price-span
+    display flex
+    align-items baseline
+    gap 8px
+
+  .pd-page .accessories-upgrades-price-span .text-muted
+    margin 0 !important
+    font-size 11.5px
+
+  .pd-page .accessories-upgrades-price-span strong
+    font-weight 800
+
+  /* Benefits band, matched to reference/mobile.html .benefits: 20px of
+     padding, 16px between rows, a 26px brand icon, a 14.5px brand heading
+     and 12.5px --ink-soft copy at 1.45. */
+  .pd-page .fmpc-trust-info
+    margin-top 16px
+    padding 20px 0
+
+  .pd-page .fmpc-trust-info__grid
+    grid-template-columns 1fr
+    gap 16px
+
+  .pd-page .fmpc-trust-info__item
+    display flex
+    align-items flex-start
+    gap 12px
+    text-align left
+
+  .pd-page .fmpc-trust-info__icon
+    width 26px
+    height 26px
+    flex 0 0 auto
+    margin 1px 0 0
+
+  .pd-page .fmpc-trust-info__icon img
+    height 26px
+
+  /* Heading and copy sit side by side. The heading column is fixed at 38%
+     and must not shrink - letting it size to its own text gives each row a
+     different heading width, so the copy starts at a different x on every
+     row and the second column reads as ragged. */
+  .pd-page .fmpc-trust-info__title
+    flex 0 0 38%
+    min-width 0
+    margin 0
+    font-size 14.5px
+    line-height 1.35
+
+  .pd-page .fmpc-trust-info__description
+    flex 1 1 0
+    min-width 0
+    max-width none
+    font-size 12.5px
+    line-height 1.35
+
+  .pd-page .product-intro-section
+    padding 26px 0 4px
+
+  .pd-page .product-intro-section .intro-title
+    font-size 20px
+
+  .pd-page .intro-description p
+    font-size 13.5px
+
+  .pd-page .spec-technical-specifications
+    margin-top 30px
+    margin-bottom 32px
+
+  .pd-page .spec-title
+    font-size 20px
+    margin-bottom 16px
+
+  /* Compact single row dock: price, the call to action, then the two icon
+     buttons. Sized down for the phone so the bar stays a thin strip. */
+  .pd-page .sticky-cart-wrap
+    backdrop-filter blur(12px)
+    -webkit-backdrop-filter blur(12px)
+
+  .pd-page .sticky-cart
+    flex-wrap wrap
+    gap 0
+    padding 9px 0 10px
+
+  .pd-page .sticky-cart .sticky-title
+    display none
+
+  .pd-page .sticky-cart .btn-wrap
+    width 100%
+    flex-wrap nowrap
+    align-items center
+    gap 8px
+
+  /* the price takes the slack so the call to action stays at its own width
+     rather than stretching across the bar */
+  .pd-page .sticky-cart .btn-wrap .price-wrapper
+    order 1
+    flex 1 1 auto
+    min-width 0
+    gap 6px
+    margin 0
+
+  .pd-page .sticky-cart .price-wrapper .price
+    font-size 18px
+
+  .pd-page .sticky-cart .price-wrapper .strike-through
+    font-size 13px !important
+
+  .pd-page .sticky-cart .btn-wrap .add-cart-bt
+    order 2
+    flex 0 0 auto
+    height 40px
+    line-height 40px
+    padding 0 18px
+    font-size 13.5px
+    box-shadow none
+
+  .pd-page .sticky-cart .btn-wrap .compare-btn
+    order 3
+    width 38px
+    height 38px
+    color var(--muted)
+
+  .pd-page .sticky-cart .btn-wrap .compare-btn .icon
+    transform scale(.85)
+
+  .pd-page .sticky-cart .btn-wrap .compare-btn:active
+    border-color var(--brand)
+    background var(--brand-50)
+    color var(--brand)
+
+@media only screen and (max-width: 576px)
+  .pd-page .all-product-info.section
+    padding 15px 0 24px
+
+  .pd-page .fmpc-detail-side-by-side-attributes
+    grid-template-columns 1fr
+    row-gap 18px
+
+  /* the frequently-bought row keeps the single-line reference layout down to
+     the narrowest phones - the thumbnails wrap inside their own strip */
+  .pd-page .frequently-bought-together-grid-image-with-plus-grid
+    max-width 132px

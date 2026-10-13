@@ -1,281 +1,196 @@
 <template>
+
   <div>
-    <form @submit.prevent="formSubmit" v-if="!emailSubmitted || !passwordUpdated">
 
-      <ul class="error-list mb-15" v-if="errors.length">
-        <li class="mb-10">
-          {{ $t('forgotPassword.errorOccurred') }}
-        </li>
-        <li v-for="(value, index) in errors" :key="index">{{ value }}</li>
-      </ul>
+    <!-- ─────────── ASK FOR THE ADDRESS ─────────── -->
+    <form
+      v-if="!sent"
+      @submit.prevent="sendLink"
+    >
 
-      <div class="input-wrap" :class="{invalid: !emailValid && hasFormError}">
-        <label>
-          {{ $t('addressPopup.email') }}
+      <div
+        v-if="errors.length"
+        class="auth-error-box"
+      >
+        <div
+          v-for="(value, index) in errors"
+          :key="index"
+        >
+          {{ value }}
+        </div>
+      </div>
+
+      <div class="auth-form-group">
+
+        <label
+          class="auth-label"
+          for="fp-email"
+        >
+          Email address
+          <span class="auth-label-required">*</span>
         </label>
 
-        <div class="icon-input">
-          <i
-            class="icon email-icon"
-          />
-          <input
-            type="text"
-            v-model="email"
-            :placeholder="$t('contact.your', { type: $t('contact.email') })"
-          >
-        </div>
-
-        <span
-          class="error"
-          v-if="!email && hasFormError"
+        <input
+          id="fp-email"
+          v-model.trim="email"
+          type="email"
+          class="auth-input"
+          :class="{ invalid: emailInvalid }"
+          autocomplete="email"
+          placeholder="you@example.ie"
         >
-          {{ $t('addressPopup.isRequired', {type: $t('addressPopup.email') }) }}
-        </span>
-        <span
-          class="error"
-          v-else-if="invalidEmail && hasFormError"
+
+        <small
+          v-if="emailInvalid"
+          class="auth-error"
         >
-          {{ $t('contact.invalidEmail') }}
-        </span>
-      </div>
-      <template v-if="emailSubmitted">
-        <div class="input-wrap" :class="{invalid: !code && hasFormError}">
-          <label>
-            {{ $t('forgotPassword.code') }}
-          </label>
+          Enter a valid email address.
+        </small>
 
-          <div class="icon-input">
-            <i
-              class="icon code-icon"
-            />
-            <input
-              type="text"
-              v-model="code"
-              :placeholder="$t('forgotPassword.codeFrom')"
-            >
-          </div>
-
-          <span
-            class="error"
-            v-if="!code && hasFormError"
-          >
-            {{ $t('addressPopup.isRequired', {type: $t('forgotPassword.code') }) }}
-            Code is Required
-          </span>
-        </div>
-
-        <div
-          class="input-wrap"
-          :class="{invalid: !passwordValid && hasFormError}"
-        >
-          <label>
-            {{ $t('profile.password') }}
-          </label>
-
-          <password-field
-            :value="password"
-            @change="password = $event"
-          />
-
-          <span
-            class="error"
-            v-if="!password && hasFormError"
-          >
-             {{ $t('addressPopup.isRequired', {type: $t('profile.password') }) }}
-          </span>
-          <span
-            class="error"
-            v-else-if="invalidPassword && hasFormError"
-          >
-             {{ $t('profile.invalidLength') }}
-          </span>
-        </div>
-
-        <div
-          class="input-wrap"
-          :class="{invalid: (!passwordValid || confirmPassword !== password)  && hasFormError}"
-        >
-          <label>
-            {{ $t('profile.confirmPassword') }}
-          </label>
-
-          <password-field
-            :value="confirmPassword"
-            @change="confirmPassword = $event"
-          />
-
-          <span
-            class="error"
-            v-if="!confirmPassword && hasFormError"
-          >
-            {{ $t('addressPopup.isRequired', {type: $t('profile.password') }) }}
-          </span>
-          <span
-            class="error"
-            v-else-if="confirmPassword !== password && hasFormError"
-          >
-            {{ $t('profile.noMatch') }}
-          </span>
-        </div>
-      </template>
-
-      <div class="flex right no-space">
-        <ajax-button
-          class="primary-btn plr-20 w-100"
-          :fetching-data="formSubmitting"
-          :loading-text="$t('checkoutRight.submitting')"
-        >
-          {{ $t('ajaxButton.submit') }}
-        </ajax-button>
       </div>
 
-      <div class="mt-20 mt-sm-15 mb-10">
-        {{ $t('forgotPassword.noAccount') }}
-        <nuxt-link
-          to="/register"
-          class="mlr-10 link bold color-primary"
-        >
-          {{ $t('forgotPassword.createAccount') }}
-        </nuxt-link>
-      </div>
+      <ajax-button
+        class="auth-btn-primary"
+        :fetching-data="submitting"
+        :loading-text="'Sending...'"
+        :text="'Send reset link'"
+      >
+        Send reset link
+      </ajax-button>
+
     </form>
 
-    <div v-else-if="emailSubmitted && passwordUpdated">
-      <h4 class="mb-15 bold">{{ $t('contact.success') }}!!!</h4>
-      <p class="mb-15">
-        <b>{{ $t('forgotPassword.congratulations') }}</b>.
-        {{ $t('forgotPassword.verified') }}
+    <!-- ─────────── LINK ON ITS WAY ─────────── -->
+    <div v-else>
+
+      <div class="auth-note auth-note-go">
+        We sent a reset link to <b>{{ email }}</b>. It’s valid for
+        {{ expiryMinutes }} minutes and can only be used once.
+      </div>
+
+      <p class="auth-hint auth-hint-spaced">
+        Nothing in your inbox after a minute? Check spam, or send it again.
       </p>
-      <p class="mb-15">
-        {{ $t('forgotPassword.youCan') }}
-        <nuxt-link
-          to="/login"
-          class="mlr-10 link bold color-primary"
+
+      <div class="auth-btn-stack">
+
+        <button
+          type="button"
+          class="auth-btn-ghost"
+          :disabled="submitting"
+          @click="sendLink"
         >
-          {{ $t('forgotPassword.signIn') }}
-        </nuxt-link>
-        {{ $t('contact.now') }}.
-      </p>
+          {{ submitting ? 'Sending...' : 'Send it again' }}
+        </button>
+
+        <button
+          type="button"
+          class="auth-btn-ghost"
+          @click="useAnotherEmail"
+        >
+          Use a different email
+        </button>
+
+      </div>
+
     </div>
+
   </div>
+
 </template>
+
 <script>
+
   import validation from '~/mixin/validation'
   import AjaxButton from '~/components/AjaxButton'
-  import PasswordField from '~/components/PasswordField'
-  import { mapGetters, mapActions } from 'vuex'
+  import {mapGetters, mapActions} from 'vuex'
   import global from '~/mixin/global'
 
   export default {
 
     middleware: ['common-middleware', 'non-logged-in'],
     layout: "empty",
+
+    components: {AjaxButton},
+
+    mixins: [validation, global],
+
     data() {
       return {
         email: '',
-        password: '',
-        code: '',
-        confirmPassword: '',
         errors: [],
-        hasFormError: false,
-        formSubmitting: false,
-        emailSubmitted: false,
-        passwordUpdated: false
+        showErrors: false,
+        submitting: false,
+        sent: false,
+        expiryMinutes: 60
       }
     },
-    components: {
-      AjaxButton,
-      PasswordField
-    },
-    watch: {
-      email() {
-        if (!this.invalidEmail) {
-          this.hasFormError = false
-        }
-      }
-    },
-    mixins: [validation, global],
+
     computed: {
-      invalidEmail() {
-        return !this.isValidEmail(this.email)
-      },
+
       emailValid() {
-        return this.email && !this.invalidEmail
+        return !!this.email && this.isValidEmail(this.email)
       },
-      invalidPassword() {
-        return !this.isValidLength(this.password)
+
+      emailInvalid() {
+        return this.showErrors && !this.emailValid
       },
-      passwordValid() {
-        return this.password && !this.invalidPassword
-      },
-      ...mapGetters('language', ['langCode']),
+
+      ...mapGetters('language', ['langCode'])
     },
+
     methods: {
-      async formSubmit() {
-        if (!this.emailSubmitted && this.email) {
-          if (this.email) {
-            this.formSubmitting = true
-            try {
 
-              const {data, status} = await this.$store.dispatch('user/forgotPassword', {
-                params: {
-                  email: this.email
-                },
-                lang: this.langCode
-              })
+      useAnotherEmail() {
+        this.sent = false
+        this.errors = []
+        this.showErrors = false
+      },
 
-              if (status === 200) {
-                this.setToastMessage(this.$t('forgotPassword.sentEmail'))
-                this.emailSubmitted = true
-                this.hasFormError = false
-                this.errors = []
-              } else {
-                this.errors = data.form
-              }
+      async sendLink() {
 
-            } catch (e) {
-              return this.$nuxt.error(e)
-            }
-            this.formSubmitting = false
+        this.showErrors = true
 
+        if (!this.emailValid || this.submitting) {
+          return
+        }
+
+        this.errors = []
+        this.submitting = true
+
+        try {
+
+          const data = await this.forgotPassword({
+            params: {email: this.email},
+            lang: this.langCode
+          })
+
+          if (data?.status === 200) {
+            this.showErrors = false
+            this.expiryMinutes = data.data?.expires_in_minutes || 60
+            this.sent = true
+            this.setToastMessage(`Reset link sent to ${this.email}`)
           } else {
-            this.hasFormError = true
+            this.errors = data?.data?.form || [data?.message]
           }
-        } else {
-          if (this.code && this.email && this.password && (this.password === this.confirmPassword)) {
-            this.formSubmitting = true
-            try {
-              const {data, status} = await this.$store.dispatch('user/updatePassword', {
-                params: {
-                  email: this.email,
-                  code: this.code,
-                  password: this.password
-                },
-                lang: this.langCode
-              })
-              if (status === 200) {
-                this.passwordUpdated = true
-                this.hasFormError = false
-                this.errors = []
-              } else {
-                this.errors = data.form
-              }
-            } catch (e) {
-              return this.$nuxt.error(e)
-            }
-            this.formSubmitting = false
-          } else {
-            this.hasFormError = true
-          }
+
+        } catch (e) {
+          return this.$nuxt.error(e)
+        } finally {
+          this.submitting = false
         }
       },
+
+      ...mapActions('user', ['forgotPassword']),
       ...mapActions('common', ['setToastMessage'])
-    },
-    mounted(){
     }
   }
 </script>
 
 <style>
+
+.auth-hint-spaced {
+    margin: 14px 0 20px;
+}
 
 </style>

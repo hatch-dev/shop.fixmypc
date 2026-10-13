@@ -1,121 +1,117 @@
-@extends('layouts.email_layout')
+@extends('mail_templates.layout.base')
+
+@php
+    use App\Models\Helper\MailBrand;
+    use App\Models\Helper\Utils;
+
+    $lang = isset($lang) ? $lang : null;
+
+    $brand = isset($brand)
+        ? $brand
+        : MailBrand::make(isset($setting->receiver) ? $setting->receiver : null, $lang);
+
+    $orderUrl = rtrim(config('env.url.CLIENT_BASE_URL') ?: $brand->site_url, '/')
+        . '/user/order/' . $order->id;
+
+    $shipName = $order->address && $order->address->name
+        ? $order->address->name
+        : (isset($order->user->name) ? $order->user->name : $brand->receiver);
+
+    $customerEmail = isset($order->user->email)
+        ? $order->user->email
+        : (isset($order->guest_user->email) ? $order->guest_user->email : null);
+@endphp
+
+@section('title', __('lang.mail_delivered_title', [], $lang))
+
+@section('preheader')
+    {{ __('lang.mail_delivered_sub', ['order' => $order->order], $lang) }}
+@endsection
+
+@section('hero')
+    @include('mail_templates.partials.hero', [
+        'brand'    => $brand,
+        'tone'     => 'positive',
+        'art'      => 'hero-truck.png',
+        'eyebrow'  => __('lang.mail_delivered_eyebrow', [], $lang),
+        'title'    => __('lang.mail_delivered_title', [], $lang),
+        'subtitle' => __('lang.mail_delivered_sub', ['order' => $order->order], $lang),
+    ])
+@endsection
 
 @section('content')
-    <p class="mb-10">{{__('lang.inform_you', [], $lang)}} <b>#{{ $order->order }}</b> {{__('lang.delivered', [], $lang)}}</p>
-    <p>{{__('lang.enjoying_purchase', [], $lang)}}</p>
+    <p class="ink" style="margin:0 0 8px 0; font-size:16px; line-height:26px; font-weight:bold; color:{{ $brand->ink }};">
+        {{ __('lang.hello', [], $lang) }}@if($brand->receiver_first) {{ $brand->receiver_first }}@endif,
+    </p>
 
-    <h5 class="mtb-20">
-        <a class="btn" href="{{ env('ORDER_DETAIL_REDIRECT', \App\Models\Helper\Utils::orderDetailRedirect()) . '/' . $order->id }}">
-            {{__('lang.write_review', [], $lang)}}
-        </a>
-    </h5>
+    <p class="muted" style="margin:0 0 24px 0; font-size:16px; line-height:26px; color:{{ $brand->muted }};">
+        {{ __('lang.mail_review_prompt', [], $lang) }}
+    </p>
 
-    <table class="mb-10">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
         <tr>
-            <th class="pb-10">{{__('lang.shipped_to', [], $lang)}}</th>
-        </tr>
-
-        <tr>
-            <td>
-                @if (!is_null($order->address))
-                    <h5 style="margin-bottom: 5px">{{ $order->address->name }}</h5>
-                @else
-                    <h5 style="margin-bottom: 5px">{{ $order->user->name }}</h5>
-                @endif
-                <p>{{ $order->formatted_address }}</p>
-
-                    @if($order->user)
-                        <p>{{__('lang.email', [], $lang)}}: {{ $order->user->email }}</p>
-                    @elseif($order->guest_user)
-                        <p>{{__('lang.email', [], $lang)}}: {{ $order->guest_user->email }}</p>
-                    @endif
-
-
-
-
-                    @if (!is_null($order->address))
-                        <p>{{__('lang.phone', [], $lang)}}: {{ $order->user->phone }}</p>
-                    @endif
-
-
+            <td align="center">
+                @include('mail_templates.partials.button', [
+                    'brand' => $brand,
+                    'url'   => $orderUrl,
+                    'label' => __('lang.write_review', [], $lang),
+                    'align' => 'center',
+                ])
             </td>
         </tr>
-    </table><!--table-->
+    </table>
 
+    @include('mail_templates.partials.spacer', ['brand' => $brand, 'h' => 26])
 
-    <table class="mb-10">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
         <tr>
-            <th class="pb-10">{{__('lang.paid_via', [], $lang)}}</th>
-        </tr>
+            <td class="stack" width="50%" valign="top" style="padding:0 7px 0 0;">
+                @component('mail_templates.partials.panel', [
+                    'brand' => $brand,
+                    'title' => __('lang.shipped_to', [], $lang),
+                ])
+                    <p class="ink" style="margin:0 0 4px 0; font-size:15px; line-height:23px;
+                       font-weight:bold; color:{{ $brand->ink }};">{{ $shipName }}</p>
+                    <p class="muted unstyle-auto-detected-links" style="margin:0; font-size:14px;
+                       line-height:22px; color:{{ $brand->muted }};">{{ $order->formatted_address }}</p>
+                    @if ($customerEmail)
+                        <p class="muted" style="margin:6px 0 0 0; font-size:13px; line-height:20px;
+                           color:{{ $brand->muted }};">{{ $customerEmail }}</p>
+                    @endif
+                @endcomponent
+            </td>
 
-        <tr>
-            <td>{{ $order->order_method }}</td>
-        </tr>
-    </table><!--table-->
+            <td class="stack-gap" style="font-size:0; line-height:0; height:0;">&nbsp;</td>
 
-    <table style="background: #eee; border: 1px solid #ddd; border-bottom: none" class="mt-20 main-table border-tr">
-        <tr>
-            <th>{{__('lang.title', [], $lang)}}</th>
-            <th>{{__('lang.delivery_fee', [], $lang)}}</th>
-            <th>{{__('lang.quantity', [], $lang)}}</th>
-            <th>{{__('lang.price', [], $lang)}}</th>
-            <th>{{__('lang.total', [], $lang)}}</th>
-        </tr>
-
-        @foreach ($order->ordered_products as $op)
-            <tr style="background: #fff">
-                <td>
-                    <b>{{ $op->product->title }}</b>
-                    <span class="mt-5 f-9 block">{{ \App\Models\Helper\MailHelper::generatingAttribute($op) }}</span>
-                </td>
-                <td>
-                    {{ $setting->currency_icon }}
-                    {{ \App\Models\Helper\MailHelper::shippingPrice($op->shipping_place, $op->shipping_type) }}
-                </td>
-                <td>{{ $op->quantity }}</td>
-
-                <td>{{ $setting->currency_icon }}{{ $op->selling }}</td>
-                <td>{{ $setting->currency_icon }}{{ $op->selling * $op->quantity }}</td>
-            </tr>
-
-        @endforeach
-    </table><!--table-->
-
-    <table class="border-tr td-right-align footer-table"
-           style="border: 1px solid #ddd; background: #eee; ">
-        <tr>
-            <td style="width: 630px" >{{__('lang.subtotal', [], $lang)}}</td>
-            <td style="width: 70px;">{{ $setting->currency_icon }}{{ $order->calculated_price['subtotal'] }}</td>
-        </tr>
-        <tr>
-            <td>{{__('lang.shipping_cost', [], $lang)}}</td>
-            <td>{{ $setting->currency_icon }}{{ $order->calculated_price['shipping_price'] }}</td>
-        </tr>
-
-        @if ((int) $order->calculated_price['bundle_offer'] > 0)
-            <tr>
-                <td>{{__('lang.bundle_offer', [], $lang)}}</td>
-                <td>{{ $setting->currency_icon }}{{ $order->calculated_price['bundle_offer'] }}</td>
-            </tr>
-        @endif
-
-        @if ((int) $order->calculated_price['voucher_price'] > 0)
-            <tr>
-                <td>{{__('lang.voucher', [], $lang)}}</td>
-                <td>{{ $setting->currency_icon }}{{ $order->calculated_price['voucher_price'] }}</td>
-            </tr>
-        @endif
-
-        @if ((int) $order->calculated_price['tax'] > 0)
-            <tr>
-                <td>{{__('lang.tax', [], $lang)}}</td>
-                <td>{{ $setting->currency_icon }}{{ $order->calculated_price['tax'] }}</td>
-            </tr>
-        @endif
-
-        <tr>
-            <td>{{__('lang.total', [], $lang)}}</td>
-            <td>{{ $setting->currency_icon }}{{ $order->calculated_price['total_price'] }}</td>
+            <td class="stack" width="50%" valign="top" style="padding:0 0 0 7px;">
+                @component('mail_templates.partials.panel', [
+                    'brand' => $brand,
+                    'title' => __('lang.mail_order_details', [], $lang),
+                ])
+                    @include('mail_templates.partials.kv', [
+                        'brand' => $brand,
+                        'rows'  => array_values(array_filter([
+                            [
+                                'label'  => __('lang.mail_order_number', [], $lang),
+                                'value'  => '#' . e($order->order),
+                                'strong' => true,
+                            ],
+                            $order->order_method ? [
+                                'label' => __('lang.paid_via', [], $lang),
+                                'value' => e($order->order_method),
+                            ] : null,
+                        ])),
+                    ])
+                @endcomponent
+            </td>
         </tr>
     </table>
-@stop
+
+    @include('mail_templates.partials.spacer', ['brand' => $brand, 'h' => 22])
+
+    @include('mail_templates.partials.products', ['brand' => $brand, 'order' => $order, 'lang' => $lang])
+
+    @include('mail_templates.partials.spacer', ['brand' => $brand, 'h' => 18])
+
+    @include('mail_templates.partials.totals', ['brand' => $brand, 'order' => $order, 'lang' => $lang])
+@endsection

@@ -1,46 +1,38 @@
 <template>
-  <div
-    class="dply-felx inputs align-end j-left"
-  >
-    <div
-      class="input-wrapper"
-    >
-      <label class="mb-10">{{ $t('prod.sTime') }}</label>
+  <div class="date-filter">
+    <div class="date-filter__field">
+      <label>{{ $t('prod.sTime') }}</label>
       <datetime
         format="YYYY-MM-DD"
-        width="180px"
+        width="170px"
         v-model="filter.start_time"
         readonly
       />
     </div>
 
-    <div
-      class="input-wrapper"
-    >
-      <label class="mb-10">{{ $t('prod.eTime') }}</label>
-
+    <div class="date-filter__field">
+      <label>{{ $t('prod.eTime') }}</label>
       <datetime
         format="YYYY-MM-DD"
-        width="180px"
+        width="170px"
         v-model="filter.end_time"
         readonly
       />
-
     </div>
 
+    <div class="date-filter__actions">
+      <ajax-button
+        name="save-edit"
+        class="primary-btn"
+        :text="$t('ship.fil')"
+        type="button"
+        @clicked="filterChanged"
+      />
 
-
-    <ajax-button
-      name="save-edit"
-      class="primary-btn mlr-5 mtb-sm-5"
-      :text="$t('ship.fil')"
-      type="button"
-      @clicked="filterChanged"
-    />
-
-    <button class="outline-btn" @click="clearTime">
-      {{ $t('ship.cl') }}
-    </button>
+      <button type="button" class="outline-btn" @click="clearTime">
+        {{ $t('ship.cl') }}
+      </button>
+    </div>
   </div>
 </template>
 
@@ -82,3 +74,34 @@
     },
   }
 </script>
+
+<style lang="stylus" scoped>
+  .date-filter
+    display flex
+    align-items center
+    flex-wrap wrap
+    gap 12px
+
+  .date-filter__field
+    display flex
+    align-items center
+    gap 8px
+
+    label
+      margin 0
+      font-size 13px
+      font-weight 600
+      color var(--text-muted)
+      white-space nowrap
+
+  .date-filter__actions
+    display flex
+    align-items center
+    gap 8px
+
+    .primary-btn
+    .outline-btn
+      height 42px !important
+      line-height 40px !important
+      border-radius var(--radius-md)
+</style>

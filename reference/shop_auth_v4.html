@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sign in — FixMyPC Shop</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+/* ============================================================================
+   FixMyPC Shop — Auth v1
+   Palette locked to the live shop brand: indigo ink, FixMyPC green action.
+   ========================================================================== */
+:root{
+  --ink:#16174A;          /* headings / navy */
+  --ink-soft:#3A3C6E;
+  --brand:#2D2DA0;        /* FixMyPC indigo */
+  --brand-700:#22227E;
+  --brand-50:#F1F1FC;
+  --go:#00A24A;           /* primary action green */
+  --go-700:#00873E;
+  --paper:#FFFFFF;
+  --wash:#F7F7FD;
+  --line:#E4E5F3;
+  --line-strong:#CFD1E8;
+  --muted:#6B7191;
+  --danger:#C8324B;
+  --amber:#B26A00;
+  --radius:14px;
+  --radius-lg:20px;
+  --shadow-sm:0 1px 2px rgba(22,23,74,.06);
+  --shadow-md:0 8px 28px rgba(22,23,74,.10);
+  --shadow-lg:0 24px 60px rgba(22,23,74,.16);
+  --sans:"Inter","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);
+  -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.5;
+}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font-family:inherit}
+:focus-visible{outline:3px solid rgba(45,45,160,.35);outline-offset:2px;border-radius:6px}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);min-height:100dvh}
+
+/* ---------- left: admin-managed banner stage ---------- */
+.stage{position:relative;overflow:hidden;background:var(--wash);isolation:isolate}
+.slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;
+  padding:44px;opacity:0;transform:scale(1.03);transition:opacity .7s ease, transform 1.2s ease;
+  pointer-events:none;
+}
+.slide.on{opacity:1;transform:scale(1);pointer-events:auto}
+.slide-media{position:absolute;inset:0;z-index:-2}
+.slide-media img{width:100%;height:100%;object-fit:cover;display:block}
+.slide-scrim{position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(180deg,rgba(12,13,45,.10) 0%,rgba(12,13,45,.30) 45%,rgba(12,13,45,.82) 100%);}
+.slide.light .slide-scrim{background:linear-gradient(180deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.86) 100%)}
+.slide.light .slide-body,.slide.light .eyebrow{color:var(--ink)}
+.slide.light .slide-sub{color:var(--ink-soft)}
+.slide-body{color:#fff;max-width:520px}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;
+  letter-spacing:.13em;text-transform:uppercase;color:#fff;margin-bottom:14px;
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);
+  padding:6px 12px;border-radius:999px;backdrop-filter:blur(6px);
+}
+.slide.light .eyebrow{background:rgba(45,45,160,.08);border-color:rgba(45,45,160,.18)}
+.slide-title{font-size:38px;line-height:1.1;font-weight:800;letter-spacing:-.02em;margin:0 0 12px}
+.slide-sub{font-size:16px;color:rgba(255,255,255,.85);margin:0 0 22px;max-width:44ch}
+.slide-cta{
+  display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--ink);
+  font-weight:700;font-size:14px;padding:12px 20px;border-radius:999px;border:0;cursor:pointer;
+  box-shadow:var(--shadow-md);
+}
+.slide-cta:hover{transform:translateY(-1px)}
+.slide.light .slide-cta{background:var(--brand);color:#fff}
+
+/* placeholder frame shown when no image is set in admin */
+.ph{position:absolute;inset:0;z-index:-2;background:
+  linear-gradient(135deg,#2D2DA0 0%,#4A4ACD 48%,#7A7AE0 100%);}
+.ph-grid{position:absolute;inset:0;opacity:.22;
+  background-image:linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px);
+  background-size:56px 56px;}
+.ph-note{position:absolute;top:24px;left:24px;z-index:1;display:flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.9);
+  background:rgba(0,0,0,.28);border:1px dashed rgba(255,255,255,.5);padding:7px 12px;border-radius:8px}
+
+.stage-nav{position:absolute;left:44px;bottom:36px;z-index:3;display:flex;gap:8px}
+.tick{width:34px;height:4px;border-radius:999px;background:rgba(255,255,255,.34);border:0;cursor:pointer;padding:0}
+.tick.on{background:#fff}
+.stage-badge{position:absolute;right:28px;bottom:28px;z-index:3;display:flex;align-items:center;gap:8px;
+  font-size:12px;color:rgba(255,255,255,.78)}
+
+/* ---------- right: auth panel ---------- */
+.panel{display:flex;flex-direction:column;padding:40px 48px;overflow-y:auto}
+.panel-inner{width:100%;max-width:430px;margin:auto;padding:24px 0}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:30px}
+.brand-mark{width:46px;height:46px;border-radius:12px;background:var(--brand);display:grid;place-items:center;flex:0 0 auto}
+.brand-mark svg{width:26px;height:26px}
+.brand-name{font-weight:800;font-size:16px;letter-spacing:-.01em;line-height:1.15}
+.brand-name small{display:block;font-weight:500;font-size:12px;color:var(--muted);letter-spacing:.02em}
+
+h1{font-size:27px;line-height:1.2;letter-spacing:-.02em;font-weight:800;margin:0 0 8px}
+.lede{color:var(--muted);margin:0 0 26px;font-size:14.5px}
+
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13.5px;font-weight:600;margin-bottom:7px;color:var(--ink)}
+.req{color:var(--danger)}
+.hint{font-size:12.5px;color:var(--muted);margin-top:6px}
+.control{
+  width:100%;padding:14px 16px;border:1px solid var(--line-strong);border-radius:var(--radius);
+  font-size:15px;color:var(--ink);background:#fff;transition:border-color .15s, box-shadow .15s;
+}
+.control::placeholder{color:#9AA0BC}
+.control:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(45,45,160,.10);outline:none}
+.control.bad{border-color:var(--danger);box-shadow:0 0 0 4px rgba(200,50,75,.09)}
+select.control{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%236B7191' stroke-width='2'><path d='M4 6l4 4 4-4'/></svg>");background-repeat:no-repeat;background-position:right 16px center}
+textarea.control{min-height:88px;resize:vertical}
+.pw-wrap{position:relative}
+.pw-wrap .control{padding-right:52px}
+.peek{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;
+  width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--muted)}
+.peek:hover{background:var(--brand-50);color:var(--brand)}
+.err{display:none;color:var(--danger);font-size:12.5px;margin-top:6px;font-weight:600}
+.err.on{display:block}
+
+.row{display:flex;gap:12px}
+.row>*{flex:1;min-width:0}
+.between{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:4px 0 22px;flex-wrap:wrap}
+
+.check{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink-soft);cursor:pointer;user-select:none}
+.check input{width:18px;height:18px;accent-color:var(--brand);margin:1px 0 0;flex:0 0 auto}
+
+.btn{
+  width:100%;padding:15px 20px;border-radius:999px;border:0;font-size:15.5px;font-weight:700;
+  cursor:pointer;transition:transform .12s ease, background .15s, box-shadow .15s;
+}
+.btn-go{background:var(--go);color:#fff;box-shadow:0 6px 18px rgba(0,162,74,.28)}
+.btn-go:hover{background:var(--go-700);transform:translateY(-1px)}
+.btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line-strong)}
+.btn-ghost:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-50)}
+.btn-ink{background:var(--brand);color:#fff}
+.btn-ink:hover{background:var(--brand-700)}
+.btn[disabled]{opacity:.55;cursor:not-allowed;transform:none}
+.btn-sm{width:auto;padding:10px 18px;font-size:14px}
+.stack{display:grid;gap:12px}
+
+.sep{display:flex;align-items:center;gap:14px;margin:22px 0;color:var(--muted);font-size:12.5px;font-weight:600}
+.sep:before,.sep:after{content:"";height:1px;background:var(--line);flex:1}
+
+.linkish{background:none;border:0;padding:0;color:var(--brand);font:inherit;cursor:pointer}
+.linkish:hover{text-decoration:underline}
+.linkish.strong{font-weight:700}
+.foot{text-align:center;font-size:14px;color:var(--muted);margin-top:24px}
+.foot strong{color:var(--ink)}
+.powered{display:flex;align-items:center;justify-content:center;gap:8px;color:#9AA0BC;font-size:12.5px;margin-top:34px}
+
+/* segmented account type */
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.seg-opt{position:relative;cursor:pointer}
+.seg-opt input{position:absolute;opacity:0;pointer-events:none}
+.seg-face{
+  border:1px solid var(--line-strong);border-radius:var(--radius);padding:14px 14px 13px;background:#fff;
+  display:flex;gap:11px;align-items:flex-start;transition:border-color .15s,box-shadow .15s,background .15s;height:100%;
+}
+.seg-opt input:checked+.seg-face{border-color:var(--brand);background:var(--brand-50);box-shadow:0 0 0 3px rgba(45,45,160,.09)}
+.dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line-strong);flex:0 0 auto;margin-top:2px;position:relative}
+.seg-opt input:checked+.seg-face .dot{border-color:var(--go)}
+.seg-opt input:checked+.seg-face .dot:after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--go)}
+.seg-face b{display:block;font-size:14.5px;font-weight:700}
+.seg-face span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.35}
+
+/* password strength */
+.meter{display:flex;gap:5px;margin-top:9px}
+.meter i{height:4px;flex:1;border-radius:999px;background:var(--line);transition:background .2s}
+.meter.s1 i:nth-child(1){background:var(--danger)}
+.meter.s2 i:nth-child(-n+2){background:var(--amber)}
+.meter.s3 i:nth-child(-n+3){background:#3E9E5F}
+.meter.s4 i{background:var(--go)}
+
+/* OTP */
+.otp{display:flex;gap:10px;margin:6px 0 4px}
+.otp input{
+  flex:1;min-width:0;height:60px;text-align:center;font-size:24px;font-weight:700;color:var(--ink);
+  border:1px solid var(--line-strong);border-radius:var(--radius);background:#fff;
+}
+.otp input:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(45,45,160,.10);outline:none}
+.otp input.bad{border-color:var(--danger)}
+
+/* notices */
+.note{border:1px solid var(--line);background:var(--wash);border-radius:var(--radius);padding:14px 16px;
+  font-size:13.5px;color:var(--ink-soft);display:flex;gap:11px;align-items:flex-start;margin-bottom:20px}
+.note svg{flex:0 0 auto;margin-top:1px}
+.note.go{background:#F0FBF4;border-color:#C6EBD4;color:#12603A}
+.note.warn{background:#FFF8EC;border-color:#F3DFBB;color:#7A4C00}
+
+/* method cards (2FA) */
+.pick{display:grid;gap:12px;margin-bottom:22px}
+.pick-card{display:flex;gap:14px;align-items:flex-start;padding:16px;border:1px solid var(--line-strong);
+  border-radius:var(--radius);cursor:pointer;background:#fff;text-align:left;width:100%;transition:.15s}
+.pick-card:hover{border-color:var(--brand);background:var(--brand-50)}
+.pick-ico{width:42px;height:42px;border-radius:12px;background:var(--brand-50);color:var(--brand);
+  display:grid;place-items:center;flex:0 0 auto}
+.pick-card b{display:block;font-size:15px}
+.pick-card span{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.4}
+.pill{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--go);color:#fff;padding:3px 8px;border-radius:999px;margin-left:8px;vertical-align:1px}
+
+/* QR + recovery codes */
+.qr{width:172px;height:172px;border-radius:var(--radius);border:1px solid var(--line-strong);padding:10px;background:#fff}
+.qr-row{display:flex;gap:18px;align-items:center;margin-bottom:18px}
+.secret{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;letter-spacing:.06em;
+  background:var(--wash);border:1px solid var(--line);border-radius:10px;padding:10px 12px;word-break:break-all}
+.codes{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-family:ui-monospace,Menlo,monospace;font-size:13.5px;
+  background:var(--wash);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:16px}
+
+/* account type cards */
+.pick-card .pick-ico{display:grid;margin-top:0;color:var(--brand);font-size:inherit}
+.pick-card b{color:var(--ink)}
+
+.type-card{
+  position:relative;display:grid;grid-template-columns:44px 1fr;gap:15px;align-items:start;
+  width:100%;text-align:left;padding:18px 46px 16px 18px;background:#fff;cursor:pointer;
+  border:1px solid var(--line-strong);border-radius:16px;font-family:inherit;
+  transition:border-color .15s, box-shadow .15s, transform .15s;
+}
+.type-card:hover{border-color:var(--brand);box-shadow:0 10px 26px rgba(22,23,74,.09);transform:translateY(-1px)}
+.type-card:active{transform:none}
+.tc-ico{width:44px;height:44px;border-radius:13px;background:var(--brand-50);color:var(--brand);
+  display:grid;place-items:center}
+.tc-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:5px}
+.tc-name{font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:var(--ink);line-height:1.2}
+.tc-badge{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--amber);background:#FFF6E6;border:1px solid #F0DCB6;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.tc-desc{display:block;font-size:13.5px;color:var(--muted);line-height:1.45}
+.tc-list{display:grid;gap:5px;margin-top:11px}
+.tc-li{position:relative;padding-left:21px;font-size:13px;color:var(--ink-soft);line-height:1.4}
+.tc-li:before{content:"";position:absolute;left:3px;top:5px;width:9px;height:5px;
+  border-left:2px solid var(--go);border-bottom:2px solid var(--go);transform:rotate(-45deg)}
+.tc-foot{display:block;margin-top:13px;padding-top:11px;border-top:1px solid var(--line);
+  font-size:12px;font-weight:700;color:var(--brand);letter-spacing:.01em}
+.tc-go{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--line-strong);
+  display:grid;place-items:center;transition:color .15s, transform .15s}
+.type-card:hover .tc-go{color:var(--brand);transform:translateY(-50%) translateX(3px)}
+
+/* section heads inside a long form */
+.sub-head{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  margin:28px 0 14px;padding-top:18px;border-top:1px solid var(--line)}
+.prefs{display:grid;gap:14px;padding:16px;border:1px solid var(--line);border-radius:var(--radius);background:var(--wash)}
+.prefs .check{align-items:flex-start}
+.prefs .check b{display:block;font-size:13.5px;color:var(--ink)}
+.prefs .check .hint{margin-top:2px;display:block}
+
+/* chosen-type banner on the details step */
+.chosen{display:flex;align-items:center;gap:12px;padding:13px 15px;border:1px solid var(--line-strong);
+  border-radius:var(--radius);background:var(--brand-50);margin-bottom:22px}
+.chosen b{font-size:13.5px}
+.chosen small{display:block;color:var(--muted);font-size:12.5px}
+.chosen button{margin-left:auto;background:none;border:0;color:var(--brand);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+.chosen button:hover{text-decoration:underline}
+
+/* steps */
+.steps{display:flex;align-items:center;gap:8px;margin-bottom:22px}
+.step{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);font-weight:600}
+.step i{width:22px;height:22px;border-radius:50%;background:var(--line);color:var(--muted);display:grid;place-items:center;
+  font-style:normal;font-size:11.5px;font-weight:800}
+.step.on{color:var(--brand)} .step.on i{background:var(--brand);color:#fff}
+.step.done i{background:var(--go);color:#fff}
+.step-line{flex:1;height:1px;background:var(--line)}
+
+/* order summary (guest) */
+.cart{border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:22px;background:var(--wash)}
+.cart-line{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:5px 0;color:var(--ink-soft)}
+.cart-line b{color:var(--ink)}
+.cart-total{border-top:1px solid var(--line-strong);margin-top:9px;padding-top:10px;font-size:16px;font-weight:800}
+
+.back{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;color:var(--muted);font-weight:600;
+  background:none;border:0;padding:0;cursor:pointer;margin-bottom:18px}
+.back:hover{color:var(--brand)}
+
+/* screens */
+.screen{display:none;animation:rise .3s ease}
+.screen.on{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* toast */
+.toasts{position:fixed;right:20px;bottom:20px;z-index:90;display:grid;gap:10px;max-width:340px}
+.toast{background:var(--ink);color:#fff;padding:13px 16px;border-radius:12px;font-size:13.5px;
+  box-shadow:var(--shadow-lg);animation:rise .25s ease;display:flex;gap:10px;align-items:flex-start}
+.toast.go{background:#0B6B3A}
+.toast.bad{background:#8E2035}
+
+/* prototype screen switcher */
+.proto{position:fixed;left:16px;bottom:16px;z-index:95}
+.proto-btn{background:var(--ink);color:#fff;border:0;border-radius:999px;padding:9px 15px;font-size:12px;
+  font-weight:700;cursor:pointer;box-shadow:var(--shadow-md);letter-spacing:.03em}
+.proto-menu{display:none;position:absolute;bottom:46px;left:0;background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:8px;min-width:230px;max-height:60vh;overflow:auto}
+.proto-menu.on{display:block}
+.proto-menu button{display:block;width:100%;text-align:left;background:none;border:0;padding:8px 11px;
+  border-radius:9px;font-size:13px;color:var(--ink-soft);font-family:inherit;cursor:pointer}
+.proto-menu button:hover{background:var(--brand-50);color:var(--brand)}
+.proto-menu hr{border:0;border-top:1px solid var(--line);margin:6px 4px}
+.proto-menu .cap{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 11px 4px}
+
+@media (max-width:980px){
+  .shell{grid-template-columns:1fr}
+  .stage{min-height:190px;order:-1}
+  .slide{padding:22px}
+  .slide-title{font-size:22px} .slide-sub{display:none} .slide-cta{padding:10px 16px;font-size:13px}
+  .stage-nav{left:22px;bottom:16px} .stage-badge{display:none}
+  .panel{padding:26px 20px 48px}
+  .panel-inner{max-width:none}
+  h1{font-size:23px}
+  .otp input{height:54px;font-size:21px;gap:8px}
+  .seg{grid-template-columns:1fr}
+  .type-card{grid-template-columns:38px 1fr;gap:12px;padding:16px 16px 14px}
+  .tc-ico{width:38px;height:38px;border-radius:11px}
+  .tc-go{display:none}
+  .tc-name{font-size:15.5px}
+  .qr-row{flex-direction:column;align-items:flex-start}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ══════════════ LEFT: admin-managed banner stage ══════════════ -->
+  <aside class="stage" id="stage" aria-label="FixMyPC offers">
+    <!-- slides injected by JS from the banner feed (admin/shop_banners.html) -->
+    <div class="stage-nav" id="ticks"></div>
+    <div class="stage-badge">Banner slot · managed in Shop → Banners</div>
+  </aside>
+
+  <!-- ══════════════ RIGHT: auth panel ══════════════ -->
+  <main class="panel">
+    <div class="panel-inner">
+
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M8.5 9.5l2 2-2 2M13 13.5h3"/>
+          </svg>
+        </span>
+        <span class="brand-name">FixMyPC Shop<small>Parts, devices &amp; repairs · Kilcock</small></span>
+      </div>
+
+      <!-- ─────────── SIGN IN ─────────── -->
+      <section class="screen on" data-screen="login">
+        <h1>Sign in to your account</h1>
+        <p class="lede">Track repairs, reorder parts and check out faster.</p>
+
+        <div class="field">
+          <label for="li-email">Email address <span class="req">*</span></label>
+          <input class="control" id="li-email" type="email" autocomplete="username" placeholder="you@example.ie">
+          <p class="err" id="li-email-err">Enter the email address on your account.</p>
+        </div>
+
+        <div class="field">
+          <label for="li-pw">Password <span class="req">*</span></label>
+          <div class="pw-wrap">
+            <input class="control" id="li-pw" type="password" autocomplete="current-password" placeholder="Your password">
+            <button class="peek" type="button" data-peek="li-pw" aria-label="Show password">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <p class="err" id="li-pw-err">Enter your password.</p>
+        </div>
+
+        <div class="between">
+          <label class="check"><input type="checkbox" id="li-remember"> Keep me signed in</label>
+          <button type="button" class="linkish" data-go="forgot">Forgot password?</button>
+        </div>
+
+        <button class="btn btn-go" id="li-submit">Sign in</button>
+
+        <div class="sep">or</div>
+        <div class="stack">
+          <button class="btn btn-ghost" data-go="code">Email me a sign-in code</button>
+          <button class="btn btn-ghost" data-go="guest">Check out as a guest</button>
+        </div>
+
+        <p class="foot">New to FixMyPC? <button type="button" class="linkish strong" data-go="signup">Create an account</button></p>
+      </section>
+
+      <!-- ─────────── EMAIL CODE ─────────── -->
+      <section class="screen" data-screen="code">
+        <button class="back" data-go="login">← Back to sign in</button>
+        <h1>Sign in with a code</h1>
+        <p class="lede">We'll email you a 6-digit code. No password needed.</p>
+
+        <div class="field" id="code-step-email">
+          <label for="oc-email">Email address <span class="req">*</span></label>
+          <input class="control" id="oc-email" type="email" autocomplete="email" placeholder="you@example.ie">
+          <p class="err" id="oc-email-err">Enter a valid email address.</p>
+          <button class="btn btn-go" style="margin-top:16px" id="oc-send">Send my code</button>
+        </div>
+
+        <div id="code-step-otp" hidden>
+          <div class="note go">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            <div>Code sent to <b id="oc-sent-to">you@example.ie</b>. It expires in 10 minutes.</div>
+          </div>
+          <div class="field">
+            <label>Enter your code <span class="req">*</span></label>
+            <div class="otp" data-otp="oc"></div>
+            <p class="err" id="oc-otp-err">That code isn't right. Try again or send a new one.</p>
+            <p class="hint">Prototype: any 6 digits work. <b>000000</b> shows the error state.</p>
+          </div>
+          <button class="btn btn-go" id="oc-verify">Sign in</button>
+          <p class="foot"><button class="back" style="margin:0" id="oc-resend">Send a new code</button></p>
+        </div>
+      </section>
+
+      <!-- ─────────── FORGOT ─────────── -->
+      <section class="screen" data-screen="forgot">
+        <button class="back" data-go="login">← Back to sign in</button>
+        <h1>Reset your password</h1>
+        <p class="lede">Enter your email and we'll send a reset link valid for 60 minutes.</p>
+        <div class="field">
+          <label for="fp-email">Email address <span class="req">*</span></label>
+          <input class="control" id="fp-email" type="email" placeholder="you@example.ie">
+          <p class="err" id="fp-email-err">Enter a valid email address.</p>
+        </div>
+        <button class="btn btn-go" id="fp-send">Send reset link</button>
+      </section>
+
+      <!-- ─────────── STEP 1 · ACCOUNT TYPE ─────────── -->
+      <section class="screen" data-screen="signup">
+        <button class="back" data-go="login">← Back to sign in</button>
+        <div class="steps">
+          <span class="step on"><i>1</i> Type</span><span class="step-line"></span>
+          <span class="step"><i>2</i> Details</span><span class="step-line"></span>
+          <span class="step"><i>3</i> Verify</span><span class="step-line"></span>
+          <span class="step"><i>4</i> Security</span>
+        </div>
+
+        <h1>What kind of account?</h1>
+        <p class="lede">This sets your pricing, how we invoice you and what we need to ask for next. You can change it later by talking to us.</p>
+
+        <div class="pick" id="type-pick">
+          <button type="button" class="type-card" data-type="personal">
+            <span class="tc-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></span>
+            <span class="tc-main">
+              <span class="tc-head"><span class="tc-name">Personal</span></span>
+              <span class="tc-desc">Home laptops, phones and consoles.</span>
+              <span class="tc-list">
+              <span class="tc-li">Track your repair tickets</span>
+              <span class="tc-li">Saved delivery address</span>
+              <span class="tc-li">Card or PayPal at checkout</span>
+              </span>
+              <span class="tc-foot">Retail prices inc. VAT · ready straight away</span>
+            </span>
+            <span class="tc-go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </button>
+
+          <button type="button" class="type-card" data-type="business">
+            <span class="tc-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-4 7 4v13"/><path d="M10 21v-5h4v5"/></svg></span>
+            <span class="tc-main">
+              <span class="tc-head"><span class="tc-name">Business</span></span>
+              <span class="tc-desc">Offices, schools and practices buying for their own use.</span>
+              <span class="tc-list">
+              <span class="tc-li">VAT invoices and PO references</span>
+              <span class="tc-li">Apply for a 30-day credit account</span>
+              <span class="tc-li">Multiple sites and named contacts</span>
+              </span>
+              <span class="tc-foot">Ex-VAT invoicing · credit on application</span>
+            </span>
+            <span class="tc-go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </button>
+
+          <button type="button" class="type-card" data-type="trade">
+            <span class="tc-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"/></svg></span>
+            <span class="tc-main">
+              <span class="tc-head"><span class="tc-name">Trade</span><span class="tc-badge">Approval needed</span></span>
+              <span class="tc-desc">Repair shops and resellers buying parts to fit or resell.</span>
+              <span class="tc-list">
+              <span class="tc-li">Trade price list, ex-VAT</span>
+              <span class="tc-li">Bulk parts and RMA handling</span>
+              <span class="tc-li">Order at retail prices while we review</span>
+              </span>
+              <span class="tc-foot">Trade pricing · reviewed within one working day</span>
+            </span>
+            <span class="tc-go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </button>
+        </div>
+
+        <p class="foot">Already registered? <button type="button" class="linkish strong" data-go="login">Sign in</button></p>
+      </section>
+
+      <!-- ─────────── STEP 2 · DETAILS ─────────── -->
+      <section class="screen" data-screen="register">
+        <button class="back" data-go="signup">← Change account type</button>
+        <div class="steps">
+          <span class="step done"><i>✓</i> Type</span><span class="step-line"></span>
+          <span class="step on"><i>2</i> Details</span><span class="step-line"></span>
+          <span class="step"><i>3</i> Verify</span><span class="step-line"></span>
+          <span class="step"><i>4</i> Security</span>
+        </div>
+
+        <h1 id="reg-title">Create your personal account</h1>
+        <p class="lede" id="reg-lede">Retail pricing inc. VAT, with your repair tickets and orders in one place.</p>
+
+        <div class="chosen" id="chosen-type"></div>
+
+        <!-- ── who you are ── -->
+        <div class="field">
+          <label for="su-name">Full name <span class="req">*</span></label>
+          <input class="control" id="su-name" autocomplete="name" placeholder="Enter your full name">
+          <p class="err" id="su-name-err">Enter your full name.</p>
+        </div>
+
+        <!-- ── business only ── -->
+        <div id="blk-business" hidden>
+          <h2 class="sub-head">Your business</h2>
+          <div class="field">
+            <label for="bz-company">Company name <span class="req">*</span></label>
+            <input class="control" id="bz-company" autocomplete="organization" placeholder="Registered or trading name">
+            <p class="err" id="bz-company-err">Enter the company name.</p>
+          </div>
+          <div class="field">
+            <label for="bz-sector">What does the business do? <span class="req">*</span></label>
+            <select class="control" id="bz-sector">
+              <option value="">Choose one</option>
+              <option>Professional services / office</option>
+              <option>School or college</option>
+              <option>Medical or dental practice</option>
+              <option>Hospitality or retail</option>
+              <option>Construction or trades</option>
+              <option>Charity or community group</option>
+              <option>Other</option>
+            </select>
+            <p class="err" id="bz-sector-err">Pick the closest match.</p>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="bz-vat">VAT number</label>
+              <input class="control" id="bz-vat" placeholder="IE1234567FA">
+              <p class="err" id="bz-vat-err">Use IE + 7 digits + 1–2 letters.</p>
+            </div>
+            <div class="field">
+              <label for="bz-cro">CRO number</label>
+              <input class="control" id="bz-cro" placeholder="123456">
+            </div>
+          </div>
+          <div class="field">
+            <label for="bz-billing">Billing address <span class="req">*</span></label>
+            <textarea class="control" id="bz-billing" placeholder="Street, town, county, Eircode"></textarea>
+            <p class="err" id="bz-billing-err">We need a billing address for VAT invoices.</p>
+          </div>
+          <div class="field">
+            <label class="check"><input type="checkbox" id="bz-po"> Our invoices need a PO number on them.</label>
+          </div>
+          <div class="field">
+            <label class="check"><input type="checkbox" id="bz-credit"> Apply for a 30-day credit account.</label>
+            <p class="hint">Reviewed after your email is confirmed. Card and bank transfer work straight away.</p>
+          </div>
+        </div>
+
+        <!-- ── trade only ── -->
+        <div id="blk-trade" hidden>
+          <h2 class="sub-head">Your trade account</h2>
+          <div class="note warn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+            <div>Trade pricing is reviewed by a person. You can order at retail prices as soon as your email is confirmed, and ex-VAT trade prices switch on once we approve you.</div>
+          </div>
+          <div class="field">
+            <label for="td-trading">Trading name <span class="req">*</span></label>
+            <input class="control" id="td-trading" autocomplete="organization" placeholder="Shop or company name">
+            <p class="err" id="td-trading-err">Enter your trading name.</p>
+          </div>
+          <div class="field">
+            <label for="td-trade">Trade <span class="req">*</span></label>
+            <select class="control" id="td-trade">
+              <option value="">Choose one</option>
+              <option>Computer / laptop repair shop</option>
+              <option>Phone and tablet repair</option>
+              <option>IT reseller or MSP</option>
+              <option>Games console repair</option>
+              <option>Electronics or appliance repair</option>
+              <option>Field engineer / sole trader</option>
+              <option>Other</option>
+            </select>
+            <p class="err" id="td-trade-err">Pick the closest match.</p>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="td-vat">VAT number <span class="req">*</span></label>
+              <input class="control" id="td-vat" placeholder="IE1234567FA">
+              <p class="err" id="td-vat-err">Trade accounts need a valid IE VAT number.</p>
+            </div>
+            <div class="field">
+              <label for="td-cro">CRO number</label>
+              <input class="control" id="td-cro" placeholder="123456">
+            </div>
+          </div>
+          <div class="field">
+            <label for="td-address">Business address <span class="req">*</span></label>
+            <textarea class="control" id="td-address" placeholder="Street, town, county, Eircode"></textarea>
+            <p class="err" id="td-address-err">Enter the trading address.</p>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="td-spend">Expected monthly spend <span class="req">*</span></label>
+              <select class="control" id="td-spend">
+                <option value="">Choose one</option>
+                <option>Under €500</option>
+                <option>€500 – €2,000</option>
+                <option>€2,000 – €5,000</option>
+                <option>Over €5,000</option>
+              </select>
+              <p class="err" id="td-spend-err">Give us a rough band.</p>
+            </div>
+            <div class="field">
+              <label for="td-web">Website or social page</label>
+              <input class="control" id="td-web" placeholder="yourshop.ie">
+            </div>
+          </div>
+          <div class="field">
+            <label class="check"><input type="checkbox" id="td-resale"> I confirm parts bought on this account are fitted or resold as part of a business, not for personal use. <span class="req">*</span></label>
+            <p class="err" id="td-resale-err">Trade accounts need this confirmation.</p>
+          </div>
+        </div>
+
+        <!-- ── contact + password ── -->
+        <h2 class="sub-head" id="head-login">How you sign in</h2>
+        <div class="field">
+          <label for="su-email" id="lbl-email">Email address <span class="req">*</span></label>
+          <input class="control" id="su-email" type="email" autocomplete="email" placeholder="you@example.ie">
+          <p class="hint" id="hint-email">We send your confirmation code here.</p>
+          <p class="err" id="su-email-err">Enter a valid email address.</p>
+        </div>
+
+        <div class="field">
+          <label for="su-phone">Mobile number <span class="req">*</span></label>
+          <input class="control" id="su-phone" type="tel" autocomplete="tel" placeholder="087 123 4567">
+          <p class="hint">Used for repair and order updates, and for SMS security codes if you choose them.</p>
+          <p class="err" id="su-phone-err">Enter a mobile number we can text.</p>
+        </div>
+
+        <div class="field">
+          <label for="su-pw">Password <span class="req">*</span></label>
+          <div class="pw-wrap">
+            <input class="control" id="su-pw" type="password" autocomplete="new-password" placeholder="At least 10 characters">
+            <button class="peek" type="button" data-peek="su-pw" aria-label="Show password">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <div class="meter" id="su-meter"><i></i><i></i><i></i><i></i></div>
+          <p class="hint" id="su-pw-hint">Use 10+ characters with a number and a capital letter.</p>
+          <p class="err" id="su-pw-err">Use at least 10 characters, with a capital letter and a number.</p>
+        </div>
+
+        <div class="field">
+          <label for="su-pw2">Confirm password <span class="req">*</span></label>
+          <div class="pw-wrap">
+            <input class="control" id="su-pw2" type="password" autocomplete="new-password" placeholder="Type it again">
+            <button class="peek" type="button" data-peek="su-pw2" aria-label="Show password">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <p class="err" id="su-pw2-err">Passwords don't match.</p>
+        </div>
+
+        <!-- ── preferences ── -->
+        <h2 class="sub-head">Staying in touch</h2>
+        <div class="prefs">
+          <label class="check"><input type="checkbox" id="pref-email" checked> <span><b>Offers by email</b><span class="hint">Repair deals, price drops and seasonal offers. Roughly twice a month.</span></span></label>
+          <label class="check"><input type="checkbox" id="pref-sms"> <span><b>Offers by text</b><span class="hint">Short notice only — flash offers and stock arrivals.</span></span></label>
+          <label class="check"><input type="checkbox" id="pref-recs" checked> <span><b>Recommendations for my devices</b><span class="hint">Suggested upgrades and parts based on what you've bought or had repaired.</span></span></label>
+          <label class="check" id="pref-trade-wrap" hidden><input type="checkbox" id="pref-trade" checked> <span><b>Trade price list and stock file</b><span class="hint">Monthly ex-VAT price list and weekly stock updates.</span></span></label>
+        </div>
+        <p class="hint" style="margin:10px 0 20px">You can change any of these in Account → Preferences, or unsubscribe from any message we send.</p>
+
+        <div class="field">
+          <label class="check"><input type="checkbox" id="su-terms"> I agree to the <button type="button" class="linkish" data-doc="terms of sale">terms of sale</button> and the <button type="button" class="linkish" data-doc="privacy notice">privacy notice</button>. <span class="req">*</span></label>
+          <p class="err" id="su-terms-err">Tick the box to continue.</p>
+        </div>
+
+        <button class="btn btn-go" id="su-submit">Create account</button>
+        <p class="foot">Already registered? <button type="button" class="linkish strong" data-go="login">Sign in</button></p>
+      </section>
+
+
+      <!-- ─────────── ACTIVATE ─────────── -->
+      <section class="screen" data-screen="activate">
+        <div class="steps">
+          <span class="step done"><i>✓</i> Type</span><span class="step-line"></span>
+          <span class="step done"><i>✓</i> Details</span><span class="step-line"></span>
+          <span class="step on"><i>3</i> Verify</span><span class="step-line"></span>
+          <span class="step"><i>4</i> Security</span>
+        </div>
+        <h1>Confirm your email</h1>
+        <p class="lede">We sent a 6-digit code to <b id="act-email">you@example.ie</b>. Enter it below, or use the link in the same email.</p>
+
+        <div class="field">
+          <label>Activation code <span class="req">*</span></label>
+          <div class="otp" data-otp="act"></div>
+          <p class="err" id="act-otp-err">That code has expired or doesn't match. Send a new one.</p>
+          <p class="hint">Prototype: any 6 digits work. <b>000000</b> shows the error state.</p>
+        </div>
+
+        <button class="btn btn-go" id="act-verify">Confirm email</button>
+        <div class="stack" style="margin-top:12px">
+          <button class="btn btn-ghost" id="act-resend">Send a new code</button>
+          <button class="btn btn-ghost" data-go="signup">Use a different email</button>
+        </div>
+        <div class="note warn" style="margin-top:22px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+          <div>Nothing in your inbox after a minute? Check spam, or add <b>shop@fixmypc.ie</b> to your contacts.</div>
+        </div>
+      </section>
+
+      <!-- ─────────── 2FA CHOOSER ─────────── -->
+      <section class="screen" data-screen="twofa">
+        <div class="steps">
+          <span class="step done"><i>✓</i> Type</span><span class="step-line"></span>
+          <span class="step done"><i>✓</i> Details</span><span class="step-line"></span>
+          <span class="step done"><i>✓</i> Verify</span><span class="step-line"></span>
+          <span class="step on"><i>4</i> Security</span>
+        </div>
+        <h1>Add a second step at sign-in</h1>
+        <p class="lede">Two-factor authentication stops anyone using your password on its own. It takes about a minute to set up.</p>
+
+        <div class="pick">
+          <button class="pick-card" data-go="twofa-app">
+            <span class="pick-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg></span>
+            <span><b>Authenticator app <span class="pill">Recommended</span></b><span>Google Authenticator, Microsoft Authenticator or 1Password. Works without signal.</span></span>
+          </button>
+          <button class="pick-card" data-go="twofa-sms">
+            <span class="pick-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg></span>
+            <span><b>Text message</b><span>We text a 6-digit code to your mobile each time you sign in.</span></span>
+          </button>
+        </div>
+
+        <button class="btn btn-ghost" id="tf-skip">Skip for now</button>
+        <p class="hint" style="text-align:center;margin-top:12px">You can turn this on later in Account → Security.</p>
+      </section>
+
+      <!-- ─────────── 2FA: APP ─────────── -->
+      <section class="screen" data-screen="twofa-app">
+        <button class="back" data-go="twofa">← Choose a different method</button>
+        <h1>Set up your authenticator app</h1>
+        <p class="lede">Scan this code in your authenticator app, then enter the 6 digits it shows.</p>
+
+        <div class="qr-row">
+          <div class="qr" id="qr-box"></div>
+          <div style="min-width:0">
+            <p class="hint" style="margin:0 0 8px">Can't scan? Enter this key by hand:</p>
+            <div class="secret" id="tf-secret">JBSW Y3DP EHPK 3PXP</div>
+            <button class="btn btn-ghost btn-sm" style="margin-top:10px" id="tf-copy">Copy key</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Code from your app <span class="req">*</span></label>
+          <div class="otp" data-otp="tfa"></div>
+          <p class="err" id="tfa-otp-err">That code didn't match. Codes change every 30 seconds — try the newest one.</p>
+        </div>
+        <button class="btn btn-go" id="tfa-verify">Turn on two-factor</button>
+      </section>
+
+      <!-- ─────────── 2FA: SMS ─────────── -->
+      <section class="screen" data-screen="twofa-sms">
+        <button class="back" data-go="twofa">← Choose a different method</button>
+        <h1>Set up SMS codes</h1>
+        <p class="lede">We'll text a code to this number every time you sign in.</p>
+
+        <div class="field" id="sms-step-num">
+          <label for="tfs-phone">Mobile number <span class="req">*</span></label>
+          <input class="control" id="tfs-phone" type="tel" placeholder="087 123 4567">
+          <p class="err" id="tfs-phone-err">Enter a valid Irish mobile number.</p>
+          <button class="btn btn-go" style="margin-top:16px" id="tfs-send">Send test code</button>
+        </div>
+
+        <div id="sms-step-code" hidden>
+          <div class="note go">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            <div>Code texted to <b id="tfs-sent-to">087 123 4567</b>.</div>
+          </div>
+          <div class="field">
+            <label>Enter the code <span class="req">*</span></label>
+            <div class="otp" data-otp="tfs"></div>
+            <p class="err" id="tfs-otp-err">That code isn't right. Send a new one and try again.</p>
+          </div>
+          <button class="btn btn-go" id="tfs-verify">Turn on two-factor</button>
+          <p class="foot"><button class="back" style="margin:0" id="tfs-resend">Send a new code</button></p>
+        </div>
+      </section>
+
+      <!-- ─────────── RECOVERY CODES ─────────── -->
+      <section class="screen" data-screen="recovery">
+        <h1>Save your recovery codes</h1>
+        <p class="lede">Each code signs you in once if you lose your phone. Keep them somewhere safe — you won't see them again.</p>
+        <div class="codes" id="rec-codes"></div>
+        <div class="row" style="margin-bottom:18px">
+          <button class="btn btn-ghost btn-sm" id="rec-copy" style="width:100%">Copy codes</button>
+          <button class="btn btn-ghost btn-sm" id="rec-download" style="width:100%">Download .txt</button>
+        </div>
+        <label class="check" style="margin-bottom:18px"><input type="checkbox" id="rec-ack"> I've saved these codes somewhere safe.</label>
+        <button class="btn btn-go" id="rec-done" disabled>Finish setup</button>
+      </section>
+
+      <!-- ─────────── DONE ─────────── -->
+      <section class="screen" data-screen="done">
+        <div style="width:64px;height:64px;border-radius:18px;background:#EAF9F0;display:grid;place-items:center;margin-bottom:20px">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00A24A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <h1 id="done-title">You're all set</h1>
+        <p class="lede" id="done-lede">Your account is active. We've put your basket back the way you left it.</p>
+        <div class="cart">
+          <div class="cart-line"><span>Crucial P3 1TB NVMe SSD × 1</span><b>€64.99</b></div>
+          <div class="cart-line"><span>Laptop screen fitting (labour)</span><b>€45.00</b></div>
+          <div class="cart-line"><span>Delivery — An Post, next day</span><b>€6.50</b></div>
+          <div class="cart-line cart-total"><span>Total inc. VAT</span><b>€116.49</b></div>
+        </div>
+        <button class="btn btn-go" id="done-checkout">Continue to checkout</button>
+        <div class="stack" style="margin-top:12px">
+          <button class="btn btn-ghost" data-go="login">Back to sign in (restart prototype)</button>
+        </div>
+      </section>
+
+      <!-- ─────────── GUEST CHECKOUT ─────────── -->
+      <section class="screen" data-screen="guest">
+        <button class="back" data-go="login">← Back to sign in</button>
+        <h1>Check out as a guest</h1>
+        <p class="lede">No account needed. We'll email your receipt and a tracking link for the order.</p>
+
+        <div class="cart">
+          <div class="cart-line"><span>Crucial P3 1TB NVMe SSD × 1</span><b>€64.99</b></div>
+          <div class="cart-line"><span>Laptop screen fitting (labour)</span><b>€45.00</b></div>
+          <div class="cart-line cart-total"><span>Subtotal inc. VAT</span><b>€109.99</b></div>
+        </div>
+
+        <div class="field">
+          <label for="g-email">Email address <span class="req">*</span></label>
+          <input class="control" id="g-email" type="email" placeholder="you@example.ie">
+          <p class="hint">Receipt, VAT invoice and order updates go here.</p>
+          <p class="err" id="g-email-err">Enter a valid email address.</p>
+        </div>
+        <div class="field">
+          <label for="g-name">Full name <span class="req">*</span></label>
+          <input class="control" id="g-name" placeholder="Enter your full name">
+          <p class="err" id="g-name-err">Enter your full name.</p>
+        </div>
+        <div class="field">
+          <label for="g-phone">Mobile number <span class="req">*</span></label>
+          <input class="control" id="g-phone" type="tel" placeholder="087 123 4567">
+          <p class="err" id="g-phone-err">We need a number for the courier.</p>
+        </div>
+
+        <div class="field"><label>How do you want it?</label></div>
+        <div class="seg">
+          <label class="seg-opt">
+            <input type="radio" name="fulfil" value="deliver" checked>
+            <span class="seg-face"><span class="dot"></span><span><b>Delivery</b><span>An Post next day, €6.50</span></span></span>
+          </label>
+          <label class="seg-opt">
+            <input type="radio" name="fulfil" value="collect">
+            <span class="seg-face"><span class="dot"></span><span><b>Collect in store</b><span>Kilcock, free, ready today</span></span></span>
+          </label>
+        </div>
+
+        <div id="g-addr">
+          <div class="field">
+            <label for="g-street">Delivery address <span class="req">*</span></label>
+            <textarea class="control" id="g-street" placeholder="Street, town, county"></textarea>
+            <p class="err" id="g-street-err">Enter the delivery address.</p>
+          </div>
+          <div class="field">
+            <label for="g-eircode">Eircode</label>
+            <input class="control" id="g-eircode" placeholder="W23 XY12" style="text-transform:uppercase">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="check"><input type="checkbox" id="g-terms"> I agree to the <button type="button" class="linkish" data-doc="terms of sale">terms of sale</button>.</label>
+          <p class="err" id="g-terms-err">Tick the box to continue.</p>
+        </div>
+
+        <button class="btn btn-go" id="g-submit">Continue to payment</button>
+        <p class="foot">Want order history and faster checkout next time? <button type="button" class="linkish strong" data-go="signup">Create an account</button></p>
+      </section>
+
+      <!-- ─────────── GUEST: ORDER PLACED ─────────── -->
+      <section class="screen" data-screen="guest-done">
+        <div style="width:64px;height:64px;border-radius:18px;background:#EAF9F0;display:grid;place-items:center;margin-bottom:20px">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00A24A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <h1>Order FMP-24817 placed</h1>
+        <p class="lede">Receipt on its way to <b id="gd-email">you@example.ie</b>. Track it any time with the link in that email.</p>
+
+        <div class="note">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          <div>Set a password now and this order, plus any repair tickets under this email, moves into your account.</div>
+        </div>
+
+        <div class="field">
+          <label for="gd-pw">Create a password</label>
+          <div class="pw-wrap">
+            <input class="control" id="gd-pw" type="password" placeholder="At least 10 characters">
+            <button class="peek" type="button" data-peek="gd-pw" aria-label="Show password">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <p class="err" id="gd-pw-err">Use at least 10 characters.</p>
+        </div>
+        <button class="btn btn-go" id="gd-create">Save password and claim this order</button>
+        <div class="stack" style="margin-top:12px">
+          <button class="btn btn-ghost" data-go="login">No thanks, I'm done</button>
+        </div>
+      </section>
+
+      <div class="powered">Powered by <b style="color:var(--brand)">excytech</b></div>
+    </div>
+  </main>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<div class="proto">
+  <button class="proto-btn" id="proto-btn">Prototype screens</button>
+  <nav class="proto-menu" id="proto-menu">
+    <div class="cap">Sign in</div>
+    <button type="button" data-go="login">Password sign-in</button>
+    <button type="button" data-go="code">Email sign-in code</button>
+    <button type="button" data-go="forgot">Forgot password</button>
+    <div class="cap">Register</div>
+    <button type="button" data-go="signup">Choose account type</button>
+    <button type="button" data-go="register">Registration details</button>
+    <button type="button" data-go="activate">Email activation</button>
+    <div class="cap">Security</div>
+    <button type="button" data-go="twofa">Choose 2FA method</button>
+    <button type="button" data-go="twofa-app">Authenticator app</button>
+    <button type="button" data-go="twofa-sms">SMS codes</button>
+    <button type="button" data-go="recovery">Recovery codes</button>
+    <button type="button" data-go="done">Setup complete</button>
+    <div class="cap">Guest</div>
+    <button type="button" data-go="guest">Guest checkout</button>
+    <button type="button" data-go="guest-done">Order placed + claim</button>
+    <hr>
+    <button type="button" data-note="Open admin/shop_banners.html from the ZIP for the banner manager.">Admin → Shop banners</button>
+  </nav>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ══════════════════════════════════════════════════════════════════════
+     BANNER FEED
+     In production this is GET /shop/ajax.php?a=auth_banners — rows from
+     shop_banners where active=1, placement in ('auth','all') and today
+     falls inside starts_at/ends_at, ordered by sort_order.
+     The admin screen (admin/shop_banners.html) writes exactly this shape.
+     ══════════════════════════════════════════════════════════════════════ */
+  var BANNERS = [
+    { eyebrow:"August offer", title:"Free diagnostics on every laptop repair",
+      sub:"Drop in to Kilcock or post it to us. No fix, no fee — you only pay when you approve the quote.",
+      cta:"See repair prices", href:"#", theme:"dark", image:"" },
+    { eyebrow:"In stock now", title:"SSD upgrades fitted while you wait",
+      sub:"Crucial and Samsung NVMe drives from €54, with your data cloned across and Windows re-activated.",
+      cta:"Shop drives", href:"#", theme:"dark", image:"" },
+    { eyebrow:"Business accounts", title:"30-day credit, VAT invoices, one contact",
+      sub:"Managed IT and hardware supply for 90+ businesses across Kildare, Dublin and Wicklow.",
+      cta:"Open a business account", href:"/shop/auth#/signup", theme:"dark", image:"" }
+  ];
+
+  var stage = document.getElementById('stage'),
+      ticks = document.getElementById('ticks'),
+      slideIdx = 0, timer = null;
+
+  function buildStage(){
+    var frag = document.createDocumentFragment();
+    ticks.innerHTML = '';
+    BANNERS.forEach(function(b, i){
+      var s = document.createElement('div');
+      s.className = 'slide' + (b.theme === 'light' ? ' light' : '') + (i === 0 ? ' on' : '');
+      var media = b.image
+        ? '<div class="slide-media"><img src="' + b.image + '" alt=""></div><div class="slide-scrim"></div>'
+        : '<div class="ph"><div class="ph-grid"></div></div><div class="slide-scrim"></div>' +
+          '<div class="ph-note">Banner image slot · 1200 × 1600 · set in admin</div>';
+      s.innerHTML = media +
+        '<div class="slide-body">' +
+          (b.eyebrow ? '<span class="eyebrow">' + esc(b.eyebrow) + '</span>' : '') +
+          '<h2 class="slide-title">' + esc(b.title) + '</h2>' +
+          (b.sub ? '<p class="slide-sub">' + esc(b.sub) + '</p>' : '') +
+          (b.cta ? '<button class="slide-cta" data-href="' + esc(b.href || '#') + '">' + esc(b.cta) +
+                   ' <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>' : '') +
+        '</div>';
+      frag.appendChild(s);
+
+      var t = document.createElement('button');
+      t.className = 'tick' + (i === 0 ? ' on' : '');
+      t.setAttribute('aria-label', 'Show banner ' + (i + 1));
+      t.onclick = function(){ show(i); rearm(); };
+      ticks.appendChild(t);
+    });
+    stage.insertBefore(frag, ticks);
+  }
+
+  function show(i){
+    var slides = stage.querySelectorAll('.slide'), tk = ticks.querySelectorAll('.tick');
+    if (!slides.length) return;
+    slideIdx = (i + slides.length) % slides.length;
+    for (var n = 0; n < slides.length; n++){
+      slides[n].classList.toggle('on', n === slideIdx);
+      if (tk[n]) tk[n].classList.toggle('on', n === slideIdx);
+    }
+  }
+  function rearm(){ clearInterval(timer); timer = setInterval(function(){ show(slideIdx + 1); }, 7000); }
+
+  stage.addEventListener('click', function(e){
+    var b = e.target.closest('.slide-cta'); if (!b) return;
+    var href = b.getAttribute('data-href') || '';
+    var route = href.indexOf('#/') > -1 ? href.split('#/')[1] : '';
+    if (route && SCREENS[route]) go(route); else toast('Banner link: ' + href);
+  });
+
+  /* ══════════════ router ══════════════ */
+  var SCREENS = {};
+  [].forEach.call(document.querySelectorAll('.screen'), function(s){ SCREENS[s.getAttribute('data-screen')] = s; });
+
+  function go(name){
+    if (!SCREENS[name]) name = 'login';
+    for (var k in SCREENS) SCREENS[k].classList.toggle('on', k === name);
+    document.querySelector('.panel').scrollTop = 0;
+    window.scrollTo(0, 0);
+    var first = SCREENS[name].querySelector('.control, .otp input, .btn');
+    if (first && window.innerWidth > 980) { try { first.focus({preventScroll:true}); } catch(e){} }
+  }
+  document.addEventListener('click', function(e){
+    var el = e.target.closest('[data-go]'); if (!el) return;
+    e.preventDefault(); go(el.getAttribute('data-go'));
+  });
+
+  /* ══════════════ helpers ══════════════ */
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function $(id){ return document.getElementById(id); }
+  function val(id){ var e = $(id); return e ? e.value.trim() : ''; }
+  function isEmail(v){ return /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v); }
+  function isMobile(v){ return /^(\+?353|0)\s?8[3-9](\s?\d){7}$/.test(v.replace(/[-()]/g, '')); }
+  /* registration accepts any plausible mobile, Irish or not */
+  function isPhone(v){ var d = v.replace(/[^\d]/g, ''); return d.length >= 9 && d.length <= 15; }
+  function bad(id, on){
+    var f = $(id), e = $(id + '-err');
+    if (f) f.classList.toggle('bad', !!on);
+    if (e) e.classList.toggle('on', !!on);
+    return !on;
+  }
+  function toast(msg, kind){
+    var t = document.createElement('div');
+    t.className = 'toast' + (kind ? ' ' + kind : '');
+    t.textContent = msg;
+    $('toasts').appendChild(t);
+    setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity .3s'; }, 3200);
+    setTimeout(function(){ t.remove(); }, 3600);
+  }
+
+  /* terms / privacy stand-ins and menu notes */
+  document.addEventListener('click', function(e){
+    var d = e.target.closest('[data-doc]');
+    if (d){ e.preventDefault(); toast('Prototype: the ' + d.getAttribute('data-doc') + ' opens in a new tab on the live site.'); return; }
+    var n = e.target.closest('[data-note]');
+    if (n){ e.preventDefault(); toast(n.getAttribute('data-note')); }
+  });
+
+  /* password peek */
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-peek]'); if (!b) return;
+    var f = $(b.getAttribute('data-peek'));
+    f.type = f.type === 'password' ? 'text' : 'password';
+    b.setAttribute('aria-label', f.type === 'password' ? 'Show password' : 'Hide password');
+  });
+
+  /* ══════════════ OTP inputs ══════════════ */
+  function buildOtp(box){
+    var key = box.getAttribute('data-otp');
+    for (var i = 0; i < 6; i++){
+      var inp = document.createElement('input');
+      inp.type = 'text'; inp.inputMode = 'numeric'; inp.maxLength = 1; inp.autocomplete = i === 0 ? 'one-time-code' : 'off';
+      inp.setAttribute('aria-label', 'Digit ' + (i + 1));
+      box.appendChild(inp);
+    }
+    box.addEventListener('input', function(e){
+      var t = e.target; t.value = t.value.replace(/\D/g, '').slice(0, 1);
+      if (t.value && t.nextSibling) t.nextSibling.focus();
+      box.querySelectorAll('input').forEach(function(i){ i.classList.remove('bad'); });
+      var errEl = $(key + '-otp-err'); if (errEl) errEl.classList.remove('on');
+    });
+    box.addEventListener('keydown', function(e){
+      if (e.key === 'Backspace' && !e.target.value && e.target.previousSibling) e.target.previousSibling.focus();
+      if (e.key === 'ArrowLeft' && e.target.previousSibling) e.target.previousSibling.focus();
+      if (e.key === 'ArrowRight' && e.target.nextSibling) e.target.nextSibling.focus();
+    });
+    box.addEventListener('paste', function(e){
+      var d = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+      if (!d) return;
+      e.preventDefault();
+      var ins = box.querySelectorAll('input');
+      for (var i = 0; i < ins.length; i++) ins[i].value = d[i] || '';
+      ins[Math.min(d.length, 5)].focus();
+    });
+  }
+  [].forEach.call(document.querySelectorAll('[data-otp]'), buildOtp);
+
+  function otpValue(key){
+    var ins = document.querySelector('[data-otp="' + key + '"]').querySelectorAll('input'), s = '';
+    for (var i = 0; i < ins.length; i++) s += ins[i].value;
+    return s;
+  }
+  function otpClear(key){
+    var ins = document.querySelector('[data-otp="' + key + '"]').querySelectorAll('input');
+    for (var i = 0; i < ins.length; i++){ ins[i].value = ''; ins[i].classList.remove('bad'); }
+    ins[0].focus();
+  }
+  function otpFail(key){
+    var ins = document.querySelector('[data-otp="' + key + '"]').querySelectorAll('input');
+    for (var i = 0; i < ins.length; i++) ins[i].classList.add('bad');
+    var e = $(key + '-otp-err'); if (e) e.classList.add('on');
+  }
+  /* prototype rule: 6 digits pass, 000000 fails */
+  function otpOk(key){
+    var v = otpValue(key);
+    if (v.length !== 6 || v === '000000'){ otpFail(key); return false; }
+    return true;
+  }
+
+  function busy(btn, label, done){
+    var old = btn.textContent;
+    btn.disabled = true; btn.textContent = label;
+    setTimeout(function(){ btn.disabled = false; btn.textContent = old; done(); }, 650);
+  }
+
+  /* ══════════════ sign in ══════════════ */
+  $('li-submit').onclick = function(){
+    var ok = bad('li-email', !isEmail(val('li-email')));
+    ok = bad('li-pw', val('li-pw').length < 1) && ok;
+    if (!ok) return;
+    var btn = this;
+    busy(btn, 'Checking…', function(){
+      /* live: if the account has 2FA, this lands on a challenge screen instead */
+      $('done-title').textContent = 'Welcome back';
+      $('done-lede').textContent = 'Signed in. We put your basket back the way you left it.';
+      toast('Signed in as ' + val('li-email'), 'go');
+      go('done');
+    });
+  };
+
+  /* ══════════════ email code ══════════════ */
+  $('oc-send').onclick = function(){
+    if (!bad('oc-email', !isEmail(val('oc-email')))) return;
+    var btn = this;
+    busy(btn, 'Sending…', function(){
+      $('oc-sent-to').textContent = val('oc-email');
+      $('code-step-email').hidden = true;
+      $('code-step-otp').hidden = false;
+      otpClear('oc');
+      toast('Code sent to ' + val('oc-email'), 'go');
+    });
+  };
+  $('oc-resend').onclick = function(){ otpClear('oc'); toast('New code sent. The old one no longer works.'); };
+  $('oc-verify').onclick = function(){
+    if (!otpOk('oc')) return;
+    var btn = this;
+    busy(btn, 'Checking…', function(){
+      $('done-title').textContent = 'Welcome back';
+      $('done-lede').textContent = 'Signed in with an email code. We put your basket back the way you left it.';
+      go('done');
+    });
+  };
+
+  /* ══════════════ forgot ══════════════ */
+  $('fp-send').onclick = function(){
+    if (!bad('fp-email', !isEmail(val('fp-email')))) return;
+    var btn = this;
+    busy(btn, 'Sending…', function(){
+      toast('Reset link sent to ' + val('fp-email') + '. It expires in 60 minutes.', 'go');
+      go('login');
+    });
+  };
+
+  /* ══════════════ sign up ══════════════ */
+  var TYPES = {
+    personal:{
+      label:'Personal', tag:'Retail prices inc. VAT',
+      title:'Create your personal account',
+      lede:'Retail pricing inc. VAT, with your repair tickets and orders in one place.'
+    },
+    business:{
+      label:'Business', tag:'VAT invoices · PO references · credit on application',
+      title:'Create your business account',
+      lede:'We invoice your company, keep your PO references on file and can set up 30-day credit.'
+    },
+    trade:{
+      label:'Trade', tag:'Ex-VAT trade pricing · approved by a person',
+      title:'Apply for a trade account',
+      lede:'Tell us about the shop. Retail ordering works straight away; trade prices switch on once we approve you.'
+    }
+  };
+  var acctType = 'personal';
+
+  function setType(t){
+    if (!TYPES[t]) t = 'personal';
+    acctType = t;
+    $('blk-business').hidden = (t !== 'business');
+    $('blk-trade').hidden    = (t !== 'trade');
+    $('pref-trade-wrap').hidden = (t === 'personal');
+    $('reg-title').textContent = TYPES[t].title;
+    $('reg-lede').textContent  = TYPES[t].lede;
+    $('lbl-email').innerHTML = (t === 'personal' ? 'Email address' : 'Work email address') + ' <span class="req">*</span>';
+    $('hint-email').textContent = (t === 'personal')
+      ? 'We send your confirmation code here.'
+      : 'We send your confirmation code, invoices and order updates here.';
+    $('su-submit').textContent = (t === 'trade') ? 'Submit application' : 'Create account';
+    var c = $('chosen-type');
+    if (c) c.innerHTML = '<span><b>' + TYPES[t].label + ' account</b><small>' + TYPES[t].tag + '</small></span>' +
+      '<button type="button" data-go="signup">Change</button>';
+    clearErrors();
+  }
+  function clearErrors(){
+    [].forEach.call(document.querySelectorAll('[data-screen="register"] .err'), function(e){ e.classList.remove('on'); });
+    [].forEach.call(document.querySelectorAll('[data-screen="register"] .control'), function(e){ e.classList.remove('bad'); });
+  }
+
+  /* type chooser → details */
+  $('type-pick').addEventListener('click', function(e){
+    var card = e.target.closest('.type-card'); if (!card) return;
+    setType(card.getAttribute('data-type'));
+    go('register');
+  });
+
+  function strength(p){
+    var s = 0;
+    if (p.length >= 10) s++;
+    if (/[A-Z]/.test(p) && /[a-z]/.test(p)) s++;
+    if (/\d/.test(p)) s++;
+    if (/[^A-Za-z0-9]/.test(p) && p.length >= 12) s++;
+    return s;
+  }
+  $('su-pw').oninput = function(){
+    var s = strength(this.value);
+    $('su-meter').className = 'meter s' + s;
+    $('su-pw-hint').textContent = ['Use 10+ characters with a number and a capital letter.',
+      'Weak — add a capital letter and a number.', 'Getting there — add a number.',
+      'Good password.', 'Strong password.'][s];
+  };
+
+  function vatOk(v){ return /^IE\d{7}[A-W]{1,2}$/i.test(v.replace(/\s/g, '')); }
+
+  $('su-submit').onclick = function(){
+    var ok = bad('su-name', val('su-name').length < 2);
+    ok = bad('su-email', !isEmail(val('su-email'))) && ok;
+    ok = bad('su-phone', !isPhone(val('su-phone'))) && ok;
+    ok = bad('su-pw', val('su-pw').length < 10 || strength(val('su-pw')) < 3) && ok;
+    ok = bad('su-pw2', !val('su-pw2') || val('su-pw2') !== val('su-pw')) && ok;
+    ok = bad('su-terms', !$('su-terms').checked) && ok;
+
+    if (acctType === 'business'){
+      ok = bad('bz-company', val('bz-company').length < 2) && ok;
+      ok = bad('bz-sector', !val('bz-sector')) && ok;
+      ok = bad('bz-billing', val('bz-billing').length < 8) && ok;
+      ok = bad('bz-vat', val('bz-vat') !== '' && !vatOk(val('bz-vat'))) && ok;
+    }
+    if (acctType === 'trade'){
+      ok = bad('td-trading', val('td-trading').length < 2) && ok;
+      ok = bad('td-trade', !val('td-trade')) && ok;
+      ok = bad('td-vat', !vatOk(val('td-vat'))) && ok;
+      ok = bad('td-address', val('td-address').length < 8) && ok;
+      ok = bad('td-spend', !val('td-spend')) && ok;
+      ok = bad('td-resale', !$('td-resale').checked) && ok;
+    }
+
+    if (!ok){
+      toast('Check the highlighted fields.', 'bad');
+      var first = document.querySelector('[data-screen="register"] .err.on');
+      if (first) first.scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+
+    var btn = this;
+    busy(btn, acctType === 'trade' ? 'Submitting…' : 'Creating account…', function(){
+      $('act-email').textContent = val('su-email');
+      otpClear('act');
+      if (acctType === 'business' && $('bz-credit').checked) toast('Credit application queued for review.', 'go');
+      if (acctType === 'trade') toast('Trade application received — we review within one working day.', 'go');
+      go('activate');
+    });
+  };
+
+  /* ══════════════ activation ══════════════ */
+  $('act-resend').onclick = function(){ otpClear('act'); toast('New activation code sent.'); };
+  $('act-verify').onclick = function(){
+    if (!otpOk('act')) return;
+    var btn = this;
+    busy(btn, 'Confirming…', function(){ toast('Email confirmed.', 'go'); go('twofa'); });
+  };
+
+  /* ══════════════ 2FA ══════════════ */
+  $('tf-skip').onclick = function(){
+    $('done-title').textContent = 'Account ready';
+    $('done-lede').textContent = 'Two-factor is off — turn it on any time in Account → Security.' + tradeNote();
+    go('done');
+  };
+  function tradeNote(){
+    return acctType === 'trade'
+      ? ' Your trade application is with us; retail prices apply until it\'s approved.'
+      : '';
+  }
+
+  /* QR placeholder — deterministic pattern, replaced by a real otpauth:// QR live */
+  (function drawQr(){
+    var box = $('qr-box'), n = 21, cell = 152 / n, svg = '';
+    var seed = 7;
+    function rnd(){ seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+    for (var y = 0; y < n; y++) for (var x = 0; x < n; x++){
+      var finder = (x < 7 && y < 7) || (x > n - 8 && y < 7) || (x < 7 && y > n - 8);
+      var on = finder
+        ? !((x > 1 && x < 5 && (y === 1 || y === 5)) || (y > 1 && y < 5 && (x === 1 || x === 5)) ||
+            (x - (x < 7 ? 0 : n - 7) === 6) || (y - (y < 7 ? 0 : n - 7) === 6) ||
+            ((x % 7 === 6) || (y % 7 === 6)))
+        : rnd() > .52;
+      if (finder){
+        var lx = x < 7 ? x : x - (n - 7), ly = y < 7 ? y : y - (n - 7);
+        on = (lx === 0 || lx === 6 || ly === 0 || ly === 6) || (lx > 1 && lx < 5 && ly > 1 && ly < 5);
+      }
+      if (on) svg += '<rect x="' + (x * cell) + '" y="' + (y * cell) + '" width="' + cell + '" height="' + cell + '" fill="#16174A"/>';
+    }
+    box.innerHTML = '<svg viewBox="0 0 152 152" width="152" height="152" role="img" aria-label="Authenticator QR code">' + svg + '</svg>';
+  })();
+
+  $('tf-copy').onclick = function(){
+    var s = $('tf-secret').textContent.replace(/\s/g, '');
+    if (navigator.clipboard) navigator.clipboard.writeText(s);
+    toast('Setup key copied.', 'go');
+  };
+  $('tfa-verify').onclick = function(){
+    if (!otpOk('tfa')) return;
+    var btn = this;
+    busy(btn, 'Turning on…', function(){ method2fa = 'Authenticator app'; makeCodes(); go('recovery'); });
+  };
+
+  $('tfs-send').onclick = function(){
+    if (!bad('tfs-phone', !isMobile(val('tfs-phone')))) return;
+    var btn = this;
+    busy(btn, 'Texting…', function(){
+      $('tfs-sent-to').textContent = val('tfs-phone');
+      $('sms-step-num').hidden = true; $('sms-step-code').hidden = false;
+      otpClear('tfs'); toast('Code texted to ' + val('tfs-phone'), 'go');
+    });
+  };
+  $('tfs-resend').onclick = function(){ otpClear('tfs'); toast('New code texted.'); };
+  $('tfs-verify').onclick = function(){
+    if (!otpOk('tfs')) return;
+    var btn = this;
+    busy(btn, 'Turning on…', function(){ method2fa = 'SMS codes'; makeCodes(); go('recovery'); });
+  };
+
+  /* ══════════════ recovery codes ══════════════ */
+  var method2fa = 'Authenticator app', codes = [];
+  function makeCodes(){
+    codes = [];
+    var alph = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    for (var i = 0; i < 10; i++){
+      var a = '', b = '';
+      for (var j = 0; j < 4; j++) a += alph[Math.floor(Math.random() * alph.length)];
+      for (var k = 0; k < 4; k++) b += alph[Math.floor(Math.random() * alph.length)];
+      codes.push(a + '-' + b);
+    }
+    $('rec-codes').innerHTML = codes.map(function(c){ return '<span>' + c + '</span>'; }).join('');
+  }
+  $('rec-ack').onchange = function(){ $('rec-done').disabled = !this.checked; };
+  $('rec-copy').onclick = function(){
+    if (navigator.clipboard) navigator.clipboard.writeText(codes.join('\n'));
+    toast('Recovery codes copied.', 'go');
+  };
+  $('rec-download').onclick = function(){
+    var blob = new Blob(['FixMyPC Shop — recovery codes\n\n' + codes.join('\n') +
+      '\n\nEach code works once. Generated ' + new Date().toLocaleString('en-IE') + '\n'], {type:'text/plain'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'fixmypc-recovery-codes.txt'; a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+    toast('Codes downloaded.', 'go');
+  };
+  $('rec-done').onclick = function(){
+    $('done-title').textContent = 'Two-factor is on';
+    $('done-lede').textContent = method2fa + ' will be asked for at every sign-in.' + tradeNote() + ' Your basket is waiting.';
+    toast('Two-factor turned on — ' + method2fa, 'go');
+    go('done');
+  };
+
+  $('done-checkout').onclick = function(){ toast('Prototype: this returns to /shop/checkout.php'); };
+
+  /* ══════════════ guest checkout ══════════════ */
+  var fulfil = document.querySelectorAll('input[name="fulfil"]');
+  [].forEach.call(fulfil, function(r){
+    r.onchange = function(){ $('g-addr').hidden = (this.value === 'collect' && this.checked); };
+  });
+  $('g-submit').onclick = function(){
+    var collect = document.querySelector('input[name="fulfil"]:checked').value === 'collect';
+    var ok = bad('g-email', !isEmail(val('g-email')));
+    ok = bad('g-name', val('g-name').length < 2) && ok;
+    ok = bad('g-phone', val('g-phone').length < 7) && ok;
+    if (!collect) ok = bad('g-street', val('g-street').length < 8) && ok;
+    ok = bad('g-terms', !$('g-terms').checked) && ok;
+    if (!ok){ toast('Check the highlighted fields.', 'bad'); return; }
+    var btn = this;
+    busy(btn, 'Taking payment…', function(){
+      $('gd-email').textContent = val('g-email');
+      toast('Prototype: SumUp payment sheet would open here.', 'go');
+      go('guest-done');
+    });
+  };
+  $('gd-create').onclick = function(){
+    if (!bad('gd-pw', val('gd-pw').length < 10)) return;
+    var btn = this;
+    busy(btn, 'Saving…', function(){
+      setType('personal');
+      $('act-email').textContent = $('gd-email').textContent;
+      otpClear('act');
+      toast('Confirm your email to finish claiming the order.', 'go');
+      go('activate');
+    });
+  };
+
+  /* ══════════════ prototype menu ══════════════ */
+  $('proto-btn').onclick = function(e){ e.stopPropagation(); $('proto-menu').classList.toggle('on'); };
+  document.addEventListener('click', function(){ $('proto-menu').classList.remove('on'); });
+
+  /* ══════════════ boot ══════════════ */
+  buildStage(); rearm(); setType('personal');
+  go('login');
+})();
+</script>
+</body>
+</html>

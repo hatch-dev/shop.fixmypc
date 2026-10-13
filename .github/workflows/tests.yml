@@ -1,0 +1,104 @@
+# Runs the isolated PHPUnit suite on every push and pull request.
+#
+# The database is built from the committed files in database/testing by
+# `php artisan test:db`, the same command used locally, so CI needs no copy of
+# any real data. Only the Isolated suite runs here: tests/Feature and
+# tests/Unit still read the dev database and move onto the isolated one
+# module by module.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      mariadb:
+        # Matches the local XAMPP server (MariaDB 10.4).
+        image: mariadb:10.4
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      # Never created; test:db refuses to rebuild the app's own database, so
+      # the app and the test database must have different names.
+      DB_DATABASE: fixmypc_ci
+      DB_TEST_DATABASE: mrmobile_test
+      MAIL_MAILER: array
+      QUEUE_CONNECTION: sync
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql, mbstring, bcmath, gd, zip, intl, exif
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      # --no-scripts: composer.json's post-install-cmd runs `php artisan
+      # optimize`, which would cache config before .env exists and make every
+      # later step ignore the env vars above (MAIL_MAILER=array included).
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --no-progress --prefer-dist --no-scripts
+          php artisan package:discover --ansi
+
+      - name: Prepare the app
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          php artisan passport:keys --force
+
+      # tests/COVERAGE.md is generated from the routes, pages and tests. Fail if
+      # a change to any of them was committed without regenerating it, or if a
+      # new controller or page belongs to no module.
+      - name: Coverage checklist is up to date
+        run: |
+          php artisan test:inventory --check
+          git diff --exit-code -- tests/COVERAGE.md tests/coverage/inventory.json
+
+      - name: Build the test database
+        run: php artisan test:db
+
+      - name: Run the isolated suite
+        run: vendor/bin/phpunit --testsuite Isolated --log-junit storage/logs/junit.xml
+
+      - name: Keep the results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpunit-results
+          path: |
+            storage/logs/junit.xml
+            storage/logs/laravel.log
+          if-no-files-found: ignore

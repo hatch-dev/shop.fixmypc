@@ -113,6 +113,39 @@ class RolePermissionSeeder extends Seeder
                 ]
             ],
             [
+                'group_name' => 'clearance',
+                'permissions'=> [
+                    'clearance.view',
+                    'clearance.create',
+                    'clearance.edit',
+                    'clearance.delete'
+                ]
+            ],
+            [
+                /*
+                 * Procurement -> Suppliers. Superadmin only by intent: a
+                 * supplier is matched to order lines by category across
+                 * every vendor's products, so it is a shop-wide list, not a
+                 * per-vendor one.
+                 */
+                'group_name' => 'supplier',
+                'permissions'=> [
+                    'supplier.view',
+                    'supplier.create',
+                    'supplier.edit',
+                    'supplier.delete'
+                ]
+            ],
+            [
+                'group_name' => 'upsell',
+                'permissions'=> [
+                    'upsell.view',
+                    'upsell.create',
+                    'upsell.edit',
+                    'upsell.delete'
+                ]
+            ],
+            [
                 'group_name' => 'voucher',
                 'permissions'=> [
                     'voucher.view',
@@ -137,6 +170,21 @@ class RolePermissionSeeder extends Seeder
                     'flash_sale.create',
                     'flash_sale.edit',
                     'flash_sale.delete'
+                ]
+            ],
+            /*
+             * The store-wide basket discount, not the per-product flash sale
+             * above. Its admin screen ships with gate: 'flash_discount' and
+             * nothing here ever created the permission, so the menu entry was
+             * invisible on any installation not patched by hand.
+             */
+            [
+                'group_name' => 'flash_discount',
+                'permissions'=> [
+                    'flash_discount.view',
+                    'flash_discount.create',
+                    'flash_discount.edit',
+                    'flash_discount.delete'
                 ]
             ],
             [
@@ -280,6 +328,15 @@ class RolePermissionSeeder extends Seeder
                 ]
             ],
             [
+                'group_name' => 'loyalty_group',
+                'permissions'=> [
+                    'loyalty_group.view',
+                    'loyalty_group.create',
+                    'loyalty_group.edit',
+                    'loyalty_group.delete'
+                ]
+            ],
+            [
                 'group_name' => 'withdrawal_request',
                 'permissions'=> [
                     'withdrawal_request.view',
@@ -319,9 +376,15 @@ class RolePermissionSeeder extends Seeder
                     $groupName != 'page' &&
                     $groupName != 'banner' &&
                     $groupName != 'user' &&
+                    // Loyalty groups are store-wide customer segments, so they
+                    // follow 'user' and 'voucher': superadmin only.
+                    $groupName != 'loyalty_group' &&
                     $groupName != 'subscription_email_format' &&
                     $groupName != 'subscriber' &&
                     $groupName != 'flash_sale' &&
+                    // A store-wide basket discount belongs to the store, not
+                    // to a seller, so vendors never receive it.
+                    $groupName != 'flash_discount' &&
                     $groupName != 'product_collection' &&
                     $groupName != 'shipping_rule' &&
                     $groupName != 'message' &&

@@ -1,0 +1,45 @@
+/* ==========================================================================
+   Mobile chrome — clearance and stacking for the bottom tab bar.
+   The bar itself lives in components/MobileTabBar.vue (fixed, z-index 45,
+   64px tall plus the safe area inset).
+   ========================================================================== */
+
+@media only screen and (max-width: 991px)
+  /* nothing should end up underneath the tab bar - this covers the footer,
+     long pages and any sticky page furniture */
+  body
+    padding-bottom calc(64px + env(safe-area-inset-bottom))
+
+  /* the product page's add-to-cart bar stacks directly on top of the tabs */
+  .sticky-cart-wrap
+    bottom calc(64px + env(safe-area-inset-bottom))
+    z-index 46
+
+  /* ...so while it is on screen the page has to clear both bars, not just the
+     tabs. body.show-cart is set by the product page's IntersectionObserver
+     and is the only time the dock is visible, so the extra 62px of clearance
+     comes and goes with it. Without this the last stretch of the page - the
+     footer's link columns - sits under the dock and cannot be reached. */
+  body.show-cart
+    padding-bottom calc(126px + env(safe-area-inset-bottom))
+
+  /* the cookie notice must clear the bar too */
+  .cookie-banner
+    bottom calc(74px + env(safe-area-inset-bottom)) !important
+
+/* ==========================================================================
+   Phone: the basket's fixed bottom summary (components/CheckoutRight.vue,
+   `mobile-bar`). It sits on top of the tab bar, so the page has to clear
+   both. Its height is not a constant - the loyalty nudge strip comes and
+   goes, and the device's own text size moves it - so the component measures
+   itself into --mobile-summary-h and this adds the tab bar's 64px to it.
+
+   The fallback in the var() is only for the frame before the first
+   measurement lands; after that the real figure is always there.
+   ========================================================================== */
+@media only screen and (max-width: 767px)
+  body.has-mobile-summary
+    padding-bottom calc(64px + var(--mobile-summary-h, 118px) + env(safe-area-inset-bottom))
+
+  body.has-mobile-summary .cookie-banner
+    bottom calc(74px + var(--mobile-summary-h, 118px) + env(safe-area-inset-bottom)) !important

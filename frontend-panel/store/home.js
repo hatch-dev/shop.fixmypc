@@ -50,7 +50,16 @@ const actions = {
     commit('common/SET_LOADING', true, {root: true})
 
     try {
-      const {data} = await Service.home(payload, lang)
+      const token =
+        this.$auth?.strategy?.token?.get()
+
+        console.log("Token in home store: ", token)
+
+      const { data } = await Service.home(
+        payload,
+        lang,
+        token
+      )
 
       if(data?.status){
 

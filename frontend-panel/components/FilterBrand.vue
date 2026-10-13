@@ -1,13 +1,20 @@
 <template>
-  <div class="sidebar-section mt-xs">
-    <h4 class="title mb-xs-5">
-      {{ $t('listingLayout.brands') }}
-    </h4>
-    <div class="collapsible" :class="{expanded: brandExpanded}">
+  <div class="side-block" v-if="brands && brands.length">
+    <h3>{{ $t('listingLayout.brands') }}</h3>
+
+    <input
+      class="brand-search"
+      type="text"
+      v-model="brandQuery"
+      :placeholder="$t('header.searchHere')"
+      :aria-label="$t('listingLayout.brands')"
+    >
+
+    <div class="scroll-list">
       <label
-        class="block mtb-10"
-        v-for="(value, key) in brands"
-        :key="key"
+        class="f-row"
+        v-for="value in filteredBrands"
+        :key="value.id"
         :for="`brand-${value.id}`"
       >
         <input
@@ -20,14 +27,11 @@
         >
         {{ value.title }}
       </label>
+
+      <p v-if="!filteredBrands.length" class="no-match">
+        {{ $t('listingLayout.noProductFound') }}
+      </p>
     </div>
-    <!-- <button
-      aria-label="Show/Hide"
-      @click.prevent="brandExpanded =! brandExpanded"
-      class="link mt-15"
-    >
-      {{ brandExpanded ? $t('filter.hideAll') : $t('featured.showAll') }}
-    </button> -->
   </div>
 </template>
 
@@ -48,6 +52,7 @@
         return {
           brand: [],
           brandExpanded: false,
+          brandQuery: '',
         }
       },
       components: {
@@ -55,7 +60,15 @@
       },
       mixins: [],
       computed: {
-
+        // Client side narrowing of the brand list that already came with the
+        // listing payload — no extra request is made.
+        filteredBrands() {
+          const query = this.brandQuery.trim().toLowerCase()
+          if (!query) {
+            return this.brands || []
+          }
+          return (this.brands || []).filter(value => `${value.title || ''}`.toLowerCase().includes(query))
+        },
       },
       mounted() {
         if (this.$route.query.brand) {
@@ -79,12 +92,5 @@
 </script>
 
 <style scoped>
-.collapsible {
-  margin-left: -10px;
-  max-height: 200px;
-  overflow: hidden;
-  padding-left: 10px;
-  transition: all .2s;
-  overflow-y: auto;
-}
+
 </style>

@@ -1,23 +1,46 @@
-<div style="max-width: 600px; ">
-    {{__('lang.hello', [], $lang)}} <i>{{ $data->receiver }}</i>,
-    <h1>{{__('lang.almost_there', [], $lang)}}</h1>
-    <h4>{{__('lang.created_account', [], $lang)}}</h4>
-    <p>{{__('lang.verify_email', [], $lang)}}</p>
-    <p>{{__('lang.code_below', [], $lang)}}</p>
+@extends('mail_templates.layout.base')
 
-    <p>
-        <span style="background: #39AEA4; padding: 10px 30px; margin: 20px 0; display: inline-block;
-                        border-radius: 100px; font-size: 20px; color: #fff; letter-spacing: 1px;">
-            <b>{{ $data->code }}</b>
-        </span>
+@php
+    use App\Models\Helper\MailBrand;
+    $brand = isset($brand) ? $brand : MailBrand::make($data->receiver, isset($lang) ? $lang : null);
+    $lang = isset($lang) ? $lang : null;
+@endphp
+
+@section('title', __('lang.mail_verify_title', [], $lang))
+
+@section('preheader')
+    {{ __('lang.mail_verification_code', [], $lang) }}: {{ $data->code }}
+@endsection
+
+@section('hero')
+    @include('mail_templates.partials.hero', [
+        'brand'    => $brand,
+        'art'      => 'hero-verify.png',
+        'eyebrow'  => __('lang.mail_welcome_eyebrow', [], $lang),
+        'title'    => __('lang.mail_verify_title', [], $lang),
+        'subtitle' => __('lang.mail_verify_sub', [], $lang),
+    ])
+@endsection
+
+@section('content')
+    <p style="margin:0 0 8px 0; font-size:16px; line-height:26px; font-weight:bold; color:{{ $brand->ink }};" class="ink">
+        {{ __('lang.hello', [], $lang) }}@if($brand->receiver_first) {{ $brand->receiver_first }}@endif,
     </p>
-    {{__('lang.thank_you', [], $lang)}}
 
-    <h3>{{ $data->store_name  }}</h3>
+    <p class="muted" style="margin:0 0 22px 0; font-size:16px; line-height:26px; color:{{ $brand->muted }};">
+        {{ __('lang.mail_verify_body', [], $lang) }}
+    </p>
 
-    <div style="margin-top: 20px; border-top: 1px solid #eee;">
-        <p>{{ $data->address }}</p>
-        <p>{{__('lang.phone', [], $lang)}}: <a href="tel:{{ $data->phone}}">{{ $data->phone}}</a></p>
-    </div>
+    @include('mail_templates.partials.code', [
+        'brand'   => $brand,
+        'code'    => $data->code,
+        'minutes' => isset($data->expires_in_minutes) ? $data->expires_in_minutes : null,
+        'lang'    => $lang,
+    ])
 
-</div>
+    @include('mail_templates.partials.note', [
+        'brand' => $brand,
+        'icon'  => 'icon-shield.png',
+        'text'  => __('lang.mail_ignore_registration', [], $lang),
+    ])
+@endsection

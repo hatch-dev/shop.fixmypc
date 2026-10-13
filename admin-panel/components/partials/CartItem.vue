@@ -73,14 +73,15 @@
               >
               <span class="rd-checkmark"></span>
               {{ $t('ship.fl') }}
-              (<span v-if="isFreeShipping" class="color-free">{{ $t('invent.fre') }}</span>
-              <price-format
-                v-else
-                :price="parseFloat(currentShipRule.price)"
-              />)
+              <template v-if="isDelivery">
+                (<span v-if="isFreeShipping" class="color-free">{{ $t('invent.fre') }}</span>
+                <price-format
+                  v-else
+                  :price="parseFloat(currentShipRule.price)"
+                />)
+              </template>
             </label>
             <label
-              v-if="parseInt(currentShipRule.pickup_point) === 1"
               class="cp rd-container color-lite"
             >
               <input
@@ -93,11 +94,13 @@
               >
               <span class="rd-checkmark"></span>
               {{ $t('ship.fpp') }}
-              (<span v-if="isFreePickup" class="color-free">{{ $t('invent.fre') }}</span>
-              <price-format
-                v-else
-                :price="parseFloat(currentShipRule.pickup_price)"
-              />)
+              <template v-if="!isDelivery">
+                (<span v-if="isFreePickup" class="color-free">{{ $t('invent.fre') }}</span>
+                <price-format
+                  v-else
+                  :price="parseFloat(currentShipRule.pickup_price)"
+                />)
+              </template>
             </label>
           </div>
         </template>
@@ -193,33 +196,18 @@
       shippingOption() {
         return this.cartWithShipping[this.cartItem?.id]?.shipping_option
       },
+      /*
+       * The row the server decided for this basket from the customer's
+       * address (CartsController::updateShipping), or the collection point.
+       * Products no longer carry a rule, so there is nothing to match here;
+       * a price is shown only for the option currently chosen, since the
+       * row that answers the other one may be a different row.
+       */
       currentShipRule() {
-        let matched = null
-        if (this.selectedShipping) {
-
-          this.product?.shipping_rule?.shipping_places.forEach((obj) => {
-            if (obj.country === this.selectedShipping.country) {
-              if (obj.state === this.selectedShipping.state) {
-                matched = obj
-                return
-              } else if (obj.state === 'ALL') {
-
-                matched = obj
-              }
-            } else if (obj.country === 'ALL') {
-              if (!matched) {
-                matched = obj
-              }
-            }
-          })
-        }
-
-        if(matched && !matched?.shipping_rule){
-          matched = {...matched, ...{shipping_rule: this.product?.shipping_rule}}
-        }
-
-
-        return matched
+        return this.cartWithShipping[this.cartId]?.shipping_place || this.cartItem?.shipping_place || null
+      },
+      isDelivery() {
+        return parseInt(this.cartWithShipping[this.cartId]?.shipping_type) !== this.shippingTypeIn.pickup
       },
       productQuantity() {
         return parseInt(this.cartItem?.quantity)
@@ -244,12 +232,11 @@
     methods: {
       async updateCartShipping(){
 
-        Object.keys(this.cartWithShipping).forEach(i => {
-          const curr = this.cartWithShipping[i]
+        // One choice for the whole basket: every line follows this one.
+        const type = this.cartWithShipping[this.cartItem.id].shipping_type
 
-          if(curr.shipping_rule === this.cartWithShipping[this.cartItem.id].shipping_rule && !curr.shipping_option){
-            this.cartWithShipping[i].shipping_type = this.cartWithShipping[this.cartItem.id].shipping_type
-          }
+        Object.keys(this.cartWithShipping).forEach(i => {
+          this.cartWithShipping[i].shipping_type = type
         })
 
         const data = await this.setRequest({
@@ -259,7 +246,10 @@
           api: 'updateShipping'
         })
 
-        this.$emit('shipping-changed', data)
+        // A refusal resolves with nothing; ErrorFormatter shows why.
+        if (Array.isArray(data)) {
+          this.$emit('shipping-changed', data)
+        }
       },
       async qtyChanged(evt){
         const direction = evt - this.quantity

@@ -64,6 +64,8 @@ class WithdrawalsController extends ControllerHelper
             })->join('orders as o', function ($join) {
                 $join->on('o.id', '=', 'ordered_products.order_id');
                 $join->where('o.payment_done', true);
+                // A deleted order owes the vendor nothing.
+                $join->whereNull('o.deleted_at');
             });
 
             $ordered = $ordered->where('withdrawn', Config::get('constants.withdrawn.NO'));

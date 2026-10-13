@@ -1,0 +1,70 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Models\Helper\BasketUpkeep;
+use App\Models\Helper\CartHold;
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+
+/**
+ * cart.hold - after a basket request, make the basket's reserved stock match
+ * what is now in it (App\Models\Helper\CartHold::reconcile). One place for
+ * every endpoint that changes a basket: add, quantity, variant switch,
+ * bundle, cross-sell, save for later, delete.
+ *
+ * cart.hold:sweep - on any API request, run the basket sweep (BasketUpkeep) at most
+ * once a minute, after the response has gone. A backup for the scheduled
+ * command on a host whose cron may not be ticking.
+ */
+class ReconcileCartHold
+{
+    /**
+     * Modes: reconcile (the basket routes) and checkout (placing an order,
+     * authorising a card, the guest email-code steps) both
+     *
+     *   - first empty the basket if its 20 minutes have lapsed, so a lapsed
+     *     basket is never priced, shipped or paid for - whether or not the
+     *     sweep has reached it yet;
+     *   - then count the request as activity, restarting the 20 minutes: a
+     *     shopper working through checkout is not idle;
+     *   - and, after a request that changed something, make the reserved
+     *     stock match the basket.
+     *
+     * sweep (the whole api group) only runs the once-a-minute sweep below.
+     */
+    public function handle(Request $request, Closure $next, $mode = 'reconcile')
+    {
+        $owner = $mode === 'sweep' ? null : CartHold::ownerFromRequest($request);
+
+        if ($owner) {
+            try {
+                CartHold::expireIfLapsed($owner[0], $owner[1]);
+                CartHold::touch($owner[0], $owner[1]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Basket activity check failed', ['message' => $e->getMessage()]);
+            }
+        }
+
+        $response = $next($request);
+
+        if ($owner && !$request->isMethod('GET')) {
+            CartHold::reconcile($owner[0], $owner[1]);
+        }
+
+        return $response;
+    }
+
+    public function terminate(Request $request, $response)
+    {
+        try {
+            if (Cache::add('cart-hold-sweep', 1, 60)) {
+                // Reservations (remind at 5, empty at 20) and abandoned Buy Now lines.
+                BasketUpkeep::sweep();
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Cart hold sweep failed', ['message' => $e->getMessage()]);
+        }
+    }
+}

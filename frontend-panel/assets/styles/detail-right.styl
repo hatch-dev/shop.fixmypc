@@ -105,3 +105,33 @@
           border 0
           border-top 1px solid #ddd
           border-radius 0
+
+// ==================== VAT LABELS ====================
+// The headline price says which side of VAT it sits on, with the same figure
+// the other way round underneath. Both come from the server's quote for the
+// quantity on screen; this page never divides by a rate.
+.detail-right .price-vat
+  display flex
+  align-items baseline
+  flex-wrap wrap
+  gap 4px 10px
+  margin -2px 0 10px
+
+.detail-right .price-vat-side
+  font-size 12px
+  font-weight 600
+  letter-spacing .02em
+  text-transform uppercase
+  color #737987
+
+.detail-right .price-vat-alt
+  display flex
+  align-items baseline
+  gap 4px
+  flex-wrap wrap
+  font-size 13px
+  color #737987
+
+.detail-right .price-vat-amount
+  font-size 12px
+  color #8a8fa3

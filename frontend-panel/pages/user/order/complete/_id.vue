@@ -1,15 +1,95 @@
 <template>
     <div class="bank-payment-page">
         <div class="container-fluid my-4">
-            <div class="main-card">
+
+            <!--
+                The order is fetched on mount, so the card used to draw itself
+                against an empty object first: no order number, no address,
+                "N/A" against every figure. That reads as a broken order rather
+                than one still on its way.
+            -->
+            <div v-if="fetching" class="order-skeleton">
+                <skeleton-base :height="64" :width="64" circle class="order-skeleton-badge" />
+                <skeleton-base :height="24" width="260px" :mb="12" />
+                <skeleton-base :height="14" width="340px" :mb="28" />
+                <skeleton-card :image="false" :lines="4" />
+                <skeleton-card class="order-skeleton-gap" :image="false" :lines="3" />
+            </div>
+
+            <!--
+                An id in the URL is not proof the order exists, nor that it
+                belongs to whoever is looking. The API answers a missing order
+                with "No order found." and someone else's with "Not your
+                order." - both were swallowed here, so the success card drew
+                itself against an empty object: a "Payment Successful" heading
+                over a blank order number, a blank date and "Not Paid". Anyone
+                editing the id in the address bar got a confirmation for an
+                order that does not exist.
+            -->
+            <div v-else-if="loadFailed" class="order-loading">
+                <div class="order-error-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <h5 class="order-error-title">{{ errorTitle }}</h5>
+                <p class="order-loading-failed">{{ errorMessage }}</p>
+                <button class="btn manage-btn" @click="$router.push('/user/orders')">
+                    My Orders
+                </button>
+            </div>
+
+            <div v-else class="main-card">
 
                 <!-- Success -->
                 <div class="text-center mb-4">
                     <div class="success-icon">
-                        <img :src="successImg" class="complete-order-image" alt="Payment Success">
+                        <img
+                            :src="successImg"
+                            class="complete-order-image"
+                            :alt="isPaid ? 'Payment successful' : 'Order placed successfully'"
+                        >
                     </div>
-                    <h5 class="mt-3 order-placed">Order placed! Thank you for your payment</h5>
-                    <p class="small-text-thanku">Thank you for choosing Financy.com, once the payment is released to us we will ship your order and email you a tracking number.</p>
+                    <!--
+                        Was: "Thank you for your payment ... Thank you for
+                        choosing Financy.com ... we will ship your order and
+                        email you a tracking number." Three things wrong with
+                        that on this order: nothing has been paid on a cash or
+                        bank order, Financy.com is not this shop, and a
+                        collection order is never shipped anywhere.
+                    -->
+                    <!--
+                        The heading follows payment_done, not the existence of
+                        an order. Cash on a collection order and bank transfer
+                        are both placed long before any money moves, and
+                        "Payment successful" over one of those tells the
+                        shopper they have paid when they have not - the page
+                        contradicted its own "Not Paid" status a few lines
+                        further down.
+                    -->
+                    <h5 class="mt-3 order-placed">
+                        <template v-if="isPaid">Payment successful</template>
+                        <template v-else>Order placed successfully</template>
+                    </h5>
+                    <p class="small-text-thanku">
+                        Thank you for choosing {{ storeName }}.
+                        <template v-if="isCollection">
+                            We'll email you as soon as it's ready to collect.
+                            <!-- Cash is only offered on collection orders, so
+                                 this is the one case where the shopper pays
+                                 over the counter. Saying so is the difference
+                                 between "Not Paid" reading as a problem and
+                                 reading as the arrangement. -->
+                            <template v-if="isCash && !isPaid">
+                                You'll pay in store when you collect.
+                            </template>
+                        </template>
+                        <template v-else-if="isPaid">
+                            We'll email you a tracking number the moment it ships.
+                        </template>
+                        <template v-else>
+                            Once payment reaches us we'll ship your order and email
+                            you a tracking number.
+                        </template>
+                    </p>
                 </div>
 
                 <!-- Order Box -->
@@ -17,58 +97,174 @@
                     <div class="small-text-order">
                         <strong>Order No:</strong> #{{ order?.order }}<br>
                         <strong>Order Date:</strong> {{ order?.created }}<br>
+                        <!--
+                            The customer's finance department will not pay an
+                            invoice that does not quote this, so the reference
+                            they typed at checkout belongs beside the order
+                            number rather than nowhere at all.
+                        -->
+                        <template v-if="order?.purchase_order_number">
+                            <strong>PO Number:</strong> {{ order.purchase_order_number }}<br>
+                        </template>
                     </div>
-                    <button class="btn manage-btn" @click="$router.push(`/user/order/${order?.id}`)">Manage Order</button>
+                    <button
+                        v-if="isGuestOrder"
+                        class="btn manage-btn"
+                        @click="$router.push({ path: '/track-order', query: { order_id: order?.order } })"
+                    >
+                        Track Order
+                    </button>
+                    <button
+                        v-else
+                        class="btn manage-btn"
+                        @click="$router.push(`/user/order/${order?.id}`)"
+                    >
+                        Manage Order
+                    </button>
+                </div>
+
+                <!--
+                    A guest confirmed their email before paying, so the order
+                    opened an account on that address and put this order in it.
+                    The password is in their inbox and nowhere else, which is
+                    the one thing worth saying here.
+                -->
+                <div
+                    v-if="isGuestOrder"
+                    class="claim-box mb-4"
+                >
+                    <div class="claim-copy">
+                        <div class="claim-title">Your account is ready</div>
+                        <p class="claim-sub mb-0">
+                            We've set up an account on
+                            <strong>{{ guestEmail || 'your email address' }}</strong>
+                            and put this order in it. Your sign-in password is in
+                            that inbox &mdash; change it to something of your own
+                            once you're in.
+                        </p>
+                    </div>
+                    <button
+                        class="btn manage-btn claim-btn"
+                        @click="goToSignIn"
+                    >
+                        Sign in
+                    </button>
+                </div>
+
+                <!--
+                    The account this order was placed by, as it stood at the
+                    time. Every field is read off the order, never off the
+                    customer's live profile: a company that is renamed, a VAT
+                    number that is corrected or a trade approval that is later
+                    withdrawn must not rewrite a receipt that has already been
+                    sent.
+                -->
+                <div v-if="isBusinessOrder" class="account-box mb-4">
+                    <div class="section-title-billing">Account</div>
+                    <ul class="account-facts">
+                        <li>
+                            <span class="fact-label">Account Type</span>
+                            <span class="fact-value">{{ accountTypeLabel }}</span>
+                        </li>
+                        <li v-if="order?.company_name">
+                            <span class="fact-label">Company</span>
+                            <span class="fact-value">{{ order.company_name }}</span>
+                        </li>
+                        <li v-if="order?.vat_number">
+                            <span class="fact-label">VAT Number</span>
+                            <span class="fact-value">{{ order.vat_number }}</span>
+                        </li>
+                        <li v-if="order?.cro_number">
+                            <span class="fact-label">Company Reg. No.</span>
+                            <span class="fact-value">{{ order.cro_number }}</span>
+                        </li>
+                        <li v-if="order?.purchase_order_number">
+                            <span class="fact-label">PO Number</span>
+                            <span class="fact-value">{{ order.purchase_order_number }}</span>
+                        </li>
+                    </ul>
                 </div>
 
                 <!-- Address -->
                 <div class="row mb-4 mt-5">
                     <div class="col-md-6">
-                        <div class="section-title-billing">Billing Address</div>
-                    <ul class="billing-address">
-                        <li>{{ order?.address?.name }}</li>
-                        <li>
-                            {{ [
-                                order?.address?.address_1,
-                                order?.address?.address_2
-                            ].filter(Boolean).join(', ') }}
-                        </li>
-                        <li>
-                            {{ order?.address?.city }},
-                            {{ order?.address?.state }} -
-                            {{ order?.address?.zip }}
-                        </li>
 
-                        <li>{{ order?.address?.country }}</li>
+                        <!--
+                            A collection order has no address on it - nothing is
+                            being posted - so the address block rendered six
+                            empty lines under a "Billing Address" heading. The
+                            contact details captured at checkout are what the
+                            store actually holds for that order, so they are
+                            what is shown.
+                        -->
+                        <template v-if="isCollection">
+                            <div class="section-title-billing">Contact Details</div>
+                            <ul class="billing-address">
+                                <li>{{ contact.name }}</li>
+                                <li v-if="contact.phone">{{ contact.phone }}</li>
+                                <li v-if="contact.email">{{ contact.email }}</li>
+                            </ul>
+                        </template>
 
-                        <li>{{ order?.address?.phone }}</li>
+                        <template v-else>
+                            <div class="section-title-billing">Billing Address</div>
+                            <ul class="billing-address">
+                                <li>{{ order?.address?.name }}</li>
+                                <li>
+                                    {{ [
+                                        order?.address?.address_1,
+                                        order?.address?.address_2
+                                    ].filter(Boolean).join(', ') }}
+                                </li>
+                                <li>
+                                    {{ order?.address?.city }},
+                                    {{ order?.address?.state }} -
+                                    {{ order?.address?.zip }}
+                                </li>
 
-                        <li>{{ order?.address?.email }}</li>
-                    </ul>
+                                <li>{{ order?.address?.country }}</li>
+
+                                <li>{{ order?.address?.phone }}</li>
+
+                                <li>{{ order?.address?.email }}</li>
+                            </ul>
+                        </template>
                     </div>
 
                     <div class="col-md-6">
-                        <div class="section-title-billing"">Shipping Address</div>
+                        <!--
+                            The same pickup address was headed "Shipping
+                            Address" either way, and always promised delivery in
+                            N days - on a collection order that is the store the
+                            customer is coming to, and nothing is being
+                            delivered at all.
+                        -->
+                        <div class="section-title-billing">
+                            {{ isCollection ? 'Collect From' : 'Shipping Address' }}
+                        </div>
                         <ul class="billing-address">
                             <li>
                                 {{ [
-                                order?.ordered_products?.[0]?.shipping_place?.pickup_address_line_1,
-                                order?.ordered_products?.[0]?.shipping_place?.pickup_address_line_2
+                                shippingPlace?.pickup_address_line_1,
+                                shippingPlace?.pickup_address_line_2
                                 ].filter(Boolean).join(', ') }}
                             </li>
 
                             <li>
-                                {{ order?.ordered_products?.[0]?.shipping_place?.pickup_city }}
-                                , {{ order?.ordered_products?.[0]?.shipping_place?.pickup_state }}
-                                - {{ order?.ordered_products?.[0]?.shipping_place?.pickup_zip }}
+                                {{ shippingPlace?.pickup_city }}
+                                , {{ shippingPlace?.pickup_state }}
+                                - {{ shippingPlace?.pickup_zip }}
                             </li>
 
-                            <li>{{ order?.ordered_products?.[0]?.shipping_place?.pickup_country }}</li>
+                            <li>{{ shippingPlace?.pickup_country }}</li>
 
-                            <li>{{ order?.ordered_products?.[0]?.shipping_place?.pickup_phone }}</li>
+                            <li>{{ shippingPlace?.pickup_phone }}</li>
 
-                            <li>
-                                Delivery in {{ order?.ordered_products?.[0]?.shipping_place?.day_needed }} days
+                            <li v-if="isCollection">
+                                We'll email you when it's ready to collect
+                            </li>
+                            <li v-else-if="shippingPlace?.day_needed">
+                                Delivery in {{ shippingPlace.day_needed }} days
                             </li>
                         </ul>
                     </div>
@@ -78,8 +274,15 @@
                 <div class="row mb-4 payment-info">
                     <div class="col-md-6 small-text">
                         <div class="section-title-billing">Payment Information</div>
+                    <!--
+                        The order's own total, the same figure the summary
+                        below prints. This read `calculated.total_price` while
+                        the summary read `calculations.total` - two separately
+                        computed numbers on one screen, which is exactly the
+                        kind of disagreement this page exists to rule out.
+                    -->
                     <div class="d-flex gap-2">
-                        <h6>Payment Amount:</h6> <span class="text-success fw-bold"> €{{ Number(order?.calculated?.total_price || 0).toFixed(2) }}</span>
+                        <h6>Payment Amount:</h6> <span class="text-success fw-bold"> {{ money(order?.calculations?.total) }}</span>
                     </div>
                     <div class="d-flex gap-2 mt-2">
                         <h6>Payment Method:</h6>   <span class="payment-method"><i :class="['fa-solid', paymentMethodIcon, 'me-1']"></i>{{ paymentMethodLabel }}</span>
@@ -93,7 +296,7 @@
                         }">{{ paymentStatusLabel }}</span><br>
                     </div>
                         <div class="mt-3">
-                        <h6> Payment Transaction ID: </h6><strong class="payment-id"> {{ order?.transaction_id || 'N/A' }}</strong><br>
+                        <h6> Payment Transaction ID: </h6><strong class="payment-id"> {{ order?.trans_id || 'N/A' }}</strong><br>
                     </div>
                     
                     </div>
@@ -142,15 +345,32 @@
                     </div>
                 </div>
 
-                <div 
-                    v-for="item in order?.ordered_products" 
-                    :key="item.id"
+                <!--
+                    One line per ordered product, in the order and under the
+                    labels the checkout summary uses: Unit Price, Original
+                    Price, Product Discount, Shipping, Tax, Subtotal.
+                    Deliberately the same words in the same sequence, so the
+                    customer can lay this beside the basket they approved and
+                    read down both.
+
+                    Every figure comes from the order itself, decorated onto
+                    the line server-side by OrderSummary::decorate(). Nothing
+                    here multiplies, subtracts or looks anything up in the
+                    catalogue: the previous version worked the discount out in
+                    the browser from actual_price and selling, which is a
+                    second opinion about a number the order already holds.
+                -->
+                <div
+                    v-for="(item, index) in order?.ordered_products"
+                    :key="item.id || index"
                     class="product-thanks d-flex justify-content-between mb-20"
                     >
-                    <div class="d-flex">
-                        <img 
-                        :src="getImageURL(item.product?.image)" 
+                    <div class="d-flex product-thanks-media">
+                        <img
+                        :src="productImage(item)"
+                        :alt="item.product?.title || 'Product'"
                         class="ordered-product-image"
+                        @error="onImageError"
                         >
 
                         <div class="product-info ms-4 mt-2">
@@ -158,85 +378,119 @@
                             {{ item.product?.title }}
                         </span><br>
 
-                        <span class="product-model fw-normal">
-                            ({{ item?.updated_inventory?.inventory_attributes
-                            ?.map(i => i.attribute_value.title).join(' / ') }})
-                        </span><br>
+                        <!--
+                            "(256GB / Black / Very Good)" told the customer
+                            three values and not one of the things they are
+                            values of. The basket lists them as Storage, Colour
+                            and Condition; so does this.
+                        -->
+                        <span
+                            v-for="(attr, i) in itemAttributes(item)"
+                            :key="`attr-${i}`"
+                            class="product-model fw-normal d-block"
+                        >
+                            {{ attr.label }}: {{ attr.value }}
+                        </span>
 
-                        <span class="fw-semibold mobile-quantity">
+                        <span v-if="item?.updated_inventory?.sku" class="product-model fw-normal d-block">
+                            SKU: {{ item.updated_inventory.sku }}
+                        </span>
+
+                        <span class="fw-semibold mobile-quantity d-block mt-1">
                             Quantity: {{ item.quantity }}
+                        </span>
+
+                        <!-- The units a buy-X-get-Y-free bundle gave away. -->
+                        <span v-if="item.bundle_offer > 0" class="product-model fw-normal d-block">
+                            Includes {{ item.bundle_offer }} free
                         </span>
                         </div>
                     </div>
 
-                    <!-- <div class="mt-2">
-                        <div class="d-flex justify-content-end price-box-thanku">
-                            <p>Total Price: <span class="fw-bold">€{{ item.selling }}</span></p>
-                        </div>
-                        <div class="d-flex justify-content-end price-box-thanku">
-                            <p> Shipping Price:<span class="fw-bold">€{{ item.shipping_price || 0 }}</span></p><br>
-                        </div>
-                        <div class="d-flex justify-content-end price-box-thanku">
-                            <p> Tax Price:<span class="fw-bold">€{{ item.tax_price || 0 }}</span></p><br>
-                        </div>
-                        <div class="d-flex justify-content-end price-box-thanku">
-                            <p> Subtotal:<span class="fw-bold">€{{ getItemSubtotal(item) }}</span></p><br>
-                        </div>
-                    </div> -->
+                    <div class="mt-2 product-thanks-prices">
 
-                    <div class="mt-2">
+                        <div class="d-flex justify-content-end price-box-thanku">
+                            <p>
+                                Unit Price:
+                                <span class="fw-bold">
+                                    {{ money(item.price) }}
+                                    <s
+                                        v-if="Number(item.line_discount || 0) > 0"
+                                        class="unit-was"
+                                    >{{ money(item.actual_price) }}</s>
+                                </span>
+                            </p>
+                        </div>
 
                         <div class="d-flex justify-content-end price-box-thanku">
                             <p>
                                 Original Price:
                                 <span class="fw-bold">
-                                    €{{
-                                        (
-                                            Number(item.actual_price || 0)
-                                            * Number(item.quantity || 0)
-                                        ).toFixed(2)
-                                    }}
+                                    {{ money(Number(item.actual_price || 0) * Number(item.quantity || 0)) }}
                                 </span>
                             </p>
                         </div>
 
                         <div
+                            v-if="Number(item.line_discount || 0) > 0"
                             class="d-flex justify-content-end price-box-thanku"
                         >
                             <p>
                                 Product Discount:
                                 <span class="fw-bold text-success">
-                                    - €{{
-                                        (
-                                            (
-                                                Number(item.actual_price || 0)
-                                                - Number(item.selling || 0)
-                                            )
-                                            * Number(item.quantity || 0)
-                                        ).toFixed(2)
-                                    }}
+                                    - {{ money(item.line_discount) }}
                                 </span>
                             </p>
                         </div>
 
+                        <!--
+                            Only when there is one. Nothing writes
+                            product_voucher_discount_applied yet, so this row
+                            read "- 0.00" on every order ever placed; the
+                            voucher that was actually applied is in the summary
+                            below, off ordered_voucher.
+                        -->
                         <div
+                            v-if="Number(item.product_voucher_discount_applied || 0) > 0"
                             class="d-flex justify-content-end price-box-thanku"
                         >
                             <p>
                                 Voucher Discount:
                                 <span class="fw-bold text-success">
-                                    - €{{
-                                        (Number(item.product_voucher_discount_applied || 0) * Number(item.quantity || 0)).toFixed(2)
-                                    }}
+                                    - {{ money(Number(item.product_voucher_discount_applied) * Number(item.quantity || 0)) }}
                                 </span>
                             </p>
                         </div>
 
-                        <div class="d-flex justify-content-end price-box-thanku">
+                        <div
+                            v-if="Number(item.shipping_price || 0) > 0"
+                            class="d-flex justify-content-end price-box-thanku"
+                        >
                             <p>
                                 Shipping:
                                 <span class="fw-bold">
-                                    + €{{ Number(item.shipping_price || 0).toFixed(2) }}
+                                    + {{ money(item.shipping_price) }}
+                                </span>
+                            </p>
+                        </div>
+
+                        <div
+                            v-if="Number(item.tax_total || 0) > 0"
+                            class="d-flex justify-content-end price-box-thanku"
+                        >
+                            <p>
+                                Tax:
+                                <span class="fw-bold">
+                                    + {{ money(item.tax_total) }}
+                                </span>
+                            </p>
+                        </div>
+
+                        <div class="d-flex justify-content-end price-box-thanku line-subtotal">
+                            <p>
+                                Subtotal:
+                                <span class="fw-bold">
+                                    {{ money(item.line_total) }}
                                 </span>
                             </p>
                         </div>
@@ -251,52 +505,113 @@
                 <!-- Order Summary -->
                 <div class="order-summary-box mt-4">
 
+                    <!--
+                        The goods, gross, and what they net down to:
+
+                          Products (Inc-VAT) - Discount = Net Products (Inc-VAT)
+
+                        The discount is the whole saving against the list
+                        price, so the value a "buy X get Y free" bundle gave
+                        away is inside it rather than on a row of its own -
+                        listing both counted the same saving twice.
+                    -->
                     <div class="summary-row">
-                        <span>Subtotal</span>
-                        <span>€{{ order?.calculations?.subtotal || 0 }}</span>
+                        <span>Products (Inc-VAT)</span>
+                        <span>{{ money(order?.calculations?.subtotal_inc_vat) }}</span>
                     </div>
 
-                    <div class="summary-row">
-                        <span>Product Discount</span>
+                    <div v-if="Number(order?.calculations?.discount_inc_vat) > 0" class="summary-row">
+                        <span>Discount</span>
                         <span class="text-success">
-                            - €{{ order?.calculations?.discount || 0 }}
+                            -{{ money(order?.calculations?.discount_inc_vat) }}
                         </span>
                     </div>
 
+                    <div class="summary-rule"></div>
+
                     <div class="summary-row">
+                        <span>Net Products (Inc-VAT)</span>
+                        <span>{{ money(order?.calculations?.inc_vat) }}</span>
+                    </div>
+
+                    <!--
+                        Already inside the figure above, not added to it.
+                    -->
+                    <div class="summary-row summary-row-sub">
+                        <span>
+                            VAT included in products<template v-if="vatRateLabel"> ({{ vatRateLabel }})</template>
+                        </span>
+                        <span>{{ money(order?.calculations?.vat) }}</span>
+                    </div>
+
+                    <div v-if="showRow('Flash Discount')" class="summary-row">
                         <span>Flash Discount</span>
                         <span class="text-success">
-                            - €{{ order?.calculations?.flash_discount || 0 }}
+                            - {{ money(order?.calculations?.flash_discount) }}
                         </span>
                     </div>
 
-                    <div class="summary-row">
+                    <div v-if="showRow('Bundle Saving')" class="summary-row">
+                        <span>Bundle Saving</span>
+                        <span class="text-success">
+                            - {{ money(order?.calculations?.bundle_discount) }}
+                        </span>
+                    </div>
+
+                    <div v-if="showRow('Voucher Discount')" class="summary-row">
                         <span>Voucher Discount</span>
                         <span class="text-success">
-                            - €{{ order?.calculations?.voucher || 0 }}
+                            - {{ money(order?.calculations?.voucher) }}
                         </span>
                     </div>
 
+                    <!--
+                      Labelled with the wording frozen on the order when it was
+                      placed, so a receipt keeps saying what the customer was
+                      told even if the group is renamed later.
+                    -->
+                    <div v-if="showRow('Loyalty Discount')" class="summary-row">
+                        <span>{{ order?.calculations?.loyalty_label || 'Loyalty Discount' }}</span>
+                        <span class="text-success">
+                            - {{ money(order?.calculations?.loyalty_discount) }}
+                        </span>
+                    </div>
+
+                    <div v-if="showRow('Points')" class="summary-row">
+                        <span>Cherry Points</span>
+                        <span class="text-success">
+                            - {{ money(order?.calculations?.points_discount) }}
+                        </span>
+                    </div>
+
+                    <!--
+                        Stated even when it is nothing: a missing shipping row
+                        and free shipping look the same on a receipt.
+                    -->
                     <div class="summary-row">
                         <span>Shipping</span>
-                        <span>
-                            + €{{ order?.calculations?.shipping || 0 }}
-                        </span>
-                    </div>
-
-                    <div class="summary-row">
-                        <span>Tax</span>
-                        <span>
-                            + €{{ order?.calculations?.tax || 0 }}
-                        </span>
+                        <span v-if="!(Number(order?.calculations?.shipping) > 0)" class="text-success">FREE</span>
+                        <span v-else>{{ money(order?.calculations?.shipping) }}</span>
                     </div>
 
                     <div class="summary-row total-row">
-                        <span>Total</span>
+                        <span>Total (Inc-VAT)</span>
                         <span>
-                            €{{ order?.calculations?.total || 0 }}
+                            {{ money(order?.calculations?.total) }}
                         </span>
                     </div>
+
+                    <!-- A split payment: how the total was paid. -->
+                    <template v-if="Number(order?.calculations?.wallet_paid) > 0">
+                        <div class="summary-row">
+                            <span>Paid from wallet</span>
+                            <span class="text-success">- {{ money(order?.calculations?.wallet_paid) }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Paid by your chosen method</span>
+                            <span>{{ money(order?.calculations?.amount_due) }}</span>
+                        </div>
+                    </template>
 
                 </div>
             </div>
@@ -311,8 +626,18 @@ import successImg from '~/assets/images/payment_done.png'
  export default {
     data() {
       return {
-        fetching: false,
+        // Starts true: mounted() fetches, and the gap before it does is the
+        // whole reason this flag exists.
+        fetching: true,
         order: {},
+        /*
+         * null while the order loaded. Otherwise { answered, message }:
+         * `answered` marks a reply the API actually gave us - "No order
+         * found." / "Not your order." - as opposed to a request that never
+         * completed, which is the difference between "this order isn't yours"
+         * and "try again in a moment".
+         */
+        loadError: null,
         successImg
       }
     },
@@ -355,39 +680,259 @@ import successImg from '~/assets/images/payment_done.png'
         orderId() {
             return parseInt(this.$route.params.id)
         },
-        orderStatusStep() {
-            const status = this.order?.status
-
-            const map = {
-                placed: 1,
-                processing: 2,
-                shipping: 3,
-                delivered: 4
+        /* Nothing to confirm unless a real order came back. */
+        loadFailed() {
+            return !!this.loadError || !this.order || !this.order.id
+        },
+        errorTitle() {
+            return this.loadError?.answered === false
+                ? 'Order details unavailable'
+                : 'Order not found'
+        },
+        errorMessage() {
+            if (this.loadError?.answered === false) {
+                return "We couldn't reach the store to load this order. Please try "
+                    + 'again in a moment, or open it from My Orders.'
             }
 
-            return map[status] || 1
+            /* "No order found." / "Not your order.", already translated. */
+            return this.loadError?.message
+                || "We couldn't find an order with this reference on your account. "
+                    + 'Check the link in your confirmation email, or open the order '
+                    + 'from My Orders.'
+        },
+        isGuestOrder() {
+            return !this.$auth?.loggedIn
+        },
+        /* Every line on an order shares one fulfilment type; 2 is collection. */
+        isCollection() {
+            return parseInt(this.order?.ordered_products?.[0]?.shipping_type) === 2
+        },
+        isPaid() {
+            return parseInt(this.order?.payment_done) === 1
+        },
+        /* constants.paymentMethod.CASH_ON_DELIVERY */
+        isCash() {
+            return parseInt(this.order?.order_method) === 2
+        },
+        /*
+         * The rate this order's VAT was charged at, for the summary label.
+         *
+         * Read from the rates the server split off the order's own lines, and
+         * suppressed when they disagree — one percentage across a mixed-rate
+         * order would be a fiction. Never computed from today's tax rules.
+         */
+        vatRateLabel() {
+            const rates = (this.order?.calculations?.vat_breakdown || [])
+                .map(row => Number(row.rate))
+                .filter(rate => rate > 0)
+
+            if (rates.length !== 1) {
+                return null
+            }
+
+            return String(rates[0].toFixed(2)).replace(/\.?0+$/, '') + '%'
+        },
+        storeName() {
+            return this.site_setting?.site_name || 'us'
+        },
+        /*
+         * Read off the order, not off the signed-in customer. The account that
+         * placed the order is what the receipt is about; the account reading it
+         * may since have been downgraded, suspended or renamed.
+         */
+        isBusinessOrder() {
+            const type = this.order?.account_type
+
+            return !!type && type !== 'personal'
+        },
+        accountTypeLabel() {
+            return {
+                business: 'Business',
+                trade: 'Trade',
+                personal: 'Personal'
+            }[this.order?.account_type] || 'Personal'
+        },
+        shippingPlace() {
+            return this.order?.ordered_products?.[0]?.shipping_place
+        },
+        /*
+         * Who the store contacts about this order. The columns on the order
+         * are filled in at checkout for a collection; a delivery carries the
+         * address instead, and a signed-in shopper has their account.
+         */
+        contact() {
+            return {
+                name: this.order?.contact_name
+                    || this.order?.guest_user?.name
+                    || this.order?.address?.name
+                    || this.order?.user?.name
+                    || '',
+                email: this.order?.contact_email
+                    || this.order?.guest_user?.email
+                    || this.order?.address?.email
+                    || this.order?.user?.email
+                    || '',
+                phone: this.order?.contact_phone
+                    || this.order?.guest_user?.phone
+                    || this.order?.address?.phone
+                    || ''
+            }
+        },
+        /* Delivery orders carry the address; collection ones only the guest. */
+        guestEmail() {
+            return this.contact.email
+        },
+        progressStyle() {
+            // three gaps between four steps
+            const progress = (this.orderStatusStep - 1) * (100 / 3)
+
+            return {
+                '--progress-width': `${Math.max(0, Math.min(progress, 100))}%`
+            }
+        },
+        /*
+         * orders.status is an integer (constants.orderStatus: 1 Pending,
+         * 2 Confirmed, 3 Picked up, 4 On the way, 5 Delivered, 6 Cancelled,
+         * 7 Returned, 8 Refunded). This was keyed on strings - 'placed',
+         * 'processing' - so every lookup missed and every order, at every
+         * stage, fell back to step 1. It only looked right because a freshly
+         * placed order is step 1 anyway.
+         */
+        orderStatusStep() {
+
+            const map = {
+                1: 1,   // Pending      → Order Placed
+                2: 2,   // Confirmed    → Order Processing
+                3: 3,   // Picked up    → On Delivery
+                4: 3,   // On the way   → On Delivery
+                5: 4    // Delivered    → Delivery
+            }
+
+            return map[parseInt(this.order?.status)] || 1
         },
         ...mapGetters('order', ['ordered']),
         ...mapGetters('language', ['langCode']),
-        ...mapGetters('common', ['setting'])
+        ...mapGetters('common', ['setting', 'site_setting', 'currencyIcon', 'currencyPosition'])
     },
     async mounted() {
-        console.log("Route ID:", this.$route.params.id)
         await this.fetchOrder()
     },
     methods: {
-        getItemSubtotal(item) {
-            const total =
-                parseFloat(item.selling || 0) +
-                parseFloat(item.shipping_price || 0) +
-                parseFloat(item.tax_price || 0)
+        goToSignIn() {
+            this.$router.push('/login')
+        },
+        /*
+         * Every figure here was written with a hard-coded €, which is wrong
+         * for any shop not selling in euro and ignores the currency position
+         * and decimal format the admin sets.
+         */
+        money(value) {
+            return this.priceFormat(
+                this.currencyPosition,
+                this.currencyIcon,
+                Number(value || 0).toFixed(2),
+                this.setting
+            )
+        },
+        /*
+         * actual_price is the list price and selling is what was charged, both
+         * per unit. Clamped at zero so a product whose list price sits below
+         * the charged price can never render as a negative "discount".
+         */
+        /*
+         * A summary that lists "Flash Discount - €0.00", "Voucher Discount -
+         * €0.00" and "Tax + €0.00" on an order that had none of those makes
+         * the reader check three lines that say nothing. Only rows that
+         * carry a figure are shown; Subtotal and Total always are.
+         */
+        showRow(label) {
 
-            return total.toFixed(2)
+            const key = {
+                'Product Discount': 'discount',
+                'Bundle Offer': 'bundle_offer',
+                'Flash Discount': 'flash_discount',
+                // The Essentials Bundle saving. 'Bundle Offer' above is the
+                // other feature: the value of the units a buy-X-get-Y-free
+                // deal gave away.
+                'Bundle Saving': 'bundle_discount',
+                'Voucher Discount': 'voucher',
+                'Loyalty Discount': 'loyalty_discount',
+                'Points': 'points_discount',
+                'Tax': 'tax'
+            }[label]
+
+            return Number(this.order?.calculations?.[key] || 0) > 0
+        },
+        /*
+         * The variation the customer bought, as label/value pairs.
+         *
+         * The attribute carries the question ("Storage") and the value carries
+         * the answer ("256GB"). This page joined the answers with a slash and
+         * threw the questions away, so a phone read "(256GB / Black / Very
+         * Good)" - three facts about the device with nothing saying which was
+         * the condition and which the colour.
+         */
+        itemAttributes(item) {
+            const attributes = item?.updated_inventory?.inventory_attributes || []
+
+            return attributes
+                .map(row => ({
+                    label: row?.attribute_value?.attribute?.title || '',
+                    value: row?.attribute_value?.title || ''
+                }))
+                .filter(attr => attr.value)
+        },
+        /*
+         * The picture of the ordered product.
+         *
+         * Two conventions live in products.image: a bare file name written by
+         * the older uploader, and one already prefixed with "uploads/" written
+         * by the newer one. img_src_url ends in /uploads/, so the prefixed form
+         * resolved to /uploads/uploads/... and rendered as a broken image.
+         * Strip it, and fall back to the store's placeholder when the column is
+         * empty.
+         */
+        productImage(item) {
+            const image = (item?.product?.image || '').replace(/^\/?uploads\//, '')
+
+            return image ? this.getImageURL(image) : this.getImageURL()
+        },
+        /*
+         * A file that is no longer on disk. Several of this store's products
+         * point at images that were never migrated, and the browser's own
+         * broken-image icon beside a €6,740 line reads as a broken order.
+         * Same treatment LazyImage already gives every other picture.
+         */
+        onImageError(event) {
+            const fallback = this.getImageURL()
+
+            // Guard against a placeholder that is itself missing, which would
+            // otherwise fire this handler forever.
+            if (event.target.src !== fallback) {
+                event.target.src = fallback
+            }
         },
         async fetchOrder() {
             this.fetching = true
+            this.loadError = null
+            this.order = {}
+
+            /*
+             * /user/order/complete/abc parses to NaN, which serialises as null
+             * and reads on the API as "no order_id given" - the list branch,
+             * answering 200 with every order on the account. Nothing to ask
+             * for, so don't ask.
+             */
+            if (!Number.isInteger(this.orderId) || this.orderId <= 0) {
+                this.loadError = { answered: true, message: null }
+                this.fetching = false
+
+                return
+            }
+
             try {
-                await this.getOrderByUser({
+                const response = await this.getOrderByUser({
                 payload: {
                     order_id: this.orderId,
                     user_token: await this.getUserToken(),
@@ -395,11 +940,26 @@ import successImg from '~/assets/images/payment_done.png'
                 },
                 lang: this.langCode
                 })
-                this.order = this.ordered
-                console.log("Fetched Order:", this.order)
+
+                /*
+                 * 200 is the only status that carries an order. A missing id
+                 * comes back 201 "No order found." and another shopper's order
+                 * 403 "Not your order."; the store leaves `ordered` empty for
+                 * both, so reading it blind handed this page an empty object
+                 * and it rendered the confirmation anyway.
+                 */
+                if (response?.status === 200 && this.ordered?.id) {
+                    this.order = this.ordered
+                } else {
+                    this.loadError = {
+                        answered: true,
+                        message: response?.message || null
+                    }
+                }
             } catch (e) {
-                console.log("Order fetch error", e)
+                this.loadError = { answered: false, message: null }
             }
+
             this.fetching = false
         },
         ...mapActions('order', ['getOrderByUser']),
@@ -419,9 +979,59 @@ span.product-model {
 .mobile-quantity {
     color: #232159;
 }
-body {
-    background: #f5f6fa;
-    font-family: 'Segoe UI', sans-serif;
+
+/*
+ * The confirmation page drawn before the order arrives: the badge, the
+ * headline, then the two panels it is about to fill. The page keeps its
+ * height, so the receipt does not drop into view from a collapsed block.
+ */
+.order-skeleton {
+    min-height: 340px;
+    padding: 40px 20px;
+    text-align: left;
+}
+
+.order-skeleton-badge {
+    margin: 0 auto 22px;
+}
+
+.order-skeleton-gap {
+    margin-top: 16px;
+}
+
+.order-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-height: 340px;
+    padding: 40px 20px;
+    text-align: center;
+    color: #565a75;
+    font-size: 15px;
+}
+
+.order-loading p {
+    margin: 0;
+}
+
+.order-loading-failed {
+    max-width: 420px;
+    line-height: 1.6;
+}
+
+.order-error-icon {
+    font-size: 44px;
+    line-height: 1;
+    color: #d64550;
+}
+
+.order-error-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #232159;
 }
 
 .main-card {
@@ -437,6 +1047,36 @@ body {
     background: #F3F8FF;
     border-radius: 20px;
     padding: 20px 20px 20px 20px;
+}
+
+.claim-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    background: #F0FBF4;
+    border: 1px solid #C6EBD4;
+    border-radius: 20px;
+    padding: 20px;
+}
+
+.claim-title {
+    font-weight: 600;
+    font-size: 16px;
+    color: #232159;
+    margin-bottom: 4px;
+}
+
+.claim-sub {
+    font-size: 14px;
+    color: #415A80;
+    font-weight: 500;
+    max-width: 60ch;
+}
+
+.claim-btn {
+    white-space: nowrap;
 }
 
 .manage-btn {
@@ -473,10 +1113,6 @@ body {
     border-top: 1px solid #EEEEF3;
     border-bottom: 1px solid #EEEEF3;
     padding: 30px 0;
-}
-
-.price-box-thnaku { 
-    font-size: 13px;
 }
 
 .subtotal {
@@ -531,6 +1167,77 @@ strong.payment-id {
     font-weight: 500;
     color: #232159;
     margin-bottom: 3px;
+}
+
+/* The line's own total, set off from the rows that build up to it. */
+.line-subtotal {
+    border-top: 1px solid #EEEEF3;
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+/* The unit price the line was discounted from, beside what was charged. */
+.unit-was {
+    margin-left: 6px;
+    font-weight: 500;
+    color: #8A8FA3;
+}
+
+/*
+    The account block. A quiet panel rather than another address column: it is
+    reference data a business customer checks once, not something they read.
+*/
+.account-box {
+    background: #F8F9FC;
+    border: 1px solid #EEEEF3;
+    border-radius: 14px;
+    padding: 18px 20px;
+}
+
+ul.account-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px 28px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.account-facts li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.fact-label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #737987;
+}
+
+/*
+    A company name or a long VAT number must wrap rather than push the panel
+    wider than the card, which is what "Business information does not break the
+    layout" means on a 390px phone.
+*/
+.fact-value {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: #232159;
+    overflow-wrap: anywhere;
+}
+
+/* The media half of a product row: image plus details, never wider than its
+   share of the row, so a long title cannot push the prices off screen. */
+.product-thanks-media {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.product-thanks-prices {
+    flex: 0 0 auto;
+    min-width: 230px;
 }
 
 .ordered-product-image{
@@ -632,6 +1339,20 @@ strong.payment-id {
     color: #232159;
 }
 
+/* Separates the goods from what they net down to. */
+.summary-rule {
+    border-top: 1px dashed #DCDCE6;
+    margin: 15px 0;
+}
+
+/* Describes the line above rather than adding a charge of its own. */
+.summary-row-sub {
+    margin-top: -6px;
+    padding-left: 12px;
+    font-size: 13.5px;
+    color: #737987;
+}
+
 .total-row {
     border-top: 1px solid #EEEEF3;
     padding-top: 15px;
@@ -648,6 +1369,238 @@ strong.payment-id {
     border-top: 1px solid #EEEEF3;
     margin-top: 10px;
     padding-top: 10px;
+}
+
+/* ---------------------------------------------------------------------------
+   Order confirmation, small screens.
+
+   The page had no media query at all: 50px of card padding, a 9rem gap on the
+   timeline wrapper, 60px between four progress steps and a product row built
+   as two columns pushed apart. On a 390px phone that overflowed sideways and
+   spent most of the first screen on padding. Everything below scales the
+   spacing and the type down; the desktop layout is untouched.
+   --------------------------------------------------------------------------- */
+
+@media (max-width: 991px) {
+    .main-card {
+        padding: 28px 24px;
+        margin: 20px auto;
+    }
+    .timeline {
+        gap: 0;
+        padding: 24px 0;
+    }
+    .steps {
+        gap: 40px;
+    }
+}
+
+@media (max-width: 767px) {
+    .main-card {
+        padding: 18px 14px;
+        margin: 12px auto;
+        border-radius: 14px;
+    }
+
+    .complete-order-image {
+        width: 96px;
+        height: 75px;
+    }
+    .order-placed {
+        font-size: 17px;
+        line-height: 1.35;
+    }
+    .small-text-thanku {
+        font-size: 12.5px;
+    }
+
+    /* the button sat beside two lines of text and squeezed both */
+    .order-box {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 12px;
+        padding: 14px;
+        border-radius: 14px;
+    }
+    .small-text-order {
+        font-size: 13px;
+        line-height: 1.6;
+    }
+    .manage-btn {
+        width: 100%;
+        font-size: 13px;
+    }
+
+    .section-title-billing {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+    ul.billing-address {
+        font-size: 13px;
+        line-height: 1.7;
+        padding-left: 0;
+        list-style: none;
+    }
+    .billing-address li {
+        font-size: 12.5px;
+    }
+    /* the two address columns stack, so they need air between them */
+    .row.mb-4.mt-5 > [class*="col-"] + [class*="col-"] {
+        margin-top: 18px;
+    }
+
+    .payment-info {
+        padding-top: 18px;
+    }
+    .payment-info h6 {
+        font-size: 13px;
+        margin-bottom: 0;
+    }
+    /* text-end is a desktop alignment; stacked, it reads as a stray column */
+    .payment-info .text-end {
+        margin-top: 14px;
+        text-align: left !important;
+    }
+    .payment-info .text-end .d-flex {
+        justify-content: flex-start !important;
+    }
+    .status-badge {
+        font-size: 12px;
+        padding: 4px 12px;
+    }
+    .payment-method,
+    strong.payment-id {
+        font-size: 13px;
+    }
+
+    /* four steps at a 60px gap do not fit 390px; let them share the width */
+    .timeline {
+        margin: 18px 0;
+        padding: 20px 0;
+        overflow: hidden;
+    }
+    .steps {
+        width: 100%;
+        gap: 0;
+    }
+    .step {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+    .circle {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    /* the rails hang off the centre of the first and last circle, which with
+       four equal columns sits an eighth of the way in from each edge */
+    .steps::before {
+        top: 14px;
+        left: 12.5%;
+        right: 12.5%;
+    }
+    .steps::after {
+        top: 14px;
+        left: 12.5%;
+        width: calc(var(--progress-width, 0%) * 0.75);
+    }
+    .step-label {
+        margin-top: 6px;
+        font-size: 10.5px;
+        line-height: 1.25;
+        padding: 0 2px;
+    }
+
+    /* the reference panel becomes one column of label-over-value pairs */
+    .account-box {
+        padding: 14px;
+        border-radius: 14px;
+    }
+    ul.account-facts {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    .fact-label {
+        font-size: 11.5px;
+    }
+    .fact-value {
+        font-size: 13px;
+    }
+
+    /* image, details and prices in one column instead of two pushed apart */
+    .product-thanks {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .product-thanks-prices {
+        min-width: 0;
+    }
+    .unit-was {
+        margin-left: 4px;
+        font-size: 12px;
+    }
+    .ordered-product-image {
+        width: 78px;
+        height: 92px;
+    }
+    .product-info {
+        margin-left: 12px !important;
+        margin-top: 0 !important;
+        min-width: 0;
+    }
+    span.product-thanku-tittle {
+        font-size: 14px;
+        line-height: 1.35;
+    }
+    span.product-model,
+    .mobile-quantity {
+        font-size: 12px;
+    }
+    .price-box-thanku {
+        justify-content: space-between !important;
+    }
+    .price-box-thanku p {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        gap: 12px;
+        font-size: 12.5px;
+        margin-bottom: 5px;
+    }
+
+    /* the summary is pinned right on desktop; on a phone it is the full width */
+    .order-summary-box {
+        max-width: none;
+        margin-left: 0;
+        padding-top: 14px;
+    }
+    .summary-row {
+        margin-bottom: 9px;
+        font-size: 13px;
+    }
+    .total-row {
+        margin-top: 12px;
+        padding-top: 12px;
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 400px) {
+    .order-placed {
+        font-size: 15.5px;
+    }
+    .step-label {
+        font-size: 9.5px;
+    }
+    .circle {
+        width: 26px;
+        height: 26px;
+        font-size: 11px;
+    }
+    .steps::before,
+    .steps::after {
+        top: 13px;
+    }
 }
 
 .text-success {

@@ -10,7 +10,7 @@ class AttributeValue extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title', 'admin_id', 'attribute_id'
+        'title', 'color', 'admin_id', 'attribute_id', 'rank'
     ];
 
     protected $hidden = [

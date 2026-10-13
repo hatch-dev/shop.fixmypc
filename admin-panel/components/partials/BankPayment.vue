@@ -59,6 +59,28 @@
         >
       </div>
 
+      <!-- What an Irish / SEPA transfer is actually addressed by. Shown to
+           the customer on the bank page and in the order email. -->
+      <div class="input-wrapper">
+        <label>IBAN</label>
+        <input
+          type="text"
+          placeholder="IE00 BANK 0000 0000 0000 00"
+          v-model="paymentData.iban"
+          @input="emitData"
+        >
+      </div>
+
+      <div class="input-wrapper">
+        <label>BIC / SWIFT</label>
+        <input
+          type="text"
+          placeholder="e.g. AIBKIE2D"
+          v-model="paymentData.bic_swift"
+          @input="emitData"
+        >
+      </div>
+
       <div class="input-wrapper">
         <label>
           {{ $t('title.bn') }}

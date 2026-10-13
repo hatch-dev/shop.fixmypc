@@ -10,9 +10,10 @@
     :order-options="orderOptions"
   >
 
-    <template v-slot:table="{list}">
+    <template v-slot:table="{list, from}">
 
       <tr class="lite-bold">
+        <th class="w-50x mx-w-50x">#</th>
         <th>{{ $t('user.name') }}</th>
         <th>{{ $t('fSale.email') }}</th>
         <th>{{ $t('setting.replied') }}</th>
@@ -21,6 +22,7 @@
       </tr>
 
       <tr v-for="(value, index) in list" :key="index">
+        <td class="w-50x mx-w-50x">{{ from + index }}</td>
         <td><span class="mx-w-300x">{{ value.name }}</span></td>
         <td><span class="mx-w-300x">{{ value.email }}</span></td>
         <td

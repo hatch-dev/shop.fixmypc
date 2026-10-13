@@ -95,12 +95,21 @@ export default {
         4: {title: this.$t('util.otw')},
         5: {title: this.$t('index.delivered')}
       },
+      /*
+       * Mirrors config/constants.php `orderStatus`. The terminal three were
+       * missing here, so anything reading them got `undefined` and silently
+       * compared against the wrong status - the activity feed showed a
+       * cancellation as a generic "Order updated".
+       */
       orderStatusIn: {
         PENDING: 1,
         CONFIRMED: 2,
         PICKED_UP: 3,
         ON_THE_WAY: 4,
-        DELIVERED: 5
+        DELIVERED: 5,
+        CANCELLED: 6,
+        RETURNED: 7,
+        REFUNDED: 8
       },
       shippingType: {
         1: this.$t('util.loc'),
@@ -204,6 +213,21 @@ export default {
     }
   },
   methods: {
+    /*
+     * Where the API lives.
+     *
+     * Pages were writing `process.env.apiBase || 'https://shop.fixmypc.ie/'`
+     * inline. env.apiBase is process.env.API_BASE and is undefined whenever
+     * that is not set, so an admin panel run anywhere without it -- a dev
+     * machine, a staging copy -- sent its writes to the live shop. The rest of
+     * the app already resolves an unset API_BASE to same-origin '/': see the
+     * top of nuxt.config.js, which is what the auth endpoints are built from.
+     * This is that same default, in one place.
+     */
+    apiBase(){
+      const base = process.env.apiBase || '/'
+      return base.endsWith('/') ? base : `${base}/`
+    },
     reloadPage(timer = 100){
       setTimeout(()=>{
         window.location.reload()
@@ -232,14 +256,27 @@ export default {
         this.result.slug = this.convertToSlug(this.result[title])
       }
     },
-    priceFormatting(price) {
-
-      if (parseInt(this.currencyPosition) === this.currencyPositionsIn.PRE) {
-        return this.currencyIcon + this.decimalSeparator(price, this.setting?.decimal_format)
-      }
-      return this.decimalSeparator(price, this.setting?.decimal_format) + this.currencyIcon
+    // A component that forgets to declare its own currencyIcon/currencyPosition
+    // computed used to fall straight through to the "symbol after the number"
+    // branch, so the same amount rendered "12.00€" in one card and "€12.00" in
+    // the next. Fall back to the store setting instead - every component that
+    // does declare them returns exactly these values anyway.
+    currencySymbol() {
+      return this.currencyIcon ?? (this.setting?.currency_icon || '$')
     },
-    decimalSeparator(price, decimalSeparator = 'en-US') {
+    // minimumFractionDigits defaults to 0, which is what every existing
+    // caller has always rendered. A column of money passes 2 so that 1, 24.95
+    // and 1000 line up as 1.00, 24.95 and 1,000.00 instead of ragged.
+    priceFormatting(price, minimumFractionDigits = 0) {
+      const position = this.currencyPosition ?? this.setting?.currency_position
+      const amount = this.decimalSeparator(price, this.setting?.decimal_format, minimumFractionDigits)
+
+      if (parseInt(position) === this.currencyPositionsIn.PRE) {
+        return this.currencySymbol() + amount
+      }
+      return amount + this.currencySymbol()
+    },
+    decimalSeparator(price, decimalSeparator = 'en-US', minimumFractionDigits = 0) {
 
       if(!decimalSeparator){
         decimalSeparator = 'en-US'
@@ -249,6 +286,7 @@ export default {
         .toLocaleString(
           decimalSeparator,
           {
+            minimumFractionDigits,
             maximumFractionDigits: 2,
           })
     },

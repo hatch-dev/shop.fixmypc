@@ -554,12 +554,10 @@
     "ai": "Ajouter une image",
     "trans": "Traduire le PDF joint dans un e-mail",
     "dl": "Emplacement par défaut pour l'expédition",
-
     "pos": "Système de point de vente",
     "pm": "Gestionnaire POS",
     "pc": "Configuration du PDV",
     "po": "Commandes POS",
-
     "si": "Sous-total ({itemCount} éléments)",
     "ttl": "Le montant total économisé sur cette commande",
     "con": "Confirmer",
@@ -595,7 +593,6 @@
     "md": "Définir cette valeur par défaut",
     "oi": "ID de commande",
     "ofw": "Commandes depuis le site",
-
     "pl": "Plugins",
     "pls": "Plugin",
     "ap": "Ajouter un plugin",
@@ -609,7 +606,8 @@
     "fil": "Filtre"
   },
   "procurement": {
-    "title" : "Approvisionnement",
-    "suppliers" : "Fournisseurs"
+    "title": "Approvisionnement",
+    "suppliers": "Fournisseurs",
+    "sourcing": "Approvisionnement"
   }
 }

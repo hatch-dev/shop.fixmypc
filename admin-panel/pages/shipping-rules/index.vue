@@ -11,11 +11,12 @@
     @delete-bulk="deleteBulk"
     @list="itemList = $event"
   >
-    <template v-slot:table="{list}">
+    <template v-slot:table="{list, from}">
       <tr class="lite-bold">
         <th class="w-50x mx-w-50x">
           <input type="checkbox" @change="checkAll">
         </th>
+        <th class="w-50x mx-w-50x">#</th>
         <th>{{ $t('index.title') }}</th>
         <th>{{ $t('category.created') }}</th>
         <th>&nbsp;</th>
@@ -25,6 +26,7 @@
         <td class="w-50x mx-w-50x">
           <input type="checkbox" :value="value.id" v-model="cbList">
         </td>
+        <td class="w-50x mx-w-50x">{{ from + index }}</td>
         <td class="">
           <nuxt-link
             class="link"

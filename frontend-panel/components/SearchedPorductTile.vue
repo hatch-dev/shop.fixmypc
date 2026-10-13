@@ -3,7 +3,7 @@
     :to="productLink(product)"
     class="col-md-4 text-decoration-none product-link-tile"
   >
-    <div class="product-card">
+  <div class="product-card">
       <div class="product-img">
         <lazy-image
           :data-src="thumbImageURL(product)"
@@ -17,6 +17,8 @@
         </div>
         <div class="product-pricing"> 
           <span class="price">
+            <!-- variants disagree on price: this is the cheapest buyable one -->
+            <small v-if="isVariablePrice" class="price-from">{{ $t('from') }}</small>
             <price-format :price="currentPricing" />
           </span>
           <span
@@ -33,13 +35,6 @@
           </span>
         </div>
       </div>
-      <button
-        class="compare-btn"
-        :title="$t('product.compare')"
-        @click.prevent="addToCompare"
-      >
-        <i class="icon reload-icon" />
-      </button>
     </div>
   </router-link>
 </template>
@@ -155,5 +150,10 @@
 .old-price-discount{
   text-decoration: line-through !important;
 }
-
+.trending-box .product-card {
+    flex-direction: row;
+}
+.trending-box .product-card .product-pricing {
+    text-align: left;
+}
 </style>

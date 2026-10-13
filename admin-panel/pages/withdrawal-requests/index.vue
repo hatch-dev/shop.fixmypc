@@ -48,11 +48,12 @@
 
       </template>
 
-      <template v-slot:table="{list}">
+      <template v-slot:table="{list, from}">
         <tr class="lite-bold">
           <th>
             <input type="checkbox" @change="checkAll">
           </th>
+          <th class="w-50x mx-w-50x">#</th>
           <th>{{ $t('index.amount') }}({{ currencyIcon }})</th>
           <th>{{ $t('user.apprBy') }}</th>
           <th>{{ $t('category.status') }}</th>
@@ -69,6 +70,7 @@
           <td>
             <input type="checkbox" :value="value.id" v-model="cbList">
           </td>
+          <td class="w-50x mx-w-50x">{{ from + index }}</td>
           <td>{{ value.amount }}</td>
           <td>{{ getDataFromObject(value, 'approved_admin.username', $t('prod.na')) }}</td>
           <td

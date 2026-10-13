@@ -342,7 +342,8 @@
     "voucherCode": "Code",
     "confirmOrderAnd": "Confirmez la commande et payez maintenant ({amount})",
     "confirmOrder": "Confirmer la commande",
-    "noPayment": "Aucun moyen de paiement n'est actuellement disponible"
+    "noPayment": "Aucun moyen de paiement n'est actuellement disponible",
+    "goToPayment": "Aller au paiement"
   },
   "forgotPassword": {
     "errorOccurred": "Une erreur de suivi s'est produite",
@@ -369,7 +370,15 @@
     "haveAccount": "Vous avez déjà un compte ?",
     "sentEmail": "Nous vous avons envoyé un e-mail contenant un code. Veuillez coller le code ci-dessous afin de vérifier votre compte."
   },
+  "tabs": {
+    "home": "Accueil",
+    "shop": "Boutique",
+    "search": "Recherche",
+    "basket": "Panier",
+    "account": "Compte"
+  },
   "shipping": {
+    "addContactDetails": "Please enter your name, email and phone number so we can contact you about your collection.",
     "instruction": "Instruction de livraison",
     "ordered": "Produits commandés",
     "addAddress": "Veuillez d'abord ajouter une adresse.",

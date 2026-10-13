@@ -1,6 +1,6 @@
 <template>
-  <div class="product-form">
-   <div
+  <div class="product-form pv2">
+    <div
       v-if="loading"
       class="spinner-wrapper"
     >
@@ -11,608 +11,816 @@
       />
     </div>
 
-    <div
-      class="right-area"
-    >
-      <div class="sticky">
-        <div class="tab-sidebar mb-20 mb-lg mb-md-15">
-          <h4 class="title">
-            <span class="mr-5">{{ $t('prod.pVideo') }}</span>
-            <span class="fw-400 f-8">{{ $t('prod.maxVid') }}</span>
-          </h4>
-
-          <div
-            v-if="$can('product', 'edit') || $can('product', 'create')"
-            class="form-wrapper"
-          >
-
-            <error-formatter
-              type="video"
-            />
-
-            <video-input
-              v-if="mediaStorageData.URL === mediaStorage"
-              :saving="videoUploading"
-              :video="result.video"
-              :video-thumb="result.video_thumb"
-              @image-change="uploadVideo(null, $event)"
-            />
-
-            <video-upload
-              v-else
-              class="upload-block"
-              :video="result.video"
-              type="video"
-              :file-uploading="videoUploading"
-              @file-upload="uploadVideo"
-            />
-          </div>
-          <div
-            v-else-if="$can('product', 'view')"
-            class="ptb-15 plr-20"
-          >
-            <video
-              v-if="result.video"
-              controls autoplay
-            >
-              <source
-                :src="getVideoURL(result.video)"
-                type="video/mp4">
-            </video>
-            <div v-else>
-              {{ $t('prod.noVid') }}
-            </div>
-          </div>
-          <video
-            v-else-if="result.video && $can('product', 'view')"
-            controls autoplay
-          >
-            <source
-              :src="getVideoURL(result.video)"
-              type="video/mp4">
-          </video>
-        </div>
-
-        <div class="tab-sidebar mb-20 mlr-lg-15 mlr-md mb-md-15">
-          <h4 class="title">
-            <span class="mr-5">{{ $t('prod.pImg') }}</span>
-            <span class="fw-400 f-8">{{ $t('prod.suggImg') }}</span>
-          </h4>
-
-          <div v-if="!loading">
-            <div
-              v-if="$can('product', 'edit') || $can('product', 'create')"
-              class="form-wrapper upload-block"
-            >
-              <error-formatter
-                type="image"
-              />
-
-              <image-input
-                v-if="mediaStorageData.URL === mediaStorage"
-                :saving="fileUploading"
-                :image="result.image"
-                @image-change="imageInputChanged"
-              />
-              <file-upload
-                v-else
-                class="upload-block"
-                :image="result.image"
-                :file-uploading="fileUploading"
-                @file-upload="uploadFile"
-              />
-            </div>
-
-            <img
-              v-else-if="$can('product', 'view')"
-              class="mx-w-300x"
-              :src="getImageURL(result.image)"
-            >
-          </div>
-
-        </div>
-
-        <div
-          class="tab-sidebar mb-md-15"
-          v-if="!isAdding"
+    <!-- ============ TOP ACTION BAR ============ -->
+    <div class="pv2-topbar">
+      <div class="pv2-topbar-left">
+        <button
+          class="btn secondary-btn pv2-back"
+          @click.prevent="goBack"
         >
-          <h4 class="title">
-            <span class="mr-5">{{ $t('prod.pImgs') }}</span>
-            <span class="fw-400 f-8">{{ $t('prod.suggImg') }}</span>
-          </h4>
-
-          <product-images
-            :product-images="result.product_images"
-            @result="productImages"
-          />
-        </div>
+          <i class="fas fa-arrow-left mr-5" /> Back
+        </button>
+        <span class="pv2-divider" />
+        <h4 class="pv2-title">{{ isAdding ? 'New Product' : (result.title || 'Product') }}</h4>
+        <span
+          class="pv2-badge"
+          :class="statusBadgeClass"
+        >{{ statusLabel(result.status) }}</span>
+      </div>
+      <div
+        v-if="validLicence && ($can('product', 'edit') || $can('product', 'create'))"
+        class="pv2-topbar-right"
+      >
+        <button
+          class="btn secondary-btn"
+          @click.prevent="goBack"
+        >Discard</button>
+        <ajax-button
+          name="save-edit"
+          class="secondary-btn"
+          text="Save Draft"
+          :fetching-data="formSubmitting && !redirect"
+          @click.native="submitAll('save-edit')"
+        />
+        <ajax-button
+          name="save"
+          class="primary-btn"
+          :text="isAdding ? 'Publish' : 'Update'"
+          :fetching-data="formSubmitting && redirect"
+          @click.native="submitAll('save')"
+        />
       </div>
     </div>
 
-    <div
-      ref="productForm"
-      class="left-area">
-      <div class="tab-sidebar">
-
-        <div>
-          <div class="dply-felx gap-15 title ptb-5 b-0">
-            <h4>{{ $t('prod.pForm') }}</h4>
-
-            <button class="btn-clear dply-felx" @click.prevent="productFormOpen = !productFormOpen">
-              <i
-                class="icon black ignore-click"
-                :class="`${productFormOpen? 'arrow-up' : 'arrow-down'}`"
-              />
-            </button>
-          </div>
-
-          <form
-            v-if="productFormOpen"
-            class="form-wrapper b-t"
-            @submit.prevent="checkForm"
-            :class="{'has-error': hasError}"
+    <div class="pv2-body">
+      <!-- ============ LEFT TAB RAIL ============ -->
+      <nav class="pv2-rail">
+        <div
+          v-for="group in tabGroups"
+          :key="group.g"
+          class="pv2-rail-group"
+        >
+          <div class="pv2-rail-gtitle">{{ group.g }}</div>
+          <button
+            v-for="tab in group.items"
+            :key="tab.k"
+            type="button"
+            class="pv2-rail-item"
+            :class="{active: activeTab === tab.k, 'has-err': tabErrors[tab.k]}"
+            @click="setTab(tab.k)"
           >
-            <error-formatter />
+            <i
+              class="pv2-rail-ic fas"
+              :class="tab.ic"
+            />
+            <span>{{ tab.l }}</span>
+            <span
+              v-if="tabErrors[tab.k]"
+              class="pv2-rail-badge"
+            >{{ tabErrors[tab.k] }}</span>
+          </button>
+        </div>
+      </nav>
 
-            <div class="input-wrapper">
-              <label>{{ $t('index.title') }}</label>
-              <input
-                type="text"
-                :placeholder="$t('index.title')"
-                @change="slugChange"
-                v-model="result.title"
-                :class="{invalid: !result.title && hasError}"
-              >
-              <span
-                class="error"
-                v-if="!result.title && hasError"
-              >
-                {{ $t('category.req', { type: $t('index.title')}) }}
-              </span>
+      <!-- ============ CENTER CONTENT ============ -->
+      <div
+        ref="productForm"
+        class="pv2-content"
+      >
+        <div
+          v-if="errorCount"
+          class="pv2-err-banner"
+        >
+          <i class="fas fa-exclamation-circle" />
+          <span>Please fix <strong>{{ errorCount }}</strong> required field{{ errorCount > 1 ? 's' : '' }} — highlighted tabs are marked in the sidebar.</span>
+        </div>
+
+        <error-formatter />
+
+        <div class="form-wrapper pv2-form">
+
+          <!-- ==================== BASIC INFO ==================== -->
+          <section v-show="activeTab === 'basic'">
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">Product Information</h5>
+
+              <div class="input-wrapper">
+                <label>{{ $t('index.title') }}</label>
+                <input
+                  type="text"
+                  :placeholder="$t('index.title')"
+                  @change="slugChange"
+                  v-model="result.title"
+                  :class="{invalid: !result.title && hasError}"
+                >
+                <span
+                  class="error"
+                  v-if="!result.title && hasError"
+                >
+                  {{ $t('category.req', { type: $t('index.title')}) }}
+                </span>
+              </div>
+
+              <div class="input-wrapper">
+                <label>Short Heading</label>
+                <input
+                  type="text"
+                  placeholder="Short Heading"
+                  v-model="result.short_heading"
+                  :class="{invalid: !result.short_heading && hasError}"
+                >
+                <span
+                  class="error"
+                  v-if="!result.short_heading && hasError"
+                >
+                  {{ $t('category.req', { type: 'Short Heading' }) }}
+                </span>
+              </div>
+
+              <div class="input-wrapper">
+                <label>{{ $t('category.slug') }}</label>
+                <input
+                  type="text"
+                  :placeholder="$t('category.slug')"
+                  name="slug"
+                  v-model="result.slug"
+                  ref="slug"
+                  :class="{invalid: !!!result.slug && hasError}"
+                >
+                <span
+                  class="error"
+                  v-if="!!!result.slug && hasError"
+                >
+                  {{ $t('category.req', { type: $t('category.slug')}) }}
+                </span>
+              </div>
+
+              <div class="pv2-grid c3">
+                <div class="input-wrapper">
+                  <label>{{ $t('prod.unit') }}</label>
+                  <input
+                    type="text"
+                    :placeholder="$t('prod.unit')"
+                    v-model="result.unit"
+                    :class="{invalid: !!!result.unit && hasError}"
+                  >
+                  <span
+                    class="error"
+                    v-if="!!!result.unit && hasError"
+                  >
+                    {{ $t('category.req', { type: $t('prod.unit')}) }}
+                  </span>
+                </div>
+
+                <div class="input-wrapper">
+                  <label>{{ $t('prod.badge') }}</label>
+                  <input
+                    type="text"
+                    :placeholder="$t('prod.badge')"
+                    v-model="result.badge"
+                  >
+                </div>
+              </div>
             </div>
 
-            <div class="input-wrapper">
-              <label>Short Heading</label>
-              <input
-                type="text"
-                placeholder="Short Heading"
-                v-model="result.short_heading"
-                :class="{invalid: !result.short_heading && hasError}"
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">Variant Type</h5>
+              <p class="pv2-help">Does this product have multiple options (colour, storage, size)?</p>
+              <div class="pv2-type-grid two">
+                <div
+                  class="pv2-type"
+                  :class="{sel: !uiVariable}"
+                  @click="uiVariable = false"
+                >
+                  <i class="fas fa-box" />
+                  <div class="pv2-type-l">Simple Product</div>
+                  <div class="pv2-type-d">One SKU, one price</div>
+                </div>
+                <div
+                  class="pv2-type"
+                  :class="{sel: uiVariable}"
+                  @click="setVariable"
+                >
+                  <i class="fas fa-sitemap" />
+                  <div class="pv2-type-l">Variable Product</div>
+                  <div class="pv2-type-d">Multiple options &amp; SKUs</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ==================== CONTENT ==================== -->
+          <section v-show="activeTab === 'content'">
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">Overview &amp; Description</h5>
+              <div
+                class="input-wrapper"
+                :class="{'whysigwyg-error': !!!result.overview && hasError}"
               >
-               <span
-                class="error"
-                v-if="!result.short_heading && hasError"
+                <WYSIWYGEditor
+                  :title="$t('prod.overview')"
+                  :description="result.overview"
+                  @change="result.overview = $event"
+                  @file="editorOverviewFile"
+                />
+                <span
+                  class="error"
+                  v-if="!!!result.overview && hasError"
+                >
+                  {{ $t('category.req', { type: $t('prod.overview')}) }}
+                </span>
+              </div>
+              <div
+                class="input-wrapper"
+                :class="{'whysigwyg-error': !!!result.description && hasError}"
               >
-                {{ $t('category.req', { type: 'Short Heading' }) }}
-              </span>
+                <WYSIWYGEditor
+                  :description="result.description"
+                  @change="result.description = $event"
+                  @file="editorDescriptionFile"
+                />
+                <span
+                  class="error"
+                  v-if="!!!result.description && hasError"
+                >
+                  {{ $t('category.req', { type: $t('prod.desc')}) }}
+                </span>
+              </div>
             </div>
 
-            <div class="input-wrapper">
-              <label>{{ $t('category.slug') }}</label>
-              <input
-                type="text"
-                :placeholder="$t('category.slug')"
-                name="slug"
-                v-model="result.slug"
-                ref="slug"
-                :class="{invalid: !!!result.slug && hasError}"
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">Technical Specifications</h5>
+
+              <div
+                class="pv2-spec-box"
+                v-for="(group, groupIndex) in specifications"
+                :key="groupIndex"
               >
-              <span
-                class="error"
-                v-if="!!!result.slug && hasError"
+                <div class="pv2-spec-cat">
+                  <label class="pv2-spec-label">Spec Category</label>
+                  <div class="pv2-spec-row">
+                    <input
+                      type="text"
+                      class="pv2-spec-input"
+                      placeholder="e.g. Display, Processor, Battery"
+                      v-model="group.group"
+                    >
+                    <button
+                      class="pv2-spec-del"
+                      @click.prevent="removeGroup(groupIndex)"
+                      title="Remove category"
+                    >
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  class="pv2-spec-row"
+                  v-for="(item, itemIndex) in group.items"
+                  :key="itemIndex"
+                >
+                  <input
+                    type="text"
+                    class="pv2-spec-input"
+                    placeholder="Enter specification"
+                    v-model="item.value"
+                  >
+                  <button
+                    class="pv2-spec-del"
+                    @click.prevent="removeItem(groupIndex, itemIndex)"
+                    title="Remove specification"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+
+                <button
+                  class="pv2-spec-add"
+                  @click.prevent="addItem(groupIndex)"
+                >
+                  <i class="fas fa-plus mr-5" /> Add Spec
+                </button>
+              </div>
+
+              <button
+                class="primary-btn pv2-spec-addcat"
+                @click.prevent="addGroup"
               >
-                {{ $t('category.req', { type: $t('category.slug')}) }}
-              </span>
+                <i class="fas fa-plus mr-5" /> Add Spec Category
+              </button>
+            </div>
+          </section>
+
+          <!-- ==================== MEDIA ==================== -->
+          <section v-show="activeTab === 'media'">
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">
+                {{ $t('prod.pVideo') }}
+                <span class="fw-400 f-8 mt">{{ $t('prod.maxVid') }}</span>
+              </h5>
+              <div
+                v-if="$can('product', 'edit') || $can('product', 'create')"
+              >
+                <error-formatter type="video" />
+                <video-input
+                  v-if="mediaStorageData.URL === mediaStorage"
+                  :saving="videoUploading"
+                  :video="result.video"
+                  :video-thumb="result.video_thumb"
+                  @image-change="uploadVideo(null, $event)"
+                />
+                <video-upload
+                  v-else
+                  class="upload-block"
+                  :video="result.video"
+                  type="video"
+                  :file-uploading="videoUploading"
+                  @file-upload="uploadVideo"
+                />
+              </div>
+              <div
+                v-else-if="$can('product', 'view')"
+              >
+                <video
+                  v-if="result.video"
+                  controls autoplay
+                >
+                  <source
+                    :src="getVideoURL(result.video)"
+                    type="video/mp4">
+                </video>
+                <div v-else>{{ $t('prod.noVid') }}</div>
+              </div>
             </div>
 
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">
+                {{ $t('prod.pImg') }}
+                <span class="fw-400 f-8 mt">{{ $t('prod.suggImg') }}</span>
+              </h5>
+              <div v-if="!loading">
+                <div
+                  v-if="$can('product', 'edit') || $can('product', 'create')"
+                  class="upload-block"
+                >
+                  <error-formatter type="image" />
+                  <image-input
+                    v-if="mediaStorageData.URL === mediaStorage"
+                    :saving="fileUploading"
+                    :image="result.image"
+                    @image-change="imageInputChanged"
+                  />
+                  <file-upload
+                    v-else
+                    class="upload-block"
+                    :image="result.image"
+                    :file-uploading="fileUploading"
+                    @file-upload="uploadFile"
+                  />
+                </div>
+                <img
+                  v-else-if="$can('product', 'view')"
+                  class="mx-w-300x"
+                  :src="getImageURL(result.image)"
+                >
+              </div>
+            </div>
 
             <div
+              class="pv2-card"
+              v-if="!isAdding"
+            >
+              <h5 class="pv2-ctitle">
+                {{ $t('prod.pImgs') }}
+                <span class="fw-400 f-8 mt">{{ $t('prod.suggImg') }}</span>
+              </h5>
+              <product-images
+                :product-images="result.product_images"
+                @result="productImages"
+              />
+            </div>
+
+            <div
+              class="pv2-card"
+              v-if="!isAdding"
+            >
+              <h5 class="pv2-ctitle">Product Feature Images</h5>
+              <product-feature-images
+                :feature-images="result.feature_images"
+                @result="featureImagesResult"
+              />
+            </div>
+
+            <div
+              class="pv2-card pv2-note"
+              v-if="isAdding"
+            >
+              <i class="fas fa-info-circle mr-5" />
+              Gallery &amp; feature images become available after the product is first saved.
+            </div>
+          </section>
+
+          <!-- ==================== PRICING & TAX ==================== -->
+          <section v-show="activeTab === 'pricing'">
+            <div
               v-for="(flash, index) in result.flash_sale_product"
-              :key="index"
+              :key="'flash-' + index"
               class="info-msg mb-20 mb-sm-15"
             >
               <p>
                 {{ $t('prod.flash') }}
                 (<nuxt-link
-                class="link"
-                :to="`/flash-sales/${flash.flash_sale.id}`"
-              >
-                {{ flash.flash_sale.title }}
-              </nuxt-link>)
+                  class="link"
+                  :to="`/flash-sales/${flash.flash_sale.id}`"
+                >{{ flash.flash_sale.title }}</nuxt-link>)
               </p>
               <p>{{ $t('prod.flashPrice') }}: <b>{{ priceFormatting(flash.price) }}</b></p>
             </div>
 
-            <div class="dply-felx mlr--7-5 inputs">
-
-              <!-- Wholesale Price -->
-              <div class="input-wrapper mlr-8-5">
-                <label>Wholesale Price</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="Wholesale Price"
-                  v-model="result.wholesale_price"
-                >
-              </div>
-
-              <!-- Discount Value -->
-              <div class="input-wrapper mlr-7-5">
-                <label>
-                  Discount
-                  <span v-if="result.wholesale_discount_type === 'percentage'">(%)</span>
-                  <span v-else>({{ currencyIcon }})</span>
-                </label>
-
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="Discount"
-                  v-model="result.wholesale_discount_value"
-                >
-              </div>
-
-              <!-- Discount Type -->
-              <div class="input-wrapper mlr-7-5">
-                <label>Discount Type</label>
-                <div class="">
-                  <select v-model="result.wholesale_discount_type">
-                    <option value="fixed">Fixed</option>
-                    <option value="percentage">Percentage</option>
-                  </select>
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">Pricing</h5>
+              <div class="pv2-grid c3">
+                <!--
+                  A "Wholesale Price" and "Discount" pair used to sit here,
+                  bound to products.wholesale_price and
+                  products.wholesale_discount_*. Nothing reads those columns:
+                  trade and business pricing is decided by the quantity bands
+                  in business_product_pricing, which the storefront, the cart
+                  and checkout all price from. Setting a figure here changed no
+                  price anywhere, which is worse than having no field at all.
+                -->
+                <div class="input-wrapper pv2-span-2">
+                  <label>Wholesale &amp; trade pricing</label>
+                  <p class="pv2-field-note">
+                    Quantity bands for business and trade accounts are set per
+                    product under
+                    <nuxt-link class="link" to="/business-products">Business Products</nuxt-link>.
+                  </p>
                 </div>
-              </div>
 
-              <div class="input-wrapper mlr-7-5">
-                <label>{{ $t('prod.purchased') }}({{ currencyIcon }})</label>
-                <input
-                  type="number"
-                  step="any"
-                  :placeholder="$t('prod.purchased')"
-                  v-model="result.purchased"
-                  :class="{invalid: (result.purchased < 1 || !result.purchased) && hasError}"
-                >
-                <span
-                  class="error"
-                  v-if="(result.purchased < 1 || !result.purchased) && hasError"
-                >
-                {{ $t('category.req', { type: $t('brand.price')}) }}
-              </span>
-              </div>
-
-              <div class="input-wrapper mlr-7-5">
-                <label>{{ $t('prod.selling') }}({{ currencyIcon }})</label>
-                <input
-                  type="number"
-                  step="any"
-                  :placeholder="$t('prod.selling')"
-                  v-model="result.selling"
-                  :class="{invalid: (result.selling < 1 || !result.selling) && hasError}"
-                >
-                <span
-                  class="error"
-                  v-if="(result.selling < 1 || !result.selling) && hasError"
-                >
-                {{ $t('category.req', { type: $t('brand.price')}) }}
-              </span>
-              </div>
-
-              <div class="input-wrapper mlr-7-5">
-                <label>{{ $t('prod.offered') }}({{ currencyIcon }})</label>
-                <input
-                  type="number"
-                  step="any"
-                  :placeholder="$t('prod.offered')"
-                  v-model="result.offered"
-                >
-              </div>
-            </div><!--dply-felx inputs-->
-
-                      <div class="f-wrap dply-felx inputs mlr--7-5">
-            <div class="input-wrapper mlr-7-5">
-              <label class="block">{{ $t('prod.tRule') }}</label>
-              <dropdown
-                v-if="allTaxRules"
-                :selectedKey="result.tax_rule_id"
-                :options="allTaxRules"
-                @clicked="taxRuleSelected"
-              />
-              <span
-                class="error"
-                v-if="!!!result.tax_rule_id && hasError"
-              >
-                {{ $t('category.req', { type: $t('brand.tRule')}) }}
-              </span>
-            </div>
-
-            <!-- Add this new checkbox wrapper div -->
-            <div class="input-wrapper mlr-7-5 mt-20">
-              <label class="checkbox-container">
-                <input
-                  class="checkbox-input"
-                  type="checkbox"
-                  id="exclude-vat"
-                  v-model="result.excludeVAT"
-                  true-value="1"
-                  false-value="0"
-                >
-                <span class="checkbox-checkmark"></span>
-                <span class="checkbox-label">
-                  {{ $t('prod.excludeVAT') }}
-                </span>
-              </label>
-            </div>
-
-            <div class="input-wrapper mlr-7-5 mt-20">
-              <label class="checkbox-container">
-                <input
-                  class="checkbox-input"
-                  type="checkbox"
-                  id="exclude-vat"
-                  v-model="result.procurement"
-                  true-value="1"
-                  false-value="0"
-                >
-                <span class="checkbox-checkmark"></span>
-                <span class="checkbox-label">
-                  {{ $t('prod.procurement') }}
-                </span>
-              </label>
-            </div>
-
-            <!-- <div class="input-wrapper mlr-7-5 mt-20">
-              <label class="checkbox-container">
-                <input
-                  class="checkbox-input"
-                  type="checkbox"
-                  id="back-order"
-                  v-model="result.back_order"
-                  true-value="1"
-                  false-value="0"
-                >
-                <span class="checkbox-checkmark"></span>
-                <span class="checkbox-label">
-                  Back Order
-                </span>
-              </label>
-            </div> -->
-
-            <div class="input-wrapper mlr-7-5">
-              <label class="block">{{ $t('dataPage.shipRule') }}</label>
-              <dropdown
-                v-if="allShippingRules"
-                :selectedKey="result.shipping_rule_id"
-                :options="allShippingRules"
-                @clicked="shippingRuleSelected"
-              />
-              <span
-                class="error"
-                v-if="!!!result.shipping_rule_id && hasError"
-              >
-                {{ $t('category.req', { type: $t('brand.shipRule')}) }}
-              </span>
-            </div>
-
-         </div>
-
-
-
-            <div class="dply-felx inputs pos-rel w-100">
-              <div class="input-wrapper ">
-                <label class="block">{{ $t('error.cat') }}</label>
-
-                <div
-                  data-ignore="multiple-category"
-                  @click.prevent="showCategories = !showCategories"
-                  class="custom-dropdown cp"
-                >
-                  <span class="ignore-click">{{ $t('title.choose') }} ({{ result.product_categories.length }})
-                    <i
-                      class="icon black ignore-click"
-                      :class="[{'arrow-up': showCategories}, {'arrow-down': !showCategories}]"
-                    />
+                <div class="input-wrapper">
+                  <label>{{ $t('prod.purchased') }} ({{ currencyIcon }})</label>
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="0.00"
+                    v-model="result.purchased"
+                    :class="{invalid: (result.purchased < 1 || !result.purchased) && hasError}"
+                  >
+                  <span
+                    class="error"
+                    v-if="(result.purchased < 1 || !result.purchased) && hasError"
+                  >
+                    {{ $t('category.req', { type: $t('brand.price')}) }}
                   </span>
                 </div>
 
-                <ul v-if="showCategories" class="multiple-wrap" v-outside-click="closeDrop" id="multiple-category">
-
+                <div class="input-wrapper">
+                  <label>{{ $t('prod.selling') }} ({{ currencyIcon }})</label>
                   <input
-                    class="mb-10"
-                    type="text"
-                    :placeholder="$t('list.sh')"
-                    v-model="categorySearch"
-                    @input="doCategorySearch"
+                    type="number"
+                    step="any"
+                    placeholder="0.00"
+                    v-model="result.selling"
+                    :class="{invalid: (result.selling < 1 || !result.selling) && hasError}"
                   >
-                  <label
-                    v-for="(item, index) in searchedCategories"
-                    :key="index"
-                    :label-for="`all-cat-${index}`"
+                  <span
+                    class="error"
+                    v-if="(result.selling < 1 || !result.selling) && hasError"
                   >
-                    <input
-                      :id="`all-cat-${index}`"
-                      type="checkbox"
-                      v-model="result.product_categories"
-                      :value="index"
-                    >
-                    {{ item.title }}
-                  </label>
-                </ul>
-              </div>
+                    {{ $t('category.req', { type: $t('brand.price')}) }}
+                  </span>
+                </div>
 
-              <div v-if="selectedCategories" class="input-wrapper mlr-7-5">
-                <label class="block">{{$t('title.prim')}}</label>
-                <dropdown
-                  class="left-dd"
-                  :selectedKey="result.primary_category_id"
-                  :options="selectedCategories"
-                  @clicked="primaryCategorySelected"
-                />
+                <div class="input-wrapper">
+                  <label>{{ $t('prod.offered') }} ({{ currencyIcon }})</label>
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="0.00"
+                    v-model="result.offered"
+                  >
+                </div>
               </div>
             </div>
 
+            <div class="pv2-card pv2-profit">
+              <h5 class="pv2-ctitle">Live Profit Calculator</h5>
+              <div class="pv2-profit-grid">
+                <div>
+                  <div class="pv2-profit-l">Cost</div>
+                  <div class="pv2-profit-v">{{ currencyIcon }}{{ uiCost.toFixed(2) }}</div>
+                </div>
+                <div>
+                  <!-- the price a customer pays: the offer when there is one -->
+                  <div class="pv2-profit-l">
+                    Price
+                    <span v-if="result.offered > 0 && result.offered < result.selling" class="pv2-profit-note">offer</span>
+                  </div>
+                  <div class="pv2-profit-v">{{ currencyIcon }}{{ uiPrice.toFixed(2) }}</div>
+                </div>
+                <div v-if="uiPriceIncludesVat">
+                  <!-- VAT is collected on Revenue's behalf, so it is not income -->
+                  <div class="pv2-profit-l">Ex&#8209;VAT <span class="pv2-profit-note">&minus;{{ uiVatRate }}%</span></div>
+                  <div class="pv2-profit-v">{{ currencyIcon }}{{ uiNetRevenue.toFixed(2) }}</div>
+                </div>
+                <div>
+                  <div class="pv2-profit-l">Profit</div>
+                  <div class="pv2-profit-v" :style="{color: uiProfit >= 0 ? '#059669' : '#dc2626'}">{{ currencyIcon }}{{ uiProfit.toFixed(2) }}</div>
+                </div>
+                <div>
+                  <div class="pv2-profit-l">Margin</div>
+                  <div class="pv2-profit-v" :style="{color: marginColor}">{{ uiMargin.toFixed(1) }}%</div>
+                </div>
+                <div>
+                  <div class="pv2-profit-l">ROI</div>
+                  <div class="pv2-profit-v" style="color:#7c3aed">{{ uiCost > 0 ? uiRoi.toFixed(0) + '%' : '—' }}</div>
+                </div>
+              </div>
 
-            <div class="dply-felx inputs mlr--7-5">
-              <div class="input-wrapper mlr-7-5">
-                <label>{{ $t('prod.unit') }}</label>
+              <p v-if="uiCost <= 0" class="pv2-profit-hint">
+                Set a <strong>Purchased</strong> cost to see profit and ROI.
+              </p>
+              <p v-else-if="uiVariable" class="pv2-profit-hint">
+                Figures use the product price. Variations priced differently in
+                the Inventory tab will earn more or less than this.
+              </p>
+            </div>
+
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">Tax</h5>
+              <div class="pv2-grid c3">
+                <div class="input-wrapper">
+                  <label class="block">{{ $t('prod.tRule') }}</label>
+                  <dropdown
+                    v-if="allTaxRules"
+                    :selectedKey="result.tax_rule_id"
+                    :options="allTaxRules"
+                    @clicked="taxRuleSelected"
+                  />
+                  <span
+                    class="error"
+                    v-if="!!!result.tax_rule_id && hasError"
+                  >
+                    {{ $t('category.req', { type: $t('brand.tRule')}) }}
+                  </span>
+                </div>
+
+                <div class="input-wrapper">
+                  <label class="block pv2-spacer-lbl">&nbsp;</label>
+                  <label class="checkbox-container">
+                    <input
+                      class="checkbox-input"
+                      type="checkbox"
+                      v-model="result.excludeVAT"
+                      true-value="1"
+                      false-value="0"
+                    >
+                    <span class="checkbox-checkmark"></span>
+                    <span class="checkbox-label">{{ $t('prod.excludeVAT') }}</span>
+                  </label>
+
+                  <label class="checkbox-container mt-10">
+                    <input
+                      class="checkbox-input"
+                      type="checkbox"
+                      v-model="result.procurement"
+                      true-value="1"
+                      false-value="0"
+                    >
+                    <span class="checkbox-checkmark"></span>
+                    <span class="checkbox-label">{{ $t('prod.procurement') }}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ==================== INVENTORY ==================== -->
+          <section v-show="activeTab === 'inventory'">
+            <div
+              class="pv2-card"
+              ref="productInventory"
+            >
+              <product-inventory
+                ref="inventoryComponent"
+                :product-id="result.id"
+                :attributes="allAttributes"
+                :product-price="parseFloat(currentPrice)"
+                :is-variable="uiVariable"
+                @variant-detected="uiVariable = $event"
+                @has-error="scrollToTop('productInventory')"
+              />
+            </div>
+          </section>
+
+          <!-- ==================== UPGRADES ==================== -->
+          <section v-show="activeTab === 'upgrades'">
+            <div class="pv2-card">
+              <!--
+                Only meaningful once the product exists: the panel reads the
+                product's variants to work out what could upgrade, and a
+                product being created has none yet.
+              -->
+              <product-upgrades v-if="result.id" :product-id="result.id" />
+
+              <div v-else class="pv2-note">
+                <i class="fas fa-info-circle mr-5" />
+                <span>Save the product first, then add its variants on the Inventory tab. Upgrades are worked out from those.</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- ==================== SHIPPING ==================== -->
+          <section v-show="activeTab === 'shipping'">
+            <!--
+              Products are not assigned a shipping rule (2026-09-28). What
+              delivery costs comes from the customer's address and the Shipping
+              Rules page; all a product can say is where it may be sold.
+            -->
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">Where this product can be sold</h5>
+              <p class="pv2-help">
+                Delivery and collection prices come from the customer&rsquo;s address and the
+                Shipping Rules, not from the product. Limit this product only if it must not be
+                sold everywhere you deliver.
+              </p>
+
+              <div class="pv2-chip-group" role="radiogroup" aria-label="Where this product can be sold">
+                <label class="pv2-chk-chip" :class="{active: !sellRestricted}">
+                  <input type="radio" name="sell-where" :checked="!sellRestricted" @change="setSellRestricted(false)">
+                  Anywhere we deliver
+                </label>
+                <label class="pv2-chk-chip" :class="{active: sellRestricted}">
+                  <input type="radio" name="sell-where" :checked="sellRestricted" @change="setSellRestricted(true)">
+                  Only in selected countries
+                </label>
+              </div>
+
+              <div v-if="sellRestricted" class="pv2-sell-countries">
+                <div v-if="sellCountryCodes.length" class="pv2-chip-group">
+                  <span
+                    v-for="code in sellCountryCodes"
+                    :key="code"
+                    class="pv2-chk-chip active"
+                  >
+                    {{ countryName(code) }}
+                    <a
+                      href="#"
+                      role="button"
+                      class="pv2-chip-remove"
+                      :aria-label="`Remove ${countryName(code)}`"
+                      @click.prevent="removeSellCountry(code)"
+                    >&times;</a>
+                  </span>
+                </div>
+
+                <div class="input-wrapper pv2-sell-add">
+                  <select
+                    v-model="sellCountryToAdd"
+                    aria-label="Add a country"
+                    @change="addSellCountry"
+                  >
+                    <option value="">Add a country&hellip;</option>
+                    <option v-for="c in countryOptions" :key="c.code" :value="c.code">{{ c.name }}</option>
+                  </select>
+                </div>
+
+                <p v-if="!sellCountryCodes.length" class="pv2-help pv2-sell-warn">
+                  Add at least one country. With none selected, the product is sold anywhere you deliver.
+                </p>
+              </div>
+            </div>
+
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">Dimensions</h5>
+              <p class="pv2-help">Optional — used to estimate parcel size for carriers.</p>
+              <div class="pv2-grid c4">
+                <div class="input-wrapper">
+                  <label>Length (cm)</label>
+                  <input type="number" step="any" placeholder="0" v-model="result.length">
+                </div>
+                <div class="input-wrapper">
+                  <label>Width (cm)</label>
+                  <input type="number" step="any" placeholder="0" v-model="result.width">
+                </div>
+                <div class="input-wrapper">
+                  <label>Height (cm)</label>
+                  <input type="number" step="any" placeholder="0" v-model="result.height">
+                </div>
+                <div class="input-wrapper">
+                  <label>Weight (kg)</label>
+                  <input type="number" step="any" placeholder="0" v-model="result.weight">
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ==================== SEO & META ==================== -->
+          <section v-show="activeTab === 'seo'">
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">Focus Keyphrase</h5>
+              <div class="input-wrapper">
                 <input
                   type="text"
-                  :placeholder="$t('prod.unit')"
-                  v-model="result.unit"
-                  :class="{invalid: !!!result.unit && hasError}"
+                  placeholder="e.g. dell latitude 3520 laptop ireland"
+                  v-model="uiFocusKw"
                 >
+                <!--
+                  There is no column behind this. It scores the checks below
+                  while the page is open and is gone on reload; saying so beats
+                  an SEO score that silently resets to 33% every time.
+                -->
+                <p class="pv2-field-note">
+                  Used to score the checks below. Not saved with the product.
+                </p>
+              </div>
+            </div>
+
+            <div class="pv2-grid c2 pv2-seo-row">
+              <div class="pv2-card">
+                <h5 class="pv2-ctitle">Google Preview</h5>
+                <div class="pv2-google">
+                  <div class="pv2-google-t">{{ result.meta_title || result.title || 'Meta title | FixMyPC' }}</div>
+                  <div class="pv2-google-u">shop.fixmypc.ie/product/{{ result.slug || '...' }}</div>
+                  <div class="pv2-google-d">{{ result.meta_description || 'Add a meta description to improve click-through rate...' }}</div>
+                </div>
+              </div>
+              <div class="pv2-card">
+                <h5 class="pv2-ctitle">SEO Score — {{ seoScore }}%</h5>
+                <div
+                  v-for="(c, i) in seoChecks"
+                  :key="i"
+                  class="pv2-seo-check"
+                >
+                  <span
+                    class="pv2-seo-dot"
+                    :style="{background: c.ok ? '#059669' : '#d97706'}"
+                  />
+                  <span>{{ c.l }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">Meta Fields</h5>
+              <div class="input-wrapper">
+                <label>{{ $t('category.mTitle') }}</label>
+                <input
+                  type="text"
+                  :placeholder="$t('category.mTitle')"
+                  v-model="result.meta_title"
+                  :class="{invalid: !!!result.meta_title && hasError}"
+                >
+                <span class="pv2-count">{{ (result.meta_title || '').length }}/60</span>
                 <span
                   class="error"
-                  v-if="!!!result.unit && hasError"
+                  v-if="!!!result.meta_title && hasError"
                 >
-                {{ $t('category.req', { type: $t('prod.unit')}) }}
-              </span>
-              </div>
-
-              <div class="input-wrapper mlr-7-5">
-                <label>{{ $t('prod.badge') }}</label>
-                <input
-                  type="text"
-                  :placeholder="$t('prod.badge')"
-                  v-model="result.badge"
-                >
-              </div>
-            </div>
-
-
-            <div
-              class="input-wrapper"
-              :class="{'whysigwyg-error': !!!result.overview && hasError}"
-            >
-              <WYSIWYGEditor
-                :title="$t('prod.overview')"
-                :description="result.overview"
-                @change="result.overview = $event"
-                @file="editorOverviewFile"
-              />
-              <span
-                class="error"
-                v-if="!!!result.overview && hasError"
-              >
-              {{ $t('category.req', { type: $t('prod.overview')}) }}
-            </span>
-            </div>
-            <div
-              class="input-wrapper"
-              :class="{'whysigwyg-error': !!!result.description && hasError}"
-            >
-              <WYSIWYGEditor
-                :description="result.description"
-                @change="result.description = $event"
-                @file="editorDescriptionFile"
-              />
-              <span
-                class="error"
-                v-if="!!!result.description && hasError"
-              >
-              {{ $t('category.req', { type: $t('prod.desc')}) }}
-            </span>
-            </div>
-
-            <!-- Template Selection Section -->
-            <div class="input-wrapper">
-              <label for="templateDropdown">{{ $t('templates.select_template') }}</label>
-              <select
-                id="templateDropdown"
-                class="form-control"
-                :disabled="isLoadingTemplates"
-                v-model="selectedTemplateId"
-              >
-                <option value="">{{ $t('templates.select_default') }}</option>
-                <!-- <option v-if="isLoadingTemplates" disabled>
-                  {{ $t('templates.loading') }}
-                </option>
-                <option v-if="templateError" disabled>
-                  {{ templateError }}
-                </option> -->
-                <option
-                  v-for="template in templates"
-                  :key="template.id"
-                  :value="template.id"
-                  :disabled="productCustomizations.some(c => c.template_id == template.id)"
-                >
-                  {{ template.title }}
-                </option>
-              </select>
-              <button
-                class="btn btn-sm primary-btn ml-10"
-                :disabled="!selectedTemplateId"
-                @click.prevent="addSelectedTemplate"
-              >
-                +
-              </button>
-            </div>
-
-            <div
-              v-if="productCustomizations.length"
-              class="selected-templates"
-            >
-              <div
-                v-for="(customization, index) in productCustomizations"
-                :key="customization.template_id || index"
-                class="template-pill"
-              >
-                <span class="template-name">
-                  {{ customization.template?.title }}
+                  {{ $t('category.req', { type: $t('category.mTitle')}) }}
                 </span>
+              </div>
 
+              <div class="input-wrapper">
+                <label>{{ $t('category.mDesc') }}</label>
+                <textarea
+                  :placeholder="$t('category.mDesc')"
+                  v-model="result.meta_description"
+                  :class="{invalid: !!!result.meta_description && hasError}"
+                />
+                <span class="pv2-count">{{ (result.meta_description || '').length }}/160</span>
                 <span
-                  class="remove-template"
-                  @click.prevent="removeTemplate(index)"
+                  class="error"
+                  v-if="!!!result.meta_description && hasError"
                 >
-                  ✕
+                  {{ $t('category.req', { type: $t('category.mDesc')}) }}
+                </span>
+              </div>
+
+              <div class="input-wrapper">
+                <label>{{ $t('ship.mk') }} ({{ $t('ship.csk') }})</label>
+                <textarea
+                  :placeholder="$t('ship.mk')"
+                  v-model="result.meta_keywords"
+                  :class="{invalid: !!!result.meta_keywords && hasError}"
+                />
+                <span
+                  class="error"
+                  v-if="!!!result.meta_keywords && hasError"
+                >
+                  {{ $t('category.req', { type: $t('ship.mk')}) }}
                 </span>
               </div>
             </div>
+          </section>
 
-            <button
-              class="ajax-btn primary-btn template_save_button"
-              :disabled="isSavingCustomizations || !productCustomizations.length"
-              @click.prevent="saveTemplateCustomizations"
-            >
-              {{ $t('setting.sv') }}
-              <span v-if="isSavingCustomizations" class="ml-2 spinner"></span>
-            </button>
-
-            <div class="dply-felx inputs mlr--7-5">
-
-              <div class="input-wrapper mlr-7-5">
-                <label class="block">{{ $t('category.status') }}</label>
-                <dropdown
-                  :selectedKey="`${result.status}`"
-                  :options="statusObj"
-                  @clicked="dropdownSelected"
-                />
-              </div>
-              <!-- Brand dropdown -->
-              <div class="input-wrapper mlr-7-5">
-                <label class="block">{{ $t('prod.brand') }}</label>
-                <dropdown
-                  v-if="allBrands"
-                  :default-null="true"
-                  :selectedKey="result.brand_id"
-                  :options="allBrands"
-                  @clicked="brandSelected"
-                />
-              </div>
-
-              <!-- Bundle Deals -->
-              <!-- <div class="input-wrapper mlr-7-5">
-                <label class="block">Bundle Deals</label>
-                <dropdown
-                  v-if="allBundleDeals"
-                  :default-null="true"
-                  :selectedKey="result.bundle_deal_id"
-                  :options="allBundleDeals"
-                  @clicked="bundleDealSelected"
-                />
-              </div> -->
-
-              <div class="input-wrapper mlr-7-5 pos-rel">
+          <!-- ==================== ORGANISATION ==================== -->
+          <section v-show="activeTab === 'organisation'">
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">Relationships</h5>
+              <div class="pv2-grid c3">
+                <div class="input-wrapper pos-rel">
                 <label class="block">Bundle Deals</label>
                 <div
                   class="custom-dropdown cp"
@@ -646,211 +854,289 @@
                 </div>
               </div>
 
-              <!-- Updated Upsell dropdown -->
-              <div class="input-wrapper mlr-7-5">
-                <label class="block">Upsell</label>
-                <dropdown
-                  v-if="allUpdatedUpsells"
-                  :default-null="true"
-                  :selectedKey="result.updated_upsell_id"
-                  :options="allUpdatedUpsells"
-                  @clicked="updatedUpsellSelected"
-                />
-              </div>
 
-              <!-- Cross Sell dropdown -->
-              <div class="input-wrapper mlr-7-5">
-                <label class="block">{{ $t('index.crosssell') }}</label>
-                <dropdown
-                  v-if="Object.keys(allUpsells).length"
-                  :default-null="true"
-                  :selectedKey="result.upsell_id"
-                  :options="allUpsells"
-                  @clicked="upsellSelected"
-                />
-                <span v-else-if="!loadingUpsells">{{ $t('prod.noUpsells') }}</span>
-                <span v-else>{{ $t('prod.loadingUpsells') }}</span>
-              </div>
+              <!--
+                Assigns EXISTING cross-sell promotions, several at a time.
+                Promotions are still created once under Promotions ->
+                Cross-sell; this only says which of them hang off this
+                product, which is the same question Bundle Deals beside it
+                answers.
 
+                On a saved product each tick writes on its own. On one being
+                created there is no id to write against, so the picker holds
+                the ticks and checkForm() flushes them through this ref once
+                the save returns an id.
+              -->
+              <cross-sell-select
+                ref="crossSellSelect"
+                :product-id="result.id || null"
+              />
+
+              </div>
             </div>
 
-            <div class="input-wrapper">
-              <label>{{ $t('prod.tags') }}</label>
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">Collections</h5>
+              <div class="pv2-chip-group">
+                <label
+                  v-for="(item, index) in allProductCollections"
+                  :key="index"
+                  class="pv2-chk-chip"
+                  :class="{ active: result.product_collections.includes(item.id) }"
+                >
+                  <input
+                    type="checkbox"
+                    v-model="result.product_collections"
+                    :value="item.id"
+                  >
+                  <span>{{ item.title }}</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">{{ $t('prod.tags') }}</h5>
               <tag-search
                 @add="addTag"
                 @delete="deleteTag"
                 :tags="result.tags"
               />
             </div>
+          </section>
 
-            <div class="input-wrapper">
-              <label>{{ $t('ship.mk') }} ({{ $t('ship.csk') }})</label>
-              <textarea
-                :placeholder="$t('ship.mk')"
-                v-model="result.meta_keywords"
-                :class="{invalid: !!!result.meta_keywords && hasError}"
-              />
-              <span
-                class="error"
-                v-if="!!!result.meta_keywords && hasError"
-              >
-                {{ $t('category.req', { type: $t('ship.mk')}) }}
-              </span>
-            </div>
-
-            <div class="input-wrapper">
-              <label>{{ $t('category.mTitle') }}</label>
-              <input
-                type="text"
-                :placeholder="$t('category.mTitle')"
-                v-model="result.meta_title"
-                :class="{invalid: !!!result.meta_title && hasError}"
-              >
-              <span
-                class="error"
-                v-if="!!!result.meta_title && hasError"
-              >
-                {{ $t('category.req', { type: $t('category.mTitle')}) }}
-              </span>
-            </div>
-
-            <div class="input-wrapper">
-              <label>{{ $t('category.mDesc') }}</label>
-              <textarea
-                :placeholder="$t('category.mDesc')"
-                v-model="result.meta_description"
-                :class="{invalid: !!!result.meta_description && hasError}"
-              />
-              <span
-                class="error"
-                v-if="!!!result.meta_description && hasError"
-              >
-                {{ $t('category.req', { type: $t('category.mDesc')}) }}
-              </span>
-            </div>
-
-            <div class="mb-10 mb-sm-5 cb-wrapper">
-              <span class="block mb-10">{{ $t('dataPage.prodCol') }}</span>
-              <label
-                v-for="(item, index) in allProductCollections"
-                :key="index"
-                class="mr-15 mb-10"
-              >
-                <input
-                  type="checkbox"
-                  v-model="result.product_collections"
-                  :value="item.id"
-                >
-                {{ item.title }}
-              </label>
-            </div>
-
-            <div class="mb-20 mb-sm-15 cb-wrapper">
-              <span class="block mb-10">{{ $t('prod.pInfo') }}</span>
+          <!-- ==================== ADVANCED ==================== -->
+          <section v-show="activeTab === 'advanced'">
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">{{ $t('prod.pInfo') }}</h5>
               <p>
                 <label class="mr-15">{{ $t('prod.refund') }}</label>
                 <label>
-                  <input
-                    type="radio"
-                    name="refundable"
-                    value="1"
-                    v-model="result.refundable"
-                  >
+                  <input type="radio" name="refundable" value="1" v-model="result.refundable">
                   {{ $t('prod.yes') }}
                 </label>
                 <label>
-                  <input
-                    type="radio"
-                    name="refundable"
-                    value="2"
-                    v-model="result.refundable"
-                  >
+                  <input type="radio" name="refundable" value="2" v-model="result.refundable">
                   {{ $t('prod.no') }}
                 </label>
               </p>
               <p>
                 <label class="mr-15">{{ $t('prod.warranty') }}</label>
                 <label>
-                  <input
-                    type="radio"
-                    name="warranty"
-                    value="1"
-                    v-model="result.warranty"
-                  >
+                  <input type="radio" name="warranty" value="1" v-model="result.warranty">
                   {{ $t('prod.yes') }}
                 </label>
                 <label>
-                  <input
-                    type="radio"
-                    name="warranty"
-                    value="2"
-                    v-model="result.warranty"
-                  >
+                  <input type="radio" name="warranty" value="2" v-model="result.warranty">
                   {{ $t('prod.no') }}
                 </label>
               </p>
             </div>
 
-            <!-- <div
-              v-if="validLicence && ($can('product', 'edit') || $can('product', 'create')) "
-              class="dply-felx j-right gap-15"
-            >
-              <ajax-button
-                name="save-edit"
-                class="primary-btn"
-                :text="$t('list.svn')"
-                :fetching-data="formSubmitting  && !redirect"
-              />
-              <ajax-button
-                name="save"
-                class="primary-btn"
-                :text="$t('setting.sv')"
-                :fetching-data="formSubmitting && redirect"
-              />
-            </div> -->
-          </form>
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">Purchase Note</h5>
+              <p class="pv2-help">Shown to the customer after they complete their purchase.</p>
+              <div class="input-wrapper">
+                <textarea
+                  rows="3"
+                  placeholder="e.g. Thank you! Your warranty is automatically registered."
+                  v-model="result.purchase_note"
+                />
+              </div>
+            </div>
+
+            <div class="pv2-card">
+              <h5 class="pv2-ctitle">Page Templates</h5>
+              <div class="input-wrapper">
+                <label for="templateDropdown">{{ $t('templates.select_template') }}</label>
+                <div class="pv2-inline pv2-tpl-row">
+                  <select
+                    id="templateDropdown"
+                    class="form-control"
+                    :disabled="isLoadingTemplates"
+                    v-model="selectedTemplateId"
+                  >
+                    <option value="">{{ $t('templates.select_default') }}</option>
+                    <option
+                      v-for="template in templates"
+                      :key="template.id"
+                      :value="template.id"
+                      :disabled="productCustomizations.some(c => c.template_id == template.id)"
+                    >
+                      {{ template.title }}
+                    </option>
+                  </select>
+                  <button
+                    class="btn primary-btn pv2-tpl-add"
+                    :disabled="!selectedTemplateId"
+                    @click.prevent="addSelectedTemplate"
+                    title="Add template"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div
+                v-if="productCustomizations.length"
+                class="selected-templates"
+              >
+                <div
+                  v-for="(customization, index) in productCustomizations"
+                  :key="customization.template_id || index"
+                  class="template-pill"
+                >
+                  <span class="template-name">
+                    {{ customization.template && customization.template.title }}
+                  </span>
+                  <span
+                    class="remove-template"
+                    @click.prevent="removeTemplate(index)"
+                  >
+                    ✕
+                  </span>
+                </div>
+              </div>
+
+              <button
+                class="ajax-btn primary-btn template_save_button"
+                :disabled="isSavingCustomizations || !productCustomizations.length"
+                @click.prevent="saveTemplateCustomizations"
+              >
+                {{ $t('setting.sv') }}
+                <span v-if="isSavingCustomizations" class="ml-2 spinner"></span>
+              </button>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+      <!-- ============ RIGHT SIDEBAR ============ -->
+      <aside class="pv2-side">
+        <div class="pv2-side-card">
+          <div class="pv2-side-title">{{ $t('category.status') }}</div>
+          <dropdown
+            :selectedKey="`${result.status}`"
+            :options="productStatusObj"
+            @clicked="dropdownSelected"
+          />
+          <div class="pv2-side-note">{{ `${result.status}` === '1' ? 'Live on storefront' : 'Not visible to customers' }}</div>
         </div>
 
+        <div class="pv2-side-card">
+          <div class="pv2-side-title">Brand &amp; Category</div>
+          <div class="input-wrapper">
+            <label class="block">{{ $t('prod.brand') }}</label>
+            <dropdown
+              v-if="allBrands"
+              :default-null="true"
+              :selectedKey="result.brand_id"
+              :options="allBrands"
+              @clicked="brandSelected"
+            />
+          </div>
 
-      </div>
+          <div class="input-wrapper pos-rel mt-15">
+            <label class="block">{{ $t('error.cat') }}</label>
+            <div
+              data-ignore="multiple-category"
+              @click.prevent="showCategories = !showCategories"
+              class="custom-dropdown cp"
+            >
+              <span class="ignore-click">{{ $t('title.choose') }} ({{ chosenCategoryCount }})
+                <i
+                  class="icon black ignore-click"
+                  :class="[{'arrow-up': showCategories}, {'arrow-down': !showCategories}]"
+                />
+              </span>
+            </div>
+            <ul v-if="showCategories" class="multiple-wrap" v-outside-click="closeDrop" id="multiple-category">
+              <input
+                class="mb-10"
+                type="text"
+                :placeholder="$t('list.sh')"
+                v-model="categorySearch"
+                @input="doCategorySearch"
+              >
+              <!--
+                 Each root with its subcategories under it. The options used
+                 to be top-level only: `product/dropdown-data` sends every
+                 root with its `child` array attached and the store threw the
+                 children away, so a subcategory could not be put on a product
+                 from this form at all - even though the API writes them and
+                 reads them back.
+              -->
+              <li
+                v-for="(item, index) in searchedCategories"
+                :key="index"
+                class="cat-group"
+              >
+                <label :label-for="`all-cat-${index}`" class="cat-group__parent">
+                  <input
+                    :id="`all-cat-${index}`"
+                    type="checkbox"
+                    v-model="result.product_categories"
+                    :value="index"
+                  >
+                  {{ item.title }}
+                </label>
+                <label
+                  v-for="sub in (item.child || [])"
+                  :key="`${index}-${sub.id}`"
+                  :label-for="`all-sub-${sub.id}`"
+                  class="cat-group__sub"
+                >
+                  <input
+                    :id="`all-sub-${sub.id}`"
+                    type="checkbox"
+                    :checked="isSubcategoryChosen(sub.id)"
+                    @change="toggleSubcategory(sub, index)"
+                  >
+                  {{ sub.title }}
+                </label>
+              </li>
+            </ul>
+          </div>
 
-      <div
-        class="tab-sidebar mt-15"
-        ref="productInventory"
-      >
-        <product-inventory
-          ref="inventoryComponent"
-          :product-id="result.id"
-          :attributes="allAttributes"
-          :product-price="parseFloat(currentPrice)"
-          @has-error="scrollToTop('productInventory')"
-        />
-      </div>
+          <div v-if="selectedCategories" class="input-wrapper mt-15">
+            <label class="block">{{ $t('title.prim') }}</label>
+            <dropdown
+              :selectedKey="result.primary_category_id"
+              :options="selectedCategories"
+              @clicked="primaryCategorySelected"
+            />
+          </div>
+        </div>
 
-      <div
-        v-if="validLicence && ($can('product', 'edit') || $can('product', 'create'))"
-        class="dply-felx j-right gap-15 mt-20"
-      >
+        <div class="pv2-side-card">
+          <div class="pv2-side-title">Featured Image</div>
+          <div class="pv2-thumb">
+            <img
+              v-if="result.image"
+              :src="getImageURL(result.image)"
+            >
+            <i v-else class="fas fa-image" />
+          </div>
+          <div class="pv2-side-note">Manage in the Media tab</div>
+        </div>
 
-        <ajax-button
-          name="save-edit"
-          class="primary-btn"
-          :text="$t('list.svn')"
-          :fetching-data="formSubmitting && !redirect"
-          @click.native="submitAll('save-edit')"
-        />
-
-        <ajax-button
-          name="save"
-          class="primary-btn"
-          :text="$t('setting.sv')"
-          :fetching-data="formSubmitting && redirect"
-          @click.native="submitAll('save')"
-        />
-
-      </div>
-
-    </div><!--left-area-->
+        <div class="pv2-side-card">
+          <div class="pv2-side-title">Quick Info</div>
+          <!-- "Price", not "Selling": this is the offer price when one is set -->
+          <div class="pv2-kv"><span class="k">Price</span><span class="v">{{ currencyIcon }}{{ uiPrice.toFixed(2) }}</span></div>
+          <div class="pv2-kv"><span class="k">Margin</span><span class="v" :style="{color: marginColor}">{{ uiMargin.toFixed(1) }}%</span></div>
+          <!--
+            A "Condition" row used to sit here reading uiCondition, which was
+            the hardcoded string 'New'. There is no condition on a product, so
+            every product in a shop that sells refurbished machines reported
+            itself as new. A stated fact that is not read from anything is
+            worse than no row.
+          -->
+          <div class="pv2-kv"><span class="k">Variant</span><span class="v">{{ uiVariable ? 'Variable' : 'Simple' }}</span></div>
+          <div class="pv2-kv"><span class="k">Categories</span><span class="v">{{ result.product_categories.length }}</span></div>
+        </div>
+      </aside>
+    </div>
   </div>
 </template>
 
@@ -863,6 +1149,8 @@
   import VideoUpload from '~/components/VideoUpload'
   import TagSearch from '~/components/TagSearch'
   import AjaxButton from '~/components/AjaxButton'
+  import ProductUpgrades from '~/components/partials/ProductUpgrades'
+  import CrossSellSelect from '~/components/partials/CrossSellSelect'
   import ProductInventory from '~/components/partials/ProductInventory'
   import DataPage from '~/components/partials/DataPage'
   import Dropdown from '~/components/Dropdown'
@@ -872,12 +1160,14 @@
   import VideoInput from "~/components/VideoInput";
   import outsideClick from '~/directives/outside-click.js'
   import {debounce} from "debounce";
+  import ProductFeatureImages from '~/components/partials/ProductFeatureImages'
 
   export default {
     name: "product",
     middleware: ['common-middleware', 'auth'],
     data() {
       return {
+        specifications: [],
         showBundleDeals: false,
         licence: null,
         categorySearch: '',
@@ -892,10 +1182,54 @@
         setApi: 'setProduct',
         setImageApi: 'setProductImage',
         setVideoApi: 'setProductVideo',
-        fileKeys: ['id', 'tax_rule_id', 'shipping_rule_id'],
+        fileKeys: ['id', 'tax_rule_id'],
         validationKeys: ['title', 'slug', 'short_heading', 'unit', 'meta_title', 'meta_description',
-          'description', 'overview', 'selling', 'purchased'],
+          'description', 'overview', 'selling', 'purchased', 'tax_rule_id'],
+        // "Sell only in": off = anywhere a shipping rule delivers.
+        sellRestricted: false,
+        sellCountryToAdd: '',
+        // ---- Tabbed UI state ----
+        activeTab: 'basic',
+        tabGroups: [
+          {g: 'PRODUCT', items: [
+            {k: 'basic', l: 'Basic Info', ic: 'fa-info-circle'},
+            {k: 'content', l: 'Content', ic: 'fa-align-left'},
+            {k: 'media', l: 'Media', ic: 'fa-images'}
+          ]},
+          {g: 'COMMERCE', items: [
+            {k: 'pricing', l: 'Pricing & Tax', ic: 'fa-tags'},
+            {k: 'inventory', l: 'Inventory', ic: 'fa-boxes'},
+            // How this product upgrades between its own variants. Under
+            // Commerce rather than Marketing: it is part of what the product
+            // IS, and it is derived from the variants on the tab above it.
+            {k: 'upgrades', l: 'Upgrades', ic: 'fa-arrow-up-right-dots'},
+            {k: 'shipping', l: 'Shipping', ic: 'fa-truck'}
+          ]},
+          {g: 'MARKETING', items: [
+            {k: 'seo', l: 'SEO & Meta', ic: 'fa-search'},
+            // Cross-sell is assigned on Organisation, beside Bundle Deals:
+            // both answer "what else goes with this", and a rail entry of its
+            // own put one relationship a click away from the other.
+            {k: 'organisation', l: 'Organisation', ic: 'fa-sitemap'}
+          ]},
+          {g: 'SETTINGS', items: [
+            {k: 'advanced', l: 'Advanced', ic: 'fa-cog'}
+          ]}
+        ],
+        fieldTabMap: {
+          title: 'basic', short_heading: 'basic', slug: 'basic', unit: 'basic',
+          selling: 'pricing', purchased: 'pricing', tax_rule_id: 'pricing',
+          sell_countries: 'shipping',
+          overview: 'content', description: 'content',
+          meta_title: 'seo', meta_description: 'seo'
+        },
+        // UI-only fields (not persisted until backend support is added)
+        uiVariable: false,
+        uiFocusKw: '',
+        // uiPurchaseNote / uiDims removed: these inputs are bound straight to
+        // result now, so what the admin types is actually saved.
         result: {
+          feature_images: [],
           id: '',
           title: '',
           short_heading: '',
@@ -911,7 +1245,7 @@
           badge: '',
           subcategory_id: '',
           tax_rule_id: '',
-          shipping_rule_id: '',
+          sell_countries: [],
           purchased: '',
           selling: '',
           offered: '',
@@ -927,14 +1261,16 @@
           product_images: [],
           product_collections: [],
           product_categories: [],
+          /*
+           * [{id, category_id}] - the shape ProductsController::action reads
+           * and find() returns. Carried on `result` so it posts with the rest
+           * of the form without a transform step to forget.
+           */
+          subcategories: [],
           excludeVAT: 0,
           procurement: 0,
           back_order: 0,
-          upsell_id: '',
-          updated_upsell_id: '',
-          wholesale_price: '',
-          wholesale_discount_type: 'fixed',
-          wholesale_discount_value: ''
+          upsell_id: ''
         },
         hasError: false,
         loading: false,
@@ -969,12 +1305,20 @@
       TagSearch,
       AjaxButton,
       ProductInventory,
+      ProductUpgrades,
+      CrossSellSelect,
       ErrorFormatter,
-      Spinner
+      Spinner,
+      ProductFeatureImages
     },
     computed: {
       productCategories() {
         return this.result.product_categories
+      },
+      /** Categories and subcategories together, which is what was chosen. */
+      chosenCategoryCount() {
+        return (this.result.product_categories || []).length
+          + (this.result.subcategories || []).length
       },
       selectedCategories() {
         let sc = null;
@@ -1003,16 +1347,224 @@
       currencyIcon() {
         return this.setting?.currency_icon || '$'
       },
+      // ---- Tabbed UI computed ----
+      uiCost() {
+        return parseFloat(this.result.purchased) || 0
+      },
+      /*
+       * The price a customer actually pays.
+       *
+       * This used to read result.selling, so a product on offer was measured
+       * against a price it is never sold at — a €1,000 phone offered at €899
+       * reported €990 profit instead of €889. currentPrice is the same
+       * offer-aware figure the storefront and checkout use.
+       */
+      uiPrice() {
+        return parseFloat(this.currentPrice) || 0
+      },
+      // The rate attached to the selected tax rule, as a percentage.
+      uiVatRate() {
+        const rule = this.allTaxRules ? this.allTaxRules[this.result.tax_rule_id] : null
+
+        if (!rule) {
+          return 0
+        }
+
+        // type 1 is a flat amount, which is not a percentage of the price.
+        return parseInt(rule.type) === 1 ? 0 : (parseFloat(rule.price) || 0)
+      },
+      /*
+       * Is the price the customer sees inclusive of VAT?
+       *
+       * excludeVAT marks a product as quoted *excluding* VAT, which checkout
+       * then adds on top. Anything else is already VAT-inclusive, so the tax
+       * has to come out before the figure counts as revenue.
+       */
+      uiPriceIncludesVat() {
+        return `${this.result.excludeVAT}` !== '1' && this.uiVatRate > 0
+      },
+      // Revenue the business keeps: VAT is collected for Revenue, not earned.
+      uiNetRevenue() {
+        if (!this.uiPriceIncludesVat) {
+          return this.uiPrice
+        }
+
+        return this.uiPrice / (1 + (this.uiVatRate / 100))
+      },
+      uiVatPortion() {
+        return this.uiPrice - this.uiNetRevenue
+      },
+      uiProfit() {
+        return this.uiNetRevenue - this.uiCost
+      },
+      uiMargin() {
+        return this.uiNetRevenue > 0
+          ? ((this.uiNetRevenue - this.uiCost) / this.uiNetRevenue * 100)
+          : 0
+      },
+      uiRoi() {
+        return this.uiCost > 0
+          ? ((this.uiNetRevenue - this.uiCost) / this.uiCost * 100)
+          : 0
+      },
+      marginColor() {
+        const m = this.uiMargin
+        return m >= 40 ? '#059669' : m >= 20 ? '#d97706' : '#dc2626'
+      },
+      /*
+       * Status 2 is called "Private" by the shared statusObj that every admin
+       * list uses, but the product editor's own primary action is "Save
+       * Draft" -- so this one screen said both. Products say Draft; renaming
+       * the shared key would rename status 2 for categories, brands and
+       * everything else that shares it.
+       */
+      productStatusObj() {
+        return {
+          1: {title: 'Public'},
+          2: {title: 'Draft'}
+        }
+      },
+      statusBadgeClass() {
+        return `${this.result.status}` === '1' ? 'is-public' : 'is-muted'
+      },
+      seoChecks() {
+        const mt = this.result.meta_title || ''
+        const md = this.result.meta_description || ''
+        const kw = (this.uiFocusKw || '').toLowerCase()
+        const slug = (this.result.slug || '').toLowerCase()
+        return [
+          {l: 'Focus keyword set', ok: !!kw},
+          {l: 'Keyword in meta title', ok: !!kw && mt.toLowerCase().includes(kw)},
+          {l: 'Keyword in slug', ok: !!kw && slug.includes(kw.replace(/\s+/g, '-'))},
+          {l: 'Meta title 50–60 chars', ok: mt.length >= 50 && mt.length <= 60},
+          {l: 'Meta description 120–160', ok: md.length >= 120 && md.length <= 160},
+          {l: 'Meta keywords added', ok: !!(this.result.meta_keywords || '').trim()}
+        ]
+      },
+      seoScore() {
+        const c = this.seoChecks
+        return Math.round(c.filter(x => x.ok).length / c.length * 100)
+      },
+      // Count of missing required fields per tab (only once validation has run)
+      tabErrors() {
+        if (!this.hasError) return {}
+        const errs = {}
+        this.validationKeys.forEach(k => {
+          if (!this.result[k]) {
+            const tab = this.fieldTabMap[k]
+            if (tab) errs[tab] = (errs[tab] || 0) + 1
+          }
+        })
+        return errs
+      },
+      errorCount() {
+        return Object.values(this.tabErrors).reduce((a, b) => a + b, 0)
+      },
       ...mapGetters(['mediaStorage']),
       ...mapGetters('admin', ['publicKey']),
       ...mapGetters('language', ['currentLanguage']),
       ...mapGetters('setting', ['setting']),
       ...mapGetters('common', ['allCategories', 'allTaxRules', 'allAttributes',
-        'allBrands','allProductCollections','allBundleDeals', 'allShippingRules', 'allUpdatedUpsells']),
+        'allBrands','allProductCollections','allBundleDeals', 'allShippingRules']),
+      ...mapGetters('resource', ['countryList']),
+      // The API sends "GB,IE" (or null); the form keeps an array.
+      sellCountryCodes() {
+        const value = this.result.sell_countries
+
+        if (Array.isArray(value)) return value
+
+        return value ? String(value).split(',').filter(Boolean) : []
+      },
+      countryOptions() {
+        return Object.values(this.countryList || {})
+          .filter(c => c?.code2 && !this.sellCountryCodes.includes(c.code2))
+          .map(c => ({code: c.code2, name: c.name}))
+          .sort((a, b) => a.name.localeCompare(b.name))
+      },
+    },
+    watch: {
+      /**
+       * Unticking a category takes its subcategories with it.
+       *
+       * The row in product_subcategories names both the subcategory and its
+       * parent, so one left behind after its parent was removed is a row
+       * pointing at a category the product is no longer in.
+       */
+      'result.product_categories'(chosen) {
+        const keep = (chosen || []).map(String)
+
+        const pruned = (this.result.subcategories || [])
+          .filter(s => keep.includes(String(s.category_id)))
+
+        if (pruned.length !== (this.result.subcategories || []).length) {
+          this.result.subcategories = pruned
+        }
+      }
     },
     methods: {
+      setTab(k) {
+        this.activeTab = k
+      },
+      setVariable() {
+        this.uiVariable = true
+        this.activeTab = 'inventory'
+      },
+      goBack() {
+        this.$router.push({path: `/${this.routeName}`})
+      },
+      statusLabel(s) {
+        const option = this.productStatusObj[`${s}`] || this.productStatusObj[s]
+        return option ? option.title : 'Draft'
+      },
+      featureImagesResult(data) {
+        this.result.feature_images = data
+      },
+      removeGroup(groupIndex) {
+        this.specifications.splice(groupIndex, 1)
+      },
+      addGroup() {
+        this.specifications.push({
+          group: '',
+          items: [
+            {
+              value: ''
+            }
+          ]
+        })
+      },
+      addItem(groupIndex) {
+        this.specifications[groupIndex]
+          .items
+          .push({
+            value: ''
+          })
+      },
+      removeItem(groupIndex, itemIndex) {
+        this.specifications[groupIndex]
+          .items
+          .splice(itemIndex, 1)
+      },
+      /*
+       * The two buttons used to differ only in where they navigated
+       * afterwards: "Save Draft" saved and stayed, "Publish" saved and went
+       * back to the list, and neither touched the product's status. Clicking
+       * Publish on a private product left it private, and Save Draft on a
+       * live one left it live.
+       *
+       * Save Draft now means draft. Publish, on a product being added, means
+       * public. Update, on an existing product, leaves the status alone --
+       * that is what the Status dropdown in the sidebar is for, and a button
+       * called Update should not quietly overrule it.
+       */
       async submitAll(type) {
         this.redirectingEnable(type)
+
+        if (type === 'save-edit') {
+          this.result.status = '2'
+        } else if (this.isAdding) {
+          this.result.status = '1'
+        }
+
         await this.checkForm()
       },
       refreshProductMedia(payload = {}) {
@@ -1048,16 +1600,14 @@
           )
         ]
       },
-      updatedUpsellSelected(data) {
-        this.result.updated_upsell_id = data.key
-      },
+
       upsellSelected(data) {
         this.result.upsell_id = data.key
       },
       async loadUpsells() {
         this.loadingUpsells = true
         try {
-          const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/';
+          const baseUrl = this.apiBase();
           const response = await this.$axios.get(`${baseUrl}api/upsells/active`);
 
           this.allUpsells = response.data
@@ -1067,24 +1617,73 @@
           this.loadingUpsells = false
         }
       },
-       upsellSelected(data) {
-        this.result.upsell_id = data.key
-      },
       doCategorySearch: debounce(function () {
           this.searchOnCategory()
         }, 500),
+      /**
+       * Search matches subcategories as well as roots.
+       *
+       * A root whose own name matches keeps all of its children; a root that
+       * does not match is still listed when one of its children does, with
+       * only the matching children under it - otherwise searching for "Apple"
+       * returned nothing, because Apple is a subcategory.
+       */
       searchOnCategory() {
-        this.searchedCategories = {}
+        const term = (this.categorySearch || '').toLowerCase().trim()
 
-        Object.keys(this.allCategories).filter(element =>
-          this.allCategories[element].title.toLowerCase().includes(this.categorySearch.toLowerCase())).forEach(i =>
-        {
-          this.searchedCategories[i] = this.allCategories[i]
+        if (!term) {
+          this.searchedCategories = this.allCategories
+          return
+        }
+
+        const matches = {}
+
+        Object.keys(this.allCategories).forEach(id => {
+          const category = this.allCategories[id]
+          const children = category.child || []
+          const parentHit = (category.title || '').toLowerCase().includes(term)
+
+          if (parentHit) {
+            matches[id] = category
+            return
+          }
+
+          const hitChildren = children.filter(
+            c => (c.title || '').toLowerCase().includes(term))
+
+          if (hitChildren.length) {
+            matches[id] = {...category, child: hitChildren}
+          }
         })
 
-        if(!Object.keys(this.searchedCategories)?.length && !this.categorySearch){
-          this.searchedCategories = this.allCategories
+        this.searchedCategories = matches
+      },
+      /** Is this subcategory on the product? */
+      isSubcategoryChosen(id) {
+        return (this.result.subcategories || []).some(s => String(s.id) === String(id))
+      },
+      /**
+       * Tick or untick one subcategory.
+       *
+       * Ticking one also ticks its parent: the row carries both ids, and a
+       * product filed under "Apple" that is not also under "Mobile" would be
+       * missing from the parent category on the storefront.
+       */
+      toggleSubcategory(sub, parentId) {
+        const chosen = (this.result.subcategories || []).slice()
+        const at = chosen.findIndex(s => String(s.id) === String(sub.id))
+
+        if (at > -1) {
+          chosen.splice(at, 1)
+        } else {
+          chosen.push({id: String(sub.id), category_id: String(parentId)})
+
+          if (!this.result.product_categories.includes(String(parentId))) {
+            this.result.product_categories.push(String(parentId))
+          }
         }
+
+        this.result.subcategories = chosen
       },
       closeDrop(){
         this.showCategories = false
@@ -1126,8 +1725,27 @@
       taxRuleSelected(data) {
         this.result.tax_rule_id = data.key
       },
-      shippingRuleSelected(data) {
-        this.result.shipping_rule_id = data.key
+      countryName(code) {
+        return this.countryList?.[code]?.name || code
+      },
+      setSellRestricted(on) {
+        this.sellRestricted = on
+
+        if (!on) {
+          this.result.sell_countries = []
+        }
+      },
+      addSellCountry() {
+        const code = this.sellCountryToAdd
+
+        if (code && !this.sellCountryCodes.includes(code)) {
+          this.result.sell_countries = [...this.sellCountryCodes, code]
+        }
+
+        this.sellCountryToAdd = ''
+      },
+      removeSellCountry(code) {
+        this.result.sell_countries = this.sellCountryCodes.filter(c => c !== code)
       },
       brandSelected(data) {
         this.result.brand_id = data.key
@@ -1136,10 +1754,14 @@
         this.redirect = buttonType === 'save'
       },
       async checkForm() {
-        
-        
-        if(this.validationKeys.findIndex((i) => { return (!this.result[i]) }) > -1){
+
+        const invalidKey = this.validationKeys.find((i) => !this.result[i])
+        if(invalidKey){
           this.hasError = true
+          if(this.fieldTabMap[invalidKey]) {
+            this.activeTab = this.fieldTabMap[invalidKey]
+          }
+          this.$nextTick(() => this.scrollToTop('productForm'))
           return false
         }
         this.formSubmitting = true
@@ -1149,10 +1771,13 @@
           delete this.result.updated_at
           this.result.bundle_deal_id = (this.result.bundle_deal_ids || []).join(',');
           delete this.result.bundle_deal_ids;
+          this.result.specifications = this.specifications;
+          this.result.sell_countries = this.sellRestricted ? this.sellCountryCodes : [];
           const inventoryComponent = this.$refs.inventoryComponent
           const inventoryValid = await inventoryComponent.validateInventoryBeforeSubmit()
           if (!inventoryValid) {
             this.formSubmitting = false
+            this.activeTab = 'inventory'
             this.scrollToTop('productInventory')
             return
           }
@@ -1164,12 +1789,6 @@
             this.updateProductState(data)
             await this.$nextTick()
 
-            
-            // this.result.product_collections = [...new Set(this.result?.product_collections?.map((o)=>{return o.product_collection_id || o}))]
-            // this.result.product_categories = [...new Set(this.result?.product_categories?.map((o) => { return (o.category_id || o)?.toString() }))]
-            // this.result.excludeVAT = this.result.excludeVAT ? 1 : 0;
-            // this.result.procurement = this.result.procurement ? 1 : 0;
-            // this.result.back_order = this.result.back_order ? 1 : 0;
 
             // Set product ID for template customizations
             this.productId = this.result.id;
@@ -1179,15 +1798,28 @@
 
             if (!inventorySaved) {
               this.formSubmitting = false
+              this.activeTab = 'inventory'
               this.scrollToTop('productInventory')
               return
             }
 
 
+            /*
+             * Cross-sells ticked before the product existed. Awaited, and
+             * before the redirect below: the picker writes one row per
+             * assignment and the route change would cut it off partway.
+             *
+             * A refused assignment is reported by the picker and does not
+             * fail the save -- the product itself is written by this point.
+             */
+            if (this.$refs.crossSellSelect) {
+              await this.$refs.crossSellSelect.flushPending()
+            }
+
             if (this.productCustomizations.length) {
               await this.saveTemplateCustomizations()
             }
-            
+
             this.$router.push({path: `/${this.routeName}${this.redirect ? '' : '/' + this.result.id}`})
           }else {
             this.scrollToTop()
@@ -1199,7 +1831,7 @@
       },
 
       scrollToTop(ref = "productForm"){
-        this.$refs[ref].scrollIntoView({ behavior: "smooth" })
+        this.$refs[ref] && this.$refs[ref].scrollIntoView({ behavior: "smooth" })
       },
       async fetchingData() {
         try {
@@ -1207,12 +1839,41 @@
           this.result = Object.assign({}, await this.getById({id: this.id, params: {}, api: this.getApi}))
 
           this.result.product_collections = [...new Set(this.result?.product_collections?.map((o) => { return o.product_collection_id }))]
+
+          /*
+           * find() hangs this product's subcategories under each category as
+           * `child`, and the line below flattens product_categories to bare
+           * ids - so read them out first or the selection is lost on every
+           * edit and the next save wipes the rows.
+           */
+          this.result.subcategories = (this.result?.product_categories || []).reduce((all, pc) => {
+            (pc?.category?.child || []).forEach(c => {
+              all.push({id: String(c.id), category_id: String(pc.category_id)})
+            })
+            return all
+          }, [])
+
           this.result.product_categories = [...new Set(this.result?.product_categories?.map((o) => { return o.category_id.toString() }))]
           this.result.bundle_deal_ids = this.result.bundle_deal_id ? this.result.bundle_deal_id.split(',').map(String) : [];
           this.excludeVAT = this.result.excludeVAT === 1;
-          
+          this.result.sell_countries = this.sellCountryCodes;
+          this.sellRestricted = this.result.sell_countries.length > 0;
+
           // Set product ID and load customizations
           this.productId = this.result.id;
+          this.specifications =
+            this.result.specifications?.length
+              ? this.result.specifications
+              : [
+                  {
+                    group: '',
+                    items: [
+                      {
+                        value: ''
+                      }
+                    ]
+                  }
+                ]
           await this.loadProductCustomizations(this.productId);
 
           this.loading = false
@@ -1261,7 +1922,7 @@
         try {
 
           const fd = new FormData()
-          
+
           this.fileKeys.forEach(i => {
             fd.append(i, this.result[i])
           })
@@ -1328,13 +1989,13 @@
           this.loading = false
         }
       },
-      
+
       // Template-related methods
       async loadTemplates() {
         this.isLoadingTemplates = true;
         this.templateError = null;
         try {
-          const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/';
+          const baseUrl = this.apiBase();
           const response = await this.$axios.get(`${baseUrl}api/templates/all`);
 
           this.templates = response.data;
@@ -1345,13 +2006,13 @@
           this.isLoadingTemplates = false;
         }
       },
-      
+
       async loadProductCustomizations(productId) {
         if (!productId) return;
-        
+
         try {
-         const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/';
-          
+         const baseUrl = this.apiBase();
+
           const response = await this.$axios.get(
             `${baseUrl}api/products/${productId}/customizations`
           );
@@ -1392,28 +2053,7 @@
         // Reset dropdown after adding
         this.selectedTemplateId = '';
       },
-      
-      // onTemplateSelect(event) {
-      //   const templateId = event.target.value;
-      //   if (templateId) {
-      //     const selectedTemplate = this.templates.find(tpl => tpl.id == templateId);
-      //     if (selectedTemplate) {
-      //       // Add new template section
-      //       this.productCustomizations.push({
-      //         template_id: selectedTemplate.id,
-      //         custom_content: selectedTemplate.content,
-      //         template: {
-      //           id: selectedTemplate.id,
-      //           title: selectedTemplate.title
-      //         }
-      //       });
-            
-      //       // Reset selection
-      //       event.target.value = '';
-      //     }
-      //   }
-      // },
-      
+
       updateTemplateContent(index, content) {
         // This ensures reactivity
         this.$set(this.productCustomizations, index, {
@@ -1421,11 +2061,11 @@
           custom_content: content
         });
       },
-      
+
       removeTemplate(index) {
         this.productCustomizations.splice(index, 1);
       },
-      
+
       async saveTemplateCustomizations() {
         if (!this.productId) {
           console.error('Product ID is required');
@@ -1434,8 +2074,8 @@
 
         try {
           this.isSavingCustomizations = true;
-          const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/';
-          
+          const baseUrl = this.apiBase();
+
           const response = await this.$axios.post(
             `${baseUrl}api/products/${this.productId}/customizations/bulk`,
             {
@@ -1445,18 +2085,29 @@
               }))
             }
           );
-          
+
           // Update with saved data (including any server-generated fields)
           this.productCustomizations = response.data;
-          
+
         } catch (error) {
           console.error('Error saving customizations:', error);
         } finally {
           this.isSavingCustomizations = false;
         }
       },
-      
-      ...mapActions('common', ['getById', 'setById', 'setImageById', 'getDropdownList', 'setWysiwygImage', 'deleteData'])
+
+      ...mapActions('common', ['getById', 'setById', 'setImageById', 'getDropdownList', 'setWysiwygImage', 'deleteData']),
+      ...mapActions('resource', ['setCountryList']),
+      // Names for "Sell only in"; the same list the Shipping Rules page loads.
+      async loadCountryList() {
+        if (this.countryList) return
+
+        try {
+          this.setCountryList(await this.getById({params: null, id: 'countries', api: 'resource'}))
+        } catch (e) {
+          // The chips fall back to the codes; nothing else depends on it.
+        }
+      }
     },
     async mounted() {
       const domain = window.location.hostname
@@ -1475,6 +2126,15 @@
           this.validLicence = true
         }
       }
+
+      // Deep link from the Products grid: ?tab=seo opens on SEO & Meta.
+      const requestedTab = this.$route.query.tab
+
+      if (requestedTab && this.tabGroups.some(g => g.items.some(t => t.k === requestedTab))) {
+        this.activeTab = requestedTab
+      }
+
+      this.loadCountryList()
 
       await this.loadUpsells();
 
@@ -1502,7 +2162,67 @@
 </script>
 
 <style scoped>
-/* Add checkbox styles if needed */
+/* ---- category picker: a root and its subcategories ------------------
+
+   A group is an <li>, so it is not one of the `.multiple-wrap > label`
+   options multiple-dropdown.styl lays out in two columns; it takes the
+   full width and each child sits directly under its own parent.
+
+   Every selector below carries three classes on purpose. The rule further
+   down this file,
+
+     .pv2-side-card .multiple-wrap label { padding: 6px 4px }
+
+   is (0,3,1) - the bare `label` in it outranks a two-class selector - so a
+   two-class indent is silently flattened back to 4px. That is exactly what
+   happened the first time round: the subcategories were listed, but level
+   with their parents, so the whole thing still read as one flat list.
+   Measured in the running panel, not counted. */
+
+.multiple-wrap .cat-group {
+  width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.multiple-wrap .cat-group .cat-group__parent {
+  font-weight: 600;
+  color: #111827;
+}
+
+.multiple-wrap .cat-group .cat-group__sub {
+  position: relative;
+  padding-left: 30px;
+  color: #4B5563;
+}
+
+/* the tree: a rail down the group, and an elbow into each child */
+
+.multiple-wrap .cat-group .cat-group__sub::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #E5E7EB;
+}
+
+/* the rail stops at the last child rather than running past it */
+.multiple-wrap .cat-group .cat-group__sub:last-child::before { bottom: 50%; }
+
+.multiple-wrap .cat-group .cat-group__sub::after {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  width: 9px;
+  height: 1px;
+  background: #E5E7EB;
+}
+
+/* ---- Checkbox / template / spec styles (preserved) ---- */
 .checkbox-container {
   display: flex;
   align-items: center;
@@ -1511,10 +2231,6 @@
 
 .checkbox-input {
   margin-right: 8px;
-}
-
-.checkbox-checkmark {
-  /* Add your custom checkbox styles here */
 }
 
 .checkbox-label {
@@ -1574,15 +2290,58 @@
 }
 
 .input-wrapper select{
-  height:38px;
+  height:40px;
+  width:100%;
   padding:0 12px;
-  border:1px solid #dcdcdc;
-  border-radius:6px;
+  border:1px solid var(--border-strong, #D1D5DB);
+  border-radius:8px;
   background:#fff;
   font-size:14px;
   cursor:pointer;
   transition:all .2s ease;
 }
+
+/* invisible label to vertically align checkboxes with adjacent dropdowns */
+.pv2-spacer-lbl{ display:block; }
+
+/* A note that stands in for a field, in the same column rhythm. */
+.pv2-field-note{ margin:0; font-size:12.5px; line-height:1.5; color:#64748b; }
+.pv2-span-2{ grid-column:span 2; }
+@media only screen and (max-width:900px){ .pv2-span-2{ grid-column:span 1; } }
+@media only screen and (max-width:1200px){ .pv2-spacer-lbl{ display:none; } }
+
+/* "Where this product can be sold" */
+.pv2-sell-countries{ margin-top:14px; display:flex; flex-direction:column; align-items:flex-start; gap:10px; }
+.pv2-sell-add{ width:280px; max-width:100%; margin:0; }
+.pv2-chip-remove{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:18px; height:18px; line-height:18px; margin-left:2px;
+  border-radius:50%; font-size:15px; color:#33319a; text-decoration:none;
+}
+.pv2-chip-remove:hover, .pv2-chip-remove:focus{ background:rgba(51,49,154,.14); }
+.pv2-sell-warn{ color:#b45309; margin:0; }
+
+/* checkbox chips (collections) */
+.pv2-chip-group{ display:flex; flex-wrap:wrap; gap:8px; }
+.pv2-chk-chip{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:8px 14px; border:1px solid #e2e8f0; border-radius:8px;
+  cursor:pointer; font-size:13px; color:#475569; transition:all .15s; user-select:none;
+  margin:0;
+}
+.pv2-chk-chip input{ accent-color:#33319a; width:15px; height:15px; margin:0; }
+.pv2-chk-chip:hover{ border-color:#c7cdd6; }
+.pv2-chk-chip.active{ border-color:#33319a; background:rgba(51,49,154,.06); color:#33319a; font-weight:600; }
+
+/* inline field: amount + unit select on one line */
+.pv2-inline{ display:flex; gap:6px; }
+.pv2-inline > input{ flex:1; min-width:0; }
+.pv2-inline > .pv2-inline-sel{ width:auto; flex:0 0 auto; }
+
+/* page-templates: select + add button on one row */
+.pv2-tpl-row{ align-items:center; gap:8px; }
+.pv2-tpl-row > select{ flex:1; min-width:0; margin:0; }
+.pv2-tpl-add{ flex:0 0 auto; width:40px; height:40px; padding:0; font-size:18px; line-height:1; }
 
 .bundle-item {
   display: flex;
@@ -1604,8 +2363,315 @@
   width: 100%;
 }
 
+.spec-group{
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:20px;
+  margin-bottom:20px;
+  background:#fff;
+}
+
+.spec-header{
+  display:flex;
+  align-items:end;
+  gap:12px;
+  margin-bottom:15px;
+}
+
+.category-input{
+  flex:1;
+}
+
+.category-input label{
+  display:block;
+  margin-bottom:6px;
+  font-size:13px;
+  font-weight:600;
+  color:#6b7280;
+}
+
+.category-input input{
+  width:100%;
+  height:42px;
+}
+
+.spec-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.specification-input{
+  flex:1;
+}
+
+.specification-input input{
+  width:100%;
+  height:40px;
+  border-radius:8px;
+}
+
+.icon-btn{
+  width:38px;
+  height:38px;
+  border:none;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:0.2s ease;
+}
+
+.icon-btn i{
+  font-size:13px;
+}
+
+.icon-btn.danger{
+  background:#fee2e2;
+  color:#dc2626;
+}
+
+.icon-btn.danger:hover{
+  background:#fecaca;
+}
+
+.add-link{
+  background:none;
+  border:none;
+  padding:0;
+  margin-top:8px;
+  color:#33319a;
+  font-size:14px;
+  font-weight:600;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* ======================================================
+   Tabbed product editor (pv2) layout
+   ====================================================== */
+.product-form.pv2{ display:block; }
+
+.pv2-topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; flex-wrap:wrap;
+  background:#fff; border:1px solid #eee; border-radius:12px;
+  padding:12px 16px; margin-bottom:16px;
+  box-shadow:0 1px 2px rgba(0,0,0,.06);
+  position:sticky; top:0; z-index:20;
+}
+/* keep in-card dropdown controls rounded to match inputs */
+.pv2-form .custom-dropdown,
+.pv2-form .custom-dropdown > span,
+.pv2-side-card .custom-dropdown,
+.pv2-side-card .custom-dropdown > span{ border-radius:8px; }
+.pv2-topbar-left{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.pv2-topbar-right{ display:flex; align-items:center; gap:8px; }
+.pv2-back{ padding:0px 12px; }
+.pv2-title{ margin:0; font-size:17px; font-weight:700; }
+.pv2-divider{ width:1px; height:22px; background:#e5e7eb; }
+.pv2-badge{ padding:3px 10px; border-radius:6px; font-size:11px; font-weight:600; text-transform:capitalize; }
+.pv2-badge.is-public{ background:rgba(5,150,105,.1); color:#059669; }
+.pv2-badge.is-muted{ background:rgba(217,119,6,.1); color:#d97706; }
+.pv2-badge.is-type{ background:#f1f5f9; color:#475569; }
+
+.pv2-body{ display:flex; gap:16px; align-items:flex-start; }
+
+.pv2-rail{
+  width:190px; flex-shrink:0;
+  background:#fff; border:1px solid #eee; border-radius:10px;
+  padding:8px 6px; position:sticky; top:76px;
+}
+.pv2-rail-group{ margin-bottom:6px; }
+.pv2-rail-gtitle{
+  font-size:10px; font-weight:700; letter-spacing:.08em; color:#94a3b8;
+  padding:12px 12px 5px; text-transform:uppercase;
+}
+.pv2-rail-item{
+  display:flex; align-items:center; gap:10px; width:100%;
+  padding:8px 12px; border:none; background:transparent; border-radius:8px;
+  cursor:pointer; font-size:13px; font-weight:500; color:#475569;
+  text-align:left; font-family:inherit;
+}
+.pv2-rail-item:hover{ background:#f1f5f9; }
+.pv2-rail-item.active{ background:rgba(51,49,154,.08); color:#33319a; font-weight:600; }
+.pv2-rail-ic{ width:18px; text-align:center; font-size:13px; }
+.pv2-rail-item.has-err{ color:#dc2626; }
+.pv2-rail-item.has-err.active{ background:rgba(220,38,38,.08); color:#dc2626; }
+.pv2-rail-badge{
+  margin-left:auto; flex-shrink:0;
+  min-width:18px; height:18px; padding:0 5px;
+  border-radius:9px; background:#dc2626; color:#fff;
+  font-size:10.5px; font-weight:700; line-height:18px; text-align:center;
+}
+
+/* client-side validation summary banner */
+.pv2-err-banner{
+  display:flex; align-items:center; gap:8px;
+  padding:11px 14px; margin-bottom:14px;
+  border-radius:10px;
+  background:#fef2f2; border:1px solid #fecaca; color:#b91c1c;
+  font-size:13px;
+}
+.pv2-err-banner i{ font-size:15px; flex-shrink:0; }
+
+/* field-level errors */
+.pv2-form .error{
+  display:inline-flex; align-items:center; gap:5px;
+  margin-top:6px; font-size:12px; font-weight:500; color:#dc2626;
+}
+.pv2-form .error::before{ content:'\26A0'; font-size:12px; line-height:1; }
+.pv2-form .invalid,
+.pv2-form input.invalid,
+.pv2-form textarea.invalid{
+  border-color:#dc2626 !important;
+  background:#fef2f2 !important;
+}
+.pv2-form .whysigwyg-error{
+  border:1px solid #dc2626;
+  border-radius:8px;
+  padding:2px;
+}
+
+.pv2-content{ flex:1; min-width:0; }
+.pv2-side{ width:270px; flex-shrink:0; position:sticky; top:76px; display:flex; flex-direction:column; gap:14px; }
+
+.pv2-card{
+  background:#fff; border:1px solid #eee; border-radius:12px;
+  padding:20px; margin-bottom:16px;
+}
+.pv2-ctitle{ font-size:15px; font-weight:700; margin:0 0 16px; }
+.pv2-ctitle .mt{ color:#94a3b8; font-weight:400; }
+.pv2-help{ font-size:13px; color:#94a3b8; margin:-6px 0 14px; }
+
+/* ---- Technical Specifications (single-column) ---- */
+.pv2-spec-box{ border:1px solid #e8ecf0; border-radius:12px; padding:16px; margin-bottom:12px; }
+.pv2-spec-cat{ margin-bottom:14px; }
+.pv2-spec-label{ font-size:12px; font-weight:600; color:#64748b; display:block; margin-bottom:6px; }
+.pv2-spec-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.pv2-spec-input{
+  flex:1; width:100%;
+  background:#f1f5f9; border:1px solid #e8ecf0; border-radius:8px;
+  padding:10px 14px; font-size:13px; color:#0f172a; outline:none;
+  transition:border-color .15s, background .15s;
+}
+.pv2-spec-input:focus{ border-color:#33319a; background:#fff; }
+.pv2-spec-del{
+  width:38px; height:38px; flex-shrink:0;
+  border:none; border-radius:8px; cursor:pointer;
+  background:#fef2f2; color:#dc2626; font-size:13px;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .15s;
+}
+.pv2-spec-del:hover{ background:#fee2e2; }
+.pv2-spec-add{
+  margin-top:4px; padding:0px 14px;
+  background:#f1f5f9; border:1px solid #e8ecf0; border-radius:8px;
+  color:#475569; font-size:12.5px; font-weight:600; cursor:pointer;
+}
+.pv2-spec-add:hover{ background:#e8ecf0; }
+.pv2-spec-addcat{ margin-top:6px; }
+.pv2-note{ display:flex; align-items:center; color:#475569; font-size:13px; background:#f8fafc; }
+
+.pv2-grid{ display:grid; gap:14px; align-items:start; }
+.pv2-grid.c2{ grid-template-columns:repeat(2,1fr); }
+.pv2-grid.c3{ grid-template-columns:repeat(3,1fr); }
+.pv2-grid.c4{ grid-template-columns:repeat(4,1fr); }
+
+.pv2-type-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.pv2-type-grid.two{ grid-template-columns:repeat(2,1fr); }
+.pv2-type{
+  border:2px solid #e5e7eb; border-radius:12px; padding:16px;
+  text-align:center; cursor:pointer; transition:.15s;
+}
+.pv2-type:hover{ border-color:#c7cdd6; }
+.pv2-type.sel{ border-color:#33319a; background:rgba(51,49,154,.06); }
+.pv2-type i{ font-size:22px; color:#33319a; }
+.pv2-type-l{ font-weight:700; font-size:13px; margin-top:6px; }
+.pv2-type-d{ font-size:11px; color:#94a3b8; margin-top:3px; }
+.pv2-type-vat{ font-size:11px; font-weight:600; color:#33319a; margin-top:5px; }
+
+.pv2-profit{ background:linear-gradient(135deg,rgba(5,150,105,.05),rgba(51,49,154,.05)); border:1px dashed #e5e7eb; }
+/* auto-fit so the optional Ex-VAT tile does not squash the row */
+.pv2-profit-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(96px,1fr)); text-align:center; gap:8px; }
+.pv2-profit-l{ font-size:11px; text-transform:uppercase; color:#94a3b8; margin-bottom:6px; }
+.pv2-profit-v{ font-size:20px; font-weight:800; }
+.pv2-profit-note{ display:inline-block; font-size:9px; letter-spacing:.04em; color:#64748b;
+  background:#e2e8f0; border-radius:3px; padding:1px 4px; margin-left:3px; vertical-align:1px; }
+.pv2-profit-hint{ margin:12px 0 0; font-size:12px; line-height:1.5; color:#64748b; text-align:center; }
+
+.pv2-seo-row{ margin-bottom:0; }
+.pv2-seo-check{ display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid #f1f5f9; font-size:13px; }
+.pv2-seo-dot{ width:10px; height:10px; border-radius:5px; flex-shrink:0; }
+.pv2-google{ padding:16px; border:1px solid #e5e7eb; border-radius:10px; background:#f8fafc; }
+.pv2-google-t{ color:#1a0dab; font-size:17px; font-weight:600; line-height:1.3; }
+.pv2-google-u{ color:#006621; font-size:13px; margin:4px 0; }
+.pv2-google-d{ font-size:13px; color:#545454; line-height:1.5; }
+.pv2-count{ display:block; font-size:11px; color:#94a3b8; margin-top:4px; }
+
+.pv2-custom-row{ display:grid; grid-template-columns:1fr 1fr 160px 40px; gap:10px; align-items:end; margin-bottom:12px; }
+.pv2-custom-del{ margin-bottom:2px; }
+
+.pv2-side-card{ background:#fff; border:1px solid #eee; border-radius:12px; padding:16px; }
+.pv2-side-title{ font-size:13px; font-weight:700; margin:0 0 12px; }
+.pv2-side-note{ font-size:11px; color:#94a3b8; margin-top:8px; }
+/* full-width, consistent dropdowns inside the sidebar cards */
+.pv2-side-card .input-wrapper{ margin-bottom:0; }
+.pv2-side-card .input-wrapper label{ margin-bottom:5px; }
+.pv2-side-card .custom-dropdown{ width:100%; }
+.pv2-side-card .custom-dropdown > span{
+  display:flex; align-items:center; justify-content:space-between;
+  width:100%; box-sizing:border-box;
+}
+/* keep the category multiselect popover within the narrow sidebar */
+.pv2-side-card .multiple-wrap{
+  width:100%; left:0; right:auto; box-sizing:border-box;
+  max-height:240px; overflow-y:auto;
+}
+/* one category per row: checkbox inline with its label */
+.pv2-side-card .multiple-wrap label{
+  display:flex; align-items:center; gap:8px;
+  width:100%; margin:0; padding:6px 4px;
+  font-size:13px; font-weight:400; cursor:pointer; white-space:normal;
+}
+.pv2-side-card .multiple-wrap label input{
+  width:15px; height:15px; margin:0; flex-shrink:0; accent-color:#33319a;
+}
+.pv2-side-card .multiple-wrap > input{ width:100%; margin-bottom:8px; }
+.pv2-kv{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f1f5f9; font-size:12px; }
+.pv2-kv:last-child{ border-bottom:none; }
+.pv2-kv .k{ color:#94a3b8; }
+.pv2-kv .v{ font-weight:600; text-transform:capitalize; }
+.pv2-thumb{
+  aspect-ratio:1; border-radius:10px; background:#f8fafc; border:2px dashed #e5e7eb;
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+  color:#cbd5e1; font-size:30px;
+}
+.pv2-thumb img{ width:100%; height:100%; object-fit:cover; }
+
+@media only screen and (max-width:1200px){
+  .pv2-body{ flex-direction:column; }
+  .pv2-rail{ width:100%; position:static; display:flex; flex-wrap:wrap; gap:4px; }
+  .pv2-rail-group{ display:flex; flex-wrap:wrap; align-items:center; gap:4px; margin:0; }
+  .pv2-rail-gtitle{ width:100%; padding:6px 8px 2px; }
+  .pv2-rail-item{ width:auto; }
+  .pv2-side{ width:100%; position:static; }
+  .pv2-grid.c3,.pv2-grid.c4,.pv2-type-grid,.pv2-seo-row{ grid-template-columns:repeat(2,1fr); }
+  .pv2-profit-grid{ grid-template-columns:repeat(3,1fr); }
+  .pv2-custom-row{ grid-template-columns:1fr 1fr; }
+}
+
+@media only screen and (max-width:576px){
+  .pv2-grid.c2,.pv2-grid.c3,.pv2-grid.c4,.pv2-type-grid,.pv2-seo-row,.pv2-profit-grid,.pv2-custom-row{ grid-template-columns:1fr; }
+  .pv2-topbar{ position:static; }
 }
 </style>

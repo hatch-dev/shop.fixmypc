@@ -1,26 +1,31 @@
 <template>
 
   <div class="container-fluid">
-    <transition name="fade" mode="out-in">
-      <div class="spinner-wrapper flex" v-if="fetchingVoucherData">
-        <spinner :radius="100"/>
-      </div>
-    </transition>
+
+    <!--
+      The spinner used to render above the page rather than instead of it, so
+      the voucher cards, the wallet figures and the empty states were all on
+      screen while the three requests behind them were still in flight.
+    -->
+    <account-skeleton
+      v-if="fetchingVoucherData"
+      :cards="3"
+      :tiles="4"
+      heading
+      label="Loading your vouchers"
+    />
+
+    <template v-else>
 
     <div class="card-box p-4 mb-4 d-flex justify-content-between align-items-center">
         <div>
             <h5 class="mb-1 order-hrading">My Vouchers</h5>
             <small class="text-muted">Manage your discount vouchers and gift codes</small>
         </div>
-        <select v-model="filterType" class="sort-select">
-          <option value="active">Active</option>
-          <option value="expired">Expired</option>
-          <option value="all">All</option>
-        </select>
     </div>
 
-    <div class="row g-3 mb-4">
-      <div class="col-md-4">
+    <div class="row g-3 mb-4 voucher-stats">
+      <div class="col-4">
           <div class="voucher-stat position-relative">
               <div class="stat-icon"><i class="fa-solid fa-ticket"
                       style="color: rgb(82, 90, 107);"></i></div>
@@ -29,7 +34,7 @@
               <span class="text-muted small">Active & Expired</span>
           </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-4">
           <div class="voucher-stat position-relative">
               <div class="stat-icon"><i class="fa-solid fa-circle-check"
                       style="color: rgb(82, 90, 107);"></i></div>
@@ -39,30 +44,56 @@
               <span class="text-muted small">Ready to use</span>
           </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-4">
           <div class="voucher-stat position-relative">
               <div class="stat-icon"><i class="fa-solid fa-euro-sign"
                       style="color: rgb(82, 90, 107);"></i></div>
 
               <small>TOTAL SAVED</small>
-              <h5 class="total-vouchers"> {{ currencyIcon }}{{ totalSaved }}</h5>
+              <!-- null until /user/savings answers; a dash rather than a guess -->
+              <h5 class="total-vouchers">{{ totalSaved === null ? '—' : currencyIcon + totalSaved }}</h5>
               <span class="text-muted small">Lifetime savings</span>
           </div>
       </div>
     </div>
 
-    <div class="card-box voucher-box p-4">
-        <h6 class="mb-3">Apply Voucher Code</h6>
-        <div class="voucher-form mb-2">
-            <input type="text" class="voucher-input" placeholder="Enter voucher code">
-            <button class="apply-btn">Apply Code</button>
+    <!--
+      Redeem a gift card. Was "Apply Voucher Code": an input bound to nothing
+      and a button with no handler. A code, bought here or received, becomes
+      a voucher in the list below, applied at checkout; what an order does not
+      use stays on it for the next one.
+    -->
+    <form class="card-box voucher-box p-4 gift-redeem" @submit.prevent="redeemGift(redeemCode)">
+        <div class="gift-redeem-head">
+          <span class="gift-redeem-icon" aria-hidden="true"><i class="fa-solid fa-gift"></i></span>
+          <div>
+            <h6 class="mb-1">Redeem a gift card</h6>
+            <small class="text-muted d-block">
+              Enter the code from your gift card email. It is added to your vouchers below:
+              apply it at checkout, and anything an order does not use stays on it for next time.
+            </small>
+          </div>
         </div>
-        <small class="text-muted d-block">
-            Enter a valid voucher code to add it to your account
-        </small>
-    </div>
+        <div class="voucher-form mb-0 mt-3">
+            <label for="gift-redeem" class="sr-only">Gift card code</label>
+            <input
+              id="gift-redeem"
+              v-model.trim="redeemCode"
+              type="text"
+              class="voucher-input gift-code-input"
+              placeholder="GIFT-XXXX-XXXX"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              maxlength="20"
+            >
+            <button type="submit" class="apply-btn" :disabled="!redeemCode || redeeming">
+              {{ redeeming ? 'Adding…' : 'Add to my vouchers' }}
+            </button>
+        </div>
+    </form>
     
-    <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 mb-2 voucher-list-head">
         <h6 class="mb-0">
           {{ filterType === 'active' ? 'Active Vouchers' :
             filterType === 'expired' ? 'Expired Vouchers' :
@@ -92,10 +123,17 @@
                           ACTIVE
                         </span>
                     </div>
-                    <p class="text-muted small mt-1 mb-3">
+                    <p v-if="item.is_gift_card" class="text-muted small mt-1 mb-3">
+                        Gift card. {{ currencyIcon }}{{ item.gift_balance }} left of {{ currencyIcon }}{{ Number(item.gift_value).toFixed(2) }}.
+                        No minimum spend; what an order does not use stays for next time.
+                    </p>
+                    <p v-else-if="item.user_id" class="text-muted small mt-1 mb-3">
+                        Gift voucher. One use, on any order, for your account only.
+                    </p>
+                    <p v-else class="text-muted small mt-1 mb-3">
                         Valid on orders above {{ currencyIcon + item.min_spend }}. Cannot be combined with other offers.
                     </p>
-                    <div class="d-flex gap-5 flex-wrap expire-boxed">
+                    <div class="d-flex gap-5 flex-wrap expire-boxed voucher-meta">
                         <div>
                             <small class="text-muted">Code</small><br>
                             <div class="code-box">
@@ -112,7 +150,11 @@
                                 </span>
                               </span>
                         </div>
-                        <div>
+                        <div v-if="item.is_gift_card">
+                            <small class="text-muted">Balance</small><br>
+                            <strong>{{ currencyIcon }}{{ item.gift_balance }}</strong>
+                        </div>
+                        <div v-else>
                             <small class="text-muted">Discount</small><br>
                             <strong>{{ item.type === 2 ? item.price + '%' : currencyIcon + item.price }}</strong>
                         </div>
@@ -122,7 +164,7 @@
                         </div>
                     </div>
                 </div>
-                <button class="btn-use-now">Use Now</button>
+                <button class="btn-use-now" @click="goToCart">Use Now</button>
             </div>
 
             <div class="voucher-progress-wrapper mt-3">
@@ -143,11 +185,15 @@
       <div class="d-flex justify-content-between align-items-start flex-wrap">
           <div>
               <strong>{{ item.title }}</strong>
-              <span class="badge-expired ms-2">EXPIRED</span>
-              <p class="text-muted small mt-1 mb-3">
-                  Welcome discount for new customers. Valid on first purchase only.
+              <span class="badge-expired ms-2">{{ isUsedUp(item) ? 'USED' : 'EXPIRED' }}</span>
+              <!-- was the same "Welcome discount for new customers" text on every expired voucher -->
+              <p v-if="isUsedUp(item)" class="text-muted small mt-1 mb-3">
+                  Gift card. All {{ currencyIcon }}{{ Number(item.gift_value).toFixed(2) }} has been spent.
               </p>
-              <div class="d-flex gap-5 flex-wrap expire-boxed">
+              <p v-else class="text-muted small mt-1 mb-3">
+                  Was valid on orders above {{ currencyIcon + item.min_spend }}.
+              </p>
+              <div class="d-flex gap-5 flex-wrap expire-boxed voucher-meta">
                   <div>
                       <small class="text-muted">Code</small><br>
                       <div class="code-box">{{ item.code }}</div>
@@ -157,131 +203,345 @@
                       <strong>{{ item.type === 2 ? item.price + '%' : currencyIcon + item.price }}</strong>
                   </div>
                   <div>
-                      <small class="text-muted">Expired On</small><br>
+                      <small class="text-muted">{{ isUsedUp(item) ? 'Valid until' : 'Expired On' }}</small><br>
                       <strong>{{ item.end_time }}</strong>
                   </div>
               </div>
           </div>
-          <button class="btn btn-light btn-sm" disabled>Expired</button>
+          <button class="btn btn-light btn-sm" disabled>{{ isUsedUp(item) ? 'Used' : 'Expired' }}</button>
       </div>
     </div>
 
-    <div class="card-box p-4 mb-4 mt-4">
-      <div class="mb-4">
-          <h6 class="mb-1">Gift a Voucher</h6>
+    <!--
+      Every gift card bought, one code each: who it went to, and whether it
+      has been used. A card for yourself can be added to your vouchers here.
+    -->
+    <section v-if="giftCodes.length" ref="giftCodesSection" class="card-box p-4 mt-4 gift-codes">
+      <div class="gift-codes-head">
+        <div>
+          <h6 class="mb-1">My gift cards</h6>
           <small class="text-muted">
-              Purchase a gift voucher for friends and family. You can use your Savers Club balance to
-              buy vouchers.
+            Cards you have bought. Each code can be redeemed once, by whoever has it.
           </small>
+        </div>
+        <span class="gift-codes-count">{{ giftCodes.length }}</span>
       </div>
 
-      <div class="row g-3">
-        <div
-          class="col-md-4"
-          v-for="voucher in giftVouchers"
-          :key="voucher.id"
+      <ul class="gift-code-list">
+        <li v-for="gc in giftCodes" :key="gc.id" class="gift-code" :class="`is-${gc.state}`">
+          <div class="gift-code-value">{{ currencyIcon }}{{ gc.amount }}</div>
 
-        >
-          <div class="voucher-card">
-
-            <div class="voucher-img">
-              <lazy-image :data-src="getImageURL(voucher.image)" :alt="voucher.title" :title="voucher.title" />
-            </div>
-
-            <div class="voucher-body">
-
-              <h6 class="voucher-title">
-                {{ voucher.title }}
-              </h6>
-
-              <p class="voucher-desc">
-                {{ voucher.description }}
-              </p>
-
-              <div class="voucher-amounts mb-2">
-                <button
-                  v-for="amt in voucher.amounts"
-                  :key="amt"
-                  @click="selectAmount(voucher.id, amt)"
-                  :class="[
-                    'amount-chip',
-                    { active: selectedVoucherAmounts[voucher.id] === amt }
-                  ]"
-                >
-                  {{ currencyIcon }}{{ amt }}
-                </button>
-              </div>
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <div class="qty-box">
-                  <button @click="decreaseQty(voucher)">-</button>
-                  <span>
-                    {{ selectedVoucherQty[voucher.id] || voucher.min_quantity }}
-                  </span>
-                  <button @click="increaseQty(voucher)">+</button>
-                </div>
-                <small class="text-muted">
-                  Min: {{ voucher.min_quantity }} | Max: {{ voucher.max_quantity }}
-                </small>
-              </div>
-              <div class="payment-method mb-2">
-                <label>
-                  <input type="radio"
-                    :name="'payment_'+voucher.id"
-                    value="wallet"
-                    v-model="paymentMethod[voucher.id]"
-                    :disabled="(wallet?.balance || 0) < getVoucherTotal(voucher)"
-                  >
-                  Wallet (Available: {{ currencyIcon }}{{ wallet?.balance || 0 }})
-                </label>
-
-                <label class="ml-10">
-                  <input type="radio"
-                    :name="'payment_'+voucher.id"
-                    value="sumup"
-                    v-model="paymentMethod[voucher.id]"
-                  >
-                  Card
-                </label>
-              </div>
+          <div class="gift-code-main">
+            <div class="gift-code-row">
+              <span class="gift-code-text">{{ gc.code }}</span>
               <button
-                class="btn btn-purchase w-100"
-                :disabled="!selectedVoucherAmounts[voucher.id]"
-                @click="purchaseVoucher(voucher)"
+                v-if="gc.state === 'available'"
+                type="button"
+                class="gift-code-copy"
+                :aria-label="`Copy ${gc.code}`"
+                @click="copyText(gc.code, gc.id)"
               >
-                Purchase Now
+                <i class="fa-regular" :class="copiedGiftId === gc.id ? 'fa-circle-check' : 'fa-copy'" aria-hidden="true"></i>
+                {{ copiedGiftId === gc.id ? 'Copied' : 'Copy' }}
+              </button>
+            </div>
+            <span class="gift-code-meta">
+              {{ gc.title }} · bought {{ shortDate(gc.purchased_at) }}
+              <template v-if="gc.state === 'available' && gc.expires_at"> · valid until {{ shortDate(gc.expires_at) }}</template>
+            </span>
+            <span v-if="gc.recipient" class="gift-code-meta">
+              <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+              Sent to {{ gc.recipient }}
+            </span>
+          </div>
+
+          <div class="gift-code-side">
+            <span class="gift-code-pill" :class="`pill-${gc.state}`">{{ giftStateLabel(gc) }}</span>
+            <button
+              v-if="gc.state === 'available' && !gc.recipient"
+              type="button"
+              class="gift-code-add"
+              :disabled="redeeming"
+              @click="redeemGift(gc.code)"
+            >
+              Add to my vouchers
+            </button>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!--
+      Gift card builder. One card preview and one set of steps, for whichever
+      design is picked: it used to be a grid of identical mini-forms, one per
+      design, each with its own value, quantity, gift and payment controls.
+      Purchase logic is unchanged (purchaseVoucher / giftFor / paymentMethod,
+      all keyed by the design id).
+    -->
+    <section v-if="giftVouchers.length && activeDesign" class="card-box gb mt-4 mb-4">
+      <div class="gb-head">
+        <h6 class="gb-title">Send a gift card</h6>
+        <p class="gb-sub">
+          Buy for yourself or someone else. Every card is its own code, valid for 5 years,
+          and redeeming it adds it to Vouchers, ready to apply at checkout.
+        </p>
+      </div>
+
+      <div class="gb-body">
+
+        <!-- ── the card ── -->
+        <div class="gb-visual">
+          <div class="gb-card" :class="`gb-theme-${themeIndex}`" aria-hidden="true">
+            <div class="gb-card-top">
+              <span class="gb-card-brand">FixMyPC</span>
+              <span class="gb-card-kind">Gift card</span>
+            </div>
+            <div class="gb-card-value">
+              <span v-if="gbAmount">{{ currencyIcon }}{{ formatMoney(gbAmount) }}</span>
+              <span v-else class="gb-card-placeholder">{{ currencyIcon }}—</span>
+            </div>
+            <div class="gb-card-bottom">
+              <span class="gb-card-for">
+                {{ gbGift.on ? (gbGift.name ? `For ${gbGift.name}` : 'For someone special') : 'For you' }}
+              </span>
+              <span class="gb-card-design">{{ activeDesign.title }}</span>
+            </div>
+            <i class="fa-solid fa-gift gb-card-mark"></i>
+          </div>
+
+          <p v-if="gbGift.on && gbGift.message" class="gb-card-message">
+            “{{ gbGift.message }}”
+          </p>
+
+          <!-- design picker, only when there is a choice -->
+          <div v-if="giftVouchers.length > 1" class="gb-designs" role="radiogroup" aria-label="Design">
+            <button
+              v-for="(design, i) in giftVouchers"
+              :key="design.id"
+              type="button"
+              role="radio"
+              class="gb-design"
+              :class="{ active: design.id === activeDesign.id }"
+              :aria-checked="design.id === activeDesign.id ? 'true' : 'false'"
+              @click="pickDesign(design.id)"
+            >
+              <span class="gb-design-swatch" :class="`gb-theme-${i % 4}`">
+                <i class="fa-solid fa-gift" aria-hidden="true"></i>
+              </span>
+              <span class="gb-design-name">{{ design.title }}</span>
+            </button>
+          </div>
+
+          <p v-if="activeDesign.description" class="gb-design-desc">{{ activeDesign.description }}</p>
+        </div>
+
+        <!-- ── the steps ── -->
+        <div class="gb-steps">
+
+          <div class="gb-step">
+            <span class="gb-step-label"><span class="gb-num">1</span> Choose a value</span>
+            <div class="gb-values" role="radiogroup" aria-label="Value">
+              <button
+                v-for="amt in activeDesign.amounts"
+                :key="amt"
+                type="button"
+                role="radio"
+                class="gb-value"
+                :class="{ active: gbAmount === amt }"
+                :aria-checked="gbAmount === amt ? 'true' : 'false'"
+                @click="selectAmount(activeDesign.id, amt)"
+              >
+                {{ currencyIcon }}{{ formatMoney(amt) }}
               </button>
             </div>
           </div>
+
+          <div class="gb-step">
+            <span class="gb-step-label"><span class="gb-num">2</span> How many</span>
+            <div class="gb-qty-row">
+              <div class="gb-qty">
+                <button
+                  type="button"
+                  aria-label="One fewer"
+                  :disabled="gbQty <= activeDesign.min_quantity"
+                  @click="decreaseQty(activeDesign)"
+                >−</button>
+                <span aria-live="polite">{{ gbQty }}</span>
+                <button
+                  type="button"
+                  aria-label="One more"
+                  :disabled="gbQty >= activeDesign.max_quantity"
+                  @click="increaseQty(activeDesign)"
+                >+</button>
+              </div>
+              <span class="gb-muted">
+                {{ gbQty > 1 ? `${gbQty} separate codes` : 'One code' }} ·
+                up to {{ activeDesign.max_quantity }}
+              </span>
+            </div>
+          </div>
+
+          <div class="gb-step">
+            <span class="gb-step-label"><span class="gb-num">3</span> Who is it for?</span>
+            <div class="gb-seg" role="radiogroup" aria-label="Recipient">
+              <button
+                type="button"
+                role="radio"
+                :class="{ active: !gbGift.on }"
+                :aria-checked="!gbGift.on ? 'true' : 'false'"
+                @click="gbGift.on = false"
+              >
+                <i class="fa-regular fa-user" aria-hidden="true"></i> For me
+              </button>
+              <button
+                type="button"
+                role="radio"
+                :class="{ active: gbGift.on }"
+                :aria-checked="gbGift.on ? 'true' : 'false'"
+                @click="gbGift.on = true"
+              >
+                <i class="fa-solid fa-gift" aria-hidden="true"></i> As a gift
+              </button>
+            </div>
+
+            <div v-if="gbGift.on" class="gb-recipient">
+              <div class="gb-field-row">
+                <div class="gb-field">
+                  <label class="gb-label" for="gb-recipient-name">Their name <span aria-hidden="true">*</span></label>
+                  <input
+                    id="gb-recipient-name"
+                    ref="gbName"
+                    v-model.trim="gbGift.name"
+                    type="text"
+                    class="gift-field"
+                    :class="{ invalid: gbErrors.name }"
+                    placeholder="e.g. Aoife Murphy"
+                    maxlength="120"
+                    autocomplete="off"
+                    :aria-invalid="gbErrors.name ? 'true' : 'false'"
+                    @blur="touchGift('name')"
+                  >
+                  <small v-if="gbErrors.name" class="gb-error" role="alert">{{ gbErrors.name }}</small>
+                </div>
+                <div class="gb-field">
+                  <label class="gb-label" for="gb-recipient-email">Their email <span aria-hidden="true">*</span></label>
+                  <input
+                    id="gb-recipient-email"
+                    ref="gbEmail"
+                    v-model.trim="gbGift.email"
+                    type="email"
+                    class="gift-field"
+                    :class="{ invalid: gbErrors.email }"
+                    placeholder="name@example.com"
+                    maxlength="190"
+                    autocomplete="off"
+                    inputmode="email"
+                    :aria-invalid="gbErrors.email ? 'true' : 'false'"
+                    @blur="touchGift('email')"
+                  >
+                  <small v-if="gbErrors.email" class="gb-error" role="alert">{{ gbErrors.email }}</small>
+                </div>
+              </div>
+              <div class="gb-field">
+                <label class="gb-label" for="gb-recipient-message">Message <span class="gb-optional">(optional)</span></label>
+                <div class="gb-message-wrap">
+                  <textarea
+                    id="gb-recipient-message"
+                    ref="gbMessage"
+                    v-model="gbGift.message"
+                    class="gift-field gift-message"
+                    :class="{ invalid: gbErrors.message }"
+                    rows="2"
+                    maxlength="300"
+                    placeholder="Happy birthday! Treat yourself."
+                    :aria-invalid="gbErrors.message ? 'true' : 'false'"
+                    @blur="touchGift('message')"
+                  ></textarea>
+                  <span class="gb-count">{{ (gbGift.message || '').length }}/300</span>
+                </div>
+                <small v-if="gbErrors.message" class="gb-error" role="alert">{{ gbErrors.message }}</small>
+              </div>
+              <p v-if="gbGiftValid" class="gb-sending">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                Sending to <strong>{{ gbGift.name }}</strong> at <strong>{{ gbGift.email }}</strong>
+              </p>
+              <p class="gb-muted gb-note">
+                <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                We email the {{ gbQty > 1 ? 'codes' : 'code' }} to them straight away, with your name and message.
+              </p>
+            </div>
+            <p v-else class="gb-muted gb-note">
+              <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+              The {{ gbQty > 1 ? 'codes go' : 'code goes' }} to your email and to My gift cards below.
+            </p>
+          </div>
+
+          <div class="gb-step">
+            <span class="gb-step-label"><span class="gb-num">4</span> Pay with</span>
+            <div class="gb-pay" role="radiogroup" aria-label="Payment method">
+              <label class="gb-pay-opt" :class="{ active: gbMethod === 'wallet', disabled: !gbWalletCovers }">
+                <input
+                  v-model="paymentMethod[activeDesign.id]"
+                  type="radio"
+                  value="wallet"
+                  :name="`gb-pay-${activeDesign.id}`"
+                  :disabled="!gbWalletCovers"
+                >
+                <span class="gb-pay-icon"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span>
+                <span class="gb-pay-text">
+                  <strong>Wallet</strong>
+                  <small>{{ currencyIcon }}{{ Number(wallet?.balance || 0).toFixed(2) }} available</small>
+                </span>
+              </label>
+              <label class="gb-pay-opt" :class="{ active: gbMethod === 'sumup' }">
+                <input
+                  v-model="paymentMethod[activeDesign.id]"
+                  type="radio"
+                  value="sumup"
+                  :name="`gb-pay-${activeDesign.id}`"
+                >
+                <span class="gb-pay-icon"><i class="fa-regular fa-credit-card" aria-hidden="true"></i></span>
+                <span class="gb-pay-text">
+                  <strong>Card</strong>
+                  <small>Visa, Mastercard and more</small>
+                </span>
+              </label>
+            </div>
+            <p v-if="gbAmount && !gbWalletCovers" class="gb-muted gb-note">
+              Your wallet doesn't cover {{ currencyIcon }}{{ gbTotal.toFixed(2) }}.
+              <nuxt-link to="/user/savers-club">Top up</nuxt-link> or pay by card.
+            </p>
+          </div>
+
+          <!-- summary + pay -->
+          <div class="gb-summary">
+            <div class="gb-summary-line">
+              <span v-if="gbAmount">{{ gbQty }} × {{ currencyIcon }}{{ formatMoney(gbAmount) }}</span>
+              <span v-else class="gb-muted">Choose a value to see the total</span>
+              <strong>{{ currencyIcon }}{{ gbTotal.toFixed(2) }}</strong>
+            </div>
+            <button
+              type="button"
+              class="gb-buy"
+              :disabled="!gbAmount || purchasingId === activeDesign.id"
+              @click="purchaseVoucher(activeDesign)"
+            >
+              <template v-if="purchasingId === activeDesign.id">
+                <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Processing…
+              </template>
+              <template v-else-if="!gbAmount">Choose a value</template>
+              <template v-else-if="gbGift.on && !gbGiftValid">Add their details to continue</template>
+              <template v-else-if="gbMethod === 'wallet'">
+                Pay {{ currencyIcon }}{{ gbTotal.toFixed(2) }} from wallet
+              </template>
+              <template v-else>
+                Pay {{ currencyIcon }}{{ gbTotal.toFixed(2) }} by card <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              </template>
+            </button>
+          </div>
         </div>
       </div>
-
-      <!-- <div class="row g-3" v-if="giftVouchers.length">
-          <div class="col-md-4" v-for="voucher in giftVouchers" :key="voucher.id">
-              <div class="gift-card text-center">
-                  <h4 class="gift-voucher-heading ">€25</h4>
-                  <small class="gift-voucher-subheading d-block mb-3">Gift Voucher</small>
-
-                  <button class="btn-purchase w-100">Purchase</button>
-              </div>
-          </div>
-          <div class="col-md-4">
-              <div class="gift-card text-center">
-                  <h4 class="gift-voucher-heading ">€50</h4>
-                  <small class="gift-voucher-subheading d-block mb-3">Gift Voucher</small>
-
-                  <button class="btn-purchase w-100">Purchase</button>
-              </div>
-          </div>
-          <div class="col-md-4">
-              <div class="gift-card text-center">
-                  <h4 class="gift-voucher-heading ">€100</h4>
-                  <small class="gift-voucher-subheading d-block mb-3">Gift Voucher</small>
-
-                  <button class="btn-purchase w-100">Purchase</button>
-              </div>
-          </div>
-      </div> -->
-    </div>
+    </section>
 
     <div class="voucher-card p-4 mb-4">
         <h6 class="mb-3  voucher-terms-heading">Voucher Terms & Conditions</h6>
@@ -357,6 +617,9 @@
         @fetching-data="fetchingData"
       />
     </div>
+
+    </template>
+
   </div>
 
 </template>
@@ -368,13 +631,15 @@
   import {mapGetters, mapActions} from 'vuex'
   import Pagination from "./Pagination";
   import Spinner from "./Spinner";
+  import AccountSkeleton from "./AccountSkeleton";
   import PriceFormat from "./PriceFormat";
 
   export default {
     name: 'Vouchers',
     data() {
       return {
-        fetchingVoucherData: false,
+        // True until mounted() has settled every request.
+        fetchingVoucherData: true,
         copiedVouchedId: '',
         sortBy: 'expiring_soon',
         filterType: 'all',
@@ -383,9 +648,37 @@
         selectedVoucherQty: {},
         paymentMethod: {},
         wallet: {},
+        /*
+         * Lifetime savings from the server: what vouchers really took off
+         * this customer's orders. It used to add up the face value of every
+         * voucher on the current page, used or not, expired or not, with a
+         * "15%" voucher counted as 15 euro.
+         */
+        totalSaved: null,
+        // gift codes bought, and the redeem box
+        giftCodes: [],
+        redeemCode: '',
+        redeeming: false,
+        copiedGiftId: null,
+        purchasingId: null,
+        // per gift card design: {on, name, email, message}
+        giftForm: {},
+        // recipient fields the customer has left (or tried to submit), and
+        // errors the server sent back, keyed by field
+        giftTouched: {},
+        giftServerErrors: {},
+        // the design shown in the gift card builder (null = the first)
+        selectedDesignId: null,
       }
     },
     watch: {
+      // an edit makes the server's last word on that form stale
+      giftForm: {
+        deep: true,
+        handler() {
+          if (Object.keys(this.giftServerErrors).length) this.giftServerErrors = {}
+        }
+      },
       selectedVoucherAmounts: {
         deep: true,
         handler() {
@@ -397,6 +690,13 @@
         handler() {
           this.checkWalletAvailability()
         }
+      },
+      // an empty wallet cannot be the selected way to pay
+      'wallet.balance'() {
+        this.checkWalletAvailability()
+      },
+      giftVouchers() {
+        this.checkWalletAvailability()
       }
     },
     props: {
@@ -408,6 +708,7 @@
     components: {
       PriceFormat,
       Spinner,
+      AccountSkeleton,
       Pagination
     },
     computed: {
@@ -442,14 +743,15 @@
         const now = new Date()
         return this.voucherList.filter(v => {
           const end = this.parseDate(v.end_time)
-          return end && end >= now
+          return end && end >= now && !this.isUsedUp(v)
         })
       },
+      // expired, or a gift card with nothing left on it
       expiredList() {
         const now = new Date()
         return this.voucherList.filter(v => {
           const end = this.parseDate(v.end_time)
-          return !end || end < now
+          return !end || end < now || this.isUsedUp(v)
         })
       },
       currentPage() {
@@ -467,18 +769,61 @@
       activeVouchers() {
         return this.activeList.length
       },
-      totalSaved() {
-        return this.voucherList.reduce((sum, v) => {
-          return sum + Number(v.price || 0)
-        }, 0)
-      },
       ...mapGetters('language', ['langCode']),
       ...mapGetters('common', ['currencyIcon', 'currencyPosition', 'setting']),
-      ...mapGetters('user', ['vouchers']),
+      ...mapGetters('user', ['vouchers', 'profile']),
+      /* ---- gift card builder ---- */
+      activeDesign() {
+        return this.giftVouchers.find(d => d.id === this.selectedDesignId) || this.giftVouchers[0] || null
+      },
+      themeIndex() {
+        const i = this.giftVouchers.indexOf(this.activeDesign)
+        return i < 0 ? 0 : i % 4
+      },
+      gbAmount() {
+        return this.activeDesign ? this.selectedVoucherAmounts[this.activeDesign.id] || null : null
+      },
+      gbQty() {
+        return this.activeDesign ? (this.selectedVoucherQty[this.activeDesign.id] || this.activeDesign.min_quantity || 1) : 1
+      },
+      // Errors to show: a field's own error once it has been left or a buy
+      // was attempted, else whatever the server said about it.
+      gbErrors() {
+        const gift = this.gbGift
+        if (!gift.on) return {}
+        const own = this.validateGift(gift)
+        const out = {}
+        ;['name', 'email', 'message'].forEach(k => {
+          const msg = (this.giftTouched[k] && own[k]) || this.giftServerErrors[k]
+          if (msg) out[k] = msg
+        })
+        return out
+      },
+      gbGiftValid() {
+        return this.gbGift.on && !Object.keys(this.validateGift(this.gbGift)).length
+      },
+      gbGift() {
+        return this.activeDesign ? this.giftFor(this.activeDesign.id) : {on: false}
+      },
+      gbMethod() {
+        return this.activeDesign ? (this.paymentMethod[this.activeDesign.id] || 'wallet') : 'wallet'
+      },
+      gbTotal() {
+        return this.gbAmount ? Math.round(this.gbAmount * this.gbQty * 100) / 100 : 0
+      },
+      gbWalletCovers() {
+        return Number(this.wallet?.balance || 0) >= this.gbTotal && Number(this.wallet?.balance || 0) > 0
+      },
     },
     mixins: [util, routeParamHelper, productHelper],
     methods: {
       ...mapActions('common', ['setToastMessage', 'setToastError']),
+      goToCart() {
+        this.$router.push('/cart')
+      },
+      isUsedUp(v) {
+        return !!v.is_gift_card && Number(v.gift_balance) <= 0
+      },
       async fetchWallet() {
           try {
               const token = this.$auth?.strategy?.token?.get()
@@ -503,69 +848,227 @@
         this.giftVouchers.forEach(voucher => {
           const total = this.getVoucherTotal(voucher)
 
-          if ((this.wallet?.balance || 0) < total) {
+          const balance = Number(this.wallet?.balance || 0)
+          if (balance <= 0 || balance < total) {
             this.$set(this.paymentMethod, voucher.id, 'sumup')
           }
         })
       },
       async purchaseVoucher(voucher) {
-
         const amount = this.selectedVoucherAmounts[voucher.id]
         const qty = this.selectedVoucherQty[voucher.id] || voucher.min_quantity
         const method = this.paymentMethod[voucher.id] || 'wallet'
+        const gift = this.giftFor(voucher.id)
 
         if (!amount) {
-          this.setToastError('Select amount')
+          this.setToastError('Choose a value first.')
           return
         }
 
         if (qty < voucher.min_quantity || qty > voucher.max_quantity) {
-          this.setToastError('Invalid quantity')
+          this.setToastError(`Choose between ${voucher.min_quantity} and ${voucher.max_quantity}.`)
           return
         }
 
-        try {
-          const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/'
-          if(method === 'sumup'){
-            const res = await this.$axios.post(`${baseUrl}api/create-sumup-checkout`, {
-              voucher_id: voucher.id,
-              amount: amount * qty,
-              quantity: qty,
-              payment_method: method,
-              currency: 'EUR',
-              is_gift_voucher: true,
-            })
+        if (gift.on) {
+          const errs = this.validateGift(gift)
+          if (Object.keys(errs).length) {
+            this.giftTouched = {name: true, email: true, message: true}
+            this.focusGiftField(errs)
+            return
+          }
+        }
 
-            const { id, checkout_reference } = res.data
+        // The wallet cannot cover it: say so rather than send a request that will be refused.
+        if (method === 'wallet' && (this.wallet?.balance || 0) < amount * qty) {
+          this.$set(this.paymentMethod, voucher.id, 'sumup')
+          this.setToastError('Not enough in your wallet. Card is selected instead.')
+          return
+        }
+
+        // amount is ONE card's face value; the server multiplies by quantity
+        const payload = {
+          voucher_id: voucher.id,
+          amount,
+          quantity: qty,
+          recipient_email: gift.on ? gift.email : null,
+          recipient_name: gift.on ? gift.name : null,
+          sender_name: gift.on ? (this.profile?.name || null) : null,
+          message: gift.on ? (gift.message || '').trim() || null : null
+        }
+
+        this.purchasingId = voucher.id
+        try {
+          if (method === 'sumup') {
+            // The purchase (value, quantity, recipient) is fixed on the server
+            // before paying; the checkout page only confirms the payment.
+            const {data} = await this.$axios.post(`${this.apiBase()}api/v1/user/purchase-gift-voucher/start`, payload)
+
+            if (!data?.checkout_id) {
+              this.setToastError(data?.message || 'We could not start the payment. Please try again.')
+              return
+            }
 
             this.$router.push({
               path: '/user/topup-checkout',
-              query: {
-                checkoutId: id,
-                checkoutReference: checkout_reference
-              }
+              query: {checkoutId: data.checkout_id, purpose: 'gift'}
             })
-          }else{
-            const res = await this.$axios.post(`${baseUrl}api/v1/user/purchase-gift-voucher`, {
-              voucher_id: voucher.id,
-              amount: amount * qty,
-              quantity: qty,
-              payment_method: method,
-              currency: 'EUR',
-              is_gift_voucher: true
+          } else {
+            const {data} = await this.$axios.post(`${this.apiBase()}api/v1/user/purchase-gift-voucher`, {
+              ...payload,
+              payment_method: 'wallet'
             })
 
-            this.setToastMessage('Voucher purchased successfully')
+            this.setToastMessage(data?.message || 'Gift card bought')
 
             this.$delete(this.selectedVoucherAmounts, voucher.id)
             this.$set(this.selectedVoucherQty, voucher.id, voucher.min_quantity)
-            this.$set(this.paymentMethod, voucher.id, 'wallet')
-            await this.fetchWallet()
+            this.$set(this.giftForm, voucher.id, {on: false, name: '', email: '', message: ''})
+            this.giftTouched = {}
+            this.giftServerErrors = {}
+            await Promise.all([this.fetchWallet(), this.fetchGiftCodes()])
+            this.$nextTick(() => this.scrollToEl(this.$refs.giftCodesSection))
           }
-
         } catch (e) {
-          this.setToastError(e.response?.data?.message || 'Purchase failed')
+          const res = e.response?.data || {}
+          // The server's field errors go under their fields.
+          const fieldMap = {recipient_name: 'name', recipient_email: 'email', message: 'message'}
+          const mapped = {}
+          Object.entries(res.errors || {}).forEach(([k, v]) => {
+            if (fieldMap[k]) mapped[fieldMap[k]] = Array.isArray(v) ? v[0] : v
+          })
+          if (Object.keys(mapped).length && gift.on) {
+            this.giftServerErrors = mapped
+            this.focusGiftField(mapped)
+          } else {
+            this.setToastError(res.message || 'Purchase failed')
+          }
+        } finally {
+          this.purchasingId = null
         }
+      },
+      // The rules the server applies, so nothing is sent that will be refused.
+      validateGift(gift) {
+        const errs = {}
+        const name = (gift.name || '').trim()
+        const email = (gift.email || '').trim()
+        const own = (this.profile?.email || this.$auth?.user?.email || '').trim().toLowerCase()
+
+        if (!name) errs.name = "Enter the recipient's name."
+        else if (name.length < 2) errs.name = "The recipient's name looks too short."
+        else if (name.length > 120) errs.name = "The recipient's name is too long (120 characters at most)."
+        else if (!/\p{L}/u.test(name)) errs.name = "Enter the recipient's name in letters."
+
+        if (!email) errs.email = 'Enter the email address to send the gift card to.'
+        else if (email.length > 190) errs.email = 'That email address is too long.'
+        else if (!/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(email)) errs.email = 'Enter a valid email address for the recipient.'
+        else if (own && email.toLowerCase() === own) errs.email = 'That is your own email address. Choose "For me" instead.'
+
+        if ((gift.message || '').length > 300) errs.message = 'Keep the message to 300 characters.'
+        return errs
+      },
+      touchGift(field) {
+        this.$set(this.giftTouched, field, true)
+      },
+      focusGiftField(errs) {
+        const ref = errs.name ? 'gbName' : errs.email ? 'gbEmail' : errs.message ? 'gbMessage' : null
+        this.$nextTick(() => {
+          const el = ref && this.$refs[ref]
+          if (el) {
+            el.scrollIntoView({behavior: 'smooth', block: 'center'})
+            el.focus({preventScroll: true})
+          }
+        })
+      },
+      pickDesign(id) {
+        this.selectedDesignId = id
+      },
+      // 10 -> "10", 12.5 -> "12.50"
+      formatMoney(v) {
+        const n = Number(v)
+        return n % 1 === 0 ? String(n) : n.toFixed(2)
+      },
+      // Per-card "send as a gift" state, created on first use.
+      giftFor(id) {
+        if (!this.giftForm[id]) {
+          this.$set(this.giftForm, id, {on: false, name: '', email: '', message: ''})
+        }
+        return this.giftForm[id]
+      },
+      apiBase() {
+        return process.env.apiBase || 'https://shop.fixmypc.ie/'
+      },
+      async fetchSavings() {
+        try {
+          const {data} = await this.$axios.get(`${this.apiBase()}api/v1/user/savings`)
+          this.totalSaved = data?.total_saved ?? null
+        } catch (e) {
+          this.totalSaved = null
+        }
+      },
+      async fetchGiftCodes() {
+        try {
+          const {data} = await this.$axios.get(`${this.apiBase()}api/v1/user/gift-voucher-codes`)
+          this.giftCodes = data?.data || []
+        } catch (e) {
+          this.giftCodes = []
+        }
+      },
+      /* Add a gift code to this account's vouchers (a bought one, or a gift). */
+      async redeemGift(code) {
+        if (!code || this.redeeming) return
+        this.redeeming = true
+        try {
+          const {data} = await this.$axios.post(`${this.apiBase()}api/v1/user/gift-voucher-codes/redeem`, {code})
+          this.setToastMessage(data?.message || 'Gift card added to your vouchers')
+          this.redeemCode = ''
+          await Promise.all([this.fetchGiftCodes(), this.refreshVoucherList()])
+        } catch (e) {
+          this.setToastError(e.response?.data?.message || 'We could not redeem that gift card.')
+        } finally {
+          this.redeeming = false
+        }
+      },
+      // The voucher list, reloaded without the full-page skeleton.
+      async refreshVoucherList() {
+        try {
+          await this.userVouchers({
+            params: {time_zone: this.timeZone, order_by: 'id', type: 'desc', page: 1},
+            lang: this.langCode,
+          })
+        } catch (e) {}
+      },
+      giftStateLabel(gc) {
+        if (gc.state === 'redeemed') return gc.redeemed_by_me ? 'In your vouchers' : 'Redeemed'
+        return {available: gc.recipient ? 'Sent, not redeemed' : 'Available', void: 'Cancelled', expired: 'Expired'}[gc.state] || gc.state
+      },
+      shortDate(value) {
+        const d = value ? new Date(value) : null
+        return d && !isNaN(d.getTime())
+          ? d.toLocaleDateString('en-IE', {day: 'numeric', month: 'short', year: 'numeric'})
+          : ''
+      },
+      async copyText(text, id) {
+        try {
+          await navigator.clipboard.writeText(text)
+        } catch (e) {
+          const t = document.createElement('textarea')
+          t.value = text
+          document.body.appendChild(t)
+          t.select()
+          document.execCommand('copy')
+          t.remove()
+        }
+        this.copiedGiftId = id
+        clearTimeout(this.copiedGiftTimer)
+        this.copiedGiftTimer = setTimeout(() => { this.copiedGiftId = null }, 1800)
+      },
+      scrollToEl(el) {
+        if (!el) return
+        const header = document.querySelector('header')
+        const offset = header && getComputedStyle(header).position === 'sticky'
+          ? header.getBoundingClientRect().height : 0
+        window.scrollTo({top: el.getBoundingClientRect().top + window.pageYOffset - offset - 16, behavior: 'smooth'})
       },
       getVoucherTotal(voucher) {
         const amount = this.selectedVoucherAmounts[voucher.id] || 0
@@ -597,6 +1100,8 @@
         this.giftVouchers = res.data.data || []
         this.giftVouchers.forEach(v => {
           this.$set(this.paymentMethod, v.id, 'wallet')
+          // created here, not during render
+          this.$set(this.giftForm, v.id, {on: false, name: '', email: '', message: ''})
         })
       },
       parseDate(dateStr) {
@@ -678,11 +1183,26 @@
     created() {
     },
     async mounted() {
-      if (!this.vouchers) {
-        await this.fetchingData()
+      /*
+       * fetchingVoucherData only ever cleared inside fetchingData(), which is
+       * skipped when the vouchers are already in the store -- and the wallet
+       * and gift-voucher calls below it were awaited one after another while
+       * the page was already on screen. Cleared here instead, once all three
+       * have settled, and run together rather than in series.
+       */
+      try {
+        await Promise.allSettled([
+          this.vouchers ? Promise.resolve() : this.fetchingData(),
+          this.fetchWallet(),
+          this.fetchGiftVouchers(),
+          this.fetchGiftCodes(),
+          this.fetchSavings()
+        ])
+      } catch (e) {
+        console.error('Vouchers load failed:', e)
+      } finally {
+        this.fetchingVoucherData = false
       }
-      await this.fetchWallet()
-      await this.fetchGiftVouchers()
     }
   }
 </script>
@@ -785,6 +1305,11 @@ h5.total-vouchers {
 /* Button */
 .apply-btn {
     padding: 0px 22px;
+    height: 44px;
+    line-height: 1.2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: #05B942;
     color: #fff;
     border: none;
@@ -792,7 +1317,7 @@ h5.total-vouchers {
     font-size: 14px;
     white-space: nowrap;
     transition: 0.2s;
-    font-weight: 400;
+    font-weight: 500;
 }
 
 .apply-btn:hover {
@@ -895,9 +1420,12 @@ button.btn-use-now {
     color: #fff;
     border: none;
     border-radius: 8px;
-    padding: 0px 20px;
+    padding: 9px 20px;
     font-size: 14px;
-    font-weight: 400;
+    font-weight: 500;
+    height: auto;
+    line-height: 1.2;
+    white-space: nowrap;
 }
 
 button.btn-use-now:hover {
@@ -951,7 +1479,7 @@ span.btn-active {
 }
 
 .expire-boxed {
-    gap: 118px !important;
+    gap: 56px !important;
 }
 
 .gift-card {
@@ -962,11 +1490,15 @@ span.btn-active {
 
 button.btn-purchase {
     background-color: #33319A;
-    border-radius: 4px;
+    border-radius: 8px;
     border: none;
     color: #fff;
     font-size: 14px;
-    font-weight: 400;
+    font-weight: 500;
+    width: 100%;
+    padding: 10px 16px;
+    height: auto;
+    line-height: 1.2;
 }
 
 button.btn-purchase:hover {
@@ -1047,16 +1579,21 @@ ul.vouchers-terms-list li{
 }
 
 .voucher-card {
-  border: 1px solid #e6e8f0;
-  border-radius: 12px;
-  overflow: hidden;
+  border: 1px solid #E3E3EF;
+  border-radius: 14px;
   background: #fff;
+  padding: 18px 20px;
   transition: 0.2s;
 }
 
-.voucher-card:hover {
+/* Gift voucher cards have an image flush to the top, so no padding */
+.gift-voucher-card {
+  padding: 0;
+  overflow: hidden;
+}
+.gift-voucher-card:hover {
   transform: translateY(-3px);
-  border-color: #4b49ac;
+  border-color: #33319A;
 }
 
 /* Image */
@@ -1124,6 +1661,1002 @@ ul.vouchers-terms-list li{
 .qty-box span {
   min-width: 20px;
   text-align: center;
+}
+
+h5.order-hrading {
+  font-size: 26px;
+  font-weight: 700;
+  color: #130E2B;
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+  .container-fluid { padding-left: 0; padding-right: 0; }
+  .card-box { padding: 18px !important; }
+  h5.order-hrading { font-size: 22px; }
+  .voucher-form { flex-direction: column; }
+  .apply-btn { width: 100%; }
+  .expire-boxed { gap: 12px !important; }
+  .voucher-card .d-flex.justify-content-between { flex-wrap: wrap; gap: 10px; }
+  button.btn-use-now { width: 100%; }
+}
+
+/* ══════════ responsive refresh ══════════
+ *
+ * One block that restyles the page for every width, instead of more
+ * scattered fixes. Buttons set their own height/line-height and hover
+ * backgrounds are !important: base.styl's global button rules otherwise win.
+ */
+
+/* base.styl sets letter-spacing: 1px on every h6, which read as a typo */
+h6,
+.card-box h6,
+.voucher-card h6,
+.voucher-list-head h6 {
+  letter-spacing: normal;
+  font-weight: 700;
+  color: #130E2B;
+}
+
+h5.order-hrading { font-size: clamp(22px, 1.1rem + 1.2vw, 30px); }
+
+.card-box h6 { font-size: clamp(15px, .85rem + .3vw, 17px); }
+
+/* stats */
+.voucher-stats .voucher-stat {
+  height: 100%;
+  border-radius: 14px;
+}
+
+.voucher-stats h5.total-vouchers {
+  font-size: clamp(22px, 1.1rem + 1vw, 30px);
+  font-weight: 700;
+}
+
+/* list heading + sort */
+.voucher-list-head .sort-select { max-width: 100%; }
+
+/* code / discount / expires */
+.voucher-card .voucher-meta {
+  display: grid !important;
+  grid-template-columns: auto auto auto;
+  justify-content: start;
+  gap: 8px 40px !important;
+}
+
+.voucher-meta .code-box { display: inline-flex; }
+
+.voucher-card h6.off-next-purchase {
+  font-size: clamp(15px, .85rem + .35vw, 18px);
+  margin: 0;
+}
+
+button.btn-use-now,
+.apply-btn,
+button.btn-purchase {
+  height: 42px;
+  line-height: 1;
+}
+
+button.btn-use-now:hover { background: #28267d !important; }
+.apply-btn:hover { background: #049636 !important; }
+button.btn-purchase:hover:enabled { background: #28267d !important; }
+
+/* gift vouchers */
+.gift-row .voucher-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F7F7FC;
+}
+
+.gift-row .voucher-img img,
+.gift-row .voucher-img ::v-deep img {
+  height: 130px;
+}
+
+.amount-chip {
+  height: 36px;
+  line-height: 1;
+  min-width: 56px;
+  font-weight: 600;
+}
+
+.amount-chip:hover { background: #4b49ac !important; color: #fff; }
+
+.qty-box button {
+  height: 36px;
+  line-height: 1;
+  font-size: 16px;
+}
+
+.qty-box button:hover { background: #E3E5F0 !important; }
+
+.payment-method {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 13px;
+}
+
+.payment-method label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+/* ---------- phone ---------- */
+
+@media (max-width: 767.98px) {
+
+  /* three compact tiles across instead of three full-width cards */
+  .voucher-stats { --bs-gutter-x: 8px; }
+
+  .voucher-stats .voucher-stat {
+    padding: 12px 10px;
+  }
+
+  .voucher-stats .voucher-stat small {
+    font-size: 10.5px;
+    letter-spacing: .02em;
+    display: block;
+    padding-right: 18px;
+    line-height: 1.3;
+  }
+
+  .voucher-stats .stat-icon { top: 10px; right: 8px; font-size: 12px; }
+  .voucher-stats .voucher-stat .text-muted.small { display: none; }
+
+  /* heading and its filter stay on one row */
+  .card-box.d-flex { gap: 12px; }
+  .card-box.d-flex > div { min-width: 0; }
+
+  .voucher-list-head { align-items: flex-start !important; }
+  .voucher-list-head > .d-flex { flex: 1 1 100%; }
+  .voucher-list-head .sort-select { flex: 1 1 auto; }
+
+  /* code across the top, discount and expiry beside each other */
+  .voucher-card .voucher-meta {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px !important;
+  }
+
+  .voucher-card .voucher-meta > div:first-child { grid-column: 1 / -1; }
+
+  .voucher-card { padding: 16px; }
+  .voucher-card > .d-flex > div { width: 100%; }
+
+  /* gift vouchers: a swipeable row instead of six full-height cards */
+  .gift-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-right: -18px;
+    padding-right: 18px;
+    padding-bottom: 4px;
+  }
+
+  .gift-row::-webkit-scrollbar { display: none; }
+
+  .gift-row > .gift-col {
+    flex: 0 0 82%;
+    max-width: 82%;
+    scroll-snap-align: start;
+  }
+
+  .gift-row .voucher-img img,
+  .gift-row .voucher-img ::v-deep img { height: 110px; }
+
+  .gift-voucher-card:hover { transform: none; }
+}
+
+/* ══════════ gift codes ══════════ */
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); white-space: nowrap;
+}
+
+.gift-code-input {
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 600;
+}
+
+.apply-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+.gift-codes-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.gift-codes-count {
+  flex-shrink: 0;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #EEEEFA;
+  color: #33319A;
+  font-weight: 700;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gift-code-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.gift-code {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px dashed #C9CAE6;
+  border-radius: 14px;
+  background: #FBFBFF;
+}
+
+.gift-code.is-used,
+.gift-code.is-redeemed,
+.gift-code.is-expired { opacity: .6; background: #fff; }
+
+.gift-code-value {
+  height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #33319A, #5653D1);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.gift-code-main { min-width: 0; }
+
+.gift-code-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gift-code-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: #130E2B;
+}
+
+.gift-code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  line-height: 1;
+  padding: 0 10px;
+  border: 1px solid #E3E3EF;
+  border-radius: 8px;
+  background: #fff;
+  color: #33319A;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gift-code-copy:hover { background: #F5F5FF !important; }
+
+.gift-code-meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: #6B7280;
+}
+
+.gift-code-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.gift-code-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: #F3F4F6;
+  color: #374151;
+}
+
+.pill-available { background: #E6F6EC; color: #1E7E34; }
+.pill-in_your_vouchers { background: #EBEBFF; color: #33319A; }
+
+.gift-code-add {
+  height: 36px;
+  line-height: 1;
+  padding: 0 14px;
+  border: 1px solid #33319A;
+  border-radius: 10px;
+  background: #33319A;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.gift-code-add:hover:enabled { background: #28267d !important; }
+.gift-code-add:disabled { opacity: .6; }
+
+/* purchase card total */
+.gift-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 4px 0 10px;
+  padding-top: 10px;
+  border-top: 1px solid #F0F0F6;
+  font-size: 13px;
+  color: #6B7280;
+}
+
+.gift-total strong { font-size: 17px; color: #130E2B; }
+.gift-total-hint { justify-content: flex-start; }
+
+button.btn-purchase:disabled { opacity: .55; cursor: not-allowed; }
+
+@media (max-width: 767.98px) {
+  .gift-code {
+    grid-template-columns: 60px minmax(0, 1fr);
+    grid-template-areas:
+      "value main"
+      "side  side";
+    gap: 10px 12px;
+  }
+
+  .gift-code-value { grid-area: value; height: 48px; font-size: 15px; }
+  .gift-code-main { grid-area: main; }
+
+  .gift-code-side {
+    grid-area: side;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .gift-code-add { flex: 0 0 auto; }
+  .gift-code-text { font-size: 14px; }
+}
+
+/* ══════════ gift cards v2 ══════════ */
+
+.gift-redeem-head {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.gift-redeem-icon {
+  flex: 0 0 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #33319A, #5653D1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.gift-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #130E2B;
+  cursor: pointer;
+}
+
+.gift-toggle input { width: 16px; height: 16px; }
+
+.gift-recipient {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #F7F7FC;
+}
+
+.gift-field {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid #E3E3EF;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+}
+
+.gift-field:focus {
+  outline: none;
+  border-color: #33319A;
+  box-shadow: 0 0 0 3px rgba(51, 49, 154, .12);
+}
+
+.gift-message {
+  height: auto;
+  min-height: 56px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.gift-code-meta i { margin-right: 4px; }
+
+.pill-redeemed { background: #EBEBFF; color: #33319A; }
+.pill-void { background: #FDECEA; color: #C82333; }
+
+@media (max-width: 767.98px) {
+  .gift-field { font-size: 16px; } /* no zoom on iOS */
+}
+
+/* ══════════ gift card builder ══════════
+ * Buttons set height/line-height and every state's background, border and
+ * colour with !important: base.styl's global button rules (50px height, a
+ * grey hover that also hits disabled buttons) otherwise win.
+ */
+
+.gb { padding: clamp(18px, 1rem + 1vw, 28px) !important; }
+
+.gb-head { margin-bottom: 20px; }
+
+.card-box h6.gb-title {
+  font-size: clamp(17px, .95rem + .4vw, 20px);
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.gb-sub {
+  margin: 0;
+  font-size: 13.5px;
+  color: #6B7280;
+  line-height: 1.55;
+  max-width: 640px;
+}
+
+.gb-body {
+  display: grid;
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+  gap: clamp(20px, 1rem + 2vw, 40px);
+  align-items: start;
+}
+
+/* ---- the card ---- */
+
+.gb-visual { position: sticky; top: 16px; }
+
+.gb-card {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1.586;          /* a real card's proportions */
+  border-radius: 18px;
+  padding: 20px 22px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 18px 40px rgba(51, 49, 154, .28);
+  transition: background .3s ease;
+}
+
+.gb-theme-0 { background: linear-gradient(135deg, #33319A 0%, #5B57E0 60%, #8A7CF5 100%); }
+.gb-theme-1 { background: linear-gradient(135deg, #0F766E 0%, #14B8A6 100%); }
+.gb-theme-2 { background: linear-gradient(135deg, #B4235C 0%, #F0567D 100%); }
+.gb-theme-3 { background: linear-gradient(135deg, #1F2937 0%, #4B5563 100%); }
+
+.gb-card::after {             /* soft sheen */
+  content: '';
+  position: absolute;
+  inset: -40% -20% auto auto;
+  width: 70%;
+  height: 120%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+.gb-card-top,
+.gb-card-bottom {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.gb-card-brand { font-weight: 800; font-size: 17px; letter-spacing: .01em; }
+
+.gb-card-kind {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  opacity: .85;
+}
+
+.gb-card-value {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(34px, 2rem + 1.4vw, 44px);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.gb-card-placeholder { opacity: .55; }
+
+.gb-card-for {
+  font-size: 14px;
+  font-weight: 600;
+  max-width: 60%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gb-card-design {
+  font-size: 11.5px;
+  opacity: .8;
+  text-align: right;
+  max-width: 45%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gb-card-mark {
+  position: absolute;
+  right: -10px;
+  bottom: -18px;
+  font-size: 110px;
+  opacity: .1;
+  transform: rotate(-12deg);
+}
+
+.gb-card-message {
+  margin: 14px 4px 0;
+  font-size: 13.5px;
+  font-style: italic;
+  color: #374151;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.gb-design-desc {
+  margin: 12px 4px 0;
+  font-size: 13px;
+  color: #6B7280;
+}
+
+.gb-designs {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.gb-designs::-webkit-scrollbar { display: none; }
+
+.gb-design {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px !important;
+  line-height: 1 !important;
+  padding: 0 12px 0 6px;
+  border: 1px solid #E3E3EF !important;
+  border-radius: 12px;
+  background: #fff !important;
+  color: #130E2B !important;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gb-design:hover { border-color: #C9CAE6 !important; background: #FAFAFF !important; }
+
+.gb-design.active,
+.gb-design.active:hover {
+  border-color: #33319A !important;
+  background: #F5F5FF !important;
+  box-shadow: 0 0 0 3px rgba(51, 49, 154, .12);
+}
+
+.gb-design-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+
+.gb-design-name { white-space: nowrap; }
+
+/* ---- steps ---- */
+
+.gb-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.gb-step-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #130E2B;
+}
+
+.gb-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #EEEEFA;
+  color: #33319A;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gb-muted { font-size: 13px; color: #6B7280; }
+.gb-note { margin: 8px 0 0; line-height: 1.5; }
+.gb-note i { margin-right: 4px; }
+.gb-note a { color: #33319A; font-weight: 600; }
+
+/* values */
+.gb-values {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 8px;
+}
+
+.gb-value {
+  height: 52px !important;
+  line-height: 1 !important;
+  border: 1.5px solid #E3E3EF !important;
+  border-radius: 12px;
+  background: #fff !important;
+  color: #130E2B !important;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.gb-value:hover { border-color: #A9A7E0 !important; background: #FAFAFF !important; }
+
+.gb-value.active,
+.gb-value.active:hover {
+  border-color: #33319A !important;
+  background: #33319A !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px rgba(51, 49, 154, .25);
+}
+
+/* quantity */
+.gb-qty-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.gb-qty {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  border: 1px solid #E3E3EF;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.gb-qty button {
+  width: 44px;
+  height: 44px !important;
+  line-height: 1 !important;
+  border: 0 !important;
+  border-radius: 0;
+  background: #F7F7FC !important;
+  color: #130E2B !important;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.gb-qty button:hover:enabled { background: #EEEEFA !important; color: #33319A !important; }
+.gb-qty button:disabled { opacity: .35; cursor: not-allowed; }
+
+.gb-qty span {
+  min-width: 44px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* recipient */
+.gb-seg {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #F3F3F9;
+  width: 100%;
+  max-width: 360px;
+}
+
+.gb-seg button {
+  height: 40px !important;
+  line-height: 1 !important;
+  border: 0 !important;
+  border-radius: 9px;
+  background: transparent !important;
+  color: #4B5563 !important;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.gb-seg button:hover { color: #130E2B !important; }
+
+.gb-seg button.active,
+.gb-seg button.active:hover {
+  background: #fff !important;
+  color: #33319A !important;
+  box-shadow: 0 1px 4px rgba(19, 14, 43, .12);
+}
+
+.gb-recipient {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.gb-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.gb .gift-field {
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: normal;
+}
+
+.gb .gift-message {
+  height: auto;
+  min-height: 72px;
+  padding: 10px 12px;
+}
+
+.gb-message-wrap { position: relative; }
+
+.gb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.gb-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.gb-label span { color: #DC2626; }
+.gb-label .gb-optional { color: #9CA3AF; font-weight: 400; }
+
+.gb .gift-field.invalid,
+.gb .gift-field.invalid:focus {
+  border-color: #DC2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, .12);
+}
+
+.gb-error {
+  font-size: 12px;
+  line-height: 1.35;
+  color: #DC2626;
+}
+
+.gb-sending {
+  display: block;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #ECFDF5;
+  color: #065F46;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.gb-sending i { margin-right: 6px; }
+
+.gb-count {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  font-size: 11px;
+  color: #9CA3AF;
+}
+
+/* payment */
+.gb-pay {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.gb-pay-opt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid #E3E3EF;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  margin: 0;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+
+.gb-pay-opt input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gb-pay-opt:hover { border-color: #A9A7E0; }
+
+.gb-pay-opt.active {
+  border-color: #33319A;
+  background: #F7F7FF;
+  box-shadow: 0 0 0 3px rgba(51, 49, 154, .1);
+}
+
+.gb-pay-opt.disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.gb-pay-opt:focus-within { box-shadow: 0 0 0 3px rgba(51, 49, 154, .2); }
+
+.gb-pay-icon {
+  flex: 0 0 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #EEEEFA;
+  color: #33319A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.gb-pay-text { display: flex; flex-direction: column; min-width: 0; }
+.gb-pay-text strong { font-size: 14px; color: #130E2B; }
+.gb-pay-text small { font-size: 12px; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* summary */
+.gb-summary {
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px dashed #E3E3EF;
+}
+
+.gb-summary-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.gb-summary-line strong {
+  font-size: 22px;
+  color: #130E2B;
+  font-variant-numeric: tabular-nums;
+}
+
+.gb-buy {
+  width: 100%;
+  height: 52px !important;
+  line-height: 1 !important;
+  border: 0 !important;
+  border-radius: 12px;
+  background: #33319A !important;
+  color: #fff !important;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 8px 20px rgba(51, 49, 154, .25);
+  transition: transform .1s ease, box-shadow .15s ease;
+}
+
+.gb-buy:hover:enabled { background: #28267D !important; box-shadow: 0 10px 24px rgba(51, 49, 154, .32); }
+.gb-buy:active:enabled { transform: translateY(1px); }
+
+.gb-buy:disabled,
+.gb-buy:disabled:hover {
+  background: #C9C8E6 !important;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* ---- tablet and phone ---- */
+
+@media (max-width: 991.98px) {
+  .gb-body { grid-template-columns: minmax(0, 1fr); }
+  .gb-visual { position: static; max-width: 420px; }
+}
+
+@media (max-width: 575.98px) {
+  .gb-field-row,
+  .gb-pay { grid-template-columns: minmax(0, 1fr); }
+  .gb-values { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .gb-value { height: 48px !important; font-size: 16px; }
+  .gb .gift-field { font-size: 16px; } /* no iOS zoom */
+  .gb-seg { max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gb-card, .gb-value, .gb-buy { transition: none; }
 }
 </style>
 

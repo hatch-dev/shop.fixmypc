@@ -45,36 +45,47 @@ class IyzicoPayment
         $requestIyzico->setEnabledInstallments(array(2, 3, 6, 9));
 
 
+        /*
+         * A collection order has no delivery address, so every one of these
+         * used to be an unguarded dereference on null. Iyzico still wants a
+         * postal address on the buyer and on both address blocks, so a pickup
+         * falls back to the store the customer is collecting from - which is
+         * the address the transaction actually relates to - and to the contact
+         * details captured in place of a delivery address.
+         */
+        $contact = $order->contactDetails();
+        $postal = self::postalAddress($order);
+
         $buyer = new \Iyzipay\Model\Buyer();
-        $buyer->setId($order->address->id);
-        $buyer->setName($order->address->name);
-        $buyer->setSurname($order->address->name);
-        $buyer->setGsmNumber($order->address->phone);
-        $buyer->setEmail($order->address->email);
+        $buyer->setId($order->user_address_id ?: $order->id);
+        $buyer->setName($contact['name']);
+        $buyer->setSurname($contact['name']);
+        $buyer->setGsmNumber($contact['phone']);
+        $buyer->setEmail($contact['email']);
         $buyer->setIdentityNumber(rand());
-        $buyer->setRegistrationAddress($order->address->address_1 . $order->address->address_2);
+        $buyer->setRegistrationAddress($postal['street']);
         $buyer->setIp($request->ip());
-        $buyer->setCity($order->address->city);
-        $buyer->setCountry($order->address->country);
-        $buyer->setZipCode($order->address->zip);
+        $buyer->setCity($postal['city']);
+        $buyer->setCountry($postal['country']);
+        $buyer->setZipCode($postal['zip']);
 
         $requestIyzico->setBuyer($buyer);
 
 
         $shippingAddress = new \Iyzipay\Model\Address();
-        $shippingAddress->setContactName($order->address->name);
-        $shippingAddress->setCity($order->address->city);
-        $shippingAddress->setCountry($order->address->country);
-        $shippingAddress->setAddress($order->address->address_1 . $order->address->address_2);
-        $shippingAddress->setZipCode($order->address->zip);
+        $shippingAddress->setContactName($contact['name']);
+        $shippingAddress->setCity($postal['city']);
+        $shippingAddress->setCountry($postal['country']);
+        $shippingAddress->setAddress($postal['street']);
+        $shippingAddress->setZipCode($postal['zip']);
         $requestIyzico->setShippingAddress($shippingAddress);
 
         $billingAddress = new \Iyzipay\Model\Address();
-        $billingAddress->setContactName($order->address->name);
-        $billingAddress->setCity($order->address->city);
-        $billingAddress->setCountry($order->address->country);
-        $billingAddress->setAddress($order->address->address_1 . $order->address->address_2);
-        $billingAddress->setZipCode($order->address->zip);
+        $billingAddress->setContactName($contact['name']);
+        $billingAddress->setCity($postal['city']);
+        $billingAddress->setCountry($postal['country']);
+        $billingAddress->setAddress($postal['street']);
+        $billingAddress->setZipCode($postal['zip']);
         $requestIyzico->setBillingAddress($billingAddress);
 
         $totalAmount = $order->total_amount;
@@ -134,6 +145,33 @@ class IyzicoPayment
         }
 
         return $responseDecode;
+    }
+
+    /**
+     * The postal address a payment relates to.
+     *
+     * Delivery orders use the customer's address. A collection order has none,
+     * so it uses the pickup point the customer is collecting from.
+     */
+    private static function postalAddress($order)
+    {
+        if ($order->address) {
+            return [
+                'street' => $order->address->address_1 . $order->address->address_2,
+                'city' => $order->address->city,
+                'country' => $order->address->country,
+                'zip' => $order->address->zip,
+            ];
+        }
+
+        $pickup = optional($order->ordered_products->first())->shipping_place;
+
+        return [
+            'street' => optional($pickup)->pickup_address_line_1 . optional($pickup)->pickup_address_line_2,
+            'city' => optional($pickup)->pickup_city,
+            'country' => optional($pickup)->pickup_country,
+            'zip' => optional($pickup)->pickup_zip,
+        ];
     }
 
 }

@@ -1,0 +1,272 @@
+@import "./variables.styl"
+
+/* =====================================================================
+   Add / Edit form UI — shared chrome rendered by DataPage across every
+   admin section (brands, attributes, categories, tax rules, shipping,
+   vouchers, banners, …). Presentation only: no markup, slot, prop or
+   backend dependency is touched. Modeled on the reference dashboard.
+   ===================================================================== */
+
+/* ---- Card ---- */
+.tab-sidebar
+  background surface-color
+  border 1px solid border-color
+  border-radius 14px
+  box-shadow 0 1px 3px shadow-color
+
+.tab-sidebar > .title
+  padding 18px 24px
+  font-size 17px
+  font-weight 700
+  color var(--text-strong)
+  border-bottom 1px solid border-color
+
+.tab-sidebar .form-wrapper
+  padding 24px
+
+/* ---- Field label ---- */
+.tab-sidebar form .input-wrapper
+  margin-bottom 18px
+
+.tab-sidebar form .input-wrapper > label
+  display block
+  font-size 12.5px
+  font-weight 600
+  color muted-color
+  margin-bottom 7px
+  letter-spacing .01em
+
+/* ---- Inputs / textareas / selects ---- */
+.tab-sidebar .form-wrapper input:not([type='checkbox']):not([type='radio'])
+.tab-sidebar .form-wrapper textarea
+.tab-sidebar .form-wrapper select
+  border 1px solid border-strong
+  border-radius var(--radius-md)
+  background surface-color
+  transition border-color .15s ease, box-shadow .15s ease
+
+.tab-sidebar .form-wrapper input:not([type='checkbox']):not([type='radio']):focus
+.tab-sidebar .form-wrapper textarea:focus
+.tab-sidebar .form-wrapper select:focus
+  border-color primary-color
+  box-shadow 0 0 0 3px primary-lite-color
+  outline none
+
+/* ---- Invalid state ---- */
+.tab-sidebar .form-wrapper .input-wrapper input.invalid
+.tab-sidebar .form-wrapper .input-wrapper textarea.invalid
+  border-color danger-foreground
+  box-shadow 0 0 0 3px var(--danger-bg)
+
+.tab-sidebar .form-wrapper .input-wrapper .error
+  display block
+  margin-top 6px
+  font-size 12px
+  color danger-foreground
+
+/* Keep custom dropdowns visually aligned with inputs */
+.tab-sidebar .form-wrapper .custom-dropdown > span
+  border-radius var(--radius-md)
+
+/* ---- Action footer (Save / Save & continue) ---- */
+.tab-sidebar .single-btn
+  margin-top 22px
+  padding-top 18px
+  border-top 1px solid border-color
+  display flex
+  justify-content flex-end
+  gap 10px
+
+/* ---- Tab navigation (settings-style pages): filled pill active ---- */
+@media only screen and (min-width: 1201px)
+  .tab-sidebar > .dply-felx > .left-area li
+    border-radius var(--radius-md)
+    padding 9px 12px
+    margin 0 0 4px
+    color muted-color
+    transition background .12s ease, color .12s ease
+
+  .tab-sidebar > .dply-felx > .left-area li:hover
+    background hover-color
+
+  .tab-sidebar > .dply-felx > .left-area .active
+    background primary-lite-color
+    color primary-color
+    border-left none
+
+/* =====================================================================
+   Structured (reference-style) edit layout — sticky top action bar +
+   card body + optional right sidebar. Enabled by DataPage's default
+   `structured` prop; sections opt out with :structured="false".
+   ===================================================================== */
+.tab-sidebar.edit-page
+  overflow visible
+
+.edit-topbar
+  position sticky
+  top 0
+  z-index 6
+  display flex
+  align-items center
+  justify-content space-between
+  gap 12px
+  flex-wrap wrap
+  padding 12px 20px
+  background surface-color
+  border-bottom 1px solid border-color
+  border-radius 14px 14px 0 0
+
+.edit-topbar__left
+  display flex
+  align-items center
+  gap 12px
+  min-width 0
+
+.edit-back
+  display inline-flex
+  align-items center
+  gap 6px
+  height 34px
+  padding 0 12px
+  border 1px solid border-strong
+  border-radius var(--radius-md)
+  background surface-color
+  color muted-color
+  font-size 13px
+  font-weight 600
+  cursor pointer
+  transition border-color .12s ease, color .12s ease
+
+  &:hover
+    border-color primary-color
+    color primary-color
+
+.edit-back__icon
+  font-size 15px
+  line-height 1
+
+.edit-topbar__sep
+  width 1px
+  height 22px
+  background border-color
+
+.edit-title
+  margin 0
+  font-size 16px
+  font-weight 700
+  color var(--text-strong)
+  white-space nowrap
+  overflow hidden
+  text-overflow ellipsis
+
+.edit-topbar__actions
+  display flex
+  align-items center
+  gap 8px
+  flex-shrink 0
+
+.edit-body
+  padding 24px
+
+.edit-columns
+  display flex
+  align-items flex-start
+  gap 20px
+
+.edit-main
+  flex 1 1 auto
+  min-width 0
+
+.edit-aside
+  width 300px
+  flex-shrink 0
+  display flex
+  flex-direction column
+  gap 16px
+
+@media only screen and (max-width: 992px)
+  .tab-sidebar .form-wrapper
+    padding 16px
+
+  .tab-sidebar > .title
+    padding 15px 16px
+
+  .edit-topbar
+    padding 10px 14px
+
+  .edit-body
+    padding 16px
+
+  .edit-columns
+    flex-direction column
+
+  .edit-aside
+    width 100%
+
+/* =====================================================================
+   Plain layout (:structured="false") — sticky top action bar, opted into
+   with DataPage's `top-actions` prop. Used by the category add/edit page,
+   whose form is far too long to reach the footer Save buttons.
+   The negative margins pull the bar out of .form-wrapper's padding so it
+   sits flush against the top of the card.
+   ===================================================================== */
+.tab-sidebar .plain-topbar
+  position sticky
+  // .content is the scroller; sticky is measured from its content box,
+  // which sits 12px below the fixed header. Pulling back by that padding
+  // parks the bar flush under the header with no sliver of form showing.
+  top -12px
+  z-index 7
+  display flex
+  align-items center
+  justify-content space-between
+  gap 12px
+  flex-wrap wrap
+  margin -24px -24px 22px
+  padding 13px 24px
+  background surface-color
+  border-bottom 1px solid border-color
+  border-radius 14px 14px 0 0
+
+.tab-sidebar .plain-topbar__left
+  display flex
+  align-items baseline
+  gap 7px
+  min-width 0
+
+.tab-sidebar .plain-topbar__title
+  margin 0
+  font-size 17px
+  font-weight 700
+  color var(--text-strong)
+  white-space nowrap
+  overflow hidden
+  text-overflow ellipsis
+
+.tab-sidebar .plain-topbar__crumb
+  font-size 13px
+  font-weight 600
+  color muted-color
+  white-space nowrap
+
+.tab-sidebar .plain-topbar__sep
+  font-size 13px
+  color border-strong
+
+.tab-sidebar .plain-topbar__actions
+  display flex
+  align-items center
+  gap 10px
+  flex-shrink 0
+
+@media only screen and (max-width: 992px)
+  .tab-sidebar .plain-topbar
+    margin -16px -16px 16px
+    padding 11px 16px
+
+@media only screen and (max-width: 768px)
+  .tab-sidebar .plain-topbar
+    top -10px
+
+  .tab-sidebar .plain-topbar__title
+    font-size 15px

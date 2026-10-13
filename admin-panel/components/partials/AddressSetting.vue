@@ -58,6 +58,18 @@
 
     <div class="input-wrapper">
       <label>
+        WhatsApp Number
+      </label>
+
+      <input
+        type="text"
+        placeholder="WhatsApp Number"
+        v-model="result.whatsapp"
+      >
+    </div>
+
+    <div class="input-wrapper">
+      <label>
         {{ $t('setting.adr') }} 1
       </label>
       <input
@@ -196,12 +208,14 @@
         result: {
           id: null,
           phone: null,
+          whatsapp: null,
           email: null,
           address_1: null,
           address_2: null,
           city: null,
           state: null,
-          zip: null
+          zip: null,
+          country: null
         }
       }
     },

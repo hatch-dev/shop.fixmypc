@@ -9,14 +9,16 @@
     :order-options="orderOptions"
     gate="role"
   >
-    <template v-slot:table="{list}">
+    <template v-slot:table="{list, from}">
       <tr class="lite-bold">
+        <th class="w-50x mx-w-50x">#</th>
         <th>{{ $t('user.name') }}</th>
         <th>{{ $t('category.created') }}</th>
         <th>&nbsp;</th>
       </tr>
 
       <tr v-for="(value, index) in list" :key="index">
+        <td class="w-50x mx-w-50x">{{ from + index }}</td>
         <td class="">
           <nuxt-link
             class="link"

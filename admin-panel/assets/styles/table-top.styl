@@ -1,7 +1,7 @@
 @import "./variables.styl"
 
 .table-top
-  margin 0 0 12px
+  margin 0 0 14px
 
   .grow
     gap 10px
@@ -10,6 +10,91 @@
   .button.primary-btn
     height 36px
     line-height 36px
+
+// ---- Unified filter toolbar (shared across all list pages) ----
+// Scoped to .table-top so it never leaks into pages that define their
+// own standalone .filter-toolbar (e.g. bulk-product-editor).
+.table-top.filter-toolbar
+  background surface-color
+  border 1px solid border-color
+  border-radius 12px
+  padding 12px 14px
+  box-shadow 0 1px 2px shadow-color
+
+.table-top .filter-toolbar__inner
+  display flex
+  align-items center
+  justify-content space-between
+  gap 12px
+  width 100%
+  flex-wrap wrap
+
+.table-top .filter-toolbar__filters
+  display flex
+  align-items center
+  gap 8px
+  flex-wrap wrap
+
+.table-top .filter-toolbar__sort
+  margin-top 0
+
+// Search + Add button cluster, pushed flush to the far right as one unit
+.table-top .filter-toolbar__right
+  display flex
+  align-items center
+  gap 10px
+  flex-wrap nowrap
+  margin-left auto
+
+.table-top .filter-toolbar__add
+  flex-shrink 0
+  display flex
+  align-items center
+
+  .button.primary-btn
+  .primary-btn
+    flex-shrink 0
+    white-space nowrap
+    width auto
+
+.table-top .filter-toolbar__right .search-input
+  flex 0 1 340px
+  flex-grow 0
+  max-width 340px
+  margin 0
+  border 1px solid border-strong
+  border-radius var(--radius-md)
+  background surface-color
+  transition border-color .12s ease, box-shadow .12s ease
+
+  .search-input__icon
+    display flex
+    align-items center
+    padding-left 12px
+    color muted-color
+    flex-shrink 0
+
+    svg
+      width 16px
+      height 16px
+
+  input
+    padding-left 8px !important
+    padding-right 14px
+
+  &:focus-within
+    border-color primary-color
+    box-shadow 0 0 0 3px primary-lite-color
+
+@media only screen and (max-width: 992px)
+  .table-top .filter-toolbar__right
+    margin-left 0
+    width 100%
+    flex-wrap wrap
+
+  .table-top .filter-toolbar__right .search-input
+    flex 1 1 auto
+    max-width none
 
 .bulk-action > button
   gap 5px

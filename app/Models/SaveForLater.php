@@ -13,6 +13,7 @@ class SaveForLater extends Model
 
     protected $fillable = [
         'user_id',
+        'user_token',
         'product_id',
         'inventory_id',
         'quantity',
@@ -25,7 +26,7 @@ class SaveForLater extends Model
 
     public function inventory()
     {
-        return $this->belongsTo(ProductInventory::class, 'inventory_id');
+        return $this->belongsTo(UpdatedInventory::class, 'inventory_id');
     }
 
     public function user()

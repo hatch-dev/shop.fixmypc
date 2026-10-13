@@ -3,6 +3,8 @@
     ref="dataPage"
     set-api="setProductCollection"
     get-api="getProductCollection"
+    set-image-api="setProductCollectionImage"
+    :file-keys="['background_image']"
     route-name="product-collections"
     empty-store-variable="allProductCollections"
     :name="$t('dataPage.prodCol')"
@@ -100,7 +102,8 @@
           title: '',
           slug: '',
           status: 2,
-		   in_frontend: 2 // Added this field
+		      in_frontend: 2,
+          background_image: ''
         }
       }
     },

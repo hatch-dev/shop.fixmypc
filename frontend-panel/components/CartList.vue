@@ -1,12 +1,27 @@
 <template>
   <div>
     <transition name="fade" mode="out-in">
+      <!--
+        Basket lines, drawn at the size the real ones will be.
+
+        `ajaxing` is the basket fetch (cart.vue raises it in fetchingData),
+        not a button press, so replacing the list while it runs is right -
+        and unlike the spinner it used to show, this keeps the page the
+        height it is about to be, so the totals panel beside it does not
+        slide up and back down on every refresh.
+      -->
       <div
-        class="spinner-wrapper flex"
+        class="cart-skeleton"
         v-if="fetchingCartData || ajaxing"
       >
-        <spinner
-          :radius="100"
+        <skeleton-card
+          v-for="index in skeletonLines"
+          :key="`sk-cart-${index}`"
+          class="cart-skeleton-line"
+          horizontal
+          :thumb-width="120"
+          image-height="120px"
+          :lines="3"
         />
       </div>
       <div v-else>
@@ -22,19 +37,11 @@
           :error="dataFromObject(errorFromApi, value.id, null)"
           @cb-changed="cbChangedFn"
           @deleting="deleting"
+          @saved-for-later="$emit('saved-for-later')"
           @quantity="valueChanged"
           @update-cart-shipping="updateCartShipping"
           @current-shipping="currentShipping"
         />
-        <div class="card p-3 mb-3">
-          <h6 class="bundle-list-title">Frequently Bought Together</h6>
-          <bundle-carousel
-            v-for="bundle in upsellBundles"
-            :key="bundle.id"
-            :bundle="bundle"
-          />
-        </div>
-        <flash-discount/>
     </div>
     </transition>
   </div>
@@ -46,7 +53,6 @@
   import util from '~/mixin/util'
   import QuantityNav from '~/components/QuantityNav'
   import CartProductTile from "~/components/CartProductTile";
-  import Spinner from "~/components/Spinner";
 
   export default {
     name: 'CartList',
@@ -100,33 +106,24 @@
       },
     },
     components: {
-      Spinner,
       CartProductTile,
       QuantityNav,
       LazyImage
     },
     computed: {
-      upsellBundles() {
-        if (!this.cartProducts?.length) return []
-        const map = new Map()
-        this.cartProducts.forEach(item => {
-          if (!item.upsell_products?.length) return
-          const key = item.upsell_products
-            .map(p => p.id)
-            .sort()
-            .join('-')
-
-          if (!map.has(key)) {
-            map.set(key, {
-              id: key,
-              title: "Frequently Bought Together",
-              products: item.upsell_products
-            })
-          }
-        });
-        return Array.from(map.values())
-      },
       ...mapGetters('language', ['langCode']),
+      /*
+       * How many placeholder lines to draw.
+       *
+       * A refresh of a basket we already know the size of draws that many, so
+       * the list does not change height at all while it reloads. Only the very
+       * first load has to guess, and two lines is a smaller wrong guess than a
+       * full-height block of them.
+       */
+      skeletonLines() {
+        const known = this.cartProducts ? this.cartProducts.length : 0
+        return Math.min(known || 2, 6)
+      },
     },
     mixins: [util],
     methods: {
@@ -201,11 +198,8 @@
   }
 </script>
 <style scoped>
-.bundle-list-title{
-  font-weight: 500;
-  color: #130E2B;
-  font-size: 16px;
-}
+/* Same rhythm as the real basket lines, so the swap does not nudge the page. */
+.cart-skeleton-line + .cart-skeleton-line { margin-top: 14px; }
 </style>
 
 

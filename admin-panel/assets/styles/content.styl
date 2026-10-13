@@ -51,6 +51,9 @@
     .content
       margin-left 0
       padding header-height-sm + 10px 10px 12px
+      // Trap page-level z-index (modals/sticky bars use z-index 9999) inside the
+      // content area so it can never paint over the mobile drawer/header/overlay.
+      isolation isolate
 
   .sidebar-opened
     .content

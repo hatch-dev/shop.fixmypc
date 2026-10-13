@@ -10,6 +10,7 @@ use App\Models\Helper\Response;
 use App\Models\Helper\Utils;
 use App\Models\Helper\Validation;
 use App\Models\Product;
+use App\Services\BundleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 
@@ -56,27 +57,41 @@ class BundleDealsController extends ControllerHelper
 
             $data = $query->paginate(Config::get('constants.api.PAGINATION'));
 
+            /*
+             * Priced by BundleService, which is what the product page and the
+             * basket use.
+             *
+             * This used to add up `products.offered ?: products.selling` and
+             * take the percentage off that. That is a product-LEVEL figure,
+             * while the shop charges the cheapest purchasable VARIANT of each
+             * item -- so on any product whose variants carry their own prices
+             * the list quoted a total the shop never charges. One batched
+             * call for the whole page, not a query per bundle.
+             */
+            $totals = (new BundleService())->totalsFor($data->getCollection());
+
             foreach ($data as $item) {
                 $item['created'] = Utils::formatDate($item->created_at);
-                $total = $item->products->sum(function ($p) {
-                    $selling = $p->selling ?? 0;
-                    $offered = $p->offered ?? 0;
-                    return $offered > 0 ? $offered : $selling;
-                });
 
-                $discountAmount = 0;
+                $priced = $totals[(int)$item->id] ?? [
+                    'total_price' => 0.0,
+                    'discount_amount' => 0.0,
+                    'final_price' => 0.0,
+                    'sellable' => false,
+                ];
 
-                if ($item->discount_type === 'percentage') {
-                    $discountAmount = ($total * $item->discount_value) / 100;
-                } else {
-                    $discountAmount = $item->discount_value;
-                }
+                $item['total_price'] = $priced['total_price'];
+                $item['discount_amount'] = $priced['discount_amount'];
+                $item['final_price'] = $priced['final_price'];
 
-                $final = $total - $discountAmount;
-
-                $item['total_price'] = round($total, 2);
-                $item['discount_amount'] = round($discountAmount, 2);
-                $item['final_price'] = round(max($final, 0), 2);
+                /*
+                 * Whether the storefront would offer it at all. A bundle is
+                 * all or nothing, so one unpublished or sold-out item hides
+                 * the whole thing -- which is worth saying on the list rather
+                 * than leaving an administrator to wonder why a live-looking
+                 * deal never appears.
+                 */
+                $item['sellable'] = $priced['sellable'];
             }
 
             return response()->json(new Response($request->token, $data));
@@ -92,7 +107,13 @@ class BundleDealsController extends ControllerHelper
         try {
             $lang = $request->header('language');
 
-
+            /*
+             * Deliberately NOT gated on `bundle_deal.view`, in line with every
+             * other allList in this codebase. It returns id and title only,
+             * and it is what fills the bundle dropdown on the product editor:
+             * gating it would take that dropdown away from a role that may
+             * edit products but not administer the deals themselves.
+             */
             $query = BundleDeal::query();
 
             if ($lang) {
@@ -156,6 +177,39 @@ class BundleDealsController extends ControllerHelper
     }
 
 
+    /**
+     * The fields a bundle owns and an administrator may edit.
+     *
+     * Named explicitly, because the only other caller of this data is a
+     * query-builder `update()`, which does not honour $fillable. `admin_id`
+     * is deliberately absent: ownership is the server's to set, once, at
+     * creation. Blank strings are dropped so an untouched optional field does
+     * not overwrite a stored value with ''.
+     */
+    private static function editableFields(Request $request)
+    {
+        $allowed = ['title', 'description', 'discount_type', 'discount_value', 'buy', 'free'];
+
+        $fields = [];
+
+        foreach ($allowed as $key) {
+            if (!$request->has($key)) {
+                continue;
+            }
+
+            $value = $request->input($key);
+
+            if (is_array($value) || (is_string($value) && trim($value) === '')) {
+                continue;
+            }
+
+            $fields[$key] = $value;
+        }
+
+        return $fields;
+    }
+
+
     public function action(Request $request, $id = null)
     {
         try {
@@ -178,9 +232,29 @@ class BundleDealsController extends ControllerHelper
                     return $isOwner;
                 }
 
-                $filtered = array_filter($request->except(['products', 'productsValidation']), function ($element) {
-                    return '' !== trim($element);
-                });
+                /*
+                 * The bundle's OWN editable fields, named, rather than
+                 * whatever the request happened to carry.
+                 *
+                 * This was `$request->except(['products','productsValidation'])`
+                 * handed to a query-builder `update()`, where $fillable does
+                 * not apply. Two things went wrong with that:
+                 *
+                 *   - `scope:admin` re-issues the caller's access token INTO
+                 *     the request input whenever the old one is within a
+                 *     minute of expiring, so the save named a `token` column
+                 *     that does not exist and died. The rows above it were
+                 *     already written and there is no transaction, so the
+                 *     administrator was told the save had failed on a save
+                 *     that had gone through.
+                 *   - Any column named in the body was written, `admin_id`
+                 *     included -- which is what scopes a vendor's bundles to
+                 *     the vendor.
+                 *
+                 * Ownership is not on this list. It is set once, by the
+                 * server, when the bundle is created.
+                 */
+                $filtered = self::editableFields($request);
 
                 BundleDeal::where('id', $id)->update([
                     'title' => $request->title,
@@ -213,9 +287,13 @@ class BundleDealsController extends ControllerHelper
                     } else {
                         $existingLang->update($langData);
                     }
-                } else {
-                    BundleDeal::where('id', $id)->update($filtered);
                 }
+                /*
+                 * No `else` branch: the explicit update above has already
+                 * written every field a bundle owns. The second update this
+                 * used to do was the unfiltered one, and it wrote nothing the
+                 * first had not already written correctly.
+                 */
 
 
             } else {
@@ -294,7 +372,27 @@ class BundleDealsController extends ControllerHelper
                     return response()->json(Validation::noDataLang($lang));
                 }
 
-                $product = Product::where('bundle_deal_id', $i)->first();
+                /*
+                 * `products.bundle_deal_id` is a comma-separated VARCHAR --
+                 * that is how a product offers more than one bundle, and how
+                 * BundleService reads it.
+                 *
+                 * This was an equality test against the whole string, so it
+                 * only ever matched a product offering this bundle AND NO
+                 * OTHER. Assign a second bundle and the guard stopped seeing
+                 * either of them: the deal was deleted out from under a live
+                 * product, leaving bundle_deal_id pointing at an id that no
+                 * longer exists.
+                 *
+                 * FIND_IN_SET matches one member of the list. Spaces are
+                 * stripped first because the column is hand-edited and
+                 * "16, 160" is a list FIND_IN_SET would otherwise read as
+                 * "16" and " 160".
+                 */
+                $product = Product::whereRaw(
+                    "FIND_IN_SET(?, REPLACE(COALESCE(bundle_deal_id, ''), ' ', ''))",
+                    [(int)$i]
+                )->first();
 
                 if ($product) {
                     return response()->json(Validation::error($request->token,

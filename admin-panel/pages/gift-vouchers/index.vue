@@ -4,23 +4,26 @@
     list-api="getGiftVouchers"
     delete-api="deleteGiftVoucher"
     route-name="gift-vouchers"
-    :name="'Gift Vouchers'"
+    :name="'Gift Card Design'"
     :order-options="orderOptions"
     @delete-bulk="deleteBulk"
     @list="itemList = $event"
     gate="gift_voucher"
   >
-    <template v-slot:table="{list}">
+    <template v-slot:table="{list, from}">
         <tr class="lite-bold">
           <th>
             <input type="checkbox" @change="checkAll">
           </th>
 
+          <th class="w-50x mx-w-50x">#</th>
           <th>Image</th>
           <th>Title</th>
           <th>Amounts</th>
           <th>Min Qty</th>
           <th>Max Qty</th>
+          <th>Status</th>
+          <th>Sold</th>
           <th>Created</th>
           <th>&nbsp;</th>
         </tr>
@@ -30,14 +33,16 @@
             <input type="checkbox" :value="item.id" v-model="cbList">
           </td>
 
+          <td class="w-50x mx-w-50x">{{ from + index }}</td>
+
           <!-- Image -->
           <td>
-            <img
-              :src="getImageURL(item.image)"
-              width="50"
-              height="50"
-              style="object-fit: cover; border-radius: 6px;"
-            />
+            <span class="voucher-thumb">
+              <img
+                :src="getImageURL(item.image)"
+                alt=""
+              />
+            </span>
           </td>
 
           <!-- Title -->
@@ -64,6 +69,16 @@
 
           <!-- Max Quantity -->
           <td>{{ item.max_quantity }}</td>
+
+          <!-- On sale or withdrawn -->
+          <td>
+            <span class="gv-status" :class="item.is_active ? 'on' : 'off'">
+              {{ item.is_active ? 'On sale' : 'Withdrawn' }}
+            </span>
+          </td>
+
+          <!-- Cards sold -->
+          <td>{{ item.sold || 0 }}</td>
 
           <!-- Created -->
           <td>{{ item.created }}</td>
@@ -124,12 +139,47 @@ export default {
 </script>
 
 <style scoped>
-.amount-badge {
-  display: inline-block;
-  background: #f1f1f1;
-  padding: 3px 8px;
-  margin: 2px;
-  border-radius: 4px;
+.gv-status {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 999px;
   font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.gv-status.on { background: #E6F6EC; color: #1E7E34; }
+.gv-status.off { background: #F3F4F6; color: #6B7280; }
+
+.voucher-thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--hover-color);
+}
+
+.voucher-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.amount-badge {
+  display: inline-flex;
+  align-items: center;
+  background: var(--primary-soft);
+  color: var(--primary-color);
+  padding: 3px 10px;
+  margin: 2px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
 }
 </style>

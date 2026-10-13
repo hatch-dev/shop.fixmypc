@@ -3,8 +3,8 @@
 
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5 class="mb-0">Featured Categories</h5>
-        <nuxt-link :to="`/categories`" class="show-all">
+        <h5 class="slider-collection-heading">Featured Categories</h5>
+        <nuxt-link :to="`/categories`" class="link">
             Show all
         </nuxt-link>
       </div>
@@ -21,8 +21,7 @@
                     <img
                         :src="getImage(cat.image)"
                         alt=""
-                        style="width:50px;height:50px;object-fit:contain;"
-                    />
+                     />
                 </div>
                 <p>{{ cat.title }}</p>
             </nuxt-link>
@@ -51,7 +50,8 @@
 <style scoped>
 .category-box {
     background: #F3F5FC;
-    border-radius: 20px;
+    border-radius: 30px;
+    border: 1px solid #E3E2F1;
 }
 
 .category-item {
@@ -59,23 +59,26 @@
 }
 
 .icon-circle {
-    width: 110px;
-    height: 110px;
-    margin: auto;
-    border-radius: 50%;
-    background: #fff;
-    display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 34px;
-    color: #4b3bbd;
+    background: #fff;
     border: 1px solid #e0e3ea;
-    transition: 0.3s;
+    border-radius: 50%;
+    color: #4b3bbd;
+    display: flex;
+    font-size: 34px;
+    height: 200px;
+    justify-content: center;
+    margin: auto;
+    transition: .3s;
+    width: 200px;
 }
-
+.icon-circle img {
+    width: 100px;
+    height: 100px;
+}
 .category-item p {
     margin-top: 10px;
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 500;
 }
 
@@ -91,4 +94,20 @@
     color: #000;
 }
 
+@media (max-width:1035px){
+ .icon-circle{
+    width: 150px;
+    height: 150px;
+ }  
+ .icon-circle img{
+    height: 80px;
+    width: 80px;
+ }
+}
+@media (max-width:500px){
+ .icon-circle{
+    width: 110px;
+    height: 110px;
+ }  
+}
 </style>

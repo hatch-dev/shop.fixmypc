@@ -5,8 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
+use App\Models\Helper\ClearanceWindow;
+use App\Models\Helper\FlashSaleWindow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\UserWishlist;
 
 class Product extends Model
 {
@@ -27,13 +30,26 @@ class Product extends Model
     protected $fillable = [
         'id', 'title', 'short_heading', 'purchased', 'selling', 'wholesale_price', 'wholesale_discount_type', 'wholesale_discount_value', 'vatInclusivePrice', 'discount_type', 'discount_value', 'offered','vatInclusiveOfferedPrice', 'image', 'unit', 'video', 'video_thumb', 'badge',
         'status', 'admin_id', 'subcategory_id', 'category_id', 'brand_id', 'warranty', 'refundable',
-        'description', 'overview', 'tags', 'tax_rule_id', 'shipping_rule_id', 'meta_title', 'meta_description',
+        'description', 'overview', 'tags', 'tax_rule_id', 'shipping_rule_id', 'sell_countries', 'meta_title', 'meta_description',
         'meta_keywords',
-        'review_count', 'rating', 'bundle_deal_id', 'slug', 'excludeVAT' , 'upsell_id', 'updated_upsell_id', 'procurement', 'back_order'
+        'review_count', 'rating', 'bundle_deal_id', 'slug', 'excludeVAT' , 'upsell_id', 'procurement',
+        /*
+         * back_order is vestigial. Backorder is decided per VARIANT by
+         * updated_inventories.is_active -- that is what the basket, checkout,
+         * the upgrade engine and the cross-sell blocks all read. This column
+         * is written by nothing, read by nothing and has no input anywhere in
+         * the admin. Left in place rather than dropped so an old row keeps its
+         * value; do not wire it up expecting it to mean anything.
+         */
+        'back_order',
+        // Shipping dimensions and the purchase note. The admin form has shown
+        // these inputs all along, bound to local state that was never sent.
+        'length', 'width', 'height', 'weight', 'purchase_note'
     ];
 
     protected $hidden = [];
 
+    protected $appends = ['is_wishlisted', 'collection_background_image', 'is_new'];
 
     public function flash_sale_product()
     {
@@ -45,6 +61,90 @@ class Product extends Model
     public function tax_rules()
     {
         return $this->hasOne(TaxRules::class, 'id', 'tax_rule_id');
+    }
+
+
+    /**
+     * A published product with its bundle, tax rule and any running flash sale
+     * price attached — the same shape Cart::product_inner() produces.
+     *
+     * Pricing needs this shape outside a cart context too (add-to-cart has no
+     * saved cart row yet), and duplicating the join is how the price ladders
+     * drifted apart in the first place (QA audit PRC-01).
+     */
+    public static function pricingRecord($productId)
+    {
+        return self::pricingQuery()
+            ->where('products.id', $productId)
+            ->first();
+    }
+
+
+    /**
+     * The same record, for many products at once, keyed by product id.
+     *
+     * Anything that prices a LIST of products needs this. Calling
+     * pricingRecord() once per product costs three queries each — the row plus
+     * its two eager loads — and a recommendation block is exactly where that
+     * bites, because it is the one place that prices a set of products the
+     * page never asked for. Eight recommendations were twenty-four queries.
+     *
+     * It shares its query with pricingRecord() rather than restating it. A
+     * record that differs by a single column between the two is a block that
+     * quotes one price and a basket that charges another, which is the whole
+     * defect this shape exists to prevent.
+     */
+    public static function pricingRecords($productIds)
+    {
+        $ids = collect($productIds)->filter()->map(function ($id) { return (int)$id; })->unique()->values();
+
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        return self::pricingQuery()
+            ->whereIn('products.id', $ids)
+            ->get()
+            /*
+             * A product in more than one live flash sale joins to more than
+             * one row. pricingRecord() takes whichever comes back first;
+             * unique() keeps the first too, so a product priced on its own and
+             * the same product priced in a batch cannot disagree.
+             */
+            ->unique('id')
+            ->keyBy('id');
+    }
+
+
+    /** The join and the column list both of the above are built from. */
+    private static function pricingQuery()
+    {
+        return self::with('bundle_deal')
+            ->with('tax_rules')
+            ->leftJoin('flash_sales', function ($join) {
+
+                $join->on('products.id', '=', 'flash_sale_products.product_id');
+
+                $join->leftJoin('flash_sale_products', function ($join) {
+                    $join->on('flash_sales.id', '=', 'flash_sale_products.flash_sale_id');
+                });
+                FlashSaleWindow::liveProduct($join);
+            })
+            /*
+             * The clearance running on this product, if any. Pricing reads
+             * it exactly as it reads the flash-sale columns above, so a
+             * deal the storefront advertises is a deal the till charges.
+             */
+            ->tap(function ($query) { ClearanceWindow::join($query); })
+            ->select('products.id', 'products.bundle_deal_id',
+                'products.title', 'products.selling', 'products.offered',
+                'products.image', 'products.shipping_rule_id',
+                'products.tax_rule_id', 'products.admin_id', 'products.purchased',
+                'products.excludeVAT', 'products.status',
+                'flash_sale_products.price',
+                'flash_sale_products.discount_type as flash_discount_type',
+                'flash_sale_products.discount_value as flash_discount_value', 'flash_sales.end_time')
+            ->addSelect(ClearanceWindow::columns());
     }
 
 
@@ -139,6 +239,33 @@ class Product extends Model
 		return $this->hasMany(UpsellProduct::class, 'upsell_id', 'upsell_id');
 	}
 
+    /**
+     * The cross-sell PROMOTIONS assigned to this product -- "Laptop
+     * Accessories" under a laptop. The pivot carries the assignment's own
+     * order and switch.
+     *
+     * Spelled out rather than called `relatedProducts` or `recommendations`:
+     * upsell campaigns, bundle deals and cross-sell all point products at
+     * other products in this catalogue, and a reader who finds `->related`
+     * cannot tell which of the three they have.
+     *
+     * Unfiltered on purpose. The admin screen needs every assignment, the
+     * switched-off ones included; the storefront asks CrossSellService, which
+     * applies the live filters itself.
+     */
+    public function crossSells()
+    {
+        return $this->belongsToMany(CrossSell::class, 'product_cross_sells', 'product_id', 'cross_sell_id')
+            ->withPivot(['id', 'sort_order', 'status'])
+            ->withTimestamps();
+    }
+
+    /** The assignment rows themselves, for when the pivot is what is edited. */
+    public function crossSellAssignments()
+    {
+        return $this->hasMany(ProductCrossSell::class, 'product_id', 'id');
+    }
+
     public function ratingReviews()
     {
         return $this->hasMany(RatingReview::class, 'product_id');
@@ -166,14 +293,6 @@ class Product extends Model
             $query->withCount(['ratingReviews as review_count'])
                 ->withAvg('ratingReviews as rating', 'rating');
         });
-
-        // static::addGlobalScope('withWholesaleColumns', function ($query) {
-        //     $query->addSelect([
-        //         'products.wholesale_price',
-        //         'products.wholesale_discount_type',
-        //         'products.wholesale_discount_value'
-        //     ]);
-        // });
     }
 
     public function getRatingAttribute($value)
@@ -181,40 +300,99 @@ class Product extends Model
         return $value ? round($value, 1) : 0;
     }
 
-    // public function getSellingAttribute($value)
-    // {
-    //     $user = Auth::user();
+    public function specifications()
+    {
+        return $this->hasMany(ProductSpecification::class);
+    }
 
-    //     if ($user && $user->account_type === 'business' && $this->wholesale_price > 0) {
-    //         return (float) $this->wholesale_price;
-    //     }
+    /**
+     * The translated titles and copy for this product.
+     *
+     * Most queries reach product_langs through a leftJoin aliased `pl`. That
+     * is fine where the join is present, but a search filtering on `pl.title`
+     * in a query that never joined it fails the whole statement -- which is
+     * exactly what broke the bulk editor's search box. A relation cannot drift
+     * out of step with a join that is not there.
+     */
+    public function langs()
+    {
+        return $this->hasMany(ProductLang::class, 'product_id', 'id');
+    }
 
-    //     return (float) $value;
-    // }
+    /** The subcategory rows chosen for this product, under their parents. */
+    public function subcategories()
+    {
+        return $this->hasMany(ProductSubcategory::class, 'product_id', 'id');
+    }
 
-    // public function getOfferedAttribute($value)
-    // {
-    //     $user = Auth::user();
+    public function getIsWishlistedAttribute()
+    {
+        $userId = Auth::user()->id ?? null;
 
-    //     if ($user && $user->account_type === 'business' && $this->wholesale_price > 0) {
+        $query = UserWishlist::where('product_id', $this->id);
 
-    //         $price = (float) $this->wholesale_price;
-    //         $discountValue = (float) $this->wholesale_discount_value;
-    //         $discountType = $this->wholesale_discount_type;
+        if ($userId) {
 
-    //         if ($discountType === 'percentage') {
-    //             return (float) $price - ($price * $discountValue / 100);
-    //         }
+            $query->where('user_id', $userId);
 
-    //         if ($discountType === 'fixed') {
-    //             return (float) $price - $discountValue;
-    //         }
+        } else {
 
-    //         return (float) $price;
-    //     }
+            // A guest owns wishlist rows through the token the server issued
+            // it, so the heart still reads as filled before signing in.
+            $userToken = request()->input('user_token') ?: request()->query('user_token');
 
-    //     return (float) $value;
-    // }
+            if (!$userToken) {
+                return false;
+            }
 
+            $query->whereNull('user_id')->where('user_token', $userToken);
+        }
+
+        return $query->exists();
+    }
+
+    public function feature_images()
+    {
+        return $this->hasMany(
+            ProductFeatureImage::class
+        )->orderBy('sort_order');
+    }
+
+    public function getCollectionBackgroundImageAttribute()
+    {
+        $collection = CollectionWithProduct::query()
+            ->with('collection')
+            ->where('product_id', $this->id)
+            ->whereHas('collection', function ($query) {
+
+                $query->whereNotNull('image')
+                    ->where('image', '!=', '');
+            })
+            ->latest()
+            ->first();
+
+        return $collection?->collection?->image;
+    }
+
+    public function getIsNewAttribute()
+    {
+        $createdAt = $this->created_at;
+
+        if (!$createdAt) {
+            $createdAt = self::query()->where(
+                'id',
+                $this->id
+            )->value('created_at');
+        }
+
+        if (empty($createdAt)) {
+            return false;
+        }
+
+        return \Carbon\Carbon::parse($createdAt)
+            ->greaterThanOrEqualTo(
+                \Carbon\Carbon::now()->subDays(7)
+            );
+    }
 	
 }

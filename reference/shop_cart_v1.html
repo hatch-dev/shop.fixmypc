@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shopping cart — FixMyPC Shop</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   FixMyPC Shop — Cart prototype v1
+   Dense two-column basket: line cards that carry their own VAT basis, and an
+   Order Summary stating every figure Inc-VAT.
+   Mixed basis is the point of the page — line 1 is priced Ex-VAT, line 2
+   Inc-VAT, and each line shows both sides so the two are never read as one.
+   Spacing is deliberately tight: 2/4/6/8/10/12px steps, and the only breathing
+   room between sections is a single rule.
+   ========================================================================== */
+:root{
+  --ink:#0F2547;--ink-2:#1B3355;--ink-3:#33486A;
+  --muted:#6B7C93;--muted-2:#8C9AB0;
+  --line:#E3E8F0;--line-2:#D6DEEA;
+  --blue:#1A56DB;--blue-700:#1544B0;--blue-600:#1D4ED8;
+  --blue-50:#EFF5FF;--blue-100:#DBE8FF;
+  --green:#15803D;--green-600:#16A34A;--green-50:#F0FCF4;--green-100:#DCF6E4;
+  --paper:#fff;--wash:#F8FAFD;
+  --r:10px;--r-sm:8px;--r-xs:6px;
+  --sans:"Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--sans);color:var(--ink);background:var(--paper);font-size:14px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+button,input{font-family:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid rgba(26,86,219,.45);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1480px;margin:0 auto;padding:0 30px}
+
+/* ─────────── breadcrumb + page head ─────────── */
+.crumb{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);padding:14px 0 8px}
+.crumb a{text-decoration:none}
+.crumb a:hover{color:var(--blue)}
+.crumb svg{opacity:.55}
+.crumb .here{color:var(--ink-2);font-weight:500}
+
+.page-head{display:flex;align-items:baseline;gap:10px;padding-bottom:10px}
+.page-head h1{margin:0;font-size:30px;font-weight:800;letter-spacing:-.022em;line-height:1.1}
+.page-head .count{font-size:16px;color:var(--muted);font-weight:400}
+.clear-cart{margin-left:auto;display:inline-flex;align-items:center;gap:7px;background:none;border:0;padding:0;
+  cursor:pointer;color:var(--ink-2);font-size:14px;font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.clear-cart:hover{color:#C8324B}
+.clear-cart:hover svg{color:#C8324B}
+.clear-cart svg{color:var(--muted)}
+
+/* ─────────── layout ─────────── */
+.cart-grid{display:grid;grid-template-columns:minmax(0,1fr) 466px;gap:14px;align-items:start}
+.cart-main{display:flex;flex-direction:column;gap:10px;min-width:0}
+
+/* ─────────── cart line ─────────── */
+.line{border:1px solid var(--line);border-radius:var(--r);background:var(--paper)}
+.line-row{display:grid;grid-template-columns:auto 102px minmax(0,1fr) auto auto auto;gap:12px;
+  align-items:center;padding:11px 12px 10px}
+
+/* selection: the control that says "this line is included", first in the row */
+.cb{position:relative;width:22px;height:22px;flex:0 0 auto;cursor:pointer;display:block}
+.cb input{position:absolute;opacity:0;width:0;height:0}
+.cb i{position:absolute;inset:0;border:1.5px solid var(--line-2);border-radius:var(--r-xs);background:#fff;
+  display:block;transition:background .12s,border-color .12s}
+.cb input:checked + i{background:var(--blue);border-color:var(--blue)}
+.cb i::after{content:"";position:absolute;left:7.5px;top:3.5px;width:5px;height:10px;border:solid #fff;
+  border-width:0 2.2px 2.2px 0;transform:rotate(45deg) scale(0);transition:transform .12s}
+.cb input:checked + i::after{transform:rotate(45deg) scale(1)}
+
+.thumb{width:102px;height:102px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--wash);
+  display:grid;place-items:center;overflow:hidden}
+.thumb svg{display:block}
+
+.info{min-width:0;display:flex;flex-direction:column;gap:3px}
+.info h2{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+.info h2 a{text-decoration:none}
+.info h2 a:hover{color:var(--blue)}
+.variant{font-size:13px;color:var(--muted)}
+
+/* which convention this line is priced on, said once and plainly */
+.basis{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;
+  padding:3px 9px;border-radius:var(--r-xs);margin:2px 0 1px;cursor:default}
+.basis.ex{background:var(--blue-100);color:var(--blue-600)}
+.basis.inc{background:var(--green-100);color:var(--green)}
+.basis em{width:14px;height:14px;border-radius:50%;border:1.3px solid currentColor;display:grid;place-items:center;
+  font-style:normal;font-size:9.5px;font-weight:700;line-height:1;opacity:.8}
+
+.price-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px;margin-top:1px}
+.price{font-size:19px;font-weight:800;letter-spacing:-.02em}
+.was{font-size:14px;color:var(--muted-2);text-decoration:line-through}
+.save{background:var(--green-100);color:var(--green);font-size:12.5px;font-weight:700;padding:2px 8px;
+  border-radius:var(--r-xs)}
+.basis-note{font-size:12.5px;color:var(--muted)}
+/* what the line above actually costs once VAT is settled, on one line */
+.vat-line{font-size:12.5px;color:var(--muted)}
+.vat-line b{color:var(--ink-3);font-weight:600}
+
+/* quantity */
+.qty{display:inline-flex;align-items:center;border:1px solid var(--line-2);border-radius:var(--r-sm);
+  height:40px;background:#fff;overflow:hidden}
+.qty button{width:40px;height:100%;border:0;background:none;cursor:pointer;font-size:19px;line-height:1;
+  color:var(--ink-3);display:grid;place-items:center}
+.qty button:hover{background:var(--blue-50);color:var(--blue)}
+.qty span{min-width:48px;text-align:center;font-size:15px;font-weight:700}
+
+/* the line stated on both sides of VAT, in a panel of its own */
+.totals{border-left:1px solid var(--line);padding-left:14px;min-width:174px;display:flex;flex-direction:column;gap:2px}
+.totals .lbl{font-size:12.5px;color:var(--muted)}
+.totals .main{font-size:15px;font-weight:800;letter-spacing:-.01em}
+.totals .main em{font-style:normal;font-size:12px;font-weight:500;color:var(--muted);margin-left:7px}
+.totals .alt{font-size:13px;color:var(--ink-3)}
+.totals .alt em{font-style:normal;color:var(--muted);margin-right:5px;font-size:12.5px}
+.totals .vat{font-size:12.5px;color:var(--muted)}
+
+.line-del{align-self:flex-start;width:30px;height:30px;border:1px solid var(--line);border-radius:var(--r-xs);
+  background:#fff;cursor:pointer;display:grid;place-items:center;color:var(--muted)}
+.line-del:hover{border-color:#F0C2CB;background:#FEF4F6;color:#C8324B}
+
+/* what the basis means for this line, in a sentence */
+.strip{display:flex;align-items:flex-start;gap:9px;margin:0 12px 10px;padding:9px 11px;border-radius:var(--r-sm);
+  font-size:13px;line-height:1.4}
+.strip.ex{background:var(--blue-50);color:var(--blue-600)}
+.strip.inc{background:var(--green-50);color:var(--green)}
+.strip svg{flex:0 0 auto;margin-top:.5px}
+
+/* ─────────── bulk actions ─────────── */
+.bulk{display:flex;align-items:center;gap:14px;padding:1px 2px 3px;font-size:13.5px;color:var(--ink-2)}
+.bulk label{display:inline-flex;align-items:center;gap:9px;cursor:pointer;font-weight:500}
+.bulk .sep{width:1px;height:17px;background:var(--line-2)}
+.bulk button{display:inline-flex;align-items:center;gap:7px;background:none;border:0;padding:0;cursor:pointer;
+  color:var(--ink-2);font-size:13.5px;font-weight:500}
+.bulk button svg{color:var(--muted)}
+.bulk button:hover,.bulk button:hover svg{color:var(--blue)}
+
+/* ─────────── recommendations ─────────── */
+.rec{border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.rec-head{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.rec-head h2{margin:0;font-size:17px;font-weight:700;letter-spacing:-.015em}
+.rec-head .see{margin-left:auto;font-size:13.5px;font-weight:500;color:var(--blue);text-decoration:underline;
+  text-underline-offset:3px}
+.rec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.rec-card{border:1px solid var(--line);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:7px}
+.rec-img{height:96px;display:grid;place-items:center}
+.rec-img svg{width:100%;height:auto;max-height:92px}
+.rec-name{margin:0;font-size:13.5px;color:var(--ink-3);line-height:1.35;min-height:37px}
+.rec-price{display:flex;align-items:baseline;gap:8px}
+.rec-price b{font-size:16px;font-weight:800;letter-spacing:-.02em}
+.rec-price s{font-size:13.5px;color:var(--muted-2)}
+.rec-btn{display:flex;align-items:center;justify-content:center;gap:8px;height:37px;border:1px solid var(--blue);
+  border-radius:var(--r-sm);background:#fff;color:var(--blue);font-size:13.5px;font-weight:600;cursor:pointer}
+.rec-btn:hover{background:var(--blue);color:#fff}
+
+/* ─────────── order summary ─────────── */
+.side{position:sticky;top:12px}
+.sum{border:1px solid var(--line);border-radius:var(--r);padding:13px 14px 14px;background:var(--paper)}
+.sum-head{display:flex;align-items:center;gap:10px;padding-bottom:10px;margin-bottom:8px;
+  border-bottom:1px solid var(--line)}
+.sum-head .ico{width:30px;height:30px;flex:0 0 auto;color:var(--blue)}
+.sum-head h2{margin:0;font-size:21px;font-weight:800;letter-spacing:-.022em;line-height:1.15}
+.sum-head small{display:block;font-size:12.5px;font-weight:400;color:var(--muted);letter-spacing:0;margin-top:1px}
+
+.row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:5px 0}
+.row .k{font-size:14.5px;font-weight:600;color:var(--ink)}
+.row .k small{display:block;font-size:12.5px;font-weight:400;color:var(--muted);margin-top:1px}
+.row .v{font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+.row .v.good{color:var(--green-600)}
+/* native title tooltips: keyboard-reachable, and the sidebar cannot clip them */
+.i{display:inline-grid;place-items:center;width:14px;height:14px;border-radius:50%;border:1.3px solid var(--muted-2);
+  color:var(--muted);font-size:9.5px;font-weight:700;line-height:1;margin-left:5px;vertical-align:1px;cursor:help}
+.i:hover{border-color:var(--blue);color:var(--blue)}
+.rule{height:1px;background:var(--line);margin:6px 0}
+
+.sum-total{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--blue-50);
+  border-radius:var(--r-sm);padding:10px 12px;margin:8px 0 10px}
+.sum-total .k{font-size:17px;font-weight:700}
+.sum-total .v{font-size:22px;font-weight:800;letter-spacing:-.025em}
+
+.cta{width:100%;height:46px;border:0;border-radius:var(--r-sm);background:var(--blue);color:#fff;
+  font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px}
+.cta:hover{background:var(--blue-700)}
+
+/* Two disclosures, below the action rather than above it. <details> elements so
+   they open without script and announce as expandable for free. */
+.disc{border:1px solid var(--line);border-radius:var(--r-sm);margin-top:8px}
+.disc summary{display:flex;align-items:center;gap:9px;padding:9px 11px;cursor:pointer;list-style:none;
+  font-size:14.5px;font-weight:700}
+.disc summary::-webkit-details-marker{display:none}
+.disc summary .ico{color:var(--blue);display:grid;place-items:center;width:17px;flex:0 0 auto;font-weight:800;
+  font-size:14px}
+.disc summary .chev{margin-left:auto;color:var(--muted);transition:transform .15s;display:grid;place-items:center}
+.disc[open] summary .chev{transform:rotate(180deg)}
+.disc-body{padding:0 11px 10px}
+
+.sv{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:7px 0}
+.sv + .sv{border-top:1px solid var(--line)}
+.sv .n{font-size:14px;font-weight:600}
+/* a net line shows its saving being grossed up: the summary figure is larger
+   than the one on the product card, and that difference is the VAT */
+.sv .w{display:block;font-size:12.5px;font-weight:400;color:var(--muted);margin-top:1px}
+.sv .a{font-size:15px;font-weight:700;white-space:nowrap}
+.sv-total{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--green-50);
+  border:1px solid var(--green-100);border-radius:var(--r-xs);padding:8px 10px;margin-top:7px;
+  color:var(--green);font-size:13.5px;font-weight:700}
+.sv-total b{font-size:14.5px;font-weight:800}
+
+.vat-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:2px}
+.vat-tbl th,.vat-tbl td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--line)}
+.vat-tbl thead th{color:var(--muted);font-weight:500;font-size:12px}
+.vat-tbl th:first-child,.vat-tbl td:first-child{text-align:left}
+.vat-tbl tbody th{font-weight:700}
+.vat-tbl tbody tr:last-child td,.vat-tbl tbody tr:last-child th{border-bottom:0}
+
+.note{display:flex;align-items:flex-start;gap:9px;background:var(--blue-50);border-radius:var(--r-sm);
+  padding:10px 11px;margin:8px 0 0;font-size:12.5px;line-height:1.45;color:#2B5BB5}
+.note svg{flex:0 0 auto;margin-top:1px;color:var(--blue)}
+
+/* ─────────── trust bar ─────────── */
+.trust{border-top:1px solid var(--line);margin-top:14px;padding:14px 0 20px;display:grid;
+  grid-template-columns:repeat(3,1fr);gap:16px}
+.trust > div{display:flex;align-items:center;gap:11px}
+.trust > div:nth-child(2){justify-content:center}
+.trust > div:nth-child(3){justify-content:flex-end}
+.trust svg{color:var(--ink-3);flex:0 0 auto}
+.trust b{display:block;font-size:14px;font-weight:700}
+.trust small{display:block;font-size:12.5px;color:var(--muted)}
+
+/* ─────────── narrow ─────────── */
+@media (max-width:1180px){
+  .cart-grid{grid-template-columns:minmax(0,1fr)}
+  .side{position:static}
+}
+@media (max-width:820px){
+  .wrap{padding:0 16px}
+  .line-row{grid-template-columns:auto 76px minmax(0,1fr) auto;gap:10px;align-items:start}
+  .thumb{width:76px;height:76px}
+  .thumb svg{transform:scale(.72)}
+  .qty{grid-column:3;justify-self:start;height:36px}
+  .qty button{width:34px}
+  /* delete stays in the corner of the row rather than dropping below the totals */
+  .line-del{grid-column:4;grid-row:1}
+  .bulk{flex-wrap:wrap;gap:8px 12px}
+  .bulk label,.bulk button{white-space:nowrap}
+  .totals{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);padding:8px 0 0;min-width:0;
+    flex-direction:row;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
+  .totals .lbl{width:100%}
+  .page-head h1{font-size:24px}
+  .rec-grid{grid-template-columns:1fr 1fr}
+  .trust{grid-template-columns:1fr;gap:10px}
+  .trust > div:nth-child(n){justify-content:flex-start}
+}
+@media (max-width:520px){.rec-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <nav class="crumb" aria-label="Breadcrumb">
+    <a href="#">Home</a>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    <span class="here">Cart</span>
+  </nav>
+
+  <div class="page-head">
+    <h1>Shopping Cart</h1>
+    <span class="count">(2 items)</span>
+    <button type="button" class="clear-cart">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>
+      </svg>
+      Clear Cart
+    </button>
+  </div>
+
+  <div class="cart-grid">
+
+    <!-- ══════════════ basket ══════════════ -->
+    <div class="cart-main">
+
+      <!-- ── line 1: priced Ex-VAT ── -->
+      <article class="line">
+        <div class="line-row">
+          <label class="cb">
+            <input type="checkbox" checked aria-label="Include Apple iPhone 15 Pro in this order"><i></i>
+          </label>
+
+          <div class="thumb">
+            <svg width="66" height="92" viewBox="0 0 66 92" aria-hidden="true">
+              <rect x="1" y="1" width="64" height="90" rx="12" fill="#2C2E33" stroke="#4A4D55"/>
+              <rect x="4" y="4" width="58" height="84" rx="10" fill="#1C1E22"/>
+              <rect x="8" y="8" width="27" height="27" rx="8" fill="#303237" stroke="#45484F"/>
+              <circle cx="16" cy="16" r="5.2" fill="#0B0C0E" stroke="#5A5E67"/>
+              <circle cx="16" cy="16" r="2.2" fill="#2B3A55"/>
+              <circle cx="27" cy="16" r="5.2" fill="#0B0C0E" stroke="#5A5E67"/>
+              <circle cx="27" cy="16" r="2.2" fill="#2B3A55"/>
+              <circle cx="16" cy="27" r="5.2" fill="#0B0C0E" stroke="#5A5E67"/>
+              <circle cx="16" cy="27" r="2.2" fill="#2B3A55"/>
+              <circle cx="27" cy="27" r="2.6" fill="#15171A" stroke="#4A4D55" stroke-width=".8"/>
+              <rect x="40" y="9" width="4" height="7" rx="2" fill="#26282D"/>
+            </svg>
+          </div>
+
+          <div class="info">
+            <h2><a href="#">Apple iPhone 15 Pro</a></h2>
+            <span class="variant">128GB &bull; Black &bull; Very Good</span>
+
+            <span class="basis ex" tabindex="0"
+              title="The price shown is before VAT. VAT is added at checkout at the applicable rate.">
+              Ex-VAT product<em aria-hidden="true">i</em>
+            </span>
+
+            <div class="price-row">
+              <span class="price">&euro;674.00</span>
+              <span class="was">&euro;699.00</span>
+              <span class="save">Save &euro;25.00</span>
+              <span class="basis-note">(Ex-VAT)</span>
+            </div>
+
+            <div class="vat-line">Inc-VAT <b>&euro;829.02</b> (VAT 23% &euro;155.02)</div>
+          </div>
+
+          <div class="qty" role="group" aria-label="Quantity">
+            <button type="button" aria-label="Decrease quantity">&minus;</button>
+            <span>3</span>
+            <button type="button" aria-label="Increase quantity">+</button>
+          </div>
+
+          <div class="totals">
+            <span class="lbl">Line total</span>
+            <span class="main">&euro;2,022.00<em>Ex-VAT</em></span>
+            <span class="main">&euro;2,487.06<em>Inc-VAT</em></span>
+            <span class="vat">VAT &euro;465.06</span>
+          </div>
+
+          <button type="button" class="line-del" aria-label="Remove Apple iPhone 15 Pro">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>
+            </svg>
+          </button>
+        </div>
+
+        <p class="strip ex">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+               aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><path d="M12 11v5" stroke-linecap="round"/>
+            <circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/>
+          </svg>
+          This product is priced Ex-VAT. VAT will be added at checkout based on the applicable tax rate.
+        </p>
+      </article>
+
+      <!-- ── line 2: priced Inc-VAT ── -->
+      <article class="line">
+        <div class="line-row">
+          <label class="cb">
+            <input type="checkbox" checked aria-label="Include Samsung Galaxy A05s in this order"><i></i>
+          </label>
+
+          <div class="thumb">
+            <svg width="66" height="92" viewBox="0 0 66 92" aria-hidden="true">
+              <defs>
+                <linearGradient id="a05s" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#F59E0B"/><stop offset=".35" stop-color="#EF4444"/>
+                  <stop offset=".7" stop-color="#6366F1"/><stop offset="1" stop-color="#0EA5E9"/>
+                </linearGradient>
+              </defs>
+              <rect x="1" y="1" width="64" height="90" rx="11" fill="#1A1C20" stroke="#3E4148"/>
+              <rect x="4" y="4" width="58" height="84" rx="9" fill="url(#a05s)"/>
+              <ellipse cx="44" cy="62" rx="26" ry="20" fill="#0EA5E9" opacity=".55"/>
+              <ellipse cx="18" cy="26" rx="20" ry="16" fill="#F59E0B" opacity=".5"/>
+              <circle cx="33" cy="9.5" r="2.6" fill="#101216"/>
+              <circle cx="14" cy="17" r="4.6" fill="#101216" stroke="#3E4148"/>
+              <circle cx="14" cy="17" r="1.9" fill="#2B3A55"/>
+              <circle cx="14" cy="28" r="4.6" fill="#101216" stroke="#3E4148"/>
+              <circle cx="14" cy="28" r="1.9" fill="#2B3A55"/>
+              <circle cx="14" cy="39" r="3.4" fill="#101216" stroke="#3E4148"/>
+            </svg>
+          </div>
+
+          <div class="info">
+            <h2><a href="#">Samsung Galaxy A05s</a></h2>
+            <span class="variant">128GB &bull; Black &bull; Very Good</span>
+
+            <span class="basis inc" tabindex="0"
+              title="The price shown already includes VAT. Nothing is added at checkout.">
+              Inc-VAT product<em aria-hidden="true">i</em>
+            </span>
+
+            <div class="price-row">
+              <span class="price">&euro;899.00</span>
+              <span class="was">&euro;1,000.00</span>
+              <span class="save">Save &euro;101.00</span>
+              <span class="basis-note">(Inc-VAT)</span>
+            </div>
+
+            <div class="vat-line">Inc-VAT <b>&euro;899.00</b> (VAT included &euro;168.11)</div>
+          </div>
+
+          <div class="qty" role="group" aria-label="Quantity">
+            <button type="button" aria-label="Decrease quantity">&minus;</button>
+            <span>1</span>
+            <button type="button" aria-label="Increase quantity">+</button>
+          </div>
+
+          <div class="totals">
+            <span class="lbl">Line total</span>
+            <span class="main">&euro;899.00<em>Inc-VAT</em></span>
+            <span class="alt"><em>Ex-VAT</em>&euro;730.89</span>
+            <span class="vat">VAT &euro;168.11</span>
+          </div>
+
+          <button type="button" class="line-del" aria-label="Remove Samsung Galaxy A05s">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>
+            </svg>
+          </button>
+        </div>
+
+        <p class="strip inc">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+               aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="m8.2 12.2 2.6 2.6 5-5.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          This product is priced Inc-VAT. The price you see includes VAT.
+        </p>
+      </article>
+
+      <!-- ── bulk actions ── -->
+      <div class="bulk">
+        <label>
+          <span class="cb"><input type="checkbox" checked aria-label="Select all items"><i></i></span>
+          Select All (2)
+        </label>
+        <span class="sep"></span>
+        <button type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>
+          </svg>
+          Remove Selected
+        </button>
+        <button type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 1 0-7.1 7.1l8.8 8.8 8.8-8.8a5 5 0 0 0 0-7.1Z"/>
+          </svg>
+          Save for Later
+        </button>
+      </div>
+
+      <!-- ── recommendations ── -->
+      <section class="rec">
+        <div class="rec-head">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A56DB" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="8" width="18" height="13" rx="2"/><path d="M3 12h18M12 8v13"/>
+            <path d="M12 8S10.5 3.5 8 3.5a2.5 2.5 0 0 0 0 5M12 8s1.5-4.5 4-4.5a2.5 2.5 0 0 1 0 5"/>
+          </svg>
+          <h2>You might also like</h2>
+          <a class="see" href="#">See all</a>
+        </div>
+
+        <div class="rec-grid">
+          <div class="rec-card">
+            <div class="rec-img">
+              <svg width="150" height="76" viewBox="0 0 150 76" fill="none" aria-hidden="true">
+                <path d="M26 26c26-16 52 34 82 14" stroke="#1F2125" stroke-width="7" stroke-linecap="round"/>
+                <path d="M26 44c26-16 52 34 82 14" stroke="#33363C" stroke-width="7" stroke-linecap="round"/>
+                <rect x="6" y="18" width="24" height="16" rx="4" fill="#232529"/>
+                <rect x="2" y="22" width="6" height="8" rx="2" fill="#4A4D55"/>
+                <rect x="6" y="36" width="24" height="16" rx="4" fill="#232529"/>
+                <rect x="2" y="40" width="6" height="8" rx="2" fill="#4A4D55"/>
+                <rect x="104" y="20" width="30" height="14" rx="7" fill="#1F2125"/>
+                <rect x="132" y="24" width="8" height="6" rx="2" fill="#4A4D55"/>
+                <rect x="104" y="46" width="30" height="14" rx="7" fill="#1F2125"/>
+                <rect x="132" y="50" width="8" height="6" rx="2" fill="#4A4D55"/>
+              </svg>
+            </div>
+            <p class="rec-name">Hoco UA27 Type-C to HDTV 4K Cable</p>
+            <div class="rec-price"><b>&euro;10.00</b><s>&euro;28.00</s></div>
+            <button type="button" class="rec-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>
+                <path d="M2 3h3l2.6 12.2h10.6L21 7H6.2"/>
+              </svg>
+              Add to cart
+            </button>
+          </div>
+
+          <div class="rec-card">
+            <div class="rec-img">
+              <svg width="150" height="76" viewBox="0 0 150 76" fill="none" aria-hidden="true">
+                <path d="M30 24c24-12 48 28 76 12" stroke="#1F2125" stroke-width="6.5" stroke-linecap="round"/>
+                <path d="M30 46c24-12 48 28 76 12" stroke="#33363C" stroke-width="6.5" stroke-linecap="round"/>
+                <rect x="8" y="16" width="26" height="16" rx="5" fill="#232529"/>
+                <rect x="4" y="20" width="6" height="8" rx="3" fill="#5A5E67"/>
+                <rect x="8" y="38" width="26" height="16" rx="5" fill="#232529"/>
+                <rect x="4" y="42" width="6" height="8" rx="3" fill="#5A5E67"/>
+                <rect x="102" y="18" width="32" height="13" rx="3" fill="#1F2125"/>
+                <rect x="132" y="21" width="9" height="7" rx="1.5" fill="#5A5E67"/>
+                <rect x="102" y="48" width="32" height="13" rx="3" fill="#1F2125"/>
+                <rect x="132" y="51" width="9" height="7" rx="1.5" fill="#5A5E67"/>
+              </svg>
+            </div>
+            <p class="rec-name">AceFast C1-10 USB-C to HDTV 4K @60Hz HDMI Cable</p>
+            <div class="rec-price"><b>&euro;10.00</b><s>&euro;29.95</s></div>
+            <button type="button" class="rec-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>
+                <path d="M2 3h3l2.6 12.2h10.6L21 7H6.2"/>
+              </svg>
+              Add to cart
+            </button>
+          </div>
+
+          <div class="rec-card">
+            <div class="rec-img">
+              <svg width="150" height="76" viewBox="0 0 150 76" fill="none" aria-hidden="true">
+                <path d="M28 30c22-18 50 30 76 10" stroke="#1F2125" stroke-width="6.5" stroke-linecap="round"/>
+                <path d="M28 48c22-18 50 30 76 10" stroke="#33363C" stroke-width="6.5" stroke-linecap="round"/>
+                <rect x="6" y="22" width="24" height="15" rx="7" fill="#232529"/>
+                <rect x="2" y="26" width="6" height="7" rx="3" fill="#5A5E67"/>
+                <rect x="6" y="42" width="24" height="15" rx="7" fill="#232529"/>
+                <rect x="2" y="46" width="6" height="7" rx="3" fill="#5A5E67"/>
+                <rect x="100" y="24" width="30" height="13" rx="6" fill="#1F2125"/>
+                <rect x="128" y="27" width="8" height="7" rx="2" fill="#5A5E67"/>
+                <rect x="100" y="50" width="30" height="13" rx="6" fill="#1F2125"/>
+                <rect x="128" y="53" width="8" height="7" rx="2" fill="#5A5E67"/>
+              </svg>
+            </div>
+            <p class="rec-name">HOCO X89 Wind Type-C to Lightning Cable</p>
+            <div class="rec-price"><b>&euro;10.00</b><s>&euro;15.00</s></div>
+            <button type="button" class="rec-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>
+                <path d="M2 3h3l2.6 12.2h10.6L21 7H6.2"/>
+              </svg>
+              Add to cart
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ══════════════ order summary ══════════════ -->
+    <aside class="side">
+      <div class="sum">
+        <div class="sum-head">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <h2>Order Summary<small>All prices are in Euro (&euro;)</small></h2>
+        </div>
+
+        <!--
+          One flow, in the order a customer reads it:
+            Products (Inc-VAT) − You Save = Total Products (Inc-VAT)
+            Total Products + shipping    = Total (Inc-VAT)
+          Every figure is gross, so a basket holding one Ex-VAT and one Inc-VAT
+          product adds up without a net figure ever sitting beside a gross one.
+          The detail behind the two headline numbers is a disclosure below,
+          not more rows here.
+        -->
+        <div class="row">
+          <span class="k">Products (Inc-VAT)<span class="i" tabindex="0" role="note"
+            title="The full price of everything in your basket before discounts, with VAT included.">i</span>
+            <small>Original price of 2 items</small></span>
+          <span class="v">&euro;3,579.31</span>
+        </div>
+
+        <div class="row">
+          <span class="k">You Save<span class="i" tabindex="0" role="note"
+            title="Your total saving, with VAT included. A saving on an Ex-VAT product is shown here with the VAT on it added, so every figure in this summary is on the same basis.">i</span>
+            <small>Total discount (Inc-VAT)</small></span>
+          <span class="v good">-&euro;193.25</span>
+        </div>
+
+        <div class="rule"></div>
+
+        <div class="row">
+          <span class="k">Total Products (Inc-VAT)<small>After discount</small></span>
+          <span class="v">&euro;3,386.06</span>
+        </div>
+
+        <div class="row">
+          <span class="k">VAT included (23%)<span class="i" tabindex="0" role="note"
+            title="The VAT already contained in the products total above. It is not added on top — the total you pay does not change because of this figure.">i</span>
+            <small>Included in the above amount</small></span>
+          <span class="v">&euro;633.17</span>
+        </div>
+
+        <div class="row">
+          <span class="k">Shipping<small>Standard delivery</small></span>
+          <span class="v good">Free</span>
+        </div>
+
+        <div class="sum-total">
+          <span class="k">Total (Inc-VAT)</span>
+          <span class="v">&euro;3,386.06</span>
+        </div>
+
+        <button type="button" class="cta">
+          Proceed to checkout
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg>
+        </button>
+
+        <details class="disc" open>
+          <summary>
+            <span class="ico" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/>
+                <circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" stroke="none"/>
+              </svg>
+            </span>
+            Savings details
+            <span class="chev" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                   stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </summary>
+
+          <div class="disc-body">
+            <div class="sv">
+              <span class="n">Apple iPhone 15 Pro
+                <span class="w">&euro;25.00 Ex-VAT &times; 3</span>
+                <span class="w">(&euro;75.00 Ex-VAT + &euro;17.25 VAT)</span>
+              </span>
+              <span class="a">&euro;92.25</span>
+            </div>
+
+            <div class="sv">
+              <span class="n">Samsung Galaxy A05s
+                <span class="w">(Inc-VAT)</span>
+              </span>
+              <span class="a">&euro;101.00</span>
+            </div>
+
+            <div class="sv-total"><span>Total You Save (Inc-VAT)</span><b>&euro;193.25</b></div>
+          </div>
+        </details>
+
+        <details class="disc">
+          <summary>
+            <span class="ico" aria-hidden="true">%</span>
+            VAT breakdown
+            <span class="chev" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                   stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </summary>
+
+          <div class="disc-body">
+            <table class="vat-tbl">
+              <thead>
+                <tr><th scope="col">Rate</th><th scope="col">Ex-VAT</th><th scope="col">VAT</th>
+                  <th scope="col">Inc-VAT</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">23%</th><td>&euro;2,752.89</td><td>&euro;633.17</td><td>&euro;3,386.06</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+
+        <p class="note">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+               aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><path d="M12 11v5" stroke-linecap="round"/>
+            <circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/>
+          </svg>
+          Your order contains products with different pricing types (Ex-VAT and Inc-VAT). All taxes are calculated
+          accurately at checkout.
+        </p>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ══════════════ trust bar ══════════════ -->
+  <div class="trust">
+    <div>
+      <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M2 6h11v10H2zM13 9.5h4L20 13v3h-7z"/>
+        <circle cx="6.5" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>
+        <path d="M8.5 18h6"/>
+      </svg>
+      <span><b>Free Delivery</b><small>On orders over &euro;50</small></span>
+    </div>
+    <div>
+      <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m12 2 9 4.5v11L12 22l-9-4.5v-11z"/><path d="m3 6.5 9 4.5 9-4.5M12 11v11"/>
+      </svg>
+      <span><b>Easy Returns</b><small>30 days return policy</small></span>
+    </div>
+    <div>
+      <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 2.5 4 6v6c0 5 3.4 8.6 8 9.5 4.6-.9 8-4.5 8-9.5V6z"/><path d="m8.6 12 2.4 2.4 4.4-4.6"/>
+      </svg>
+      <span><b>Secure Payment</b><small>100% secure checkout</small></span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

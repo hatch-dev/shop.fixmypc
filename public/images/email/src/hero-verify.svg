@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" width="200" height="140">
+    
+    <circle cx="24"  cy="46" r="4"   fill="#33319a"/>
+    <circle cx="14"  cy="86" r="3.4" fill="#33319a" opacity=".55"/>
+    <circle cx="46"  cy="24" r="3"   fill="#22c55e"/>
+    <circle cx="172" cy="36" r="4"   fill="#22c55e" opacity=".8"/>
+    <circle cx="186" cy="74" r="3.4" fill="#fbbf24"/>
+    <circle cx="150" cy="18" r="3"   fill="#fbbf24"/>
+    <circle cx="60"  cy="112" r="3"  fill="#33319a" opacity=".35"/>
+    <circle cx="164" cy="110" r="3.4" fill="#33319a" opacity=".45"/>
+    <!-- letter peeking out of the envelope -->
+    <rect x="74" y="26" width="56" height="44" rx="6" fill="#ffffff" stroke="#d2d2e9" stroke-width="2"/>
+    <rect x="84" y="38" width="36" height="4" rx="2" fill="#d2d2e9"/>
+    <rect x="84" y="48" width="28" height="4" rx="2" fill="#d2d2e9"/>
+    <!-- envelope -->
+    <path d="M62 62 h80 a8 8 0 0 1 8 8 v34 a8 8 0 0 1 -8 8 h-80 a8 8 0 0 1 -8 -8 v-34 a8 8 0 0 1 8 -8 z"
+          fill="#33319a"/>
+    <path d="M54 70 l48 30 48 -30" fill="none" stroke="#ffffff" stroke-width="3.2"
+          stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>
+    
+    <circle cx="146" cy="100" r="24" fill="#ffffff"/>
+    <circle cx="146" cy="100" r="20" fill="#22c55e"/>
+    <path d="M137.5 100 l6 6 11 -12" fill="none" stroke="#ffffff"
+          stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

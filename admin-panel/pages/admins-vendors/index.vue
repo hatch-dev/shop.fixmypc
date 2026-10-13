@@ -9,8 +9,9 @@
     :order-options="orderOptions"
     gate="admin"
   >
-    <template v-slot:table="{list}">
+    <template v-slot:table="{list, from}">
       <tr class="lite-bold">
+        <th class="w-50x mx-w-50x">#</th>
         <th>{{ $t('user.name') }}</th>
         <th>{{ $t('user.uName') }}</th>
         <th>{{ $t('fSale.email') }}</th>
@@ -26,6 +27,7 @@
         :key="index"
         :class="{'new-data': !parseInt(value.viewed)}"
       >
+        <td class="w-50x mx-w-50x">{{ from + index }}</td>
         <td class="">
           <nuxt-link
             class="link"

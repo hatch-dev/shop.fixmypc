@@ -67,6 +67,20 @@ return [
             'days' => 14,
         ],
 
+        /*
+         * Where every basket line came from and every guest basket handed to
+         * an account at sign-in. See App\Models\Helper\CartTrace; read it with
+         * `php artisan cart:trace`. CART_TRACE=false switches it off (the test
+         * suites do, so fixture accounts never land in the real log).
+         */
+        'cart_trace' => [
+            'enabled' => env('CART_TRACE', true),
+            'driver' => 'daily',
+            'path' => storage_path('logs/cart-trace.log'),
+            'level' => 'info',
+            'days' => 60,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

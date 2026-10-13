@@ -18,13 +18,15 @@
         <table class="custom-table">
             <tr class="lite-bold">
               <th><input type="checkbox" @change="checkAll(systemTemplates)"></th>
+              <th class="w-50x mx-w-50x">#</th>
               <th>{{ $t('index.title') }}</th>
               <th></th>
             </tr>
-            <tr v-for="item in systemTemplates" :key="item.id">
+            <tr v-for="(item, index) in systemTemplates" :key="item.id">
               <td>
                 <input type="checkbox" :value="item.id" v-model="cbList">
               </td>
+              <td class="w-50x mx-w-50x">{{ index + 1 }}</td>
 
               <td>
                 <nuxt-link class="link" :to="`/templates/${item.id}`">
@@ -50,14 +52,16 @@
         <table class="custom-table">
           <tr class="lite-bold">
             <th><input type="checkbox" @change="checkAll(customTemplates)"></th>
+            <th class="w-50x mx-w-50x">#</th>
             <th>{{ $t('index.title') }}</th>
             <th></th>
           </tr>
 
-          <tr v-for="item in customTemplates" :key="item.id">
+          <tr v-for="(item, index) in customTemplates" :key="item.id">
             <td>
               <input type="checkbox" :value="item.id" v-model="cbList">
             </td>
+            <td class="w-50x mx-w-50x">{{ index + 1 }}</td>
 
             <td>
               <nuxt-link class="link" :to="`/templates/${item.id}`">

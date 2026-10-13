@@ -342,7 +342,8 @@
     "voucherCode": "Kod",
     "confirmOrderAnd": "Siparişi onayla ve şimdi öde ({amount})",
     "confirmOrder": "Siparişi onayla",
-    "noPayment": "Şu anda herhangi bir ödeme yöntemi mevcut değil"
+    "noPayment": "Şu anda herhangi bir ödeme yöntemi mevcut değil",
+    "goToPayment": "Ödemeye git"
   },
   "forgotPassword": {
     "errorOccurred": "Aşağıdaki hata oluştu",
@@ -369,7 +370,15 @@
     "haveAccount": "Zaten bir hesabınız var mı?",
     "sentEmail": "Size bir kod içeren bir e-posta gönderdik. Lütfen hesabınızı doğrulamak için aşağıdaki kodu yapıştırın."
   },
+  "tabs": {
+    "home": "Ana Sayfa",
+    "shop": "Mağaza",
+    "search": "Ara",
+    "basket": "Sepet",
+    "account": "Hesap"
+  },
   "shipping": {
+    "addContactDetails": "Please enter your name, email and phone number so we can contact you about your collection.",
     "instruction": "Teslimat talimatı",
     "ordered": "Sipariş Edilen Ürünler",
     "addAddress": "Lütfen önce bir adres ekleyin.",

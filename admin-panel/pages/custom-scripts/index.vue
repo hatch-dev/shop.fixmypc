@@ -11,11 +11,12 @@
     @delete-bulk="deleteBulk"
     @list="itemList = $event"
   >
-    <template v-slot:table="{list}">
+    <template v-slot:table="{list, from}">
       <tr class="lite-bold">
         <th class="w-50x mx-w-50x">
           <input type="checkbox" @change="checkAll">
         </th>
+        <th class="w-50x mx-w-50x">#</th>
         <th>{{ $t('title.rParam') }}</th>
         <th>{{ $t('category.status') }}</th>
         <th/>
@@ -26,6 +27,7 @@
           <input type="checkbox" :value="value.id" v-model="cbList">
         </td>
 
+        <td class="w-50x mx-w-50x">{{ from + index }}</td>
 
         <td>
           <span>{{ value.route_pattern }}</span>

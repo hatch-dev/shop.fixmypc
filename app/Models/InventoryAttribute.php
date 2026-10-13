@@ -16,7 +16,10 @@ class InventoryAttribute extends Model
     public function attribute_value()
     {
         return $this->hasOne(AttributeValue::class, 'id', 'attribute_value_id')
-            ->select(['id', 'title', 'attribute_id']);
+            // `rank` rides along because the upgrade engine ranks values
+            // off the loaded relation; a column left out of this list reads
+            // as null there rather than as an error.
+            ->select(['id', 'title', 'attribute_id', 'rank']);
     }
 
 

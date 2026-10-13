@@ -1,28 +1,52 @@
-<div style="max-width: 600px; ">
-    {{__('lang.hello', [], $lang)}} <i>{{ $data->receiver }}</i>,
-    <h1>{{__('lang.congo', [], $lang)}}</h1>
-    <h4>{{__('lang.ac_success', [], $lang)}}</h4>
+@extends('mail_templates.layout.base')
 
-    <p>{{__('lang.com', ['commission'=> $data->commission ], $lang)}}</p>
+@php
+    use App\Models\Helper\MailBrand;
+    $brand = isset($brand) ? $brand : MailBrand::make($data->receiver, isset($lang) ? $lang : null);
+    $lang = isset($lang) ? $lang : null;
+@endphp
 
+@section('title', __('lang.mail_seller_title', [], $lang))
 
-    <h4>{{__('lang.can_login', [], $lang)}}</h4>
+@section('preheader')
+    {{ __('lang.mail_seller_sub', [], $lang) }}
+@endsection
 
-    <h5 class="mtb-20">
-        <a class="btn"
-           href="{{ $data->admin_url }}">
-            {{__('lang.seller_login', [], $lang)}}
-        </a>
-    </h5>
+@section('hero')
+    @include('mail_templates.partials.hero', [
+        'brand'    => $brand,
+        'tone'     => 'positive',
+        'art'      => 'hero-store.png',
+        'eyebrow'  => __('lang.mail_seller_eyebrow', [], $lang),
+        'title'    => __('lang.mail_seller_title', [], $lang),
+        'subtitle' => __('lang.mail_seller_sub', [], $lang),
+    ])
+@endsection
 
+@section('content')
+    <p class="ink" style="margin:0 0 8px 0; font-size:16px; line-height:26px; font-weight:bold; color:{{ $brand->ink }};">
+        {{ __('lang.hello', [], $lang) }}@if($brand->receiver_first) {{ $brand->receiver_first }}@endif,
+    </p>
 
-    {{__('lang.thank_you', [], $lang)}}
+    <p class="muted" style="margin:0 0 22px 0; font-size:16px; line-height:26px; color:{{ $brand->muted }};">
+        {{ __('lang.ac_success', [], $lang) }}
+    </p>
 
-    <h3>{{ $data->store_name  }}</h3>
+    @component('mail_templates.partials.panel', ['brand' => $brand, 'tone' => 'soft'])
+        <p style="margin:0; font-size:15px; line-height:24px; color:{{ $brand->ink_soft }};" class="ink-soft">
+            {{ __('lang.com', ['commission' => $data->commission], $lang) }}
+        </p>
+    @endcomponent
 
-    <div style="margin-top: 20px; border-top: 1px solid #eee;">
-        <p>{{ $data->address }}</p>
-        <p>{{__('lang.phone', [], $lang)}}: <a href="tel:{{ $data->phone}}">{{ $data->phone}}</a></p>
-    </div>
+    @include('mail_templates.partials.spacer', ['brand' => $brand, 'h' => 24])
 
-</div>
+    <p class="muted" style="margin:0 0 20px 0; font-size:16px; line-height:26px; color:{{ $brand->muted }};">
+        {{ __('lang.can_login', [], $lang) }}
+    </p>
+
+    @include('mail_templates.partials.button', [
+        'brand' => $brand,
+        'url'   => $data->admin_url,
+        'label' => __('lang.mail_open_dashboard', [], $lang),
+    ])
+@endsection

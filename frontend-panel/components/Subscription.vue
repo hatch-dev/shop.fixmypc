@@ -1,5 +1,5 @@
 <template>
-  <div class="row align-items-center mb-4">
+  <div class="row align-items-center subscription-panel">
     <div class="col-lg-6">
       <h4 class="subscription-text">Free Monthly Newsletter</h4>
       <p class="small text-light subscription-description">
@@ -84,7 +84,9 @@
           this.formSubmitting = true
           try {
             const data = await this.postRequest({
-              params: {email: this.email},
+              // The monthly letter, which is a different consent from the
+              // clearance page's 'notify me about deals' box.
+              params: {email: this.email, source: 'newsletter'},
               api: 'emailSubscription'
             })
 
@@ -110,59 +112,153 @@
 </script>
 
 <style scoped>
-.footer-section {
-  background: #3b33a5;
-  color: #fff;
-  padding-top: 50px;
-}
-
-.newsletter-box {
-  background: rgba(0,0,0,0.15);
-  border-radius: 50px;
-  padding: 8px;
-  align-items: center;
-}
-
-.newsletter-box input {
-  border: none;
-  background: transparent;
-  color: #fff;
-  padding: 10px 15px;
-  flex: 1;
-}
-
-.newsletter-box input::placeholder {
-  color: #ddd;
-}
-
-.newsletter-box button {
-  background: #22c55e;
-  border: none;
-  border-radius: 30px;
-  padding: 0px 20px;
-  color: #fff;
+/* newsletter call to action, sat on the footer's indigo */
+.subscription-panel {
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 18px;
+  margin: 0 0 8px;
+  padding: 26px 24px;
 }
 
 .subscription-text {
-    font-size: 36px;
-    font-weight: 700;
-    color: #fff;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  line-height: 1.25;
+  margin-bottom: 8px;
 }
 
 .subscription-description {
-    font-size: 14px;
-    font-weight: 400;
-    color: #C7C7EC !important;
-    line-height: 1.4em;
+  color: rgba(255, 255, 255, .7) !important;
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 60ch;
+}
+
+/* one continuous pill: field on the left, action on the right */
+.newsletter-box {
+  align-items: center;
+  background: rgba(0, 0, 0, .22);
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 999px;
+  padding: 6px;
+  transition: border-color .15s ease;
+}
+
+.newsletter-box:focus-within {
+  border-color: rgba(255, 255, 255, .45);
+}
+
+.newsletter-box > div {
+  flex-wrap: nowrap !important;
+  gap: 6px !important;
+}
+
+.newsletter-box input {
+  background: transparent;
+  border: none;
+  color: #fff;
+  flex: 1 1 auto;
+  font-size: 14px;
+  height: 42px;
+  line-height: 42px;
+  min-width: 0;
+  padding: 0 16px;
+}
+
+.newsletter-box input:focus {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: #fff;
+  outline: none;
+}
+
+.newsletter-box input::placeholder {
+  color: rgba(255, 255, 255, .55);
+}
+
+.newsletter-box button {
+  background: #05B942;
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 700;
+  height: 42px;
+  line-height: 42px;
+  padding: 0 22px;
+  transition: background .15s ease;
+  white-space: nowrap;
+}
+
+.newsletter-box button:hover:not(:disabled) {
+  background: #049937;
+}
+
+.newsletter-box button:disabled {
+  opacity: .65;
+}
+
+@media (max-width: 991px) {
+  .newsletter-box {
+    margin-top: 18px;
+  }
 }
 
 @media (max-width: 767px) {
-  .subscription-text {
-      font-size: 25px !important;
+  .subscription-panel {
+    padding: 20px 16px;
   }
 
-  .newsletter-box{
-    margin-top: 20px;
+  .subscription-text {
+    font-size: 20px;
+  }
+
+  /* the pill only works while field and button share a line. Once they stack,
+     the wrapper becomes a tall stadium box around them - so dissolve it and
+     let each control be a full width pill of its own. */
+  .newsletter-box {
+    background: none;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .newsletter-box:focus-within {
+    border: 0;
+  }
+
+  .newsletter-box > div {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+
+  .newsletter-box input {
+    background: rgba(0, 0, 0, .22);
+    border: 1px solid rgba(255, 255, 255, .18);
+    border-radius: 999px;
+    flex: 1 1 100%;
+    height: 48px;
+    line-height: 48px;
+    padding: 0 18px;
+    width: 100%;
+  }
+
+  .newsletter-box input:focus {
+    border-color: rgba(255, 255, 255, .45);
+  }
+
+  .newsletter-box button {
+    flex: 1 1 100%;
+    height: 48px;
+    line-height: 48px;
+    width: 100%;
   }
 }
 </style>

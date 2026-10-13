@@ -1,25 +1,22 @@
 <template>
-  <div class="sidebar-section">
-    <h4 class="title">
-      {{ $t('listingLayout.collections') }}
-    </h4>
-    <div>
-      <label
-        class="block mtb-10"
-        v-for="(value, key) in collections"
-        :key="key"
-        :for="`collection-${value.id}`"
+  <div class="side-block" v-if="collections && collections.length">
+    <h3>{{ $t('listingLayout.collections') }}</h3>
+
+    <label
+      class="f-row"
+      v-for="(value, key) in collections"
+      :key="key"
+      :for="`collection-${value.id}`"
+    >
+      <input
+        :id="`collection-${value.id}`"
+        type="checkbox"
+        v-model="collection"
+        :value="value.id"
+        @change="collectionChanged"
       >
-        <input
-          :id="`collection-${value.id}`"
-          type="checkbox"
-          v-model="collection"
-          :value="value.id"
-          @change="collectionChanged"
-        >
-        {{ value.title }}
-      </label>
-    </div>
+      {{ value.title }}
+    </label>
   </div>
 </template>
 

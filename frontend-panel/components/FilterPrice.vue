@@ -1,51 +1,47 @@
 <template>
-  <div class="sidebar-section mt-xs-5 mb-xs-10">
-    <h4
-      class="title">
+  <div class="side-block">
+    <h3>
       {{ $t('listingLayout.price') }}
-    </h4>
-    <button
-      class="clear-btn mb-10"
-      aria-label="submit"
-      :disabled="!maxPrice && !minPrice"
-      @click.prevent="anyPrice"
-    >
-      {{ $t('listingLayout.anyPrice') }}
-    </button>
+      <button
+        type="button"
+        aria-label="submit"
+        :disabled="!maxPrice && !minPrice"
+        @click.prevent="anyPrice"
+      >
+        {{ $t('listingLayout.anyPrice') }}
+      </button>
+    </h3>
 
-    <div class="price-search flex">
-      <div class="input-wrap">
-        <div class="input-text">
-          <span>{{ currencyIcon }}</span>
-          <input
-            type="number"
-            :placeholder="$t('listingLayout.min')"
-            v-model="minPrice"
-          >
-        </div>
-      </div>
+    <div class="price-row">
+      <label class="cur">
+        <span>{{ currencyIcon }}</span>
+        <input
+          type="number"
+          :placeholder="$t('listingLayout.min')"
+          :aria-label="$t('listingLayout.min')"
+          v-model="minPrice"
+        >
+      </label>
 
-      <div class="input-wrap">
-        <div class="input-text">
-          <span>{{ currencyIcon }}</span>
-          <input
-            type="number"
-            :placeholder="$t('listingLayout.max')"
-            v-model="maxPrice"
-          >
-        </div>
-      </div>
+      <label class="cur">
+        <span>{{ currencyIcon }}</span>
+        <input
+          type="number"
+          :placeholder="$t('listingLayout.max')"
+          :aria-label="$t('listingLayout.max')"
+          v-model="maxPrice"
+        >
+      </label>
 
       <button
-        class="outline-btn plr-10"
+        class="btn btn-ink btn-sm"
         @click.prevent="filterPrice"
         aria-label="submit"
       >
         {{ $t('listingLayout.go') }}
       </button>
     </div>
-
-  </div><!--sidebar-section-->
+  </div><!--side-block-->
 </template>
 
 <script>

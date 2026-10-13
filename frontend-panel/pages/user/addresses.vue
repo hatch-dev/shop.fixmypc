@@ -6,9 +6,14 @@
   >
     <template v-slot:rightArea>
         <div>
-          <user-account-address
+          <!--
+            The same component as the basket, so the list, the form and its
+            country -> county -> town -> Eircode rules are one implementation.
+            UserAccountAddress was a second copy that had already drifted.
+          -->
+          <user-address
             ref="userAddress"
-            @editing="editing"
+            manage
           />
         </div>
     </template>
@@ -20,7 +25,6 @@
   import LazyImage from '~/components/LazyImage'
   import AddressPopup from '~/components/AddressPopup'
   import UserAddress from '~/components/UserAddress'
-  import UserAccountAddress from '~/components/UserAccountAddress'
   import AccountLayout from '~/components/AccountLayout'
 
   import addressHelper from '~/mixin/addressHelper'
@@ -49,8 +53,7 @@
       LazyImage,
       AddressPopup,
       AccountLayout,
-      UserAddress,
-      UserAccountAddress
+      UserAddress
     },
     mixins: [util, productHelper, addressHelper, global],
     computed: {

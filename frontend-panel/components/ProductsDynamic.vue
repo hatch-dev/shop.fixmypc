@@ -1,7 +1,8 @@
 <template>
-  <div>
-    <div class="flex sided align-start">
-      <h4 class="bold">{{ title }}</h4>
+  <!-- rail-box: the home page's framed section (ProductsSlider .featured-box) -->
+  <div class="rail-box">
+    <div class="flex sided align-start mb-30">
+      <h4 class="slider-collection-heading">{{ title }}</h4>
       <p class="mn-w-90x right-text">
         {{ $t('productDynamic.pageOf', { current: currentPage, total: totalPage }) }}
       </p>
@@ -9,7 +10,7 @@
 
     <div class="c_slider__wrapper" >
       <div class="c_slider__nav" >
-        <button
+        <button 
           aria-label="submit"
           class="prev-btn clear-height"
           @click.prevent="change(-1)"
@@ -49,6 +50,27 @@
         />
 
     </div>
+
+    <!-- Page indicator for the phone, matching the home page carousels.
+         The markup is always rendered; .m-dots is display:none by default
+         and only shown at the mobile breakpoint. -->
+    <div
+      v-if="totalPage > 1"
+      class="m-dots"
+      role="tablist"
+    >
+      <button
+        v-for="page in totalPage"
+        :key="`dot-${page}`"
+        type="button"
+        role="tab"
+        class="m-dot"
+        :class="{ on: page === currentPage }"
+        :aria-selected="page === currentPage ? 'true' : 'false'"
+        :aria-label="$t('productDynamic.pageOf', { current: page, total: totalPage })"
+        @click.prevent="goToPage(page)"
+      />
+    </div>
   </div>
 </template>
 
@@ -63,7 +85,7 @@
       return {
         currentPage: 1,
         draggedWidth: 0,
-        pagination: [4, 3, 1, 1, 1]
+        pagination: [4, 3, 2, 2, 2]
       }
     },
     watch: {
@@ -132,6 +154,12 @@
           return
         }
         this.draggedWidth = -1 * evt.offsetX
+      },
+      // dots address a page directly; change() is relative, and the parent
+      // accumulates the same delta to know which page to fetch
+      goToPage(page) {
+        if (page === this.currentPage) return
+        this.change(page - this.currentPage)
       },
       change(data) {
         this.currentPage += data

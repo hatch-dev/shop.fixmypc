@@ -18,7 +18,8 @@ export default {
         IYZICO_PAYMENT: 6,
         BANK: 7,
         PAYFAST: 8,
-        SUMUP: 9
+        SUMUP: 9,
+        WALLET: 10
       },
       currencyPositionsIn: {
         PRE: 1,
@@ -33,6 +34,7 @@ export default {
         6: this.$t('filter.iyzicoPayment'),
         7: this.$t('date.bt'),
         8: this.$t('invent.pf'),
+        10: 'Wallet',
       },
       priceType: {
         FLAT: 1,
@@ -111,13 +113,18 @@ export default {
     }
   },
   methods: {
-    priceFormat(currencyPosition, currencyIcon, price, setting) {
+    priceFormat(currencyPosition, currencyIcon, price, setting, minDecimals = 0) {
       if (parseInt(currencyPosition) === this.currencyPositionsIn.PRE) {
-        return currencyIcon + this.decimalSeparator(price, setting.decimal_format)
+        return currencyIcon + this.decimalSeparator(price, setting.decimal_format, minDecimals)
       }
-      return this.decimalSeparator(price, setting.decimal_format) + currencyIcon
+      return this.decimalSeparator(price, setting.decimal_format, minDecimals) + currencyIcon
     },
-    decimalSeparator(price, decimalSeparator = 'en-US') {
+    /*
+     * minDecimals stays 0 so listings keep rendering a round price as "10",
+     * while money columns (a checkout summary, an invoice) can ask for 2 and
+     * stop showing a total that reads as "135.7".
+     */
+    decimalSeparator(price, decimalSeparator = 'en-US', minDecimals = 0) {
       if(!decimalSeparator){
         decimalSeparator = 'en-US'
       }
@@ -126,6 +133,7 @@ export default {
         .toLocaleString(
           decimalSeparator,
           {
+            minimumFractionDigits: minDecimals,
             maximumFractionDigits: 2,
           })
     },

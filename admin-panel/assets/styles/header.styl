@@ -15,44 +15,99 @@ header
   border-bottom 1px solid border-color
 
   .logo-wrapper
-    gap 12px
-    align-items center
-    min-width sidebar-width
-    height 100%
-    padding-left 16px
     display flex
+    align-items center
     justify-content space-between
+    width sidebar-width
+    flex-shrink 0
+
+  .header-actions
+    display flex
+    align-items center
+    gap 8px
+
+  .expand-btn
+    width 38px
+    height 38px
+    min-width 38px
+    padding 0
+    display flex
+    align-items center
+    justify-content center
+    border 1px solid border-color
+    background surface-color
+    border-radius var(--radius-md)
+    color var(--text-muted)
+    box-shadow 0 1px 2px rgba(17,24,39,.04)
+    transition all .2s ease
+
+    i
+      font-size 14px
+      transition transform .25s ease
+
+    &:hover
+      background var(--primary-soft)
+      border-color primary-color
+      color primary-color
+
+      i
+        transform scale(1.12)
+
+    &.active
+      background var(--primary-soft)
+      border-color primary-color
+      color primary-color
 
   .header-brand
     display flex
     align-items center
     gap 10px
     min-width 0
+    padding-left 14px
     font-size 13px
     font-weight 700
     color var(--text-strong)
 
     img
-      width 24px
-      height 24px
+      width auto
+      height 40px
+      max-width 160px
       object-fit contain
-      border-radius 6px
+      flex-shrink 0
 
     span
       line-height 1
       white-space nowrap
 
   .toggle-menu-btn
-    min-width 40px
+    width 38px
+    height 38px
+    min-width 38px
     margin-left 0
-    border 0
+    padding 0
+    display flex
+    align-items center
+    justify-content center
+    border 1px solid border-color
+    background surface-color
     border-radius var(--radius-md)
-    box-shadow none!important
-    background transparent
-    height auto
+    box-shadow 0 1px 2px rgba(17,24,39,.04)
+    transition all .2s ease
+    color var(--text-muted)
+
+    i
+      font-size 15px
+      transition transform .25s ease
 
     &:hover
-      background hover-color
+      background var(--primary-soft)
+      border-color primary-color
+      color primary-color
+
+    &.active
+      background var(--primary-soft)
+      border-color primary-color
+      color primary-color
 
   i.icon
     transform scale(.82)
@@ -111,11 +166,15 @@ header
 .sidebar-closed
   header
     .logo-wrapper
-      min-width 190px
+      width sidebar-collapsed-width
+      justify-content center
 
     .header-brand
       span
         display inline-block
+
+    .expand-btn
+      display none
 
 @media only screen and (max-width: 1200px)
   header
@@ -125,7 +184,8 @@ header
   .sidebar-closed
     header
       .logo-wrapper
-        min-width 190px
+        width sidebar-collapsed-width
+        justify-content center
 
 @media only screen and (max-width: 992px)
   .rtl header .right-wrap
@@ -139,7 +199,7 @@ header
       padding 0 5px
 
     .logo-wrapper
-      min-width 150px
+      flex 0 0 180px
 
 
     .header-brand span
@@ -155,11 +215,22 @@ header
     padding-right 15px
 
   header
-    padding 0 10px 0 0
-    height header-height-sm
+    padding 0 12px
+    // Keep the header (and its menu toggle) above the mobile drawer + overlay
+    // so the hamburger can always open/close the sidebar.
+    z-index 1003
 
     .logo-wrapper
-      min-width auto
+      width auto
+      flex 1
+      min-width 0
+      border-right 0
+
+    .header-brand
+      display none
+
+    .header-actions
+      margin-left auto
 
     .clear-cache
       display none
@@ -198,3 +269,47 @@ header
   .dots-open
     .right-area
       display block
+
+  .expand-btn,
+  .toggle-menu-btn
+    width 38px
+    height 38px
+    display flex
+    align-items center
+    justify-content center
+    border none
+    background transparent
+    border-radius 10px
+    transition .25s
+    &:hover
+      background #EEF2FF
+
+
+@media only screen and (max-width:768px)
+
+  header
+    height header-height-sm
+    padding 0 12px
+
+    .logo-wrapper
+      flex 1
+      padding 0
+      border-right none
+
+    .header-brand
+
+      img
+        width auto
+        height 28px
+        max-width 120px
+
+      span
+        display none
+
+    .header-actions
+      gap 4px
+
+    .expand-btn,
+    .toggle-menu-btn
+      width 36px
+      height 36px

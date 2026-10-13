@@ -38,7 +38,8 @@
               <a
                 href="#"
                 class="dply-felx"
-                @click.prevent="$emit('product-clicked', item)"
+                :class="{'ps-blocked': isBlocked(item)}"
+                @click.prevent="pick(item)"
               >
                 <div class="dply-felx j-left ">
                   <lazy-image
@@ -46,12 +47,24 @@
                     :data-src="getThumbImageURL(item.image)"
                     :alt="item.title"
                   />
-                  <h5 v-if="item.title">{{item.title}}</h5>
-                  <h5 v-else>{{ $t('list.nt') }}</h5>
+                  <span class="ps-name">
+                    <h5 v-if="item.title">{{item.title}}</h5>
+                    <h5 v-else>{{ $t('list.nt') }}</h5>
+                    <!--
+                      Optional, and only rendered when a parent supplies
+                      the notes. The other pages using this picker pass
+                      nothing and render exactly as before.
+                    -->
+                    <em v-if="noteFor(item)" class="ps-note">
+                      {{ noteFor(item) }}
+                    </em>
+                  </span>
                 </div>
                 <i
+                  v-if="!isBlocked(item)"
                   class="mn-w-24x icon plus"
                 />
+                <span v-else class="ps-taken">{{ blockedLabel(item) }}</span>
               </a>
             </li>
           </ul>
@@ -122,7 +135,22 @@
     directives: {
       outsideClick
     },
-    props: {},
+    props: {
+      /*
+       * Per-product notes, keyed by product id:
+       *   { note: 'string', blocked: bool, blockedLabel: 'string' }
+       *
+       * Optional. Empty by default, so bundle-deals, clearances and
+       * SourceTypeProducts -- the other three users of this picker --
+       * behave exactly as they did.
+       */
+      notes: {
+        type: Object,
+        default() {
+          return {}
+        }
+      }
+    },
     mixins: [util],
     components: {LazyImage, Spinner},
     computed: {
@@ -144,6 +172,24 @@
       }
     },
     methods: {
+      noteOf(item) {
+        return this.notes[String(item?.id)] || null
+      },
+      noteFor(item) {
+        return this.noteOf(item)?.note || ''
+      },
+      isBlocked(item) {
+        return !!this.noteOf(item)?.blocked
+      },
+      blockedLabel(item) {
+        return this.noteOf(item)?.blockedLabel || ''
+      },
+      /* A blocked row is inert; the save would refuse it anyway. */
+      pick(item) {
+        if (this.isBlocked(item)) return
+
+        this.$emit('product-clicked', item)
+      },
       autoSuggestionClose() {
         this.autoSuggestionOpen = false
       },
@@ -181,6 +227,9 @@
           return this.$nuxt.error(e)
         }
         this.fetchingProductList = false
+
+        // So a parent can look this page of results up in bulk.
+        this.$emit('list', this.productList.map(p => p.id))
       },
       ...mapActions('common', ['getRequest'] )
     },

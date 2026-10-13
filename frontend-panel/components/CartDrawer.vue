@@ -32,6 +32,7 @@
                 </div>
             </div>
 
+
             <div class="mt-auto text-center pt-3" style="border-top: 1px solid #E9E9F4;">
                 <strong>Sub Total: €{{ totalPrice }}</strong>
                 <!-- BUTTONS -->
@@ -62,11 +63,16 @@ export default {
   props: ['isOpen'],
   mixins: [util],
 
+  data() {
+    return {}
+  },
+
   computed: {
-    ...mapGetters('cart', ['cartProducts']),
     cartProducts() {
-      return this.$store.state.cart.cartProducts
+      return this.$store.getters['cart/cartProducts']
     },
+
+    ...mapGetters('language', ['langCode']),
     totalPrice() {
         console.log("Calculating total price for cart drawer", this.cartProducts);
       return this.cartProducts.reduce((sum, item) => {
@@ -91,7 +97,8 @@ export default {
     goToCart() {
       this.$router.push('/cart')
     },
-    ...mapActions('cart', ['getCartByUser']),
+
+    ...mapActions('cart', ['getCartByUser', 'cartAction']),
     ...mapActions('user', ['getUserToken'])
   },
   async mounted() {
@@ -170,4 +177,5 @@ export default {
     color: #232159;
     font-weight: 600;
 }
+
 </style>

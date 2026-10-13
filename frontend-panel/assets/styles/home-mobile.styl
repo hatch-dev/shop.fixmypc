@@ -1,0 +1,763 @@
+/* ==========================================================================
+   Home page, phone and small tablet — port of the home screen in
+   reference/shop_mobile_flow_v2.html onto the theme that is already live.
+
+   Every rule is scoped under .home-page (pages/index.vue) and lives inside a
+   max-width query, so the desktop home page is untouched. Brand tokens map
+   onto the integrated theme variables (--primary-color / --primary-hover-color
+   and the #05B942 green) rather than the raw hexes of the reference.
+   ========================================================================== */
+
+.home-page
+  --ink #130E2B
+  --ink-soft #3A3C6E
+  --brand var(--primary-color)
+  --brand-700 var(--primary-hover-color)
+  --brand-50 #F1F1FC
+  --go #05B942
+  --wash #F7F7FD
+  --line #E3E2F1
+  --line-strong #CFD1E8
+  --muted #6B7191
+  --amber #B26A00
+  --star #FFA41C
+  --radius 14px
+  --radius-lg 18px
+
+/* carousel dots are a mobile affordance on the home page only - unscoped so
+   the class stays inert anywhere else it turns up */
+.m-dots
+  display none
+
+/* A panel whose image has not arrived yet sweeps instead of sitting blank.
+   :has() is the whole point here - the state lives on the <img>, and browsers
+   without it simply drop the rule and keep the flat --wash ground. */
+@keyframes home-lazy-shimmer
+  0%
+    background-position 100% 50%
+  100%
+    background-position 0 50%
+
+.home-page .p-tile .img-wrapper:has(.lazy-img:not(.is-loaded))
+.home-page .trending-box .product-card .product-img:has(.lazy-img:not(.is-loaded))
+  animation home-lazy-shimmer 1.4s ease infinite
+  background-image linear-gradient(90deg, #F1F2F9 25%, #FAFBFE 37%, #F1F2F9 63%)
+  background-size 400% 100%
+
+@media (prefers-reduced-motion: reduce)
+  .home-page .p-tile .img-wrapper:has(.lazy-img:not(.is-loaded))
+  .home-page .trending-box .product-card .product-img:has(.lazy-img:not(.is-loaded))
+    animation none
+
+/* ══════════════ tablet and phone ══════════════ */
+@media only screen and (max-width: 991px)
+
+  /* ── page rhythm ───────────────────────────────────────────────────────
+     The reference runs a 14px page gutter and 14-20px between sections.  */
+  .home-page .container-fluid
+    padding-left 14px
+    padding-right 14px
+
+  .home-page .home-section
+    margin-top 14px
+    margin-bottom 14px
+
+  /* ── section shells ──────────────────────────────────────────────────
+     .p-4 / .mb-4 come from bootstrap; a two-class chain outranks them
+     without needing !important.                                          */
+  .home-page .category-box
+  .home-page .featured-box
+  .home-page .trending-box
+  .home-page .flash-sale-box
+    border-radius var(--radius-lg)
+    margin-bottom 14px
+    padding 14px
+
+  /* ── section headings ── */
+  .home-page .slider-collection-heading
+    color var(--ink)
+    font-size 17px
+    font-weight 700
+    letter-spacing -.02em
+    line-height 1.3
+
+  .home-page .link
+    color var(--brand)
+    flex 0 0 auto
+    font-size 13px
+    font-weight 700
+    margin-left 10px
+    text-decoration none
+    white-space nowrap
+
+  .home-page .category-box > .d-flex
+  .home-page .featured-box > .d-flex
+  .home-page .trending-box > .d-flex
+  .home-page .flash-sale-box .d-flex.justify-content-between
+    margin-bottom 12px
+
+  /* ── hero ─────────────────────────────────────────────────────────────
+     One rounded slide per screen with the two promo panels below it, the
+     way the reference stacks the hero on a phone.                         */
+  .home-page .main-slider
+    margin-top 12px
+
+  .home-page .main-slider .slider-wrapper .left > .pos-rel
+    border-radius var(--radius-lg)
+
+  .home-page .main-slider .slider-wrapper .right
+    gap 10px
+    margin-top 10px
+
+  .home-page .main-slider .slider-wrapper .right .img-wrap
+    border-radius var(--radius)
+    width calc(50% - 5px)
+
+  .home-page .main-slider .glide-bullets
+    bottom 10px
+
+  /* ── shop by category: four across, rounded tiles ── */
+  .home-page .category-box .row
+    --bs-gutter-x 10px
+    --bs-gutter-y 12px
+
+  .home-page .category-box .row > [class*="col-"]
+    flex 0 0 auto
+    width 25%
+
+  .home-page .category-box .category-item
+    display block
+
+  /* padding-bottom, not aspect-ratio: a ratio box still grows to fit content
+     taller than the ratio, which is what threw the rows out of line - the
+     category art has no common aspect ratio. This height cannot move.      */
+  .home-page .category-box .icon-circle
+    background var(--wash)
+    border 1px solid var(--line)
+    border-radius 16px
+    display block
+    height 0
+    padding-bottom 100%
+    position relative
+    width 100%
+
+  /* an absolutely positioned replaced element with width:auto takes its own
+     intrinsic size and drops the over-constrained right/bottom insets, so the
+     box is sized explicitly and centred on the tile. The parent is square, so
+     one percentage gives every glyph the same optical box and object-fit keeps
+     each in its own ratio inside it. */
+  .home-page .category-box .icon-circle img
+    height 28%
+    left 50%
+    object-fit contain
+    object-position center
+    position absolute
+    top 50%
+    transform translate(-50%, -50%)
+    width 28%
+
+  /* two lines reserved either way, so every label in a row sits on the same
+     line whether it wraps or not */
+  .home-page .category-box .category-item p
+    -webkit-box-orient vertical
+    -webkit-line-clamp 2
+    color var(--ink-soft)
+    display -webkit-box
+    font-size 11px
+    font-weight 600
+    line-height 1.25
+    margin-top 6px
+    min-height 2.5em
+    overflow hidden
+
+  /* ── product tile ─────────────────────────────────────────────────────
+     Same card as the category listing. These are the declarations from
+     category-listing.styl `.body .tile-container .p-tile`, re-scoped to
+     .home-page, so both screens render the shared ProductTile identically -
+     wash image panel, solid green pill, one type scale. Change one, change
+     the other.                                                            */
+  .home-page .featured-box .product-listing
+    border-radius 16px
+
+  /* the category grid has no arrows - on a touch rail they only cover the
+     cards they would scroll */
+  .home-page .featured-box .glide-nav
+  .home-page .flash-sale-box .glide-nav
+    display none
+
+  /* the card fills its slide, so the green pill bottom-aligns across a row
+     however tall the titles are */
+  .home-page .p-tile
+    display flex
+    min-width 0
+    width 100%
+
+  .home-page .p-tile .card-wrapper
+    background #fff
+    border 1px solid var(--line)
+    border-radius 16px
+    display flex
+    flex 1
+    flex-direction column
+    overflow hidden
+    text-align left
+
+  /* the collection-sale variant keeps its green frame, but must not keep the
+     20px radius - its scoped rule ties with the one above */
+  .home-page .p-tile .card-wrapper.collection-sale
+    border-radius 16px
+
+  .home-page .p-tile .p-tile-img-link
+    display block
+    padding 0
+
+  /* padding 0 also clears the global .img-wrapper padding-bottom hack */
+  .home-page .p-tile .img-wrapper
+    align-items center
+    background var(--wash)
+    border-bottom 1px solid var(--line)
+    display flex
+    height 180px
+    justify-content center
+    padding 0
+    position relative
+
+  .home-page .p-tile .img-wrapper img
+    max-height 78%
+    max-width 78%
+
+  .home-page .p-tile .img-wrapper .wishlist-icon
+    background #fff
+    border 1px solid var(--line)
+    border-radius 50%
+    box-shadow none
+    color var(--muted)
+    height 32px
+    right 8px
+    top 8px
+    width 32px
+
+  .home-page .p-tile .img-wrapper .wishlist-icon.active
+    background #fff
+    border-color #EFC3CC
+
+  .home-page .p-tile .badge-stack
+    gap 5px
+    left 10px
+    max-width calc(100% - 48px)
+    top 10px
+
+  .home-page .p-tile .badge-same
+    background var(--go)
+    border 0
+    border-radius 999px
+    color #fff
+    font-size 10.5px
+    font-weight 800
+    line-height 1.4
+    margin 0
+    padding 3px 8px
+
+  .home-page .p-tile .badge-flash-sale.badge-same
+  .home-page .p-tile .badge-clearance.badge-same
+    background var(--brand)
+
+  .home-page .p-tile .badge-new.badge-same
+    background var(--ink)
+
+  .home-page .p-tile .card-wrapper .product-tile-content
+    background none
+    border-top 0
+    display flex
+    flex 1
+    flex-direction column
+    gap 7px
+    padding 13px 14px 14px
+
+  .home-page .p-tile .item-title
+    display flex
+    flex 1
+    flex-direction column
+    gap 7px
+    margin 0
+
+  .home-page .p-tile h5.ellipsis.ellipsis-2
+    color var(--ink)
+    font-size 14px
+    font-weight 700
+    line-height 1.35
+    margin 0
+
+  .home-page .p-tile .block.tile-rating-div
+    align-items center
+    color var(--muted)
+    display flex
+    font-size 12px
+    gap 7px
+    margin 0
+
+  /* the stars are a fixed 88x15 svg (RatingStar.vue), so font-size does
+     nothing to them - the svg itself has to be sized. viewBox keeps the ratio,
+     and the .rating overlay is a percentage of this width so it clips right. */
+  .home-page .p-tile .block.tile-rating-div .rating-stars svg
+    height auto
+    width 72px
+
+  .home-page .p-tile .block.tile-rating-div .color-lite
+    color var(--muted)
+    font-size 11.5px
+
+  .home-page .p-tile .ptile-price-and-reducedpercent
+    align-items stretch
+    display flex
+    flex-direction column
+    gap 10px
+    margin-top auto
+
+  .home-page .p-tile .price-wrapper
+    align-items baseline
+    display flex
+    gap 9px
+    margin 0
+
+  .home-page .p-tile .price-wrapper .price span
+    color var(--ink)
+    font-size 17px
+    font-weight 700
+    letter-spacing -.01em
+
+  .home-page .p-tile .price-wrapper .strike-through span
+    color var(--muted)
+    font-size 13px
+    font-weight 400
+
+  .home-page .p-tile .add-to-cart-btn
+    border 0
+    border-radius 0
+    display block
+    padding 0
+    width 100%
+
+  .home-page .p-tile .add-to-cart-btn button
+    background var(--go)
+    border 0
+    border-radius 999px
+    color #fff
+    font-size 13px
+    font-weight 700
+    height auto !important
+    line-height 1.4 !important
+    padding 8px 14px
+    width 100%
+
+  /* beats the global `button:disabled { opacity: .6 }` in ajax-button.styl */
+  .home-page .p-tile .add-to-cart-btn button.out-of-stock
+  .home-page .p-tile .add-to-cart-btn button:disabled
+    background #fff
+    border 1px solid var(--line-strong)
+    color var(--muted)
+    cursor not-allowed
+    opacity 1
+
+  /* ── brands ── */
+  .home-page .brands-wrapper .featured-brands.area
+    border-radius var(--radius-lg)
+
+  .home-page .brands-wrapper .featured-brands.area .title
+    padding 14px
+
+  .home-page .brands-wrapper .brand-banner img
+    border-radius var(--radius-lg)
+    width 100%
+
+  /* the brand card in the product card's language - wash ground, --line hair,
+     16px corner */
+  .home-page .brands-wrapper .featured-brands.area .glide__track .glide__slides > li > a
+    background var(--wash)
+    border 1px solid var(--line)
+    border-radius 16px
+    margin 0 0 8px
+    padding 10px 8px
+
+  /* the circle was the logo's own white ground clipped round, so its size
+     tracked each logo's artwork. It is its own fixed box now, and every mark
+     is capped inside it - so Dell and One Plus carry the same optical weight
+     however differently their files are cropped. */
+  .home-page .brands-wrapper .featured-brands.area .glide__track .glide__slides > li > a .img-wrapper
+    align-items center
+    background #fff
+    border 1px solid var(--line)
+    border-radius 50%
+    display flex
+    height 64px
+    justify-content center
+    margin 0 auto
+    padding 0
+    width 64px
+
+  .home-page .brands-wrapper .featured-brands.area .glide__track .glide__slides > li > a .img-wrapper img
+    border 0
+    border-radius 0
+    max-height 60%
+    max-width 78%
+
+  .home-page .brands-wrapper .featured-brands.area .glide__track .glide__slides > li > a .item-title
+    color var(--ink)
+    font-size 12px
+    font-weight 600
+    margin-top 8px
+    text-align center
+
+  /* ── why buy here: one card per screen on a snapping track ── */
+  .home-page .static-features
+    --bs-gutter-x 10px
+    --bs-gutter-y 0
+    -webkit-overflow-scrolling touch
+    flex-wrap nowrap
+    margin-bottom 0
+    margin-top 14px
+    overflow-x auto
+    overscroll-behavior-x contain
+    position relative
+    scroll-snap-type x mandatory
+    scrollbar-width none
+
+  .home-page .static-features::-webkit-scrollbar
+    display none
+
+  .home-page .static-features > [class*="col-"]
+    flex 0 0 100%
+    max-width 100%
+    scroll-snap-align start
+    width 100%
+
+  /* ── dots, shared by the banner and trust carousels (mixin/snapCarousel.js) ── */
+  .home-page .m-dots
+    display flex
+    gap 6px
+    justify-content center
+    margin 10px 0 14px
+
+  .home-page .m-dot
+    background var(--line-strong)
+    border 0
+    border-radius 999px
+    display block
+    height 6px
+    line-height 0
+    padding 0
+    transition width .2s, background .2s
+    width 6px
+
+  .home-page .m-dot.on
+    background var(--brand)
+    width 18px
+
+  .home-page .static-features .feature-card
+    align-items flex-start
+    border-radius var(--radius)
+    display flex
+    gap 11px
+    height 100%
+    padding 13px
+
+  .home-page .static-features .feature-card .icon-box
+    border-radius 10px
+    flex 0 0 auto
+    height 34px
+    width 34px
+
+  .home-page .static-features .feature-card .icon-box img
+    height 18px
+    object-fit contain
+    width 18px
+
+  /* bootstrap spacing utilities carry !important, so this needs one too -
+     that 1.5rem was the blank strip above the heading */
+  .home-page .static-features .feature-card .mt-4
+    margin-top 0 !important
+    min-width 0
+
+  /* the copy is CMS html: <h4><strong>..</strong></h4><p>..</p>, and h4 is
+     1.25em globally - far too loud for a card this size */
+  .home-page .static-features .feature-card .detail h1
+  .home-page .static-features .feature-card .detail h2
+  .home-page .static-features .feature-card .detail h3
+  .home-page .static-features .feature-card .detail h4
+  .home-page .static-features .feature-card .detail h5
+  .home-page .static-features .feature-card .detail h6
+    color var(--ink)
+    font-size 13.5px
+    font-weight 700
+    line-height 1.35
+    margin 0
+
+  .home-page .static-features .feature-card .detail p
+    font-size 12px
+    line-height 1.5
+    margin 0
+
+  /* ── trending: two across on a snapping track ──────────────────────────
+     The DOM stays a bootstrap row, so the desktop grid is untouched; here it
+     becomes a one-line scroller. Driven by mixin/snapCarousel.js.        */
+  .home-page .trending-box .trending-grid
+    --bs-gutter-x 10px
+    --bs-gutter-y 0
+    -webkit-overflow-scrolling touch
+    flex-wrap nowrap
+    overflow-x auto
+    overscroll-behavior-x contain
+    position relative
+    scroll-snap-type x mandatory
+    scrollbar-width none
+
+  .home-page .trending-box .trending-grid::-webkit-scrollbar
+    display none
+
+  .home-page .trending-box .product-link-tile
+    flex 0 0 50%
+    max-width 50%
+    width 50%
+
+  /* a page is two tiles, so only every second one is a snap point - that is
+     what makes a swipe carry both tiles out and two new ones in */
+  .home-page .trending-box .product-link-tile:nth-child(odd)
+    scroll-snap-align start
+
+  .home-page .trending-box .product-link-tile .product-card
+    align-items stretch
+    border 1px solid var(--line)
+    border-radius var(--radius)
+    flex-direction column
+    gap 8px
+    height 100%
+    padding 10px
+
+  .home-page .trending-box .product-link-tile .product-card .product-img
+    align-items center
+    background var(--wash)
+    border-radius 10px
+    display flex
+    height 108px
+    justify-content center
+    width 100%
+
+  .home-page .trending-box .product-link-tile .product-card img
+    height 88px
+    max-width 100%
+    object-fit contain
+    width auto
+
+  .home-page .trending-box .product-link-tile .product-card .product-info
+    width 100%
+
+  .home-page .trending-box .product-link-tile .product-card .product-title
+    font-size 12.8px
+    line-height 1.35
+    margin-bottom 6px
+    min-height 35px
+
+  .home-page .trending-box .product-link-tile .product-card .product-pricing
+    align-items baseline
+    display flex
+    flex-wrap wrap
+    gap 6px
+    text-align left
+
+  .home-page .trending-box .product-link-tile .product-card .price
+    font-size 15px
+    font-weight 800
+
+  .home-page .trending-box .product-link-tile .product-card .old-price
+    font-size 11.5px
+    margin-left 0
+
+  .home-page .trending-box .product-link-tile .product-card .badge-discount
+    font-size 10px
+    margin-left 0
+    padding 2px 8px
+
+  /* ── flash sale ───────────────────────────────────────────────────────
+     The countdown is built for a desktop banner: at phone width the
+     component drops it to a 2x2 grid of 45x50 boxes with 24px copy, which
+     ate most of a screen before a single product was in view. Back to one
+     compact row.                                                          */
+  .home-page .flash-sale-box .mb-5
+    margin-bottom 16px
+
+  .home-page .flash-sale-box .flash-banner
+    padding 14px
+
+  .home-page .flash-sale-box .flash-banner h2
+    font-size 20px
+
+  .home-page .flash-sale-box .countdown
+    margin 12px 0
+    padding 12px
+
+  .home-page .flash-sale-box .count-text
+    font-size 13px
+    font-weight 600
+    line-height 1.4
+
+  .home-page .flash-sale-box .flash_sale_time_slots_grid
+    gap 12px
+    grid-template-columns repeat(4, 1fr)
+    margin-top 12px
+    row-gap 12px
+
+  /* the two digits of a unit read as one number, so they sit tighter than the
+     space between units. Bootstrap .gap-2 had it the other way round - 8px
+     inside a unit against 6px between them - which is why the row looked like
+     eight loose digits rather than four pairs. */
+  .home-page .flash-sale-box .time-group .d-flex
+    gap 3px !important
+
+  /* the ":" separators were placed for a wide two-column layout and land on
+     top of the boxes once this is four across - the gap reads well enough */
+  .home-page .flash-sale-box .countdown .flash_sale_time_slots_grid > .time-group::before
+    display none
+
+  .home-page .flash-sale-box .time-box
+    border-radius 6px
+    font-size 20px
+    height 42px
+    width 30px
+
+  .home-page .flash-sale-box .time-label
+    font-size 11px
+    margin-top 6px
+
+  .home-page .flash-sale-box .buy-container
+    margin-top 16px
+
+  .home-page .flash-sale-box .btn-buy
+    align-items center
+    display inline-flex
+    font-size 15px
+    gap 8px
+    justify-content center
+    padding 12px 24px
+
+  /* Each slide carries a pair of products stacked vertically. Laid across the
+     slide instead, one slide is exactly one row of two - so a phone shows two
+     products and the rest stay in the carousel. */
+  .home-page .flash-sale-box .double-column
+    flex-direction row
+    gap 12px
+
+  /* the pair wrapper matches the featured rail: the tinted, 18px frame sat
+     behind an opaque card, and the tile needs a flex parent to stretch into
+     so both cards in a row end level */
+  .home-page .flash-sale-box .product-wrap
+    background transparent
+    border-radius 16px
+    display flex
+    flex 1 1 0
+    min-width 0
+
+  /* ── standalone banners ── */
+  .home-page .banner-wrapper img
+    border-radius var(--radius-lg)
+    height auto
+    width 100%
+
+/* ══════════════ narrow: matches the category listing breakpoint ══════════════ */
+@media only screen and (max-width: 900px)
+
+  .home-page .p-tile .img-wrapper
+    height 140px
+
+/* ══════════════ the category listing tile refinements, same 768px cut ══════════════
+   Second half of the port: category-listing.styl narrows the card here, and
+   without these the home tile keeps the wider type and spacing of the desktop
+   card. Keep the two in step.                                                  */
+@media only screen and (max-width: 768px)
+
+  .home-page .p-tile .badge-stack
+    flex-wrap nowrap
+    gap 4px
+    left 8px
+    max-width calc(100% - 44px)
+    min-width 0
+    top 8px
+
+  .home-page .p-tile .badge-same
+    font-size 9.5px
+    padding 2px 7px
+
+  .home-page .p-tile .img-wrapper .wishlist-icon
+    height 30px
+    right 8px
+    top 8px
+    width 30px
+
+  /* the review count was wrapping onto its own line in a narrow card */
+  .home-page .p-tile .block.tile-rating-div
+    flex-wrap nowrap
+    gap 5px
+    min-width 0
+
+  .home-page .p-tile .block.tile-rating-div .rating-stars
+    flex 0 0 auto
+
+  .home-page .p-tile .block.tile-rating-div .rating-stars svg
+    width 62px
+
+  .home-page .p-tile .block.tile-rating-div .color-lite
+    font-size 10.5px
+    min-width 0
+    overflow hidden
+    text-overflow ellipsis
+    white-space nowrap
+
+  .home-page .p-tile .card-wrapper .product-tile-content
+    padding 11px 11px 12px
+
+  .home-page .p-tile h5.ellipsis.ellipsis-2
+    font-size 13.5px
+
+  .home-page .p-tile .price-wrapper .price span
+    font-size 15px
+
+  .home-page .p-tile .price-wrapper .strike-through span
+    font-size 12px
+
+/* ══════════════ phone ══════════════ */
+@media only screen and (max-width: 767px)
+
+  .home-page .container-fluid
+    padding-left 12px
+    padding-right 12px
+
+  .home-page .category-box
+  .home-page .featured-box
+  .home-page .trending-box
+  .home-page .flash-sale-box
+    padding 12px
+
+  .home-page .flash-sale-box .row > .col-lg-6 + .col-lg-6
+    margin-top 14px
+
+  .home-page .flash-sale-box .buy-container .btn-buy
+    width 100%
+
+/* ══════════════ small phone ══════════════ */
+@media only screen and (max-width: 400px)
+
+  .home-page .category-box .category-item p
+    font-size 10.5px
+
+  .home-page .trending-box .product-link-tile .product-card .product-img
+    height 96px
+
+  .home-page .trending-box .product-link-tile .product-card img
+    height 78px
+
+  .home-page .flash-sale-box .time-box
+    font-size 16px
+    height 38px
+    width 26px
+
+  .home-page .flash-sale-box .flash-banner h2
+    font-size 18px

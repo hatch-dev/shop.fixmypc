@@ -126,4 +126,18 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Order email queue
+    |--------------------------------------------------------------------------
+    |
+    | Order mail rides its own named queue so that a backlog of some other job
+    | type -- a bulk import, a newsletter run -- cannot sit in front of a
+    | receipt a customer is waiting for. The worker is started against this
+    | name; see App\Console\Kernel.
+    |
+    */
+
+    'order_queue' => env('MAIL_ORDER_QUEUE', 'emails'),
+
 ];

@@ -33,6 +33,21 @@ const mutations = {
   },
 }
 
+/*
+ * Cookies the auth module reads at boot. A token the API no longer accepts
+ * (expired, revoked, or minted against other keys) has to go before the app
+ * reloads, otherwise the auth module boots "logged in" again and the page
+ * shows the "activate the script" banner over nothing, with no way out.
+ */
+const AUTH_COOKIES = ['admin-panel__token.local', 'admin-panel__strategy', 'admin-panel__user']
+
+const dropAuthCookies = () => {
+  AUTH_COOKIES.forEach(name => {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`
+  })
+  return !document.cookie.includes('admin-panel__token.local=')
+}
+
 const actions = {
   async settingSiteData({state, dispatch}, data) {
     const cookies = document.cookie
@@ -73,6 +88,20 @@ const actions = {
         const {data} = await Service.getRequest({
           lang: currentLanguage
         }, 'Bearer ' + token, 'profile', null)
+
+        if (data?.status !== 200 || !data?.data) {
+          /*
+           * The API answers a dead token with HTTP 2xx and an empty body
+           * ({status: 204, message: "Unauthenticated."}), so axios does not
+           * throw and nothing below would set permissions. Sign out and
+           * start over on the login page instead of rendering the shell.
+           */
+          if (dropAuthCookies()) {
+            window.location.replace((context.base || '/') + 'login')
+            return
+          }
+          return context.redirect('/login')
+        }
 
         dispatch('admin/setProfile', data.data)
         dispatch('settingSiteData', data.data)

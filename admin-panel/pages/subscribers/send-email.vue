@@ -2,6 +2,7 @@
   <data-page
     v-if="allSubscriptionEmailFormats && $can('subscriber', 'view')"
     ref="dataPage"
+    :structured="false"
     route-name="subscribers"
     :name="$t('dataPage.eFor')"
     gate="subscriber"

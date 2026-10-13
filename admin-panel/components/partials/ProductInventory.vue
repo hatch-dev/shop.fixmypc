@@ -17,53 +17,84 @@
         <error-formatter
           type="inventory"
         />
+        <div v-if="sectionError" class="inventory-section-error">
+          <i class="fas fa-exclamation-circle mr-5" />
+          {{ sectionError }}
+        </div>
         <form
           @submit.prevent="saveInventory"
         >
+          <div class="inv-mode-hint" :class="isVariable ? 'is-variable' : 'is-simple'">
+            <template v-if="isVariable">
+              <i class="fas fa-sitemap mr-5" />
+              <span><strong>Variable product</strong> — tick attributes below to generate variant rows.</span>
+            </template>
+            <template v-else>
+              <i class="fas fa-box mr-5" />
+              <span><strong>Simple product</strong> — a single stock entry, no variants. Switch to <strong>Variable</strong> in Basic Info to add options.</span>
+            </template>
+          </div>
+
           <div
-            class="mb-20 mb-sm-15 atr-wrapper"
-            v-if="attributes && attributes.length"
+            class="variant-attrs mb-20 mb-sm-15"
+            v-if="isVariable && attributes && attributes.length"
           >
-            <div
-              v-for="(attr, index) in attributes"
-              :key="index"
-              class="single-atr"
-            >
-              <template
-                v-if="!!attr.values.length"
+            <template v-for="(attr, index) in attributes">
+              <div
+                v-if="attr.values && attr.values.length"
+                :key="index"
+                class="attr-block"
               >
-                <label
-                  class="cb atr-title f-1-2 bold"
-                >
+                <label class="attr-head">
                   <input
                     v-model="selectedAttributes"
                     type="checkbox"
                     :value="attr.id"
                     @change="attributeChanged(attr, $event)"
                   >
-                  <span>{{attr.title}}</span>
+                  <span class="attr-name">{{ attr.title }}</span>
                 </label>
 
-                <label
-                  v-for="(val, i) in attr.values"
-                  :key="i"
-                  class="cb"
-                >
-                  <input
-                    v-model="selectedAttributeValues"
-                    type="checkbox"
-                    :value="val.id"
-                    @change="attributeValueChanged(val, $event)"
+                <div class="attr-values">
+                  <label
+                    v-for="(val, i) in attr.values"
+                    v-if="val.title != null && String(val.title).trim().length"
+                    :key="i"
+                    class="chip"
+                    :class="{ active: selectedAttributeValues.includes(val.id) }"
                   >
-                  <span>{{ val.title }}</span>
-                </label>
-              </template>
-            </div>
+                    <input
+                      v-model="selectedAttributeValues"
+                      type="checkbox"
+                      :value="val.id"
+                      @change="attributeValueChanged(val, $event)"
+                    >
+                    <span>{{ val.title }}</span>
+                  </label>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <div
+            v-if="isVariable && !combinations.length"
+            class="variant-empty"
+          >
+            <i class="fas fa-layer-group mr-5" />
+            Tick attribute values above to generate variant rows.
           </div>
           <div
+            v-if="combinations.length"
             class="inventory-wrap mb-20 mb-sm-15"
           >
-            <div class="dply-felx f-column gap-15 ">
+            <div class="inventory-toolbar">
+              <span class="inventory-count">
+                <i class="fas fa-boxes mr-5" />
+                {{ combinations.length }} {{ isVariable ? 'variant' : 'stock' }} row{{ combinations.length > 1 ? 's' : '' }}
+              </span>
+            </div>
+            <div class="inventory-scroll">
+            <div class="dply-felx f-column gap-15 inventory-table">
               <div class="inventory-row header">
                   <div>Back Order</div>
                   <div class="col-attr">{{ $t('list.attr') }}</div>
@@ -94,8 +125,11 @@
                     {{ renderLabel(item.values || []) }}
                   </h5>
                   <h5 v-else>
-                    {{ $t('list.aq') }}
+                    {{ isVariable ? $t('list.aq') : 'Default' }}
                   </h5>
+                  <span v-if="rowError(index, 'values')" class="field-error">
+                    {{ rowError(index, 'values') }}
+                  </span>
                 </div>
 
                 <div
@@ -113,26 +147,54 @@
                   </div>
                 </div>
 
-                <input type="text" v-model="item.sku" placeholder="SKU">
+                <div class="inv-field">
+                  <input
+                    type="text"
+                    v-model="item.sku"
+                    placeholder="SKU"
+                    :class="{ 'has-error': rowError(index, 'sku') }"
+                    @input="clearRowError(index, 'sku')"
+                  >
+                  <span v-if="rowError(index, 'sku')" class="field-error">
+                    {{ rowError(index, 'sku') }}
+                  </span>
+                </div>
 
-                <input
-                  :disabled="!(item.values && item.values.length)"
-                  type="number"
-                  step="any"
-                  v-model="item.price"
-                >
+                <div class="inv-field">
+                  <input
+                    :disabled="isVariable && !(item.values && item.values.length)"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    v-model="item.price"
+                    :class="{ 'has-error': rowError(index, 'price') }"
+                    @input="clearRowError(index, 'price')"
+                  >
+                  <span v-if="rowError(index, 'price')" class="field-error">
+                    {{ rowError(index, 'price') }}
+                  </span>
+                </div>
 
-                <input
-                  type="number"
-                  step="any"
-                  v-model="item.quantity"
-                >
+                <div class="inv-field">
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    v-model="item.quantity"
+                    :class="{ 'has-error': rowError(index, 'quantity') }"
+                    @input="clearRowError(index, 'quantity')"
+                  >
+                  <span v-if="rowError(index, 'quantity')" class="field-error">
+                    {{ rowError(index, 'quantity') }}
+                  </span>
+                </div>
 
                 <input type="text" v-model="item.imei" placeholder="IMEI">
 
                 <input type="text" v-model="item.barcode" placeholder="Barcode">
 
               </div>
+            </div>
             </div>
           </div>
 
@@ -231,7 +293,7 @@
         selectedVariantImageIds: [],
         editingVariantIndex: null,
         showVariantImageModal: false,
-        inventoryOpen: false,
+        inventoryOpen: true,
         result: [],
         selectedAttributes: [],
         selectedAttributeValues: [],
@@ -242,6 +304,8 @@
         existing: {},
         showInventoryImageModal: false,
         editingInventoryIndex: null,
+        rowErrors: [],
+        sectionError: '',
       }
     },
     props: {
@@ -256,6 +320,10 @@
       productId: {
         type: [String, Number],
         default: null
+      },
+      isVariable: {
+        type: Boolean,
+        default: true
       },
     },
     mixins: [util, validation],
@@ -279,113 +347,161 @@
         await this.fetchingData()
         await this.mappingData()
         await this.fetchVariantImages(newVal)
+      },
+      isVariable(newVal) {
+        if (!newVal) {
+          // Simple: collapse to a single value-less stock row
+          this.ensureSimpleRow()
+        } else {
+          // Variable: if only a simple (value-less) row exists, clear it so
+          // the user can pick attributes. Never wipe real variant rows.
+          const onlySimple = this.combinations.length &&
+            this.combinations.every(c => !(c.values && c.values.length))
+          if (onlySimple) {
+            this.combinations = []
+            this.selected = {}
+            this.selectedAttributes = []
+            this.selectedAttributeValues = []
+          }
+        }
       }
     },
     methods: {
+      ensureSimpleRow() {
+        const existing = (this.combinations || []).find(
+          c => !(c.values && c.values.length)
+        ) || {}
+
+        this.selected = {}
+        this.selectedAttributes = []
+        this.selectedAttributeValues = []
+
+        this.combinations = [{
+          id: existing.id || '',
+          sku: existing.sku || '',
+          price: (existing.price !== undefined && existing.price !== '' && existing.price !== null)
+            ? existing.price
+            : (this.productPrice || 0),
+          quantity: existing.quantity !== undefined && existing.quantity !== null
+            ? existing.quantity
+            : 0,
+          imei: existing.imei || '',
+          barcode: existing.barcode || '',
+          images: existing.images || [],
+          values: [],
+          is_active: existing.is_active || 0
+        }]
+      },
+      resetInventoryErrors() {
+        this.sectionError = ''
+        this.rowErrors = (this.combinations || []).map(() => ({}))
+      },
+      rowError(index, field) {
+        return (this.rowErrors[index] && this.rowErrors[index][field]) || ''
+      },
+      clearRowError(index, field) {
+        if (this.rowErrors[index] && this.rowErrors[index][field]) {
+          this.$set(this.rowErrors[index], field, '')
+        }
+      },
       async validateInventoryBeforeSubmit() {
 
-        this.inventoryValidationError = ''
+        this.resetInventoryErrors()
+
+        // ---- Simple product: validate the single stock row only ----
+        if (!this.isVariable) {
+          this.ensureSimpleRow()
+          this.rowErrors = this.combinations.map(() => ({}))
+          const row = this.combinations[0]
+          const errors = {}
+
+          if (!row.sku || !String(row.sku).trim()) {
+            errors.sku = 'SKU is required'
+          }
+
+          if (row.quantity === '' || row.quantity === null || row.quantity === undefined ||
+            !Number.isInteger(Number(row.quantity)) || Number(row.quantity) < 0) {
+            errors.quantity = 'Quantity must be a whole number, 0 or more'
+          }
+
+          if (row.price === '' || row.price === null || isNaN(Number(row.price)) ||
+            Number(row.price) < 0) {
+            errors.price = 'Price must be 0 or more'
+          }
+
+          if (Object.keys(errors).length) {
+            this.$set(this.rowErrors, 0, errors)
+            this.$emit('has-error')
+            return false
+          }
+
+          return true
+        }
 
         // Require at least one attribute
         if (
           !this.selectedAttributeValues ||
           !this.selectedAttributeValues.length
         ) {
-
-          this.inventoryValidationError =
-            'Please select inventory attributes'
-
-          this.$toast.error(this.inventoryValidationError)
-
+          this.sectionError = 'Please select inventory attributes'
           this.$emit('has-error')
-
           return false
         }
 
         // Require combinations
         if (!this.combinations || !this.combinations.length) {
-
-          this.inventoryValidationError =
-            'Please create inventory combinations'
-
-          this.$toast.error(this.inventoryValidationError)
-
+          this.sectionError = 'Please create inventory combinations'
           this.$emit('has-error')
-
           return false
         }
 
-        // Require valid SKU
-        const invalidCombination = this.combinations.find(combo =>
-          !combo.sku ||
-          !combo.sku.trim() ||
-          !combo.values ||
-          !combo.values.length
-        )
+        // Validate each combination, collecting every field error at once
+        let hasError = false
+        const rowErrors = this.combinations.map(combo => {
+          const errors = {}
 
-        // Validate each combination
-        for (const combo of this.combinations) {
           if (!combo.values || !combo.values.length) {
-            this.inventoryValidationError = 'Please select attribute values for all combinations'
-            this.$toast.error(this.inventoryValidationError)
-            this.$emit('has-error')
-            return false
+            errors.values = 'Select attribute values'
           }
 
-          // SKU missing
           if (!combo.sku || !combo.sku.trim()) {
-            this.inventoryValidationError = 'SKU is required for all inventory combinations'
-            this.$toast.error(this.inventoryValidationError)
-            this.$emit('has-error')
-            return false
+            errors.sku = 'SKU is required'
           }
 
-          // Quantity validation
-          if (
-            combo.quantity === '' ||
-            combo.quantity === null
-          ) {
-
-            this.inventoryValidationError = 'Valid quantity is required for all inventory combinations'
-            this.$toast.error(this.inventoryValidationError)
-            this.$emit('has-error')
-            return false
+          if (combo.quantity === '' || combo.quantity === null ||
+            !Number.isInteger(Number(combo.quantity)) || Number(combo.quantity) < 0) {
+            errors.quantity = 'Quantity must be a whole number, 0 or more'
           }
 
-          // Price validation
-          if (
-            combo.price === '' ||
-            combo.price === null ||
-            Number(combo.price) < 0
-          ) {
-
-            this.inventoryValidationError =
-              'Valid price is required for all inventory combinations'
-
-            this.$toast.error(this.inventoryValidationError)
-
-            this.$emit('has-error')
-
-            return false
+          if (combo.price === '' || combo.price === null || isNaN(Number(combo.price)) ||
+            Number(combo.price) < 0) {
+            errors.price = 'Price must be 0 or more'
           }
-        }
 
-        // Duplicate SKU validation
+          if (Object.keys(errors).length) hasError = true
+          return errors
+        })
+
+        // Duplicate SKU validation — flag every row sharing a SKU
         const skuList = this.combinations.map(
-          combo => combo.sku.trim()
+          combo => (combo.sku || '').trim()
         )
+        skuList.forEach((sku, index) => {
+          if (sku && skuList.indexOf(sku) !== index) {
+            rowErrors[index].sku = 'Duplicate SKU'
+            const first = skuList.indexOf(sku)
+            rowErrors[first].sku = rowErrors[first].sku || 'Duplicate SKU'
+            hasError = true
+          }
+        })
 
-        const duplicateSku = skuList.find(
-          (sku, index) => skuList.indexOf(sku) !== index
-        )
+        this.rowErrors = rowErrors
 
-        if (duplicateSku) {
-          this.inventoryValidationError =
-            'Duplicate SKU found'
-          this.$toast.error(this.inventoryValidationError)
+        if (hasError) {
           this.$emit('has-error')
           return false
         }
+
         return true
       },
       async uploadNewImages(e) {
@@ -584,21 +700,28 @@
           this.$toast.error('Please save product details first')
           return false
         }
-        if (
-          this.selectedAttributes.length &&
-          !this.selectedAttributeValues.length
-        ) {
-          this.$toast.error('Please select inventory attributes')
-          this.$emit('has-error')
-          return
-        }
-        const invalidCombination = this.combinations.find(combo =>
-          !(combo.values && combo.values.length)
-        )
-        if (invalidCombination) {
-          this.$toast.error('Inventory attribute combination is required')
-          this.$emit('has-error')
-          return
+
+        if (!this.isVariable) {
+          // Simple product: guarantee a single value-less stock row, skip
+          // the attribute/combination guards below.
+          this.ensureSimpleRow()
+        } else {
+          if (
+            this.selectedAttributes.length &&
+            !this.selectedAttributeValues.length
+          ) {
+            this.$toast.error('Please select inventory attributes')
+            this.$emit('has-error')
+            return
+          }
+          const invalidCombination = this.combinations.find(combo =>
+            !(combo.values && combo.values.length)
+          )
+          if (invalidCombination) {
+            this.$toast.error('Inventory attribute combination is required')
+            this.$emit('has-error')
+            return
+          }
         }
 
         this.formSubmitting = true
@@ -844,9 +967,19 @@
           
           this.selectedAttributes = [...new Set(selectedAttr)]
           this.selectedAttributeValues = [...new Set(selectedAttrValues)]
+
+          // Tell the parent which variant type this saved product is
+          const hasValues = this.combinations.some(c => c.values && c.values.length)
+          this.$emit('variant-detected', hasValues)
+          if (!hasValues) {
+            this.ensureSimpleRow()
+          }
         } else {
-          // Default combination
+          // No inventory yet
           this.combinations = []
+          if (!this.isVariable) {
+            this.ensureSimpleRow()
+          }
         }
       },
       ...mapActions('common', ['getById', 'setById'])
@@ -862,36 +995,141 @@
         await this.fetchingData()
         await this.mappingData()
         await this.fetchVariantImages(this.productId)
+      } else if (!this.isVariable) {
+        // New simple product: seed a single stock row
+        this.ensureSimpleRow()
       }
     }
   }
 </script>
 <style lang="stylus">
-  .atr-wrapper
-    border-radius 5px
-    border 1px solid #ddd
-    background #f7f7f5
+  .inv-mode-hint
+    display flex
+    align-items center
+    gap 6px
+    padding 10px 14px
+    border-radius 8px
+    font-size 13px
+    margin-bottom 16px
 
-    .single-atr
+    &.is-variable
+      background rgba(51,49,154,.06)
+      color #33319a
+
+    &.is-simple
+      background #f1f5f9
+      color #475569
+
+  .variant-attrs
+    border 1px solid #e5e7eb
+    border-radius 12px
+    overflow hidden
+    background #fff
+
+    .attr-block
       display flex
-      flex-wrap wrap
-      align-items center
-      border-bottom 1px solid #ddd
-
-      label
-        padding 15px
-
-      .atr-title
-        width 120px
-        max-width 120px
+      align-items flex-start
+      gap 16px
+      padding 14px 16px
+      border-bottom 1px solid #eef1f4
 
       &:last-child
         border-bottom none
 
+    .attr-head
+      display flex
+      align-items center
+      gap 8px
+      min-width 120px
+      max-width 120px
+      padding 6px 0
+      cursor pointer
+      user-select none
+
+      input
+        width 16px
+        height 16px
+        accent-color #33319a
+        margin 0
+
+      .attr-name
+        font-weight 700
+        font-size 13px
+        color #0f172a
+
+    .attr-values
+      display flex
+      flex-wrap wrap
+      gap 8px
+      flex 1
+
+    .chip
+      display inline-flex
+      align-items center
+      gap 6px
+      padding 6px 12px
+      border 1px solid #e2e8f0
+      border-radius 8px
+      background #fff
+      cursor pointer
+      font-size 12.5px
+      color #475569
+      transition all .15s
+      user-select none
+
+      input
+        width 14px
+        height 14px
+        accent-color #33319a
+        margin 0
+
+      &:hover
+        border-color #c7cdd6
+
+      &.active
+        border-color #33319a
+        background rgba(51,49,154,.06)
+        color #33319a
+        font-weight 600
+
+  .variant-empty
+    display flex
+    align-items center
+    justify-content center
+    gap 6px
+    padding 26px 16px
+    margin-bottom 20px
+    border 1px dashed #cbd5e1
+    border-radius 12px
+    background #f8fafc
+    color #64748b
+    font-size 13px
+
+  .inventory-toolbar
+    display flex
+    align-items center
+    justify-content space-between
+    padding 10px 14px
+    border-bottom 1px solid #e5e7eb
+    background #f9fafb
+
+  .inventory-count
+    font-size 12.5px
+    font-weight 600
+    color #475569
+
+  .inventory-scroll
+    overflow-x auto
+
+  .inventory-table
+    width 100%
+    align-items stretch
+
 .inventory-row
   display grid
-  grid-template-columns 30px 200px 120px 120px 120px 120px 120px 120px
-  gap 12px
+  width 100%
+  grid-template-columns 46px minmax(80px,1.3fr) 52px minmax(70px,1fr) minmax(62px,0.9fr) minmax(56px,0.9fr) minmax(70px,1fr) minmax(70px,1fr)
+  gap 8px
   align-items center
   justify-items center
   text-align center
@@ -947,8 +1185,10 @@
 .inventory-row.header
   background #f9fafb
   font-weight 600
-  font-size 13px
-  color #374151
+  font-size 11px
+  letter-spacing .02em
+  color #64748b
+  text-transform uppercase
   padding 10px 12px
   border-bottom 1px solid #e5e7eb
 
@@ -967,6 +1207,41 @@
     outline none
     border-color #6366f1
     box-shadow 0 0 0 2px rgba(99,102,241,.15)
+
+.inv-field
+  display flex
+  flex-direction column
+  align-items stretch
+  width 100%
+  gap 3px
+
+.inventory-row input.has-error
+  border-color #ef4444
+  background #fef2f2
+
+  &:focus
+    border-color #ef4444
+    box-shadow 0 0 0 2px rgba(239,68,68,.15)
+
+.field-error
+  display block
+  font-size 11px
+  line-height 1.3
+  color #ef4444
+  text-align left
+  margin-top 2px
+
+.inventory-section-error
+  display flex
+  align-items center
+  gap 6px
+  margin 10px 0
+  padding 8px 12px
+  font-size 13px
+  color #b91c1c
+  background #fef2f2
+  border 1px solid #fecaca
+  border-radius 6px
 
 .inventory-image
   display flex
@@ -1006,6 +1281,9 @@
 .inventory-row.header div
   text-align center
   width 100%
+  white-space normal
+  word-break break-word
+  line-height 1.25
 
 .thumb-stack 
   display flex

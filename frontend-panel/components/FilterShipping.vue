@@ -1,10 +1,9 @@
 <template>
-  <div class="sidebar-section">
-    <h4 class="title">
-      {{ $t('listingLayout.shippingOptions') }}
-    </h4>
+  <div class="side-block" v-if="shippingRules && shippingRules.length">
+    <h3>{{ $t('listingLayout.shippingOptions') }}</h3>
+
     <label
-      class="block mtb-10"
+      class="f-row"
       v-for="(value, key) in shippingRules"
       :key="key"
       :for="`cb-${value.id}`"

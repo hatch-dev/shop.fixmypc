@@ -342,7 +342,8 @@
     "voucherCode": "كود",
     "confirmOrderAnd": "تأكيد الطلب والدفع الآن ({amount})",
     "confirmOrder": "تأكيد الطلب",
-    "noPayment": "لا توجد طريقة دفع متاحة حاليًا"
+    "noPayment": "لا توجد طريقة دفع متاحة حاليًا",
+    "goToPayment": "الانتقال إلى الدفع"
   },
   "forgotPassword": {
     "errorOccurred": "حدث الخطأ التالي",
@@ -369,7 +370,15 @@
     "haveAccount": "هل لديك حساب بالفعل؟",
     "sentEmail": "لقد أرسلنا إليك بريدًا إلكترونيًا يحتوي على رمز. يرجى لصق الرمز أدناه للتحقق من حسابك."
   },
+  "tabs": {
+    "home": "الرئيسية",
+    "shop": "المتجر",
+    "search": "بحث",
+    "basket": "السلة",
+    "account": "الحساب"
+  },
   "shipping": {
+    "addContactDetails": "Please enter your name, email and phone number so we can contact you about your collection.",
     "instruction": "تعليمات التسليم",
     "ordered": "المنتجات المطلوبة",
     "addAddress": "الرجاء إضافة عنوان أولاً.",

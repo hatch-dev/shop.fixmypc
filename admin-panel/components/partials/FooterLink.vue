@@ -162,20 +162,39 @@
     gap: 30px;
 }
 .services-tabs {
-    justify-content: space-between;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--surface-color);
+    transition: border-color .12s ease, box-shadow .12s ease;
+}
+.services-tabs:hover {
+    border-color: var(--border-strong);
+}
+.services-tabs .custom-dropdown {
+    flex: 1;
+    min-width: 0;
 }
 
-.delete-btn {
-    background: #fee2e2;
+.services-tabs .delete-btn {
     background: var(--danger-bg);
-    color: #b42318;
     color: var(--danger-text);
     display: inline-flex;
     justify-content: center;
     align-items: center;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+    transition: background .12s ease, color .12s ease;
+}
+.services-tabs .delete-btn:hover {
+    background: var(--danger-text);
+    color: #fff;
 }
 </style>
 

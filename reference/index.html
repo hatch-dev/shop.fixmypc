@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DELL Latitude 3520 — FixMyPC Shop</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+/* ============================================================================
+   FixMyPC Shop — product page v3 (desktop)
+   Everything on the live page is kept: promo strip, category search bar, icon
+   nav with contact links, breadcrumb, gallery with thumb arrows, the four left
+   accordions, addons and colour, spec bullets, frequently bought together,
+   the full right-hand buy box, the green benefits band, the features write-up,
+   both recommendation carousels, newsletter and footer.
+   Added on top: an optional configurator and a price panel that follows.
+   ========================================================================== */
+:root{
+  --ink:#16174A;--ink-soft:#3A3C6E;--brand:#2D2DA0;--brand-700:#22227E;--brand-50:#F1F1FC;
+  --go:#00A24A;--go-700:#00873E;--wash:#F7F7FD;--line:#E6E7F3;--line-strong:#CFD1E8;
+  --muted:#6B7191;--danger:#C8324B;--amber:#B26A00;--star:#F0A500;--mint:#E9F8EE;
+  --radius:14px;--radius-lg:18px;
+  --shadow-sm:0 1px 3px rgba(22,23,74,.06);--shadow-md:0 10px 30px rgba(22,23,74,.10);
+  --shadow-lg:0 26px 70px rgba(22,23,74,.20);
+  --sans:"Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--sans);color:var(--ink);background:#fff;font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;padding-bottom:92px}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:3px solid rgba(45,45,160,.35);outline-offset:2px;border-radius:8px}
+.wrap{max-width:1320px;margin:0 auto;padding:0 22px}
+
+/* ── promo strip ── */
+.promo{background:#DDE0FA;font-size:13.5px;font-weight:700}
+.promo .wrap{display:flex;align-items:center;gap:16px;height:44px}
+.promo .chip{background:#fff;border-radius:999px;padding:5px 14px;font-size:13px}
+.promo .off{color:var(--go);font-weight:800}
+.promo .x{margin-left:auto;background:none;border:0;color:var(--ink-soft);font-size:17px;line-height:1}
+
+/* ── header ── */
+.head{border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40;background:rgba(255,255,255,.97);backdrop-filter:blur(10px)}
+.head-top{display:flex;align-items:center;gap:16px;padding:12px 0}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;background:none;border:0;padding:0;color:var(--ink);font-size:15px;flex:0 0 auto}
+.logo i{width:40px;height:40px;border-radius:11px;background:var(--brand);display:grid;place-items:center;font-style:normal}
+.searchgroup{display:flex;gap:10px;flex:1;min-width:0;max-width:820px}
+.catsel{border:1px solid var(--line-strong);border-radius:999px;background:#fff;padding:0 38px 0 18px;font-size:14px;
+  font-family:inherit;color:var(--ink-soft);appearance:none;min-width:180px;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%236B7191' stroke-width='2'><path d='M4 6l4 4 4-4'/></svg>");
+  background-repeat:no-repeat;background-position:right 16px center}
+.searchbox{flex:1;min-width:0;display:flex;border:1px solid var(--line-strong);border-radius:999px;background:#fff;padding:4px 4px 4px 18px}
+.searchbox input{flex:1;min-width:0;border:0;font-size:14.5px;font-family:inherit;color:var(--ink);background:none}
+.searchbox input:focus{outline:none}
+.searchbox button{width:42px;height:42px;border-radius:50%;border:0;background:var(--brand);color:#fff;display:grid;place-items:center;flex:0 0 auto}
+.searchbox button:hover{background:var(--brand-700)}
+.head-acts{display:flex;align-items:center;gap:4px;margin-left:auto;flex:0 0 auto}
+.lang{display:inline-flex;align-items:center;gap:6px;background:none;border:0;font-size:14px;font-weight:600;color:var(--ink-soft);padding:8px 10px;border-radius:9px}
+.lang:hover{background:var(--brand-50);color:var(--brand)}
+.icon-btn{width:42px;height:42px;border-radius:12px;border:0;background:none;display:grid;place-items:center;color:var(--ink-soft);position:relative}
+.icon-btn:hover{background:var(--brand-50);color:var(--brand)}
+.icon-btn .n{position:absolute;top:3px;right:3px;background:var(--danger);color:#fff;font-size:10px;font-weight:800;min-width:17px;height:17px;
+  border-radius:999px;display:grid;place-items:center;padding:0 4px}
+
+/* ── icon nav row ── */
+.navrow{display:flex;align-items:center;gap:8px;padding:0 0 12px;flex-wrap:wrap}
+.navpill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:999px;
+  padding:8px 15px;font-size:14px;font-weight:600;color:var(--ink)}
+.navpill i{color:var(--brand);display:grid;place-items:center;font-style:normal}
+.navpill:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-50)}
+.navmore{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--muted);display:grid;place-items:center}
+.navmore:hover{border-color:var(--brand);color:var(--brand)}
+.hot{background:var(--brand);border:0;color:#fff;display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:9px 16px;font-size:14px;font-weight:700}
+.hot:hover{background:var(--brand-700)}
+.clear{background:var(--go);border:0;color:#fff;display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:9px 16px;font-size:14px;font-weight:700}
+.clear:hover{background:var(--go-700)}
+.contacts{display:flex;align-items:center;gap:14px;margin-left:auto;font-size:13.5px;color:var(--ink-soft)}
+.contacts button{background:none;border:0;display:inline-flex;align-items:center;gap:7px;color:var(--ink-soft);font:inherit}
+.contacts button:hover{color:var(--brand)}
+.contacts .sep{color:var(--line-strong)}
+.contacts .wa{color:#25D366}
+
+/* ── breadcrumb ── */
+.crumbbar{background:var(--wash);border-bottom:1px solid var(--line)}
+.crumb{display:flex;gap:9px;align-items:center;padding:13px 0;font-size:13.5px;color:var(--muted)}
+.crumb button{background:none;border:0;color:var(--ink-soft);font:inherit;padding:0}
+.crumb button:hover{color:var(--brand);text-decoration:underline}
+.crumb b{color:var(--brand)}
+
+/* ── layout ── */
+.grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr) 330px;gap:28px;align-items:start;padding:24px 0 40px}
+.sticky{position:sticky;top:120px}
+
+/* ── gallery ── */
+.shot{border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--wash);aspect-ratio:1;display:grid;place-items:center;position:relative}
+.shot svg{width:56%;height:56%;color:var(--brand);opacity:.32}
+.zoomhint{text-align:center;font-size:13px;color:var(--muted);margin:10px 0 14px}
+.thumbrow{display:flex;align-items:center;gap:8px;margin-top:12px}
+.thumbrow .arrow{width:30px;height:30px;border-radius:50%;border:1px solid var(--line-strong);background:#fff;color:var(--muted);
+  display:grid;place-items:center;flex:0 0 auto}
+.thumbrow .arrow:hover{border-color:var(--brand);color:var(--brand)}
+.thumbs{display:flex;gap:9px;overflow-x:auto;flex:1;scrollbar-width:none}
+.thumbs::-webkit-scrollbar{display:none}
+.thumb{width:64px;height:60px;border-radius:11px;border:1.5px solid var(--line-strong);background:var(--wash);
+  display:grid;place-items:center;color:var(--brand);opacity:.55;flex:0 0 auto}
+.thumb.on{border-color:var(--brand);opacity:1;background:var(--brand-50)}
+
+/* left accordions */
+.lacc{border:1px solid var(--line);border-radius:var(--radius);margin-bottom:11px;overflow:hidden}
+.lacc-h{width:100%;display:flex;align-items:center;gap:10px;background:#fff;border:0;padding:15px 16px;font-size:14.5px;font-weight:700;text-align:left}
+.lacc-h .cv{margin-left:auto;color:var(--muted);transition:transform .2s}
+.lacc.on .cv{transform:rotate(180deg)}
+.lacc-b{display:none;padding:0 16px 16px;font-size:13.5px;color:var(--ink-soft);line-height:1.6}
+.lacc.on .lacc-b{display:block}
+.paychips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.paychip{border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:700;color:var(--ink-soft)}
+
+/* ── main column ── */
+h1{font-size:26px;letter-spacing:-.025em;margin:0 0 6px;line-height:1.22;color:var(--brand)}
+.subline{font-size:13.5px;color:var(--muted);margin-bottom:10px}
+.subline b{color:var(--brand)}
+.meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:20px}
+.stars{color:var(--star);font-size:14px;letter-spacing:1px}
+.pill{font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;border:1px solid transparent}
+.pill.stock{background:#fff;color:var(--go);border-color:var(--go)}
+.pill.sku{background:var(--wash);color:var(--muted)}
+
+.optrow{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:22px}
+.optrow h3{font-size:14.5px;margin:0 0 10px}
+.addons{display:flex;gap:9px;flex-wrap:wrap}
+.addon{border:1.5px solid var(--line-strong);background:#fff;border-radius:10px;padding:9px 14px;font-size:13.5px;font-weight:600;color:var(--ink-soft)}
+.addon.on{border-color:var(--brand);background:var(--brand-50);color:var(--brand)}
+.swatches{display:flex;gap:10px;align-items:center}
+.sw{width:38px;height:38px;border-radius:50%;border:2px solid var(--line-strong);padding:3px;background:#fff}
+.sw i{display:block;width:100%;height:100%;border-radius:50%}
+.sw.on{border-color:var(--brand);box-shadow:0 0 0 3px rgba(45,45,160,.12)}
+.swname{font-size:13px;color:var(--muted)}
+
+.speclist{list-style:disc;margin:0 0 22px;padding-left:22px;display:grid;gap:8px}
+.speclist li{font-size:14.5px;color:var(--ink-soft);line-height:1.5}
+.speclist b{color:var(--ink)}
+.speclist .up{color:var(--go);font-weight:700}
+
+/* ── optional configurator ── */
+.cust-open{display:flex;align-items:center;gap:14px;width:100%;text-align:left;border:1.5px dashed var(--line-strong);
+  background:var(--wash);border-radius:var(--radius-lg);padding:15px 17px;margin-bottom:20px}
+.cust-open:hover{border-color:var(--brand);background:var(--brand-50)}
+.cust-open i{width:40px;height:40px;border-radius:12px;background:#fff;border:1px solid var(--line);color:var(--brand);
+  display:grid;place-items:center;flex:0 0 auto;font-style:normal}
+.cust-open b{display:block;font-size:15px}
+.cust-open small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.cust-open .cta{margin-left:auto;background:var(--brand);color:#fff;border-radius:999px;padding:9px 17px;font-size:13.5px;font-weight:700;white-space:nowrap}
+.cust{display:none;border:1px solid var(--line-strong);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:22px;box-shadow:var(--shadow-sm)}
+.cust.on{display:block}
+.cust-h{display:flex;align-items:center;gap:12px;padding:13px 17px;border-bottom:1px solid var(--line);background:var(--wash)}
+.cust-h b{font-size:15px}
+.cust-h .changes{font-size:12.5px;color:var(--muted);font-weight:600}
+.cust-h .close{margin-left:auto;background:none;border:1px solid var(--line-strong);border-radius:999px;padding:7px 15px;font-size:13px;font-weight:700;color:var(--ink)}
+.cust-h .close:hover{border-color:var(--brand);color:var(--brand)}
+.tabs{display:flex;gap:4px;padding:10px 14px 0;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabbtn{border:0;background:none;padding:9px 12px 11px;font-size:13.5px;font-weight:700;color:var(--muted);white-space:nowrap;
+  border-bottom:3px solid transparent;display:flex;align-items:center;gap:7px}
+.tabbtn:hover{color:var(--brand)}
+.tabbtn.on{color:var(--brand);border-bottom-color:var(--brand)}
+.tabbtn .dotmark{width:7px;height:7px;border-radius:50%;background:var(--go)}
+.pane{padding:16px 17px 18px}
+.pane p.help{margin:0 0 13px;font-size:13.5px;color:var(--muted);max-width:64ch}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(228px,1fr));gap:10px}
+.opt{border:1.5px solid var(--line-strong);border-radius:var(--radius);padding:13px;background:#fff;text-align:left;display:flex;gap:11px;align-items:flex-start}
+.opt:hover{border-color:var(--brand)}
+.opt.on{border-color:var(--brand);background:var(--brand-50);box-shadow:0 0 0 3px rgba(45,45,160,.08)}
+.opt[disabled]{opacity:.5;cursor:not-allowed}
+.opt .dot{width:19px;height:19px;border-radius:50%;border:2px solid var(--line-strong);flex:0 0 auto;margin-top:2px;position:relative}
+.opt.check .dot{border-radius:6px}
+.opt.on .dot{border-color:var(--go)}
+.opt.on .dot:after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--go)}
+.opt.check.on .dot:after{border-radius:2px;inset:2px}
+.opt .t{flex:1;min-width:0}
+.opt .t b{display:block;font-size:14px}
+.opt .t small{display:block;color:var(--muted);font-size:12.5px;margin-top:3px;line-height:1.4}
+.opt .pr{font-size:13px;font-weight:800;white-space:nowrap;color:var(--brand)}
+.opt .pr.inc{color:var(--go)}
+.opt .pr s{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.opt .lead{display:inline-block;margin-top:7px;font-size:11px;font-weight:700;color:var(--amber);background:#FFF6E6;
+  border:1px solid #F0DCB6;border-radius:999px;padding:2px 8px}
+.opt .pic{width:44px;height:44px;border-radius:11px;background:var(--wash);display:grid;place-items:center;color:var(--brand);flex:0 0 auto}
+.pane-f{display:flex;align-items:center;gap:12px;padding:12px 17px;border-top:1px solid var(--line);background:var(--wash)}
+.pane-f .nav{margin-left:auto;display:flex;gap:8px}
+.control{width:100%;border:1px solid var(--line-strong);border-radius:12px;padding:12px 14px;font-size:14.5px;font-family:inherit;color:var(--ink)}
+.control:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(45,45,160,.10);outline:none}
+textarea.control{min-height:90px;resize:vertical}
+.bfoot{display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--wash);border:1px solid var(--line);border-radius:var(--radius);font-size:13.5px;margin-top:10px}
+
+/* ── frequently bought together ── */
+.fbt{background:var(--brand-50);border:1px solid #DCDDF7;border-radius:var(--radius-lg);padding:18px;margin-bottom:8px}
+.fbt h3{margin:0 0 14px;font-size:16px}
+.fbt-top{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+.fbt-pic{width:96px;height:96px;border-radius:12px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;color:var(--brand);flex:0 0 auto}
+.fbt-total{margin-left:auto;text-align:right}
+.fbt-total span{font-size:14px;color:var(--ink-soft)}
+.fbt-total b{color:var(--danger);font-size:19px;margin-left:6px}
+.fbt-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid #DCDDF7;font-size:14px;width:100%;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0}
+.fbt-row .dot{width:19px;height:19px;border-radius:5px;border:2px solid var(--line-strong);flex:0 0 auto;position:relative;background:#fff}
+.fbt-row.on .dot{border-color:var(--go);background:var(--go)}
+.fbt-row.on .dot:after{content:"";position:absolute;left:5px;top:2px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg)}
+.fbt-row[disabled]{opacity:.85;cursor:default}
+.fbt-row .t{flex:1;min-width:0}
+.fbt-row .pr{white-space:nowrap;display:flex;gap:10px;align-items:baseline}
+.fbt-row .pr s{color:var(--muted);font-size:12.5px}
+.fbt-row .pr b{font-weight:800}
+
+/* ── right buy box ── */
+.buybox{border:1px solid var(--line-strong);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);background:#fff;overflow:hidden}
+.bb-price{padding:16px 16px 4px}
+.bb-price .row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.bb-price .big{font-size:29px;font-weight:800;letter-spacing:-.03em}
+.bb-price s{color:var(--muted);font-size:15px}
+.bb-ship{font-size:13px;color:var(--ink-soft);margin-top:5px}
+.bb-details{width:100%;display:flex;align-items:center;gap:7px;background:none;border:0;padding:10px 16px;font-size:13.5px;font-weight:700;color:var(--ink)}
+.bb-details .cv{transition:transform .2s;color:var(--muted)}
+.bb-details.on .cv{transform:rotate(180deg)}
+.bb-lines{display:none;padding:0 16px 10px;border-bottom:1px solid var(--line)}
+.bb-lines.on{display:block}
+.sline{display:flex;gap:9px;align-items:flex-start;padding:7px 0;font-size:13px;border-bottom:1px dashed var(--line)}
+.sline:last-child{border-bottom:0}
+.sline .t{flex:1;min-width:0}
+.sline .t b{display:block;font-weight:600}
+.sline .t small{color:var(--muted);font-size:11.5px}
+.sline .pr{font-weight:700;white-space:nowrap}
+.sline .pr.inc{color:var(--go)}
+.sline .x{background:none;border:0;color:var(--muted);font-size:15px;line-height:1;padding:0 2px}
+.sline .x:hover{color:var(--danger)}
+.bb-qty{display:flex;align-items:center;gap:14px;padding:14px 16px 6px;font-size:14px}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line-strong);border-radius:10px;overflow:hidden}
+.stepper button{width:38px;height:40px;border:0;background:#fff;font-size:18px;color:var(--ink-soft)}
+.stepper button:hover{background:var(--brand-50);color:var(--brand)}
+.stepper span{width:44px;text-align:center;font-weight:700;border-left:1px solid var(--line);border-right:1px solid var(--line);line-height:40px}
+.bb-acts{padding:10px 16px 4px;display:grid;gap:9px}
+.btn{border:0;border-radius:999px;padding:13px 18px;font-size:15px;font-weight:700;width:100%;transition:.15s}
+.btn-ink{background:var(--brand);color:#fff}
+.btn-ink:hover{background:var(--brand-700)}
+.btn-go{background:var(--go);color:#fff;box-shadow:0 6px 16px rgba(0,162,74,.22)}
+.btn-go:hover{background:var(--go-700)}
+.btn-grey{background:var(--wash);border:1px solid var(--line);color:var(--ink)}
+.btn-grey:hover{border-color:var(--brand);color:var(--brand)}
+.btn-ghost{background:#fff;border:1px solid var(--line-strong);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-50)}
+.btn-sm{padding:9px 15px;font-size:13.5px;width:auto}
+.bb-note{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink-soft);padding:10px 16px 0}
+.bb-note svg{color:var(--brand);flex:0 0 auto}
+.bb-arrive{padding:6px 16px 0;font-size:13.5px;color:var(--ink-soft)}
+.bb-arrive b{color:var(--ink)}
+.bb-share{display:flex;align-items:center;gap:10px;padding:14px 16px 16px;font-size:13.5px;color:var(--muted)}
+.share-btn{width:32px;height:32px;border-radius:50%;border:0;display:grid;place-items:center;color:#fff}
+.share-fb{background:#1877F2}.share-pin{background:#E60023}.share-tw{background:#1D9BF0}
+.bb-lead{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--ink-soft);background:var(--wash);
+  border-top:1px solid var(--line);padding:11px 16px}
+.bb-lead svg{color:var(--brand);flex:0 0 auto;margin-top:1px}
+
+/* ── benefits band ── */
+.benefits{background:var(--mint);padding:34px 0}
+.benefits .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;text-align:center}
+.benefits i{display:grid;place-items:center;color:var(--brand);margin-bottom:12px;font-style:normal}
+.benefits b{display:block;font-size:19px;color:var(--brand);margin-bottom:6px;letter-spacing:-.01em}
+.benefits p{margin:0;font-size:14px;color:var(--ink-soft);max-width:34ch;margin-inline:auto}
+
+/* ── features ── */
+.features{padding:40px 0 10px;text-align:center}
+.features h2{font-size:28px;letter-spacing:-.02em;margin:0 0 14px}
+.features p{max-width:88ch;margin:0 auto;color:var(--ink-soft);font-size:15px}
+
+/* ── carousels ── */
+.carousel{padding:26px 0}
+.car-h{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.car-h h2{font-size:21px;margin:0;letter-spacing:-.02em}
+.car-h .page{margin-left:auto;font-size:13px;color:var(--muted)}
+.car-h .arrows{display:flex;gap:8px}
+.car-h .arrows button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line-strong);background:#fff;color:var(--muted);display:grid;place-items:center}
+.car-h .arrows button:hover{border-color:var(--brand);color:var(--brand)}
+.track{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;scrollbar-width:none}
+.track::-webkit-scrollbar{display:none}
+.pcard{flex:0 0 246px;scroll-snap-align:start;border:1px solid var(--line);border-radius:var(--radius);background:#fff;
+  display:flex;flex-direction:column;position:relative;overflow:hidden}
+.pcard:hover{box-shadow:var(--shadow-md)}
+.pcard .pic{aspect-ratio:4/3;background:var(--wash);display:grid;place-items:center;color:var(--brand);border-bottom:1px solid var(--line)}
+.pcard .pic svg{opacity:.34;width:52%;height:52%}
+.pcard.out .pic{opacity:.6}
+.pcard .heart{position:absolute;top:9px;right:9px;width:32px;height:32px;border-radius:50%;background:#fff;border:1px solid var(--line);
+  display:grid;place-items:center;color:var(--muted)}
+.pcard .heart.on{color:var(--danger);border-color:#EFC3CC}
+.pcard .flag{position:absolute;top:9px;left:9px;background:var(--go);color:#fff;font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px}
+.pcard .flag.out{background:var(--ink);opacity:.86}
+.pcard .b{padding:12px 13px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.pcard h3{margin:0;font-size:14px;font-weight:600;line-height:1.35;color:var(--brand)}
+.pcard .rr{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.pcard .pr{display:flex;align-items:baseline;gap:8px;margin-top:auto;padding-top:4px}
+.pcard .pr b{font-size:16px}
+.pcard .pr s{font-size:12.5px;color:var(--muted)}
+.pcard .act{padding:0 13px 13px}
+.pcard .oos{font-size:12px;font-weight:700;color:var(--muted);padding:0 13px 13px;display:block}
+
+/* ── newsletter + footer ── */
+.news{background:var(--brand);color:#fff;padding:34px 0}
+.news .cols{display:grid;grid-template-columns:1.1fr 1fr;gap:32px;align-items:center}
+.news h2{font-size:30px;margin:0 0 10px;letter-spacing:-.02em}
+.news p{margin:0;font-size:13.5px;opacity:.85;max-width:60ch}
+.news .form{display:flex;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:6px 6px 6px 20px}
+.news input{flex:1;min-width:0;background:none;border:0;color:#fff;font-size:15px;font-family:inherit}
+.news input::placeholder{color:rgba(255,255,255,.7)}
+.news input:focus{outline:none}
+.news .form button{background:var(--go);color:#fff;border:0;border-radius:999px;padding:12px 26px;font-size:15px;font-weight:700}
+.news .form button:hover{background:var(--go-700)}
+.foot{background:var(--brand);color:#fff;padding:10px 0 30px}
+.foot .cols{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:26px;border-top:1px solid rgba(255,255,255,.18);padding-top:26px}
+.foot .logo-f{display:flex;align-items:center;gap:10px;font-weight:800;font-size:16px;margin-bottom:12px}
+.foot .logo-f i{width:40px;height:40px;border-radius:11px;background:rgba(255,255,255,.15);display:grid;place-items:center;font-style:normal}
+.foot b.big{display:block;font-size:18px;margin-bottom:5px}
+.foot .open{color:#7BE8A6;font-weight:700;text-decoration:underline;font-size:15px}
+.foot p{margin:8px 0 0;font-size:13px;opacity:.85}
+.foot u{display:block;font-size:16px;font-weight:800;text-decoration:none;margin-bottom:11px}
+.foot button.link{display:block;background:none;border:0;color:#fff;opacity:.85;font-size:13.5px;padding:4px 0;text-align:left}
+.foot button.link:hover{opacity:1;text-decoration:underline}
+.paylogos{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.paylogos span{background:#fff;color:var(--ink);border-radius:6px;padding:5px 8px;font-size:10px;font-weight:800;letter-spacing:.02em}
+.social{display:flex;gap:9px}
+.social button{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:none;color:#fff;display:grid;place-items:center}
+.social button:hover{background:rgba(255,255,255,.15)}
+.copy{border-top:1px solid rgba(255,255,255,.18);margin-top:24px;padding-top:16px;font-size:12.5px;opacity:.8;display:flex;gap:18px;justify-content:center}
+
+/* ── floating dock ── */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:38;background:rgba(255,255,255,.98);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);box-shadow:0 -8px 28px rgba(22,23,74,.12);transform:translateY(110%);transition:transform .22s ease}
+.dock.on{transform:none}
+.dock .wrap{display:flex;align-items:center;gap:18px;padding:11px 22px}
+.dock .pic{width:44px;height:44px;border-radius:11px;background:var(--wash);display:grid;place-items:center;color:var(--brand);flex:0 0 auto}
+.dock .name{font-size:14px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dock .name small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.dock .pr{margin-left:auto;text-align:right}
+.dock .pr b{font-size:20px;letter-spacing:-.02em;display:block;line-height:1.15}
+.dock .pr small{font-size:11.5px;color:var(--muted)}
+.dock .btn{width:auto;padding:12px 24px}
+
+/* ── modal, toasts ── */
+.scrim{position:fixed;inset:0;background:rgba(22,23,74,.4);opacity:0;pointer-events:none;transition:opacity .2s;z-index:60}
+.scrim.on{opacity:1;pointer-events:auto}
+.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%) scale(.99);width:min(620px,92vw);max-height:86vh;background:#fff;
+  border-radius:20px;z-index:65;box-shadow:var(--shadow-lg);display:none;flex-direction:column}
+.modal.on{display:flex;transform:translate(-50%,-50%)}
+.modal-h{display:flex;align-items:center;gap:12px;padding:17px 22px;border-bottom:1px solid var(--line)}
+.modal-h b{font-size:17px;flex:1}
+.modal-b{padding:18px 22px;overflow:auto}
+.modal-f{padding:14px 22px;border-top:1px solid var(--line);display:flex;gap:10px}
+.modal-f .btn{flex:1}
+.x{background:none;border:0;font-size:22px;line-height:1;color:var(--muted);width:36px;height:36px;border-radius:10px}
+.x:hover{background:var(--brand-50);color:var(--brand)}
+.tl{display:flex;gap:12px;padding-bottom:14px;position:relative}
+.tl:last-child{padding-bottom:0}
+.tl:before{content:"";position:absolute;left:11px;top:24px;bottom:0;width:2px;background:var(--line)}
+.tl:last-child:before{display:none}
+.tl i{width:24px;height:24px;border-radius:50%;background:var(--line);color:var(--muted);display:grid;place-items:center;flex:0 0 auto;font-style:normal;z-index:1}
+.tl.on i{background:var(--go);color:#fff}
+.tl b{display:block;font-size:14px}
+.tl small{color:var(--muted);font-size:12.5px}
+.toasts{position:fixed;right:20px;bottom:96px;z-index:70;display:grid;gap:10px;max-width:330px}
+.toast{background:var(--ink);color:#fff;padding:12px 15px;border-radius:12px;font-size:13.5px;box-shadow:var(--shadow-lg)}
+.toast.go{background:#0B6B3A}
+.note-strip{background:var(--brand-50);border:1px solid #D9DAF7;border-radius:var(--radius);padding:11px 14px;font-size:13px;
+  color:var(--ink-soft);display:flex;gap:10px;margin:16px 0 0}
+.note-strip b{color:var(--ink)}
+.wa-fab{position:fixed;right:22px;bottom:104px;width:52px;height:52px;border-radius:50%;background:#25D366;color:#fff;border:0;
+  display:grid;place-items:center;box-shadow:var(--shadow-md);z-index:37}
+
+@media (max-width:1180px){
+  .grid{grid-template-columns:minmax(0,320px) minmax(0,1fr)}
+  .col-buy{grid-column:1/-1}
+  .col-buy .sticky{position:static}
+  .contacts{display:none}
+}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr;gap:22px}
+  .searchgroup{order:3;flex-basis:100%;max-width:none}
+  .catsel{display:none}
+  .benefits .cols,.news .cols,.foot .cols{grid-template-columns:1fr;gap:20px}
+  .optrow{grid-template-columns:1fr;gap:18px}
+  h1{font-size:22px}
+  .features h2{font-size:22px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ── promo ── -->
+<div class="promo" id="promo"><div class="wrap">
+  <span>SHOP AND <b>SAVE BIG</b> ON LATEST PRODUCT</span>
+  <span class="chip">STARTING FROM <b>€55</b></span>
+  <span>UP TO <span class="off">30% OFF</span></span>
+  <button class="x" id="promo-x" aria-label="Close offer bar">×</button>
+</div></div>
+
+<!-- ── header ── -->
+<header class="head">
+  <div class="wrap">
+    <div class="head-top">
+      <button class="logo" data-note="Home"><i><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></i>FixMyPC.ie</button>
+      <div class="searchgroup">
+        <select class="catsel" id="catsel" aria-label="Search in category"></select>
+        <div class="searchbox">
+          <input id="q" placeholder="Search here..." aria-label="Search">
+          <button id="q-go" aria-label="Search"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+        </div>
+      </div>
+      <div class="head-acts">
+        <button class="lang" data-note="Language: English">English <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg></button>
+        <button class="icon-btn" data-note="Basket" aria-label="Basket"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 7h16l-1.4 11.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8Z"/><path d="M9 7V5.5a3 3 0 0 1 6 0V7"/></svg><span class="n" id="cart-n">1</span></button>
+        <button class="icon-btn" data-note="Wishlist" aria-label="Wishlist"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.4-7-9.4A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.6c0 5-7 9.4-7 9.4Z"/></svg></button>
+        <button class="icon-btn" data-note="Account" aria-label="Account"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></button>
+      </div>
+    </div>
+    <div class="navrow" id="navrow"></div>
+  </div>
+</header>
+
+<!-- ── breadcrumb ── -->
+<div class="crumbbar"><div class="wrap"><div class="crumb">
+  <button data-note="Home">Home</button><span>›</span>
+  <button data-note="Laptops">Laptops</button><span>›</span>
+  <b>DELL Latitude 3520</b>
+</div></div></div>
+
+<div class="wrap">
+  <div class="note-strip">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:0 0 auto;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+    <div><b>Prototype v3.</b> Every element from the live page is kept. The machine still sells as specified — the configurator is optional, and the buy box follows you down the page.</div>
+  </div>
+
+  <div class="grid">
+    <!-- ── gallery + left accordions ── -->
+    <div>
+      <div class="shot" id="shot"></div>
+      <p class="zoomhint" id="zoomhint">Click the image to zoom in</p>
+      <div class="thumbrow">
+        <button class="arrow" id="th-prev" aria-label="Previous image"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18 9 12l6-6"/></svg></button>
+        <div class="thumbs" id="thumbs"></div>
+        <button class="arrow" id="th-next" aria-label="Next image"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m9 6 6 6-6 6"/></svg></button>
+      </div>
+
+      <div style="margin-top:20px" id="laccs"></div>
+    </div>
+
+    <!-- ── main column ── -->
+    <div>
+      <h1>DELL Latitude 3520</h1>
+      <p class="subline" id="variant-line">None &nbsp; SKU: <b>dell-lat</b></p>
+      <div class="meta">
+        <span class="stars">★★★★<span style="color:var(--line-strong)">★</span></span>
+        <span id="review-count">12 Reviews</span>
+        <span class="pill stock">In Stock</span>
+        <span class="pill sku">4 units in Kilcock</span>
+      </div>
+
+      <div class="optrow">
+        <div>
+          <h3>Addons</h3>
+          <div class="addons" id="addons"></div>
+        </div>
+        <div>
+          <h3>Colour <span class="swname" id="colour-name">· Graphite</span></h3>
+          <div class="swatches" id="swatches"></div>
+        </div>
+      </div>
+
+      <ul class="speclist" id="speclist"></ul>
+
+      <!-- optional configurator -->
+      <button class="cust-open" id="cust-open">
+        <i><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></i>
+        <span><b id="cust-open-t">Need it different? Customise this machine</b>
+          <small id="cust-open-s">Memory, storage, Windows edition, licences, warranty and workshop services</small></span>
+        <span class="cta" id="cust-open-cta">Customise</span>
+      </button>
+
+      <div class="cust" id="cust">
+        <div class="cust-h"><b>Customise your machine</b><span class="changes" id="cust-changes">No changes yet</span>
+          <button class="close" id="cust-close">Done</button></div>
+        <div class="tabs" id="tabs"></div>
+        <div class="pane" id="pane"></div>
+        <div class="pane-f">
+          <button class="btn btn-ghost btn-sm" id="reset" style="border:0;background:none;color:var(--muted)">Reset to the standard build</button>
+          <span class="nav">
+            <button class="btn btn-ghost btn-sm" id="prev-tab">Back</button>
+            <button class="btn btn-ink btn-sm" id="next-tab">Next</button>
+          </span>
+        </div>
+      </div>
+
+      <!-- frequently bought together -->
+      <div class="fbt">
+        <h3>Frequently bought together</h3>
+        <div class="fbt-top">
+          <span class="fbt-pic" id="fbt-pic"></span>
+          <span class="fbt-total"><span>Total Price:</span><b id="fbt-total">€689.99</b></span>
+          <button class="btn btn-ink" style="width:auto;padding:13px 26px" id="fbt-add">Add to basket</button>
+        </div>
+        <div id="fbt-rows"></div>
+      </div>
+    </div>
+
+    <!-- ── buy box ── -->
+    <div class="col-buy"><div class="sticky">
+      <aside class="buybox">
+        <div class="bb-price">
+          <div class="row"><span class="big" id="bb-big">€689.99</span><s id="bb-was">€789.99</s></div>
+          <p class="bb-ship" id="bb-ship">+ €6.50 shipping · free over €75</p>
+        </div>
+        <button class="bb-details" id="bb-details">Details <span class="cv"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg></span><span style="margin-left:auto;font-weight:600;color:var(--muted);font-size:12.5px" id="bb-detail-count">Standard build</span></button>
+        <div class="bb-lines" id="bb-lines"></div>
+
+        <div class="bb-qty">Quantity
+          <span class="stepper"><button id="q-minus" aria-label="Fewer">−</button><span id="qty">1</span><button id="q-plus" aria-label="More">+</button></span>
+        </div>
+
+        <div class="bb-acts">
+          <button class="btn btn-ink" id="add-cart">Add to cart</button>
+          <button class="btn btn-grey" id="buy-now">Buy now</button>
+        </div>
+
+        <div class="bb-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> Secure transaction</div>
+        <p class="bb-arrive" id="bb-arrive">Arrives: <b>Sunday, 23 August</b></p>
+
+        <div class="bb-acts" style="padding-top:12px">
+          <button class="btn btn-go" id="wishlist">Add to wishlist</button>
+        </div>
+
+        <div class="bb-share">Share:
+          <button class="share-btn share-fb" data-note="Shared to Facebook" aria-label="Share on Facebook"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-8h2.7l.4-3h-3.1V8.2c0-.9.3-1.5 1.5-1.5h1.7V4.1c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3V10H7.3v3h2.7v8z"/></svg></button>
+          <button class="share-btn share-pin" data-note="Saved to Pinterest" aria-label="Share on Pinterest"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 0 0-3.3 17.4c-.1-.7-.1-1.8.1-2.6l1-4.4s-.3-.5-.3-1.3c0-1.2.7-2.1 1.6-2.1.7 0 1.1.5 1.1 1.2 0 .8-.5 1.9-.7 3-.2.9.4 1.6 1.3 1.6 1.6 0 2.8-1.7 2.8-4.1 0-2.1-1.5-3.6-3.7-3.6-2.5 0-4 1.9-4 3.9 0 .8.3 1.6.7 2.1l-.3 1.1c0 .2-.2.2-.3.1-1-.5-1.6-2-1.6-3.2 0-2.6 1.9-5 5.5-5 2.9 0 5.1 2 5.1 4.8 0 2.9-1.8 5.2-4.3 5.2-.8 0-1.6-.4-1.9-.9l-.5 2c-.2.7-.7 1.6-1 2.2A9 9 0 1 0 12 3Z"/></svg></button>
+          <button class="share-btn share-tw" data-note="Shared to X" aria-label="Share on X"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 3h3l-6.6 7.6L21.8 21h-6l-4.7-6.1L5.6 21h-3l7-8.1L2.5 3h6.2l4.3 5.6zm-1 16h1.7L7.6 4.7H5.8z"/></svg></button>
+        </div>
+
+        <div class="bb-lead"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5l3 2"/></svg>
+          <div id="bb-lead">Ready to ship tomorrow. Free collection in Kilcock takes a day off.</div></div>
+      </aside>
+    </div></div>
+  </div>
+</div>
+
+<!-- ── benefits band ── -->
+<section class="benefits"><div class="wrap"><div class="cols">
+  <div><i><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17.5" cy="18" r="1.8"/></svg></i>
+    <b>Quick delivery and pickups</b><p>An Post next day for €6.50, free over €75, or collect free in Kilcock.</p></div>
+  <div><i><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3.5 5 6.5v5c0 4 3 7.2 7 8 4-.8 7-4 7-8v-5Z"/><path d="m9.5 12 1.8 1.8 3.4-3.6"/></svg></i>
+    <b>Secure payments</b><p>Card payments handled by SumUp. Nothing card-related touches our servers.</p></div>
+  <div><i><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5Z"/><path d="M12 20v-7l9-4.5"/></svg></i>
+    <b>Warranty and returns</b><p>12-month warranty handled in Kilcock, and 14-day returns on unopened items.</p></div>
+</div></div></section>
+
+<!-- ── features ── -->
+<section class="features"><div class="wrap">
+  <h2>DELL Latitude 3520 Features</h2>
+  <p><b>Dell Latitude 3520</b> is a dependable 15.6-inch business laptop built for everyday productivity and professional use. Reliable performance, a durable chassis and the ports people actually still need make it a sensible choice for office work, remote working and daily computing — and because we build it here, you can have it upgraded, licensed and set up before it reaches your desk.</p>
+</div></section>
+
+<!-- ── recommended ── -->
+<section class="carousel"><div class="wrap">
+  <div class="car-h"><h2>Recommended for you</h2>
+    <span class="page" id="rec-page">Page 1 of 2</span>
+    <span class="arrows"><button data-scroll="rec:-1" aria-label="Previous"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18 9 12l6-6"/></svg></button>
+      <button data-scroll="rec:1" aria-label="Next"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m9 6 6 6-6 6"/></svg></button></span>
+  </div>
+  <div class="track" id="rec"></div>
+</div></section>
+
+<section class="carousel" style="padding-top:0"><div class="wrap">
+  <div class="car-h"><h2>People who viewed this item also viewed</h2>
+    <span class="page">Page 1 of 1</span>
+    <span class="arrows"><button data-scroll="viewed:-1" aria-label="Previous"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18 9 12l6-6"/></svg></button>
+      <button data-scroll="viewed:1" aria-label="Next"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m9 6 6 6-6 6"/></svg></button></span>
+  </div>
+  <div class="track" id="viewed"></div>
+</div></section>
+
+<!-- ── newsletter ── -->
+<section class="news"><div class="wrap"><div class="cols">
+  <div><h2>Free Monthly Newsletter</h2>
+    <p>All the latest news, plus tips and tricks to keep your devices safe and secure. We never spam, and you can unsubscribe in one click.</p></div>
+  <div class="form">
+    <input id="news-email" placeholder="Your email" aria-label="Your email">
+    <button id="news-go">Subscribe</button>
+  </div>
+</div></div></section>
+
+<!-- ── footer ── -->
+<footer class="foot"><div class="wrap">
+  <div class="cols">
+    <div>
+      <div class="logo-f"><i><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></i>FixMyPC.ie</div>
+      <b class="big">Fanatic Customer Service.</b>
+      <span class="open">Open 7 days</span>
+      <p>We aim to get your device back within 24 hours. Main Street, Kilcock, Co. Kildare.</p>
+    </div>
+    <div><u>About</u>
+      <button class="link" data-note="Refund policy">Refund Policy</button>
+      <button class="link" data-note="Privacy policy">Privacy Policy</button>
+      <button class="link" data-note="Help centre">Help</button>
+      <button class="link" data-note="Sitemap">Sitemap</button></div>
+    <div><u>Services</u>
+      <button class="link" data-note="About FixMyPC">About</button>
+      <button class="link" data-note="FAQ">Faq</button>
+      <button class="link" data-note="Contact: 01 504 7000">Contact</button>
+      <button class="link" data-note="Trade counter">Trade accounts</button></div>
+    <div><u>Payment</u>
+      <div class="paylogos"><span>PayPal</span><span>Mastercard</span><span>VISA</span><span>AMEX</span><span>Discover</span></div>
+      <u>Social</u>
+      <div class="social">
+        <button data-note="Instagram" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></button>
+        <button data-note="Facebook" aria-label="Facebook"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-8h2.7l.4-3h-3.1V8.2c0-.9.3-1.5 1.5-1.5h1.7V4.1c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3V10H7.3v3h2.7v8z"/></svg></button>
+        <button data-note="X" aria-label="X"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 3h3l-6.6 7.6L21.8 21h-6l-4.7-6.1L5.6 21h-3l7-8.1L2.5 3h6.2l4.3 5.6zm-1 16h1.7L7.6 4.7H5.8z"/></svg></button>
+        <button data-note="LinkedIn" aria-label="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.9 8.5H3.7V21h3.2zM5.3 3a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8ZM21 13.9c0-3.4-1.8-5-4.3-5-2 0-2.9 1.1-3.4 1.9V8.5H10V21h3.3v-6.9c0-1.5.9-2.3 2-2.3 1 0 1.9.6 1.9 2.2V21H21Z"/></svg></button>
+      </div></div>
+  </div>
+  <div class="copy"><span>© 2026 FixMyPc. All Rights Reserved</span><span>Designed by excytech</span></div>
+</div></footer>
+
+<!-- ── floating dock ── -->
+<div class="dock" id="dock"><div class="wrap">
+  <span class="pic" id="dock-pic"></span>
+  <span class="name">DELL Latitude 3520<small id="dock-sub">Standard build</small></span>
+  <span class="pr"><b id="dock-total">€689.99</b><small id="dock-lead">Ready to ship tomorrow</small></span>
+  <button class="btn btn-ghost btn-sm" id="dock-cust">Customise</button>
+  <button class="btn btn-ink btn-sm" id="dock-add">Add to cart</button>
+</div></div>
+
+<button class="wa-fab" data-note="WhatsApp 087 452 3344" aria-label="WhatsApp us">
+  <svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7L7 20.4A10 10 0 1 0 12 2Zm5.6 14c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.6-.1a12 12 0 0 1-5.9-5.2c-.4-.7-.7-1.5-.7-2.2 0-.8.4-1.4.7-1.7.3-.3.6-.3.8-.3h.5c.2 0 .4 0 .6.5l.8 1.9c.1.2 0 .4-.1.5l-.4.5c-.1.2-.3.3-.1.6.4.7.9 1.3 1.5 1.8.6.5 1.1.7 1.4.8.2.1.4.1.5-.1l.7-.8c.2-.2.3-.2.5-.1l1.8.9c.2.1.4.2.4.3.1.1.1.5-.1 1Z"/></svg>
+</button>
+
+<div class="scrim" id="scrim"></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-t">
+  <div class="modal-h"><b id="modal-t">Added to your cart</b><button class="x" id="modal-x" aria-label="Close">×</button></div>
+  <div class="modal-b" id="modal-b"></div>
+  <div class="modal-f">
+    <button class="btn btn-ghost" id="modal-keep">Keep looking</button>
+    <button class="btn btn-go" id="modal-checkout">Go to checkout</button>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function money(n){ return '€' + n.toFixed(2); }
+  function toast(m, k){
+    var t = document.createElement('div'); t.className = 'toast' + (k ? ' ' + k : ''); t.textContent = m;
+    $('toasts').appendChild(t); setTimeout(function(){ t.remove(); }, 2700);
+  }
+  function svg(d, size, sw){
+    return '<svg width="' + (size || 18) + '" height="' + (size || 18) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 1.7) + '" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+  }
+  var D = {
+    laptop:'<rect x="3" y="5" width="18" height="11" rx="1.8"/><path d="M2 20h20"/>',
+    chip:'<rect x="7" y="7" width="10" height="10" rx="1.6"/><path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/>',
+    disk:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h6M7 13h10"/>',
+    win:'<path d="M4 6.5 11 5.5v6H4ZM13 5.2 20 4v7.5h-7ZM4 12.5h7v6L4 17.5ZM13 12.5h7V20l-7-1.2Z"/>',
+    shield:'<path d="M12 3.5 5 6.5v5c0 4 3 7.2 7 8 4-.8 7-4 7-8v-5Z"/>',
+    tools:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-8 8l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 8-8l-3.8 3.8Z"/>',
+    cable:'<path d="M4 8v6a4 4 0 0 0 8 0V9a3 3 0 0 1 6 0v7"/><path d="M2.5 5.5h3M18.5 19.5h3"/>',
+    bag:'<path d="M4 7h16l-1.4 11.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8Z"/><path d="M9 7V5.5a3 3 0 0 1 6 0V7"/>',
+    mouse:'<rect x="8" y="3" width="8" height="18" rx="4"/><path d="M12 7v3"/>',
+    truck:'<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="17.5" cy="18" r="1.7"/>',
+    clock:'<circle cx="12" cy="12" r="9"/><path d="M12 8v5l3 2"/>',
+    check:'<path d="M20 6 9 17l-5-5"/>',
+    box:'<path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5Z"/><path d="m3 8.5 9 4.5 9-4.5M12 13v7"/>',
+    screen:'<rect x="2.5" y="4" width="19" height="12" rx="2"/><path d="M9 20h6M12 16v4"/>',
+    mobile:'<rect x="6.5" y="2.5" width="11" height="19" rx="2.4"/><path d="M10.5 18.5h3"/>',
+    audio:'<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.6"/><rect x="17" y="14" width="4" height="6" rx="1.6"/>',
+    fire:'<path d="M12 3s4 4.2 4 8a4 4 0 0 1-8 0c0-1.4.6-2.6 1.2-3.4C9.8 9 11 10 11 11c1-1 1-4 1-8Z"/>',
+    tag:'<path d="M20.6 12.4 12.4 20.6a2 2 0 0 1-2.8 0l-6.2-6.2a2 2 0 0 1-.6-1.6l.4-5.6a2 2 0 0 1 1.8-1.8l5.6-.4a2 2 0 0 1 1.6.6l6.4 6.4a2 2 0 0 1 0 2.4Z"/><path d="M8.5 8.5h.01"/>'
+  };
+
+  /* ══════════════ nav + search ══════════════ */
+  var CATS = ['Mobile','Computer','Storage','Accessories','Audio','Chargers','Repair parts','Laptops','Tablets','Gaming','Refurbished','Software','Services','Clearance'];
+  $('catsel').innerHTML = '<option>All Categories</option>' + CATS.map(function(c){ return '<option>' + esc(c) + '</option>'; }).join('');
+  $('navrow').innerHTML =
+    [['Mobile', D.mobile], ['Computer', D.laptop], ['Storage', D.disk], ['Accessories', D.cable], ['Audio', D.audio]].map(function(c){
+      return '<button class="navpill" data-note="' + c[0] + ' category"><i>' + svg(c[1], 16) + '</i>' + c[0] + '</button>';
+    }).join('') +
+    '<button class="navmore" data-note="More categories" aria-label="More categories">' + svg('<path d="m9 6 6 6-6 6"/>', 15, 2.4) + '</button>' +
+    '<button class="hot" data-note="Hot deals">' + svg(D.fire, 15, 1.9) + 'Hot Deals</button>' +
+    '<button class="clear" data-note="Clearance">' + svg(D.tag, 15, 1.9) + 'Clearance</button>' +
+    '<span class="contacts">' +
+      '<button data-note="support@fixmypc.ie">' + svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>', 15, 1.8) + 'support@fixmypc.ie</button>' +
+      '<span class="sep">|</span>' +
+      '<button data-note="01 504 7000">' + svg('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>', 15, 1.8) + '01 504 7000</button>' +
+      '<span class="sep">|</span>' +
+      '<button class="wa" data-note="WhatsApp 087 452 3344">' + svg('<path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.6-1.2A9 9 0 1 0 12 3Z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5"/>', 15, 1.8) + '087 452 3344</button>' +
+    '</span>';
+  $('q-go').onclick = function(){
+    var v = $('q').value.trim();
+    toast(v ? 'Searching for “' + v + '” in ' + $('catsel').value : 'Type something to search');
+  };
+  $('q').onkeydown = function(e){ if (e.key === 'Enter') $('q-go').click(); };
+  $('promo-x').onclick = function(){ $('promo').remove(); };
+  $('news-go').onclick = function(){
+    var v = $('news-email').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)){ toast('Enter a valid email address'); return; }
+    toast('Subscribed — check your inbox to confirm', 'go'); $('news-email').value = '';
+  };
+
+  /* ══════════════ configuration model ══════════════ */
+  var BASE = {name:'DELL Latitude 3520 — 15.6" business laptop', price:689.99, was:789.99, lead:1};
+  var GROUPS = [
+    {id:'ram', title:'Memory', help:'One slot is free, so an upgrade sits alongside the module already fitted. Fitted and stress-tested here.',
+     opts:[{id:'8', label:'8GB DDR4', note:'Standard build', delta:0, lead:0},
+           {id:'16', label:'16GB DDR4', note:'Comfortable for 20+ tabs and Teams', delta:45, lead:1},
+           {id:'32', label:'32GB DDR4', note:'Virtual machines, CAD, heavy spreadsheets', delta:95, lead:1}]},
+    {id:'storage', title:'Storage', help:'Bigger drives are cloned from the original, so Windows and your licence come across untouched.',
+     opts:[{id:'256', label:'256GB NVMe', note:'Standard build', delta:0, lead:0},
+           {id:'512', label:'512GB NVMe', note:'Original drive returned to you', delta:40, lead:1},
+           {id:'1tb', label:'1TB NVMe', note:'Best value per gigabyte', delta:75, lead:1},
+           {id:'2tb', label:'2TB NVMe', note:'Media libraries and local backups', delta:145, lead:2}]},
+    {id:'os', title:'Windows', help:'Pro adds BitLocker, Remote Desktop and domain join — needed to connect to a work network.',
+     opts:[{id:'home', label:'Windows 11 Home', note:'Standard build', delta:0, lead:0},
+           {id:'pro', label:'Windows 11 Pro', note:'BitLocker, domain join, Remote Desktop', delta:79, lead:0},
+           {id:'proplus', label:'Pro + clean build', note:'No manufacturer software, drivers only', delta:99, lead:1}]},
+    {id:'office', title:'Software', help:'Licences are keyed to your email and installed before the machine leaves us.',
+     opts:[{id:'none', label:'None', note:'Use what you already have', delta:0, lead:0},
+           {id:'m365p', label:'Microsoft 365 Personal', note:'1 year, 1 person, 1TB OneDrive', delta:69, lead:0},
+           {id:'m365b', label:'Microsoft 365 Business Standard', note:'1 year per user, business email', delta:149, lead:0},
+           {id:'free', label:'LibreOffice, set up for you', note:'Free suite, configured and tested', delta:0, lead:0}]},
+    {id:'warranty', title:'Warranty', help:'Extended cover is handled in Kilcock — you deal with us, not a manufacturer helpline.',
+     opts:[{id:'12', label:'1 Year Warranty', note:'Standard build, return to base', delta:0, lead:0},
+           {id:'24', label:'2 Year Warranty', note:'Parts and labour', delta:59, lead:0},
+           {id:'36', label:'3 Year Warranty', note:'Parts and labour', delta:99, lead:0},
+           {id:'adp', label:'3 Year + accidental damage', note:'Drops and spills, one claim a year', delta:189, lead:0}]}
+  ];
+  var SERVICES = [
+    {id:'transfer', label:'Data transfer from your old machine', price:35, lead:1,
+     note:'Documents, photos, browser profiles, email. Free when you buy in-store and bring the old machine.'},
+    {id:'setup', label:'Full setup, updates and accounts', price:25, lead:0, note:'Updates, drivers, printer, Wi-Fi, email signed in and tested.'},
+    {id:'wipe', label:'Secure wipe and recycling of the old device', price:15, lead:0, note:'Three-pass wipe with a certificate, then WEEE recycling.'},
+    {id:'domain', label:'Business profile or domain join', price:45, lead:1, requires:{os:['pro','proplus']},
+     note:'Entra ID or on-prem domain, policy applied, BitLocker key escrowed.'},
+    {id:'onsite', label:'On-site delivery and install', price:75, lead:1, note:'Kildare, Dublin and north Wicklow. Old machine taken away.'},
+    {id:'backup', label:'Backup set up and first restore tested', price:29, lead:0, note:'OneDrive or an external drive, tested in front of you.'}
+  ];
+  var ADDONS_BUY = [
+    {id:'hoco', name:'Hoco UA27 Type-C to HDTV 4K Cable', price:10, was:28, icon:D.cable},
+    {id:'acefast', name:'AceFast C1-10 USB-C to HDTV 4K @60Hz HDMI Cable', price:10, was:29.95, icon:D.cable},
+    {id:'x89', name:'HOCO X89 Wind Type-C to Lightning Cable', price:10, was:15, icon:D.cable},
+    {id:'case', name:'Targus 15.6" business laptop case', price:34.99, was:44.99, icon:D.bag},
+    {id:'mouse', name:'Logitech M240 silent wireless mouse', price:24.99, was:29.99, icon:D.mouse}
+  ];
+  var BUNDLE = {min:2, off:0.10};
+  var TABS = GROUPS.map(function(g){ return {id:g.id, label:g.title, kind:'group'}; })
+    .concat([{id:'services', label:'Services', kind:'services'}, {id:'custom', label:'Custom request', kind:'custom'}]);
+  var DEFAULTS = {ram:'8', storage:'256', os:'home', office:'none', warranty:'12'};
+
+  var pick = {}, svc = {}, addon = {}, custom = '', tab = 'ram', qty = 1, cart = 1, shot = 0, colour = 3, variant = 'None', wish = {};
+  for (var k in DEFAULTS) pick[k] = DEFAULTS[k];
+
+  function group(id){ for (var i = 0; i < GROUPS.length; i++) if (GROUPS[i].id === id) return GROUPS[i]; return null; }
+  function opt(g, o){ var G = group(g); if (!G) return null;
+    for (var i = 0; i < G.opts.length; i++) if (G.opts[i].id === o) return G.opts[i]; return null; }
+  function blocked(s){
+    if (!s.requires) return false;
+    for (var g in s.requires) if (s.requires[g].indexOf(pick[g]) < 0) return true;
+    return false;
+  }
+  function changed(){
+    var n = 0;
+    for (var g in DEFAULTS) if (pick[g] !== DEFAULTS[g]) n++;
+    n += Object.keys(svc).filter(function(x){ return svc[x]; }).length;
+    if (custom) n++;
+    return n;
+  }
+  function machinePrice(){
+    var p = BASE.price;
+    GROUPS.forEach(function(g){ var o = opt(g.id, pick[g.id]); if (o) p += o.delta; });
+    SERVICES.forEach(function(s){ if (svc[s.id]) p += s.price; });
+    return p;
+  }
+  function addonTotal(){
+    var picked = ADDONS_BUY.filter(function(a){ return addon[a.id]; });
+    var raw = picked.reduce(function(t, a){ return t + a.price; }, 0);
+    return picked.length >= BUNDLE.min ? raw * (1 - BUNDLE.off) : raw;
+  }
+  function shipping(){ return svc.onsite ? 0 : (machinePrice() >= 75 ? 0 : 6.50); }
+  function leadDays(){
+    var hw = 0;
+    GROUPS.forEach(function(g){ var o = opt(g.id, pick[g.id]); if (o && o.lead > hw) hw = o.lead; });
+    var extra = 0;
+    SERVICES.forEach(function(s){ if (svc[s.id]) extra += s.lead; });
+    return BASE.lead + hw + extra;
+  }
+  function readyText(){
+    if (custom) return 'Ready once the custom work is quoted and approved';
+    var d = leadDays();
+    return d <= 1 ? 'Ready to ship tomorrow' : 'Ready in ' + d + ' working days';
+  }
+  function arriveText(){
+    var d = leadDays();
+    return ['Saturday, 22 August', 'Sunday, 23 August', 'Monday, 24 August', 'Tuesday, 25 August'][Math.min(d, 3)];
+  }
+  function lines(){
+    var out = [{key:'base', name:'DELL Latitude 3520', note:'Standard build', price:BASE.price, fixed:true}];
+    GROUPS.forEach(function(g){
+      var o = opt(g.id, pick[g.id]);
+      if (o && o.delta > 0) out.push({key:'g:' + g.id, name:o.label, note:g.title + ' upgrade', price:o.delta});
+      else if (g.id === 'office' && o && o.id === 'free') out.push({key:'g:' + g.id, name:o.label, note:'Software', price:0});
+    });
+    SERVICES.forEach(function(s){ if (svc[s.id]) out.push({key:'s:' + s.id, name:s.label, note:'Workshop service', price:s.price}); });
+    if (custom) out.push({key:'custom', name:'Custom work', note:'Quoted before we charge anything', price:0, quote:true});
+    return out;
+  }
+
+  /* ══════════════ gallery ══════════════ */
+  var SHOTS = [D.laptop, D.chip, D.disk, D.bag];
+  function paintGallery(){
+    $('shot').innerHTML = svg(SHOTS[shot], 260, 1.05);
+    $('thumbs').innerHTML = SHOTS.map(function(d, i){
+      return '<button class="thumb' + (i === shot ? ' on' : '') + '" data-shot="' + i + '" aria-label="View image ' + (i + 1) + '">' + svg(d, 26) + '</button>';
+    }).join('');
+    $('dock-pic').innerHTML = svg(D.laptop, 22);
+    $('fbt-pic').innerHTML = svg(D.laptop, 46, 1.2);
+  }
+  $('shot').onclick = function(){ toast('Prototype: full-screen zoom opens here'); };
+  $('th-prev').onclick = function(){ shot = (shot - 1 + SHOTS.length) % SHOTS.length; paintGallery(); };
+  $('th-next').onclick = function(){ shot = (shot + 1) % SHOTS.length; paintGallery(); };
+
+  /* ══════════════ left accordions ══════════════ */
+  function paintLaccs(){
+    var blocks = [
+      ['Reviews', '<p style="margin-top:0"><span style="color:var(--star)">★★★★</span><span style="color:var(--line-strong)">★</span> 4.2 average from 12 verified buyers.</p>' +
+        '<p><b>Declan M.</b> — Solid work machine. The 16GB upgrade was fitted before it shipped and it flies.</p>' +
+        '<p style="margin-bottom:0"><b>Aoife K.</b> — Screen is fine for office work. Battery does about six hours.</p>'],
+      ['Payment Options Available', 'Card payments are processed by SumUp. Nothing card-related is stored on our servers.' +
+        '<div class="paychips"><span class="paychip">Visa</span><span class="paychip">Mastercard</span><span class="paychip">Amex</span>' +
+        '<span class="paychip">PayPal</span><span class="paychip">Apple Pay</span><span class="paychip">Google Pay</span>' +
+        '<span class="paychip">Bank transfer</span><span class="paychip">Trade account</span></div>'],
+      ['Shipping Policy', '<p style="margin-top:0"><b>An Post next day</b> — €6.50, free over €75. Ordered before 2pm on a working day, it ships the same day.</p>' +
+        '<p style="margin-bottom:0"><b>Collect in Kilcock</b> — free, and it takes a day off the build estimate.</p>'],
+      ['Product Details Extra', '<p style="margin-top:0">Ports: 2× USB-A 3.2, USB-C, HDMI, RJ45 ethernet, headset jack, microSD.</p>' +
+        '<p>Weight 1.79kg · 65W USB-C charger included · backlit keyboard · TPM 2.0.</p>' +
+        '<p style="margin-bottom:0">Free data transfer from your old machine when purchasing in-store.</p>']
+    ];
+    $('laccs').innerHTML = blocks.map(function(b, i){
+      return '<div class="lacc' + (i === 0 ? ' on' : '') + '"><button class="lacc-h">' + esc(b[0]) +
+        '<span class="cv"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg></span></button>' +
+        '<div class="lacc-b">' + b[1] + '</div></div>';
+    }).join('');
+    [].forEach.call($('laccs').querySelectorAll('.lacc'), function(a){
+      a.querySelector('.lacc-h').onclick = function(){ a.classList.toggle('on'); };
+    });
+  }
+
+  /* ══════════════ addons + colour + spec bullets ══════════════ */
+  var VARIANTS = ['None', 'With 24" monitor', 'With dock'];
+  var COLOURS = [['Silver','#D9DCE3'],['Ivory','#EFEAE1'],['Sand','#E4D8C3'],['Graphite','#3B3F49']];
+  function paintOptions(){
+    $('addons').innerHTML = VARIANTS.map(function(v){
+      return '<button class="addon' + (variant === v ? ' on' : '') + '" data-variant="' + esc(v) + '">' + esc(v) + '</button>';
+    }).join('');
+    $('swatches').innerHTML = COLOURS.map(function(c, i){
+      return '<button class="sw' + (colour === i ? ' on' : '') + '" data-colour="' + i + '" aria-label="' + esc(c[0]) + '"><i style="background:' + c[1] + '"></i></button>';
+    }).join('');
+    $('colour-name').textContent = '· ' + COLOURS[colour][0];
+    $('variant-line').innerHTML = esc(variant) + ' &nbsp; SKU: <b>dell-lat</b>';
+
+    var rows = [
+      ['Operating System', opt('os', pick.os).label, pick.os !== DEFAULTS.os],
+      ['Processor', 'Intel Core i5-1135G7', false],
+      ['Storage', opt('storage', pick.storage).label, pick.storage !== DEFAULTS.storage],
+      ['RAM', opt('ram', pick.ram).label, pick.ram !== DEFAULTS.ram],
+      ['Warranty', opt('warranty', pick.warranty).label, pick.warranty !== DEFAULTS.warranty]
+    ];
+    if (pick.office !== 'none') rows.push(['Software', opt('office', pick.office).label, true]);
+    rows.push(['Additional', svc.transfer ? 'Data transfer from your old machine, booked' : 'Free data transfer from old machine when purchasing in-store', !!svc.transfer]);
+    $('speclist').innerHTML = rows.map(function(r){
+      return '<li><b>' + esc(r[0]) + '</b> – ' + esc(r[1]) + (r[2] ? ' <span class="up">· upgraded</span>' : '') + '</li>';
+    }).join('');
+  }
+
+  /* ══════════════ configurator ══════════════ */
+  function paintTabs(){
+    $('tabs').innerHTML = TABS.map(function(t){
+      var mark = t.kind === 'group' ? pick[t.id] !== DEFAULTS[t.id]
+        : t.kind === 'services' ? Object.keys(svc).some(function(x){ return svc[x]; })
+        : !!custom;
+      return '<button class="tabbtn' + (tab === t.id ? ' on' : '') + '" data-tab="' + t.id + '">' + esc(t.label) +
+        (mark ? '<span class="dotmark"></span>' : '') + '</button>';
+    }).join('');
+  }
+  function paintPane(){
+    var t = TABS.filter(function(x){ return x.id === tab; })[0], html = '';
+    if (t.kind === 'group'){
+      var g = group(t.id);
+      html = '<p class="help">' + esc(g.help) + '</p><div class="opts">' + g.opts.map(function(o){
+        return '<button class="opt' + (pick[g.id] === o.id ? ' on' : '') + '" data-pick="' + g.id + ':' + o.id + '">' +
+          '<span class="dot"></span><span class="t"><b>' + esc(o.label) + '</b><small>' + esc(o.note) + '</small>' +
+          (o.lead ? '<span class="lead">+' + o.lead + ' day' + (o.lead > 1 ? 's' : '') + ' in the workshop</span>' : '') + '</span>' +
+          '<span class="pr' + (o.delta ? '' : ' inc') + '">' + (o.delta ? '+' + money(o.delta) : 'Included') + '</span></button>';
+      }).join('') + '</div>';
+    } else if (t.kind === 'services'){
+      html = '<p class="help">Work we do before the machine goes out. Pick as many as you need — they run alongside the build where they can.</p><div class="opts">' +
+        SERVICES.map(function(s){
+          var no = blocked(s);
+          return '<button class="opt check' + (svc[s.id] ? ' on' : '') + '" data-svc="' + s.id + '"' + (no ? ' disabled' : '') + '>' +
+            '<span class="dot"></span><span class="t"><b>' + esc(s.label) + '</b><small>' + esc(s.note) + '</small>' +
+            (no ? '<span class="lead">Needs Windows 11 Pro</span>' : (s.lead ? '<span class="lead">+' + s.lead + ' day</span>' : '')) +
+            '</span><span class="pr">+' + money(s.price) + '</span></button>';
+        }).join('') + '</div>';
+    } else {
+      html = '<p class="help">Anything not on the list — imaged to match your other machines, specific software, a keyboard swap, a second drive fitted. An engineer prices it within one working day and nothing is charged until you approve it.</p>' +
+        '<textarea class="control" id="custom-text" placeholder="For example: image this to match our other four Latitudes, join it to the office domain and install Sage.">' + esc(custom) + '</textarea>' +
+        '<div style="margin-top:10px;display:flex;gap:10px;align-items:center">' +
+        '<button class="btn btn-ghost btn-sm" id="custom-add">' + (custom ? 'Update the request' : 'Add this request to the build') + '</button>' +
+        (custom ? '<button class="btn btn-sm" style="background:none;border:0;color:var(--muted);width:auto" id="custom-drop">Remove</button>' : '') + '</div>';
+    }
+    $('pane').innerHTML = html;
+    var i = 0; TABS.forEach(function(x, n){ if (x.id === tab) i = n; });
+    $('next-tab').textContent = i === TABS.length - 1 ? 'Done' : 'Next · ' + TABS[i + 1].label;
+    $('prev-tab').disabled = i === 0;
+    if ($('custom-add')) $('custom-add').onclick = function(){
+      var v = $('custom-text').value.trim();
+      if (v.length < 8){ toast('Tell us a little more so we can price it'); $('custom-text').focus(); return; }
+      custom = v; toast('Added — an engineer prices it within one working day', 'go'); render();
+    };
+    if ($('custom-drop')) $('custom-drop').onclick = function(){ custom = ''; render(); };
+  }
+  function setOpen(v){
+    $('cust').classList.toggle('on', v);
+    $('cust-open').style.display = v ? 'none' : '';
+    if (v){ paintTabs(); paintPane(); $('cust').scrollIntoView({behavior:'smooth', block:'center'}); }
+  }
+  $('cust-open').onclick = function(){ setOpen(true); };
+  $('dock-cust').onclick = function(){ setOpen(true); };
+  $('cust-close').onclick = function(){ setOpen(false); toast(changed() ? changed() + ' change' + (changed() > 1 ? 's' : '') + ' applied' : 'Standard build kept'); };
+  $('prev-tab').onclick = function(){ moveTab(-1); };
+  $('next-tab').onclick = function(){ moveTab(1); };
+  function moveTab(dir){
+    var i = 0; TABS.forEach(function(x, n){ if (x.id === tab) i = n; });
+    var j = i + dir;
+    if (j < 0) return;
+    if (j >= TABS.length){ setOpen(false); toast('That\'s everything — your build is in the buy box'); return; }
+    tab = TABS[j].id; render();
+  }
+  $('reset').onclick = function(){
+    for (var g in DEFAULTS) pick[g] = DEFAULTS[g];
+    svc = {}; custom = '';
+    render(); toast('Back to the standard build');
+  };
+
+  /* ══════════════ frequently bought together ══════════════ */
+  function paintFbt(){
+    var picked = ADDONS_BUY.filter(function(a){ return addon[a.id]; });
+    $('fbt-rows').innerHTML =
+      '<button class="fbt-row on" disabled><span class="dot"></span>' +
+        '<span class="t">This item: <b>DELL Latitude 3520</b>' + (changed() ? ' <span style="color:var(--go);font-weight:700">as configured</span>' : '') + '</span>' +
+        '<span class="pr">' + (machinePrice() > BASE.price ? '<s>' + money(BASE.price) + '</s>' : '<s>' + money(BASE.was) + '</s>') +
+        '<b>' + money(machinePrice()) + '</b></span></button>' +
+      ADDONS_BUY.map(function(a){
+        return '<button class="fbt-row' + (addon[a.id] ? ' on' : '') + '" data-addon="' + a.id + '">' +
+          '<span class="dot"></span><span class="t">' + esc(a.name) + '</span>' +
+          '<span class="pr">' + (a.was > a.price ? '<s>' + money(a.was) + '</s>' : '') + '<b>' + money(a.price) + '</b></span></button>';
+      }).join('') +
+      (picked.length >= BUNDLE.min
+        ? '<p style="margin:10px 0 0;font-size:13px;color:var(--go);font-weight:700">Bundle discount applied — ' + (BUNDLE.off * 100) + '% off the accessories</p>'
+        : (picked.length === 1 ? '<p style="margin:10px 0 0;font-size:13px;color:var(--muted)">Add one more accessory for ' + (BUNDLE.off * 100) + '% off the accessory lines</p>' : ''));
+    $('fbt-total').textContent = money(machinePrice() + addonTotal());
+    $('fbt-add').textContent = 'Add ' + (1 + picked.length) + ' item' + (picked.length ? 's' : '') + ' to basket';
+  }
+  $('fbt-add').onclick = function(){ addToCart(1 + ADDONS_BUY.filter(function(a){ return addon[a.id]; }).length); };
+
+  /* ══════════════ buy box ══════════════ */
+  function paintBuyBox(){
+    var n = changed(), unit = machinePrice(), L = lines();
+    $('bb-big').textContent = money(unit * qty);
+    $('bb-was').style.display = (n || qty > 1) ? 'none' : '';
+    $('bb-was').textContent = money(BASE.was);
+    $('bb-ship').innerHTML = shipping() === 0
+      ? '<span style="color:var(--go);font-weight:700">Free shipping</span> · over €75'
+      : '+ ' + money(shipping()) + ' shipping · free over €75';
+    $('bb-detail-count').textContent = n ? n + ' change' + (n > 1 ? 's' : '') : 'Standard build';
+    $('bb-lines').innerHTML = L.map(function(l){
+      return '<div class="sline"><span class="t"><b>' + esc(l.name) + '</b><small>' + esc(l.note) + '</small></span>' +
+        '<span class="pr' + (l.price === 0 && !l.quote ? ' inc' : '') + '">' +
+          (l.quote ? 'Quote' : (l.price === 0 ? 'Included' : money(l.price))) + '</span>' +
+        (l.fixed ? '' : '<button class="x" data-drop="' + esc(l.key) + '" aria-label="Remove ' + esc(l.name) + '">×</button>') + '</div>';
+    }).join('') +
+      '<div class="sline" style="border-top:1px solid var(--line-strong);margin-top:6px;padding-top:9px">' +
+        '<span class="t"><b>Machine as configured</b><small>×' + qty + ', inc. VAT</small></span><span class="pr">' + money(unit * qty) + '</span></div>';
+    $('bb-arrive').innerHTML = 'Arrives: <b>' + esc(arriveText()) + '</b>';
+    $('bb-lead').textContent = readyText() + '. Free collection in Kilcock takes a day off.';
+    $('qty').textContent = qty;
+    $('dock-total').textContent = money(unit * qty + addonTotal());
+    $('dock-sub').textContent = n ? n + ' change' + (n > 1 ? 's' : '') + ' applied' : 'Standard build';
+    $('dock-lead').textContent = readyText();
+    $('cust-changes').textContent = n ? n + ' change' + (n > 1 ? 's' : '') + ' · ' + money(unit) : 'No changes yet';
+    $('cust-open-cta').textContent = n ? 'Edit build' : 'Customise';
+    $('cust-open-t').textContent = n ? 'Your build · ' + money(unit) : 'Need it different? Customise this machine';
+    $('cust-open-s').textContent = n ? n + ' change' + (n > 1 ? 's' : '') + ' applied — ' + readyText().toLowerCase()
+      : 'Memory, storage, Windows edition, licences, warranty and workshop services';
+  }
+  $('bb-details').onclick = function(){
+    this.classList.toggle('on'); $('bb-lines').classList.toggle('on');
+  };
+  $('q-plus').onclick = function(){ if (qty < 4){ qty++; render(); } else toast('Only 4 in stock'); };
+  $('q-minus').onclick = function(){ if (qty > 1){ qty--; render(); } };
+  $('wishlist').onclick = function(){ toast('Saved to your wishlist', 'go'); };
+
+  /* ══════════════ carousels ══════════════ */
+  var RECS = [
+    ['DELL Latitude 3520', 689.99, 789.99, D.laptop, true, 4, 12],
+    ['HP Pavilion 14-ce3606sa 14" laptop', 659.99, 719.99, D.laptop, true, 4, 5],
+    ['HP Notebook 14-bp060na', 299.99, 349.99, D.laptop, false, 3, 2],
+    ['HP EliteBook 840 G2 refurbished', 259.99, 299.99, D.laptop, true, 4, 8],
+    ['Lenovo ThinkPad T14 i5 16GB', 449.00, 529.00, D.laptop, true, 4, 7]
+  ];
+  var VIEWED = [
+    ['Apple EarPods (USB-C)', 20, 20, D.audio, true, 5, 2],
+    ['HOCO HB35 4-in-1 USB-A hub', 24.95, 29.95, D.cable, true, 4, 4],
+    ['Hoco Type-C male to USB adapter', 16.59, 16.59, D.cable, false, 4, 3],
+    ['BASEUS BA03 audio adapter', 55.95, 55.95, D.audio, true, 4, 6],
+    ['Dell 24" Full HD monitor', 139, 169, D.screen, true, 5, 12]
+  ];
+  function pcard(r, i, key){
+    var off = r[2] > r[1] ? Math.round((1 - r[1] / r[2]) * 100) : 0;
+    var id = key + i;
+    return '<article class="pcard' + (r[4] ? '' : ' out') + '">' +
+      '<div class="pic">' + svg(r[3], 90, 1.2) +
+        (off && r[4] ? '<span class="flag">' + off + '% off</span>' : '') +
+        (!r[4] ? '<span class="flag out">Out of stock</span>' : '') + '</div>' +
+      '<button class="heart' + (wish[id] ? ' on' : '') + '" data-wishcard="' + id + '" aria-label="Save">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="' + (wish[id] ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.9"><path d="M12 20s-7-4.4-7-9.4A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.6c0 5-7 9.4-7 9.4Z"/></svg></button>' +
+      '<div class="b"><h3>' + esc(r[0]) + '</h3>' +
+        '<span class="rr"><span class="stars">' + '★'.repeat(r[5]) + '<span style="color:var(--line-strong)">' + '★'.repeat(5 - r[5]) + '</span></span>(' + r[6] + ' Reviews)</span>' +
+        '<span class="pr"><b>' + money(r[1]) + '</b>' + (off ? '<s>' + money(r[2]) + '</s>' : '') + '</span></div>' +
+      (r[4] ? '<div class="act"><button class="btn btn-ghost btn-sm" style="width:100%" data-note="' + esc(r[0]) + ' added">Add to cart</button></div>'
+            : '<span class="oos">Out of stock · <button style="background:none;border:0;color:var(--brand);font:inherit;font-weight:700" data-note="We\'ll email you when it lands">Notify me</button></span>') +
+    '</article>';
+  }
+  function paintCarousels(){
+    $('rec').innerHTML = RECS.map(function(r, i){ return pcard(r, i, 'r'); }).join('');
+    $('viewed').innerHTML = VIEWED.map(function(r, i){ return pcard(r, i, 'v'); }).join('');
+  }
+  document.addEventListener('click', function(e){
+    var s = e.target.closest('[data-scroll]');
+    if (s){
+      var parts = s.getAttribute('data-scroll').split(':');
+      var el = $(parts[0]);
+      el.scrollBy({left:(+parts[1]) * 280, behavior:'smooth'});
+      return;
+    }
+    var w = e.target.closest('[data-wishcard]');
+    if (w){ var id = w.getAttribute('data-wishcard'); wish[id] = !wish[id]; paintCarousels(); toast(wish[id] ? 'Saved to wishlist' : 'Removed from wishlist'); return; }
+  });
+
+  /* ══════════════ shared interactions ══════════════ */
+  document.addEventListener('click', function(e){
+    var sh = e.target.closest('[data-shot]');
+    if (sh){ shot = +sh.getAttribute('data-shot'); paintGallery(); return; }
+    var v = e.target.closest('[data-variant]');
+    if (v){ variant = v.getAttribute('data-variant'); paintOptions(); toast(variant === 'None' ? 'No addon selected' : variant + ' selected'); return; }
+    var c = e.target.closest('[data-colour]');
+    if (c){ colour = +c.getAttribute('data-colour'); paintOptions(); return; }
+    var t = e.target.closest('[data-tab]');
+    if (t){ tab = t.getAttribute('data-tab'); render(); return; }
+    var p = e.target.closest('[data-pick]');
+    if (p){
+      var parts = p.getAttribute('data-pick').split(':');
+      pick[parts[0]] = parts[1];
+      SERVICES.forEach(function(s){ if (svc[s.id] && blocked(s)){ svc[s.id] = false; toast(s.label + ' removed — it needs Windows 11 Pro'); } });
+      render(); return;
+    }
+    var sv = e.target.closest('[data-svc]');
+    if (sv && !sv.disabled){ var sid = sv.getAttribute('data-svc'); svc[sid] = !svc[sid]; render(); return; }
+    var a = e.target.closest('[data-addon]');
+    if (a){ var aid = a.getAttribute('data-addon'); addon[aid] = !addon[aid]; render(); return; }
+    var d = e.target.closest('[data-drop]');
+    if (d){
+      var k = d.getAttribute('data-drop'), q = k.split(':');
+      if (q[0] === 'g') pick[q[1]] = DEFAULTS[q[1]];
+      else if (q[0] === 's') svc[q[1]] = false;
+      else if (k === 'custom') custom = '';
+      SERVICES.forEach(function(x){ if (svc[x.id] && blocked(x)) svc[x.id] = false; });
+      render(); return;
+    }
+    var n = e.target.closest('[data-note]');
+    if (n) toast(n.getAttribute('data-note'));
+  });
+
+  /* ══════════════ add to cart ══════════════ */
+  function addToCart(items){
+    cart += items || qty; $('cart-n').textContent = cart;
+    var L = lines(), n = changed(), picked = ADDONS_BUY.filter(function(a){ return addon[a.id]; });
+    $('modal-t').textContent = custom ? 'Added — custom work pending a quote' : (n ? 'Your build is in the cart' : 'Added to your cart');
+    $('modal-b').innerHTML =
+      '<p style="margin-top:0;color:var(--muted);font-size:13.5px">Reference <b style="color:var(--ink)">BUILD-4821</b>' +
+        (n ? ' — ' + n + ' change' + (n > 1 ? 's' : '') + ' from the standard build.' : ' — standard build, nothing changed.') + '</p>' +
+      '<div style="border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:18px">' +
+        L.map(function(l){
+          return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:4px 0">' +
+            '<span>' + esc(l.name) + '</span><b>' + (l.quote ? 'Quote' : (l.price === 0 ? 'Included' : money(l.price))) + '</b></div>';
+        }).join('') +
+        picked.map(function(a){
+          return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:4px 0;color:var(--ink-soft)">' +
+            '<span>' + esc(a.name) + '</span><b>' + money(a.price) + '</b></div>';
+        }).join('') +
+        (picked.length >= BUNDLE.min ? '<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:4px 0;color:var(--go);font-weight:700">' +
+          '<span>Bundle discount</span><span>−' + money(picked.reduce(function(t, a){ return t + a.price; }, 0) * BUNDLE.off) + '</span></div>' : '') +
+        '<div style="display:flex;justify-content:space-between;border-top:1px solid var(--line-strong);margin-top:9px;padding-top:9px;font-size:16px;font-weight:800">' +
+        '<span>Total inc. VAT</span><span>' + money(machinePrice() * qty + addonTotal() + shipping()) + '</span></div></div>' +
+      '<b style="font-size:14px;display:block;margin-bottom:12px">What happens next</b>' +
+      [['Order confirmed', 'As soon as payment clears', 1],
+       ['Built and tested in Kilcock', leadDays() + ' working day' + (leadDays() > 1 ? 's' : ''), 0],
+       [custom ? 'Custom work quoted for approval' : 'Software and licences applied', custom ? 'Within one working day, nothing charged until you agree' : 'With the build', 0],
+       [svc.onsite ? 'Delivered and installed on site' : 'Dispatched or ready to collect', 'Arrives ' + arriveText(), 0]
+      ].map(function(t){
+        return '<div class="tl' + (t[2] ? ' on' : '') + '"><i>' + (t[2] ? '✓' : '') + '</i><div><b>' + esc(t[0]) + '</b><small>' + esc(t[1]) + '</small></div></div>';
+      }).join('');
+    $('modal').classList.add('on'); $('scrim').classList.add('on');
+  }
+  $('add-cart').onclick = function(){ addToCart(qty); };
+  $('dock-add').onclick = function(){ addToCart(qty); };
+  $('buy-now').onclick = function(){ addToCart(qty); };
+  function closeModal(){ $('modal').classList.remove('on'); $('scrim').classList.remove('on'); }
+  $('modal-x').onclick = closeModal; $('scrim').onclick = closeModal; $('modal-keep').onclick = closeModal;
+  $('modal-checkout').onclick = function(){ closeModal(); toast('Prototype: continues to /shop/checkout.php'); };
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeModal(); });
+
+  /* ══════════════ dock ══════════════ */
+  function onScroll(){
+    var box = document.querySelector('.buybox').getBoundingClientRect();
+    $('dock').classList.toggle('on', box.bottom < 90);
+  }
+  window.addEventListener('scroll', onScroll);
+  window.addEventListener('resize', onScroll);
+
+  /* ══════════════ render ══════════════ */
+  function render(){
+    paintOptions();
+    if ($('cust').classList.contains('on')){ paintTabs(); paintPane(); }
+    paintFbt(); paintBuyBox(); onScroll();
+  }
+  paintGallery(); paintLaccs(); paintCarousels(); render();
+})();
+</script>
+</body>
+</html>

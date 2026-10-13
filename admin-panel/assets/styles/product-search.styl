@@ -63,3 +63,42 @@
       &:after
         z-index 1
         opacity .6
+
+/*
+ * Optional per-row notes in the product picker.
+ *
+ * Only rendered when a parent passes ProductSearch a `notes` map; the pages
+ * that do not (bundle deals, clearances, upsell source types) never produce
+ * these elements, so none of this applies to them.
+ */
+.product-search
+  .ps-name
+    display flex
+    flex-direction column
+    gap 2px
+    min-width 0
+
+  .ps-note
+    font-style normal
+    font-size 11.5px
+    line-height 1.3
+    color var(--text-muted, #6B7280)
+
+  /* Already in another flash sale: readable, but not pickable. */
+  .ps-blocked
+    cursor not-allowed
+
+    h5
+    .ps-note
+      opacity .55
+
+  .ps-taken
+    flex-shrink 0
+    white-space nowrap
+    padding 2px 8px
+    border-radius 999px
+    font-size 11px
+    line-height 18px
+    font-weight 650
+    color var(--warning-text, #7A5A00)
+    background var(--warning-bg, #FFF7D6)

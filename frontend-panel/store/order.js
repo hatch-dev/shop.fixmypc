@@ -30,8 +30,28 @@ const actions = {
   updateOrderData({ commit }, payload) {
     commit('UPDATE_ORDERED', payload)
   },
+  /*
+   * The voucher check prices the code against the caller's OWN basket, so it
+   * has to say who is calling. It was the one cart-reading action that passed
+   * null here instead of the bearer.
+   *
+   * axios sent that null as the literal string "null", which the request
+   * interceptor in services/service.js reads as "not signed in" - so it put
+   * the guest token in the body, and the server priced a signed-in
+   * customer's voucher against a guest basket holding nothing. Every code
+   * came back "You have to spend at least <min_spend>", whatever was in the
+   * real basket.
+   *
+   * null is still what a guest sends: that is the value the interceptor keys
+   * on to attach their guest token. token.get() returns false rather than
+   * null when signed out, and the interceptor does not recognise "false".
+   */
   async voucherValidity ({ commit }, {payload, lang}) {
-    const {data} = await Service.voucherValidity(payload, null, lang)
+    const bearer = this.$auth?.loggedIn
+      ? this.$auth.strategy.token.get()
+      : null
+
+    const {data} = await Service.voucherValidity(payload, bearer || null, lang)
     return data
   },
   async getOrderByUser ({ commit }, {payload, lang}) {

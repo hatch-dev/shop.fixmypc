@@ -554,12 +554,10 @@
     "ai": "Resim eklemek",
     "trans": "Ekli PDF'yi e-postaya çevir",
     "dl": "Gönderim için varsayılan konum",
-
     "pos": "POS Sistemi",
     "pm": "POS Yöneticisi",
     "pc": "POS Yapılandırması",
     "po": "POS Siparişleri",
-
     "si": "Alt toplam ({itemCount} öğe)",
     "ttl": "Bu siparişteki toplam tasarruf tutarınız",
     "con": "Onayla",
@@ -595,7 +593,6 @@
     "md": "Bunu varsayılan yap",
     "oi": "Sipariş Kimliği",
     "ofw": "Web sitesinden siparişler",
-
     "pl": "Eklentiler",
     "pls": "Eklenti",
     "ap": "Eklenti ekle",
@@ -609,7 +606,8 @@
     "fil": "Filtre"
   },
   "procurement": {
-    "title" : "Satın alma",
-    "suppliers" : "Tedarikçiler"
+    "title": "Satın alma",
+    "suppliers": "Tedarikçiler",
+    "sourcing": "Tedarik"
   }
 }

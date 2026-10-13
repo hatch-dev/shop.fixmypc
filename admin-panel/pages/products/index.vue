@@ -52,8 +52,11 @@
           @change="applyFilters"
         >
           <option value="">All Status</option>
+          <!-- "Draft" everywhere: the editor badge and the status dropdown in
+               the sidebar both call status 2 a draft, and this list was the
+               only place calling the same thing Private. -->
           <option value="1">Public</option>
-          <option value="2">Private</option>
+          <option value="2">Draft</option>
         </select>
 
         <div class="stock-filters">
@@ -75,24 +78,76 @@
             <span>Out of Stock</span>
           </label>
       </div>
+
+        <!-- Custom grid column picker -->
+        <div class="grid-tool-wrap">
+          <button
+            type="button"
+            class="grid-tool-btn grid-columns-btn"
+            :class="{ 'is-open': showColumnSelector }"
+            @click.stop="toggleColumnSelector"
+          >
+            <i class="fa-solid fa-table-columns" aria-hidden="true"></i>
+            <span>Custom Grid</span>
+            <span class="grid-tool-count">{{ visibleColumns.length }}</span>
+          </button>
+
+          <div
+            v-if="showColumnSelector"
+            class="grid-column-selector"
+            @click.stop
+          >
+            <div class="grid-column-head">
+              <strong>Choose Columns</strong>
+              <span>Pick the fields shown on the product grid. Drag to reorder.</span>
+            </div>
+
+            <div class="grid-column-list">
+              <div
+                v-for="(col, colIndex) in gridColumns"
+                :key="col.key"
+                class="grid-column-option"
+                :class="{ 'is-dragging': draggedColumnIndex === colIndex }"
+                draggable="true"
+                @dragstart="dragColumn(colIndex)"
+                @dragover.prevent
+                @drop="dropColumn(colIndex)"
+              >
+                <label class="grid-column-label">
+                  <input
+                    type="checkbox"
+                    :checked="col.visible"
+                    :disabled="col.locked"
+                    @change="toggleColumn(col)"
+                  />
+                  <span>{{ col.label }}</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="grid-column-actions">
+              <button type="button" class="grid-btn ghost xs" @click="resetColumns">
+                Reset Default
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 </template>
-    
-    <template v-slot:table="{list}">
+
+    <template v-slot:table="{list, from}">
         <tr class="lite-bold">
           <th class="w-50x mx-w-50x">
             <input type="checkbox" @change="checkAll">
           </th>
-          <th>{{ $t('index.title') }}</th>
-          <th>{{ $t('category.status') }}</th>
-          <th>{{ $t('prod.brand') }}</th>
-          <th>{{ $t('error.cat') }}</th>
-          <th>{{ $t('prod.tRule') }}</th>
-          <th>{{ $t('prod.purchased') }}({{ currencyIcon }})</th>
-          <th>{{ $t('prod.selling') }}({{ currencyIcon }})</th>
-          <th>{{ $t('prod.offered') }}({{ currencyIcon }})</th>
-          <th>{{ $t('prod.views') }}</th>
-          <th>{{ $t('category.created') }}</th>
+          <th class="w-50x mx-w-50x">#</th>
+          <th
+            v-for="col in visibleColumns"
+            :key="col.key"
+            :class="['grid-head', 'grid-head--' + col.key]"
+          >
+            {{ col.label }}
+          </th>
           <th>Actions</th>
         </tr>
 
@@ -100,72 +155,101 @@
           <td class="w-50x mx-w-50x">
             <input type="checkbox" :value="value.id" v-model="cbList">
           </td>
-          <td class="product-cell">
-            <nuxt-link
-              class="product-link"
-              :to="`/products/${value.id}`"
-            >
-              <lazy-image
-                class="product-thumb"
-                :lazy-src="getThumbImageURL(value.image)"
-                :alt="value.title"
-              />
-              <span class="product-title">{{ value.title }}</span>
-            </nuxt-link>
-          </td>
+          <td class="w-50x mx-w-50x">{{ from + index }}</td>
+
           <td
-            class="status"
-            :class="{active: value.status == 1 }"
+            v-for="col in visibleColumns"
+            :key="col.key"
+            :class="cellClass(col, value)"
           >
-            <span>{{ getStatus(value.status) }}</span>
-          </td>
-          <td>
-            <nuxt-link
-              v-if="value.brand"
-              class="link"
-              :to="`brands/${value.brand.id}`"
-            >
-              {{ value.brand.title }}
-            </nuxt-link>
-            <span v-else>{{ $t('prod.na') }}</span>
-          </td>
-
-          <td>
-            <span class="product-categories">
-               <nuxt-link
-                 v-for="(data, index) in value.product_categories"
-                 :key="index"
-                 class="link"
-                 :to="`/categories/${data.category.id}`"
-               >
-                {{ data.category.title }}
+            <template v-if="col.key === 'title'">
+              <nuxt-link
+                class="product-link"
+                :to="`/products/${value.id}`"
+              >
+                <lazy-image
+                  class="product-thumb"
+                  :lazy-src="getThumbImageURL(value.image)"
+                  :alt="value.title"
+                />
+                <span class="product-title">{{ value.title }}</span>
               </nuxt-link>
-              <!-- <span v-if="value.product_categories.length > 2" class="muted-more">
-                +{{ value.product_categories.length - 2 }} -->
-              <!-- </span> -->
-            </span>
+            </template>
 
+            <template v-else-if="col.key === 'status'">
+              <span>{{ getStatus(value.status) }}</span>
+            </template>
+
+            <template v-else-if="col.key === 'brand_id'">
+              <nuxt-link
+                v-if="value.brand"
+                class="link"
+                :to="`brands/${value.brand.id}`"
+              >
+                {{ value.brand.title }}
+              </nuxt-link>
+              <span v-else>{{ $t('prod.na') }}</span>
+            </template>
+
+            <template v-else-if="col.key === 'categories'">
+              <span
+                v-if="value.product_categories && value.product_categories.length"
+                class="product-categories"
+              >
+                <span
+                  v-for="(data, catIndex) in value.product_categories"
+                  :key="catIndex"
+                  class="product-category"
+                ><template v-if="catIndex">, </template><nuxt-link
+                    class="link"
+                    :to="`/categories/${data.category.id}`"
+                  >{{ data.category.title }}</nuxt-link></span>
+              </span>
+              <span v-else>{{ $t('prod.na') }}</span>
+            </template>
+
+            <template v-else-if="col.key === 'tax_rule_id'">
+              <nuxt-link
+                v-if="value.tax_rules"
+                class="link"
+                :to="`tax-rules/${value.tax_rules.id}`"
+              >
+                {{ value.tax_rules.title }}
+              </nuxt-link>
+              <span v-else>{{ $t('prod.na') }}</span>
+            </template>
+
+            <template v-else-if="col.key === 'offered'">
+              <span v-if="value.offered">{{ money(value.offered) }}</span>
+            </template>
+
+            <template v-else-if="col.currency">
+              {{ money(value[col.key]) }}
+            </template>
+
+            <template v-else-if="col.key === 'procurement'">
+              <span
+                class="grid-pill"
+                :class="value.procurement == 1 ? 'grid-pill--yes' : 'grid-pill--no'"
+              >
+                {{ value.procurement == 1 ? 'Yes' : 'No' }}
+              </span>
+            </template>
+
+            <template v-else-if="col.key === 'created'">
+              <span class="cell-date">{{ createdDate(value.created) }}</span>
+              <span v-if="createdTime(value.created)" class="cell-time">{{ createdTime(value.created) }}</span>
+            </template>
+
+            <template v-else-if="col.key === 'discount_type'">
+              {{ value.discount_type === 'percentage' ? 'Percentage' : 'Fixed' }}
+            </template>
+
+            <template v-else>
+              {{ value[col.key] }}
+            </template>
           </td>
 
-          <td>
-            <nuxt-link
-              v-if="value.tax_rules"
-              class="link"
-              :to="`tax-rules/${value.tax_rules.id}`"
-            >
-              {{ value.tax_rules.title }}
-            </nuxt-link>
-            <span v-else>{{ $t('prod.na') }}</span>
-          </td>
-          <td>{{ value.purchased }} {{ currencyIcon }}</td>
-          <td>{{ value.selling }} {{ currencyIcon }}</td>
-          <td>
-            <span v-if="value.offered">
-               {{ value.offered }} {{ currencyIcon }}
-            </span>
-          </td>
-          <td>{{ value.views }}</td>
-          <td>{{ value.created }}</td>
           <td class="product-actions">
             <div class="action-dropdown-wrapper">
 
@@ -227,10 +311,11 @@
                 </button>
 
                 <button
+                  v-if="$can('product', 'edit')"
                   class="dropdown-item"
                   @click="handleAction('draft', value.id)"
                 >
-                  Draft
+                  {{ value.status == 1 ? 'Move to Draft' : 'Publish' }}
                 </button>
 
                 <button
@@ -317,6 +402,8 @@
   import LazyImage from "~/components/LazyImage"
   import bulkDelete from "~/mixin/bulkDelete";
 
+  const COLUMN_STORAGE_KEY = 'fmp.products.grid.columns'
+
   export default {
     name: "tax-rule",
     middleware: ['common-middleware', 'auth'],
@@ -342,7 +429,12 @@
         loading: false,
         showEmbedModal: false,
         selectedProductId: null,
-        borderType: 'solid'
+        borderType: 'solid',
+
+        /* ---------- custom grid columns ---------- */
+        gridColumns: this.defaultGridColumns(),
+        showColumnSelector: false,
+        draggedColumnIndex: null
       }
     },
     mixins: [util, bulkDelete],
@@ -379,19 +471,185 @@
       ? 'border:none;'
       : 'border: 2px solid black; border-radius:10px;'
 
-      return `<iframe 
+      return `<iframe
       src="${this.embedUrl}"
       width="320"
       height="450"
       style="${borderStyle}">
     </iframe>`
-    }
+    },
+
+      visibleColumns() {
+        return this.gridColumns.filter(col => col.visible)
+      }
     },
     methods: {
-      closeDropdown() {
+      /* =====================================================
+       *  Custom grid columns
+       * ===================================================== */
+      defaultGridColumns() {
+        return [
+          { key: 'title', label: this.$t('index.title'), visible: true, locked: true },
+          { key: 'slug', label: 'Slug', visible: false },
+          { key: 'status', label: this.$t('category.status'), visible: true },
+          { key: 'brand_id', label: this.$t('prod.brand'), visible: true },
+          { key: 'categories', label: this.$t('error.cat'), visible: true },
+          { key: 'tax_rule_id', label: this.$t('prod.tRule'), visible: true },
+          { key: 'purchased', label: this.$t('prod.purchased'), currency: true, visible: true },
+          { key: 'selling', label: this.$t('prod.selling'), currency: true, visible: true },
+          { key: 'offered', label: this.$t('prod.offered'), currency: true, visible: true },
+          { key: 'discount_type', label: 'Discount Type', visible: false },
+          { key: 'discount_value', label: 'Discount Value', visible: false },
+          { key: 'unit', label: 'Unit', visible: false },
+          { key: 'procurement', label: 'Procurement', visible: false },
+          { key: 'views', label: this.$t('prod.views'), visible: true },
+          { key: 'created', label: this.$t('category.created'), visible: true }
+        ]
+      },
+      toggleColumnSelector() {
+        this.showColumnSelector = !this.showColumnSelector
         this.activeDropdown = null
       },
+      toggleColumn(col) {
+        if (col.locked) return
+        col.visible = !col.visible
+        this.persistColumns()
+      },
+      resetColumns() {
+        this.gridColumns = this.defaultGridColumns()
+        this.persistColumns()
+      },
+      dragColumn(index) {
+        this.draggedColumnIndex = index
+      },
+      dropColumn(index) {
+        if (this.draggedColumnIndex === null || this.draggedColumnIndex === index) {
+          this.draggedColumnIndex = null
+          return
+        }
+        const columns = this.gridColumns.slice()
+        const [dragged] = columns.splice(this.draggedColumnIndex, 1)
+        columns.splice(index, 0, dragged)
+        this.gridColumns = columns
+        this.draggedColumnIndex = null
+        this.persistColumns()
+      },
+      persistColumns() {
+        if (!process.client) return
+        try {
+          window.localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify(
+            this.gridColumns.map(col => ({ key: col.key, visible: col.visible }))
+          ))
+        } catch (e) {
+          /* storage unavailable - column choice simply is not remembered */
+        }
+      },
+      restoreColumns() {
+        if (!process.client) return
+        let saved = null
+        try {
+          saved = JSON.parse(window.localStorage.getItem(COLUMN_STORAGE_KEY))
+        } catch (e) {
+          saved = null
+        }
+        if (!Array.isArray(saved) || !saved.length) return
+
+        const defaults = this.defaultGridColumns()
+        const ordered = []
+
+        saved.forEach(item => {
+          const col = defaults.find(c => c.key === item.key)
+          if (col && !ordered.includes(col)) {
+            col.visible = col.locked ? true : !!item.visible
+            ordered.push(col)
+          }
+        })
+
+        defaults.forEach(col => {
+          if (!ordered.includes(col)) ordered.push(col)
+        })
+
+        this.gridColumns = ordered
+      },
+      /* =====================================================
+       *  Display formatting
+       *
+       *  All of this is presentation. Nothing here re-derives a value from
+       *  the raw record - the API stays exactly as it is.
+       * ===================================================== */
+
+      // A price column reads as a column: same symbol placement, same two
+      // decimals, thousands grouped. Blank stays blank rather than NaN.
+      money(amount) {
+        if (amount === null || amount === undefined || amount === '') return ''
+        const value = parseFloat(amount)
+        if (isNaN(value)) return ''
+        return this.priceFormatting(value, 2)
+      },
+
+      /*
+       * The API sends `created` already converted to the viewer's timezone
+       * and preformatted by Utils::formatDate as `h:i a, d M, y`, e.g.
+       * "06:26 am, 09 Sep, 26". That default is shared by every admin list,
+       * so it is split here rather than changed at the source, and the raw
+       * created_at is deliberately not used - it is still UTC, and reading
+       * it would silently undo the server's timezone conversion.
+       *
+       * Anything that does not match is passed through untouched.
+       */
+      parseCreated(created) {
+        if (!created) return null
+        const parts = String(created).match(
+          /^\s*(\d{1,2}):(\d{2})\s*([ap]m)\s*,\s*(\d{1,2})\s+([A-Za-z]{3,})\s*,\s*(\d{2}|\d{4})\s*$/i
+        )
+        if (!parts) return null
+
+        const year = parts[6].length === 2 ? `20${parts[6]}` : parts[6]
+
+        return {
+          date: `${parts[4].padStart(2, '0')} ${parts[5]} ${year}`,
+          time: `${parts[1].padStart(2, '0')}:${parts[2]} ${parts[3].toLowerCase()}`
+        }
+      },
+      createdDate(created) {
+        const parsed = this.parseCreated(created)
+        return parsed ? parsed.date : (created || '')
+      },
+      createdTime(created) {
+        const parsed = this.parseCreated(created)
+        return parsed ? parsed.time : ''
+      },
+      cellClass(col, product) {
+        const classes = ['grid-cell', 'grid-cell--' + col.key]
+
+        if (col.key === 'title') classes.push('product-cell')
+
+        if (col.key === 'status') {
+          classes.push('status')
+          if (product.status == 1) classes.push('active')
+        }
+
+        return classes
+      },
+
+      /* =====================================================
+       *  Product list behaviour
+       * ===================================================== */
+      closeDropdown(event) {
+        this.activeDropdown = null
+
+        const target = event && event.target
+        if (!target || typeof target.closest !== 'function') {
+          this.showColumnSelector = false
+          return
+        }
+
+        if (!target.closest('.grid-column-selector') && !target.closest('.grid-columns-btn')) {
+          this.showColumnSelector = false
+        }
+      },
       toggleActionDropdown(id) {
+        this.showColumnSelector = false
         this.activeDropdown =
           this.activeDropdown === id
             ? null
@@ -421,23 +679,31 @@
       },
       async duplicateProduct(productId) {
         if (!confirm(this.$t('prod.confirmDuplicate'))) return;
-        
+
         try {
           this.loading = true;
-          const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/';
+          const baseUrl = this.apiBase();
           const response = await this.$axios.post(`${baseUrl}api/admin/products/${productId}/duplicate`);
-          
-          if (response.data) {
-            const duplicateProductId = response.data.id;
-            
-            // Show success message
-            this.showAlert('Product duplicated successfully!');
-            
-            // Redirect to the duplicated product after a short delay
-            setTimeout(() => {
-              this.$router.push(`/products/${duplicateProductId}`);
-            }, 2000);
+
+          /*
+           * A refusal - no product.create, or a vendor reaching for somebody
+           * else's product - answers HTTP 200 carrying the error rather than
+           * throwing, so `if (response.data)` was always true and the redirect
+           * went to /products/undefined.
+           */
+          const duplicateProductId = response.data && response.data.id;
+
+          if (!duplicateProductId) {
+            this.showAlert(response.data?.message || 'You cannot duplicate this product', 'error');
+            return;
           }
+
+          this.showAlert('Product duplicated successfully!');
+
+          // Redirect to the duplicated product after a short delay
+          setTimeout(() => {
+            this.$router.push(`/products/${duplicateProductId}`);
+          }, 2000);
         } catch (error) {
           console.error('Error duplicating product:', error);
           this.showAlert('Error duplicating product', 'error');
@@ -445,7 +711,39 @@
           this.loading = false;
         }
       },
-      
+
+      /*
+       * Publish / unpublish from the list. `itemList` is the page the grid is
+       * showing, so the current status is read from it rather than fetched.
+       */
+      async setProductStatus(productId) {
+        const product = (this.itemList || []).find(p => `${p.id}` === `${productId}`)
+        const next = `${product && product.status}` === '1' ? 2 : 1
+
+        try {
+          this.loading = true
+          const baseUrl = this.apiBase();
+
+          const { data } = await this.$axios.post(
+            `${baseUrl}api/admin/product/update-status`,
+            { id: productId, status: next }
+          )
+
+          if (Number(data.status) !== 200) {
+            this.showAlert(data.message || 'Could not change the status', 'error')
+            return
+          }
+
+          this.showAlert(next === 1 ? 'Product published' : 'Product moved to draft')
+
+          await this.$refs.listPage.fetchingData()
+        } catch (e) {
+          this.showAlert('Could not change the status', 'error')
+        } finally {
+          this.loading = false
+        }
+      },
+
       showAlert(message, type = 'success') {
         if (type === 'success') {
           this.$toast.success(message)
@@ -519,12 +817,21 @@
             this.$refs.listPage.deleteItem(productId)
             break
 
+          /*
+           * There is no /products/:id/seo page and there never was, so this
+           * went straight to the Nuxt error page. The product editor has an
+           * "SEO & Meta" tab; open the editor on it.
+           */
           case 'seo':
-            this.$router.push(`/products/${productId}/seo`)
+            this.$router.push(`/products/${productId}?tab=seo`)
             break
 
+          /*
+           * This used to push the editor -- the same thing Edit and View
+           * already did -- so a menu item called Draft changed nothing.
+           */
           case 'draft':
-            this.$router.push(`/products/${productId}`)
+            this.setProductStatus(productId)
             break
 
           case 'embed':
@@ -537,7 +844,9 @@
       }
     },
     async mounted() {
-      const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/';
+      this.restoreColumns()
+
+      const baseUrl = this.apiBase();
       const response = await this.$axios.get(`${baseUrl}api/admin/product/with-categories`);
       this.categories = response.data.categories;
 
@@ -643,8 +952,12 @@ select.custom-dropdown:focus {
   vertical-align: 1px;
 }
 
+/* The Title column carries the one piece of information the row is looked up
+   by, so it gets a real width instead of an equal share of the table. */
 .product-cell {
-  min-width: 230px;
+  min-width: 300px;
+  width: 26%;
+  text-align: left;
 }
 
 .product-link {
@@ -667,13 +980,15 @@ select.custom-dropdown:focus {
   background: var(--hover-color);
 }
 
+/* No clamp and no ellipsis: a product title is never abbreviated, it wraps
+   onto as many lines as it needs. overflow-wrap catches unbroken strings
+   (long SKUs, model numbers) that would otherwise widen the column. */
 .product-title {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  display: block;
   font-weight: 650;
   line-height: 18px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .product-actions {
@@ -685,13 +1000,33 @@ select.custom-dropdown:focus {
   min-width: 132px;
 }
 
+/* Two categories used to render as adjacent links with nothing between
+   them, so they read as one word ("ComputerAccessories"), and nowrap plus
+   a 190px cap spilled the overflow into the next column rather than
+   clipping it. The comma is a real text node, not generated content, so it
+   survives a copy-paste and is read out with the names. */
 .product-categories {
-  display: inline-block;
-  max-width: 190px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: block;
   text-align: center;
+  line-height: 20px;
+}
+
+
+/* Date on top, time under it in muted type: the date is what the eye is
+   looking for, and neither half has to wrap. */
+.grid-cell--created {
+  white-space: nowrap;
+}
+
+.cell-date {
+  display: block;
+}
+
+.cell-time {
+  display: block;
+  font-size: 11.5px;
+  line-height: 15px;
+  color: var(--text-muted);
 }
 
 .muted-more {
@@ -932,7 +1267,7 @@ select.custom-dropdown:focus {
 .text-danger {
   color: #dc2626;
 }
- 
+
 @media only screen and (max-width:980px) {
 .embed-body {
     flex-direction: column;
@@ -949,5 +1284,182 @@ select.custom-dropdown:focus {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+/* =========================================================
+   CUSTOM GRID COLUMN PICKER
+   ========================================================= */
+
+.grid-tool-wrap {
+  position: relative;
+}
+
+.grid-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 13px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color);
+  background: var(--surface-color);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s ease;
+}
+
+.grid-tool-btn:hover {
+  border-color: var(--primary-color);
+  background: var(--hover-color);
+}
+
+.grid-tool-btn.is-open {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.grid-tool-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  font-size: 11px;
+  background: var(--hover-color);
+  color: var(--text-muted);
+}
+
+.grid-column-selector {
+  position: absolute;
+  right: 0;
+  top: 44px;
+  z-index: 1000;
+  width: 288px;
+  max-width: calc(100vw - 32px);
+  padding: 14px;
+  background: var(--surface-color);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
+  text-align: left;
+}
+
+.grid-column-head strong {
+  display: block;
+  font-size: 14px;
+  color: var(--text-strong);
+}
+
+.grid-column-head span {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.grid-column-list {
+  max-height: 280px;
+  overflow-y: auto;
+  margin: 12px 0 10px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 8px;
+}
+
+.grid-column-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 4px;
+  border-radius: 6px;
+  cursor: grab;
+}
+
+.grid-column-option:hover {
+  background: var(--hover-color);
+}
+
+.grid-column-option.is-dragging {
+  opacity: 0.45;
+}
+
+.grid-column-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: var(--text-color);
+  cursor: pointer;
+  margin: 0;
+}
+
+.grid-column-actions {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border-color);
+  padding-top: 10px;
+}
+
+.grid-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 650;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.grid-btn.xs {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.grid-btn.ghost {
+  background: var(--surface-color);
+  border-color: var(--border-strong);
+  color: var(--text-color);
+}
+
+.grid-btn.ghost:hover {
+  background: var(--hover-color);
+}
+
+.grid-head {
+  white-space: nowrap;
+}
+
+.grid-cell {
+  vertical-align: middle;
+}
+
+.grid-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.grid-pill--yes {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+
+.grid-pill--no {
+  background: rgba(100, 116, 139, 0.14);
+  color: #475569;
 }
 </style>

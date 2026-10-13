@@ -153,10 +153,11 @@
             value: value[0]
           })
         } else if(!this.selectedKey && this.defaultNull){
-          value['0'] = {title: '--------------'}
+          // Under keyName too, or a list keyed by 'name' shows a blank line.
+          value['0'] = {title: '--------------', [this.keyName]: '--------------'}
           this.selectedKeyData = '0'
         } else if(this.defaultNull){
-          value['0'] = {title: '--------------'}
+          value['0'] = {title: '--------------', [this.keyName]: '--------------'}
         }
         this.optionsData = value
       },

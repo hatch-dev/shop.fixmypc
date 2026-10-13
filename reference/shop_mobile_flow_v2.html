@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>shop.fixmypc.ie — full mobile flow</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+/* ============================================================================
+   FixMyPC Shop — full mobile flow v1
+   Home → menu → catalog → filters → search → product → cart → checkout →
+   confirmation → account. One file, no dependencies, no <a> tags.
+   ========================================================================== */
+:root{
+  --ink:#16174A;--ink-soft:#3A3C6E;--brand:#2D2DA0;--brand-700:#22227E;--brand-50:#F1F1FC;
+  --go:#00A24A;--go-700:#00873E;--wash:#F7F7FD;--line:#E8E9F5;--line-strong:#CFD1E8;
+  --muted:#6B7191;--danger:#C8324B;--amber:#B26A00;--star:#F0A500;
+  --radius:14px;--radius-lg:20px;
+  --shadow-sm:0 1px 3px rgba(22,23,74,.07);--shadow-md:0 10px 28px rgba(22,23,74,.12);
+  --shadow-up:0 -6px 24px rgba(22,23,74,.12);
+  --sans:"Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+  --tab-h:64px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#EFEFF6;font-family:var(--sans);color:var(--ink);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:3px solid rgba(45,45,160,.35);outline-offset:2px;border-radius:8px}
+.phone{max-width:402px;margin:0 auto;background:#fff;min-height:100dvh;position:relative;overflow:hidden}
+@media (min-width:760px){
+  body{padding:24px 0}
+  .phone{border-radius:36px;box-shadow:0 30px 80px rgba(22,23,74,.28);height:calc(100dvh - 48px);overflow:hidden;
+    border:1px solid #DCDDEC;transform:translateZ(0)}
+  .scroller{height:100%;overflow-y:auto;overscroll-behavior:contain}
+}
+.scroller{padding-bottom:calc(var(--tab-h) + 20px);background:#fff}
+
+/* ── chrome ── */
+.promo{background:#DDE0FA;font-size:11.5px;font-weight:700;padding:7px 13px;display:flex;align-items:center;gap:8px}
+.promo .chip{background:#fff;border-radius:999px;padding:3px 9px;font-size:11px;white-space:nowrap}
+.promo .off{color:var(--go)}
+.promo button{margin-left:auto;background:none;border:0;color:var(--ink-soft);font-size:15px;line-height:1;padding:0 2px}
+.head{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:9px 10px;min-height:56px}
+.hbtn{width:38px;height:38px;border-radius:11px;border:0;background:none;display:grid;place-items:center;color:var(--ink-soft);position:relative;flex:0 0 auto}
+.hbtn:active{background:var(--brand-50)}
+.hbtn .n{position:absolute;top:2px;right:2px;background:var(--go);color:#fff;font-size:9.5px;font-weight:800;
+  min-width:16px;height:16px;border-radius:999px;display:grid;place-items:center;padding:0 4px}
+.head .mark{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;letter-spacing:-.01em;background:none;border:0;padding:0;color:var(--ink)}
+.head .mark i{width:32px;height:32px;border-radius:9px;background:var(--brand);display:grid;place-items:center;font-style:normal}
+.head .ht{flex:1;min-width:0;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.searchbar{display:flex;align-items:center;gap:9px;border:1px solid var(--line-strong);border-radius:999px;padding:10px 14px;
+  color:var(--muted);font-size:14px;background:#fff;width:100%;text-align:left;margin:12px 14px;width:calc(100% - 28px)}
+
+/* ── tabs ── */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:45;background:rgba(255,255,255,.98);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));height:var(--tab-h)}
+.tab{flex:1;border:0;background:none;display:grid;justify-items:center;gap:3px;color:var(--muted);font-size:10.5px;font-weight:700;position:relative}
+.tab.on{color:var(--brand)}
+.tab .n{position:absolute;top:-2px;right:22%;background:var(--go);color:#fff;font-size:9px;font-weight:800;
+  min-width:15px;height:15px;border-radius:999px;display:grid;place-items:center;padding:0 3px}
+
+/* ── generic ── */
+.pad{padding:0 14px}
+.sec{padding:20px 14px}
+.sec.tint{background:var(--wash)}
+.sec-h{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.sec-h h2{font-size:17px;margin:0;letter-spacing:-.02em}
+.sec-h button{margin-left:auto;background:none;border:0;color:var(--brand);font-weight:700;font-size:13px}
+.sub{font-size:12.5px;color:var(--muted);margin:-6px 0 12px}
+.btn{border:0;border-radius:999px;padding:13px 18px;font-size:15px;font-weight:700;width:100%;transition:.15s}
+.btn-go{background:var(--go);color:#fff;box-shadow:0 6px 16px rgba(0,162,74,.24)}
+.btn-go:active{background:var(--go-700)}
+.btn-ink{background:var(--brand);color:#fff}
+.btn-ink:active{background:var(--brand-700)}
+.btn-ghost{background:#fff;border:1px solid var(--line-strong);color:var(--ink)}
+.btn-sm{padding:9px 14px;font-size:13px;width:auto}
+.btn[disabled]{opacity:.45;box-shadow:none}
+.stars{color:var(--star);letter-spacing:.5px;font-size:12px}
+.dim{color:var(--line-strong)}
+
+/* ── hero ── */
+.hero{position:relative;margin:12px 0 4px}
+.hero-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;padding:0 14px;scrollbar-width:none}
+.hero-track::-webkit-scrollbar{display:none}
+.slide{flex:0 0 calc(100% - 28px);scroll-snap-align:center;border-radius:var(--radius-lg);padding:20px;min-height:158px;
+  display:flex;flex-direction:column;justify-content:flex-end;color:#fff;position:relative;overflow:hidden}
+.slide.a{background:linear-gradient(135deg,#2D2DA0,#6E6EDB)}
+.slide.b{background:linear-gradient(135deg,#0B6B3A,#00A24A)}
+.slide.c{background:linear-gradient(135deg,#3A2170,#8A4BD8)}
+.slide .eyebrow{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.85;margin-bottom:7px}
+.slide b{font-size:20px;line-height:1.2;letter-spacing:-.02em;display:block;margin-bottom:5px;max-width:16ch}
+.slide small{font-size:12.5px;opacity:.85;display:block;margin-bottom:13px;max-width:26ch}
+.slide .cta{background:#fff;color:var(--ink);border:0;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;align-self:flex-start}
+.slide .ghost-art{position:absolute;right:-18px;top:-14px;opacity:.16;color:#fff}
+.dots{display:flex;gap:6px;justify-content:center;margin-top:10px}
+.dot{width:6px;height:6px;border-radius:999px;background:var(--line-strong);border:0;padding:0}
+.dot.on{background:var(--brand);width:18px}
+
+/* ── quick actions ── */
+.quick{display:flex;gap:9px;padding:14px 14px 0;overflow-x:auto;scrollbar-width:none}
+.quick::-webkit-scrollbar{display:none}
+.qa{flex:0 0 auto;display:flex;align-items:center;gap:8px;border:1px solid var(--line-strong);border-radius:999px;
+  background:#fff;padding:9px 14px 9px 10px;font-size:13px;font-weight:600;color:var(--ink-soft)}
+.qa i{width:26px;height:26px;border-radius:8px;background:var(--brand-50);color:var(--brand);display:grid;place-items:center;font-style:normal}
+
+/* ── category grid ── */
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cat{background:none;border:0;padding:0;display:grid;justify-items:center;gap:6px}
+.cat i{width:100%;aspect-ratio:1;border-radius:16px;background:var(--wash);border:1px solid var(--line);color:var(--brand);
+  display:grid;place-items:center;font-style:normal}
+.cat:active i{background:var(--brand-50);border-color:var(--brand)}
+.cat span{font-size:11px;font-weight:600;color:var(--ink-soft);text-align:center;line-height:1.25}
+
+/* ── product cards ── */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rail{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.rail .pcard{flex:0 0 156px;scroll-snap-align:start}
+.pcard{position:relative;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:#fff;display:flex;flex-direction:column;text-align:left}
+.pcard .pic{position:relative;aspect-ratio:1;background:var(--wash);display:grid;place-items:center;color:var(--brand)}
+.pcard .pic svg{opacity:.34;width:52%;height:52%}
+.pcard.out .pic{opacity:.55}
+.pcard .flag{position:absolute;top:8px;left:8px;background:var(--go);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px}
+.pcard .flag.flash{background:var(--amber)}
+.pcard .flag.out{background:var(--ink);opacity:.85}
+.pcard .heart{position:absolute;top:6px;right:6px;width:30px;height:30px;border-radius:50%;background:#fff;border:1px solid var(--line);
+  display:grid;place-items:center;color:var(--muted)}
+.pcard .heart.on{color:var(--danger);border-color:#EFC3CC}
+.pcard .b{padding:10px 11px 12px;display:flex;flex-direction:column;gap:5px;flex:1}
+.pcard .bl{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.pcard .pname{display:block;margin:0;font-size:12.8px;font-weight:600;line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:35px}
+.pcard .rr{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.pcard .pr{display:flex;align-items:baseline;gap:7px;margin-top:auto;padding-top:4px}
+.pcard .pr b{font-size:15px;letter-spacing:-.02em}
+.pcard .pr s{font-size:11.5px;color:var(--muted)}
+.pcard .act{padding:0 11px 11px}
+.pcard .act .btn{padding:9px;font-size:12.5px}
+.oos-note{font-size:11.5px;color:var(--muted);font-weight:700;display:block;padding:0 11px 11px}
+
+/* ── trust ── */
+.trust{display:grid;gap:9px}
+.trow{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);border-radius:var(--radius);padding:12px 13px;background:#fff}
+.trow i{width:32px;height:32px;border-radius:10px;background:var(--brand-50);color:var(--brand);display:grid;place-items:center;flex:0 0 auto;font-style:normal}
+.trow b{display:block;font-size:13.5px}
+.trow small{color:var(--muted);font-size:12px}
+
+/* ── catalog bits ── */
+.filterbar{position:sticky;top:56px;z-index:25;background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);display:flex;gap:9px;padding:10px 14px}
+.fb{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line-strong);border-radius:999px;
+  background:#fff;padding:10px;font-size:13.5px;font-weight:700;color:var(--ink)}
+.fb .n{background:var(--brand);color:#fff;font-size:10.5px;min-width:18px;height:18px;border-radius:999px;display:grid;place-items:center;padding:0 5px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 14px 0;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-strong);background:#fff;
+  border-radius:999px;padding:8px 13px;font-size:13px;font-weight:600;color:var(--ink-soft);white-space:nowrap}
+.chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.chip .n{font-size:11px;font-weight:800;background:var(--wash);border-radius:999px;padding:1px 7px;color:var(--muted)}
+.chip.on .n{background:rgba(255,255,255,.22);color:#fff}
+.applied{display:flex;gap:8px;flex-wrap:wrap;padding:12px 14px 0}
+.ap{display:inline-flex;align-items:center;gap:7px;background:var(--brand-50);border:1px solid #D5D6F5;color:var(--brand);
+  border-radius:999px;padding:5px 8px 5px 12px;font-size:12px;font-weight:700}
+.ap span{width:16px;height:16px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:10px}
+.crumb{display:flex;align-items:center;gap:7px;padding:12px 14px 0;font-size:12.5px;color:var(--muted)}
+.crumb button{background:none;border:0;color:var(--brand);font:inherit;font-weight:600;padding:0}
+.empty{margin:16px 14px;border:1px dashed var(--line-strong);border-radius:var(--radius-lg);padding:34px 20px;text-align:center;background:var(--wash)}
+.empty b{display:block;font-size:16px;margin-bottom:6px}
+.empty p{margin:0 0 16px;color:var(--muted);font-size:13.5px}
+
+/* ── sheets and drawer ── */
+.scrim{position:fixed;inset:0;background:rgba(22,23,74,.42);opacity:0;pointer-events:none;transition:opacity .22s;z-index:60}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:65;background:#fff;border-radius:22px 22px 0 0;
+  transform:translateY(100%);transition:transform .26s ease;display:flex;flex-direction:column;max-height:88dvh}
+.sheet.on{transform:none}
+/* Inside the phone frame every fixed child must anchor to the frame, not the
+   viewport. The transform on .phone makes it the containing block, and the
+   explicit list is the belt to that braces. */
+@media (min-width:760px){
+  .sheet,.scrim,.drawer,.overlay,.toasts,.tabs,.bar{position:absolute!important}
+  .sheet{max-height:88%}
+}
+.sheet-h{display:flex;align-items:center;gap:12px;padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+.sheet-h b{font-size:16px;flex:1}
+.sheet-h .grab{position:absolute;top:7px;left:50%;transform:translateX(-50%);width:38px;height:4px;border-radius:999px;background:var(--line-strong)}
+.sheet-b{overflow:auto;padding:4px 18px 18px;flex:1}
+.sheet-f{padding:12px 18px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;gap:10px}
+.sheet-f .btn{flex:1}
+.fgroup{padding:16px 0;border-bottom:1px solid var(--line)}
+.fgroup:last-child{border-bottom:0}
+.fgroup h4{margin:0 0 11px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:800;display:flex}
+.fgroup h4 button{margin-left:auto;background:none;border:0;color:var(--brand);font-size:12px;font-weight:700;letter-spacing:0;text-transform:none}
+.frow{display:flex;align-items:center;gap:11px;padding:9px 2px;font-size:14px;color:var(--ink-soft)}
+.frow input{width:19px;height:19px;accent-color:var(--brand);margin:0;flex:0 0 auto}
+.frow .n{margin-left:auto;font-size:11.5px;color:var(--muted);font-weight:700}
+.prow{display:flex;gap:9px;align-items:center}
+.prow .cur{flex:1;display:flex;align-items:center;border:1px solid var(--line-strong);border-radius:11px;overflow:hidden}
+.prow .cur i{padding:0 10px;color:var(--muted);font-style:normal;background:var(--wash);align-self:stretch;display:grid;place-items:center;font-size:13px}
+.prow input{border:0;padding:11px 12px;width:100%;min-width:0;font-family:inherit;font-size:14px}
+.prow input:focus{outline:none}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{border:1px solid var(--line-strong);background:#fff;border-radius:999px;padding:8px 13px;font-size:13px;font-weight:600;color:var(--ink-soft)}
+.pill.on{background:var(--brand);border-color:var(--brand);color:#fff}
+
+.drawer{position:fixed;top:0;bottom:0;right:0;width:330px;max-width:90vw;background:#fff;z-index:66;transform:translateX(100%);
+  transition:transform .26s ease;display:flex;flex-direction:column;box-shadow:var(--shadow-md)}
+.drawer.on{transform:none}
+.dr-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.dr-b{flex:1;overflow:auto;padding:8px 12px 16px}
+.dr-row{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;padding:12px 10px;border-radius:12px;
+  font-size:14.5px;font-weight:600;color:var(--ink);text-align:left}
+.dr-row:active{background:var(--brand-50)}
+.dr-row i{width:32px;height:32px;border-radius:10px;background:var(--brand-50);color:var(--brand);display:grid;place-items:center;flex:0 0 auto;font-style:normal}
+.dr-row .cv{margin-left:auto;color:var(--muted);transition:transform .2s}
+.dr-row.open .cv{transform:rotate(180deg)}
+.dr-kids{display:none;margin:0 0 6px 52px;border-left:1px solid var(--line);padding-left:10px}
+.dr-kids.on{display:block}
+.dr-kid{display:flex;width:100%;background:none;border:0;padding:9px 10px;border-radius:9px;font-size:13.5px;color:var(--ink-soft);text-align:left}
+.dr-kid:active{background:var(--brand-50)}
+.dr-cap{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:800;padding:16px 10px 6px}
+.dr-f{border-top:1px solid var(--line);padding:12px 16px calc(14px + env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center}
+.dr-f button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;display:grid;place-items:center;color:var(--ink-soft)}
+
+.overlay{position:fixed;inset:0;background:#fff;z-index:67;display:none;flex-direction:column}
+.overlay.on{display:flex}
+.ov-h{display:flex;align-items:center;gap:10px;padding:12px 12px;border-bottom:1px solid var(--line)}
+.ov-h input{flex:1;border:1px solid var(--line-strong);border-radius:999px;padding:11px 15px;font-size:15px;font-family:inherit}
+.ov-b{flex:1;overflow:auto;padding:14px 16px calc(20px + env(safe-area-inset-bottom))}
+.sug{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;padding:12px 4px;font-size:14.5px;color:var(--ink);
+  text-align:left;border-bottom:1px solid var(--line)}
+.sug i{color:var(--muted);font-style:normal;display:grid;place-items:center}
+.sug small{margin-left:auto;color:var(--muted);font-size:12px}
+
+/* ── product page ── */
+.gal{position:relative;background:var(--wash)}
+.gtrack{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.gtrack::-webkit-scrollbar{display:none}
+.gslide{flex:0 0 100%;scroll-snap-align:center;aspect-ratio:1;display:grid;place-items:center}
+.gslide svg{width:54%;height:54%;color:var(--brand);opacity:.34}
+.gcount{position:absolute;right:12px;bottom:12px;background:rgba(22,23,74,.72);color:#fff;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px}
+.pbuy{border:1px solid var(--line);border-radius:var(--radius);padding:13px;margin:14px 0}
+.price{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.price b{font-size:26px;letter-spacing:-.03em}
+.price s{color:var(--muted);font-size:14px}
+.save{background:#EAF9F0;color:#0B6B3A;font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px}
+.deliv{display:grid;gap:7px;margin-top:11px;padding-top:11px;border-top:1px dashed var(--line-strong);font-size:12.5px;color:var(--ink-soft)}
+.deliv div{display:flex;gap:8px}
+.deliv svg{flex:0 0 auto;color:var(--brand);margin-top:1px}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line-strong);border-radius:999px}
+.stepper button{width:40px;height:44px;border:0;background:none;font-size:18px;color:var(--ink-soft)}
+.stepper span{width:30px;text-align:center;font-weight:700}
+.acc{border-bottom:1px solid var(--line)}
+.acc-h{width:100%;display:flex;align-items:center;gap:10px;background:none;border:0;padding:15px 2px;text-align:left;font-size:14.5px;font-weight:700}
+.acc-h .cv{margin-left:auto;color:var(--muted);transition:transform .2s}
+.acc.on .cv{transform:rotate(180deg)}
+.acc-b{display:none;padding:0 2px 16px;font-size:13.5px;color:var(--ink-soft);line-height:1.6}
+.acc.on .acc-b{display:block}
+
+/* ── cart / checkout ── */
+.line{display:flex;gap:11px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.line .pic{width:60px;height:60px;border-radius:12px;background:var(--wash);display:grid;place-items:center;color:var(--brand);flex:0 0 auto}
+.line .t{flex:1;min-width:0}
+.line .t b{display:block;font-size:13px;font-weight:600;line-height:1.35}
+.line .t small{color:var(--muted);font-size:11.5px}
+.line .pr{font-weight:800;font-size:14px;white-space:nowrap}
+.sum{border:1px solid var(--line);border-radius:var(--radius);padding:13px;margin-top:14px;background:var(--wash)}
+.sum-line{display:flex;justify-content:space-between;font-size:13.5px;color:var(--ink-soft);padding:4px 0}
+.sum-line b{color:var(--ink)}
+.sum-total{border-top:1px solid var(--line-strong);margin-top:8px;padding-top:10px;font-size:16px;font-weight:800}
+.choice{display:flex;gap:11px;align-items:flex-start;border:1.5px solid var(--line-strong);border-radius:var(--radius);
+  padding:12px;background:#fff;width:100%;text-align:left;margin-bottom:9px}
+.choice.on{border-color:var(--brand);background:var(--brand-50)}
+.choice .dt{width:19px;height:19px;border-radius:50%;border:2px solid var(--line-strong);flex:0 0 auto;margin-top:1px;position:relative}
+.choice.on .dt{border-color:var(--go)}
+.choice.on .dt:after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--go)}
+.choice .t{flex:1;min-width:0}
+.choice .t b{display:block;font-size:13.5px}
+.choice .t small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.choice .pr{font-size:13px;font-weight:800}
+.choice .pr.free{color:var(--go)}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.control{width:100%;border:1px solid var(--line-strong);border-radius:12px;padding:12px 14px;font-size:15px;font-family:inherit;color:var(--ink)}
+.control:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(45,45,160,.10);outline:none}
+.control.bad{border-color:var(--danger)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:12px;color:var(--muted);margin:5px 0 0}
+
+/* ── sticky action bar ── */
+.bar{position:fixed;left:0;right:0;bottom:var(--tab-h);z-index:44;background:rgba(255,255,255,.98);backdrop-filter:blur(10px);
+  border-top:1px solid var(--line);box-shadow:var(--shadow-up);padding:10px 14px;display:none;gap:12px;align-items:center}
+.bar.on{display:flex}
+.bar .bp b{font-size:17px;letter-spacing:-.02em;display:block;line-height:1.15}
+.bar .bp small{font-size:11px;color:var(--muted)}
+.bar .btn{flex:1}
+.bar-why{position:absolute;left:14px;right:14px;top:-22px;font-size:11.5px;color:var(--amber);font-weight:700;text-align:center}
+
+/* ── account ── */
+.acct-head{background:linear-gradient(135deg,#2D2DA0,#5A5AD0);color:#fff;padding:22px 16px 26px}
+.acct-head b{font-size:19px;display:block}
+.acct-head small{opacity:.85;font-size:13px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:-18px;padding:0 14px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 13px;text-align:left;box-shadow:var(--shadow-sm)}
+.tile i{width:32px;height:32px;border-radius:10px;background:var(--brand-50);color:var(--brand);display:grid;place-items:center;font-style:normal;margin-bottom:9px}
+.tile b{display:block;font-size:14px}
+.tile small{color:var(--muted);font-size:12px}
+.list-row{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;padding:14px 4px;border-bottom:1px solid var(--line);
+  font-size:14.5px;color:var(--ink);text-align:left}
+.list-row .cv{margin-left:auto;color:var(--muted)}
+
+.done-wrap{padding:28px 18px 6px;text-align:center}
+.done-ic{width:66px;height:66px;border-radius:20px;background:#EAF9F0;display:grid;place-items:center;margin:0 auto 16px}
+.done-wrap h2{font-size:22px;margin:0 0 6px;letter-spacing:-.02em}
+.done-wrap p{margin:0 0 16px;color:var(--muted);font-size:14px}
+.tl{display:flex;gap:12px;padding-bottom:15px;position:relative;text-align:left}
+.tl:last-child{padding-bottom:0}
+.tl:before{content:"";position:absolute;left:11px;top:24px;bottom:0;width:2px;background:var(--line)}
+.tl:last-child:before{display:none}
+.tl i{width:24px;height:24px;border-radius:50%;background:var(--line);color:var(--muted);display:grid;place-items:center;flex:0 0 auto;font-style:normal;z-index:1}
+.tl.on i{background:var(--go);color:#fff}
+.tl b{display:block;font-size:13.5px}
+.tl small{color:var(--muted);font-size:12px}
+
+.footer{background:var(--brand);color:#fff;padding:22px 16px 26px;margin-top:8px}
+.footer b{font-size:16px;display:block;margin-bottom:5px}
+.footer p{margin:0 0 14px;font-size:12.5px;opacity:.85}
+.footer .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:12.5px;opacity:.9;margin-bottom:16px}
+.footer .cols u{display:block;margin-bottom:6px;font-weight:800;text-decoration:none;opacity:.7;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.footer .cols button{display:block;background:none;border:0;color:#fff;opacity:.85;font-size:12.5px;padding:3px 0;text-align:left}
+.footer small{font-size:11px;opacity:.7}
+
+.screen{display:none}.screen.on{display:block}
+.toasts{position:fixed;left:14px;right:14px;bottom:calc(var(--tab-h) + 14px);z-index:70;display:grid;gap:8px}
+.toast{background:var(--ink);color:#fff;padding:12px 15px;border-radius:12px;font-size:13px;box-shadow:var(--shadow-md)}
+.toast.go{background:#0B6B3A}.toast.bad{background:#8E2035}
+.note-strip{margin:12px 14px 0;background:var(--brand-50);border:1px solid #D9DAF7;border-radius:var(--radius);
+  padding:11px 13px;font-size:12px;color:var(--ink-soft);display:flex;gap:9px}
+.note-strip b{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="scroller" id="scroller">
+    <div class="promo" id="promo">
+      <span>SHOP AND <b>SAVE BIG</b></span>
+      <span class="chip">From <b>€55</b></span>
+      <span>Up to <b class="off">30% off</b></span>
+      <button id="promo-x" aria-label="Close">×</button>
+    </div>
+
+    <header class="head" id="head"></header>
+
+    <div class="note-strip">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:0 0 auto;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+      <div><b>Full mobile flow.</b> Home → categories → product → basket → checkout → account. Sample data, nothing is charged.</div>
+    </div>
+
+    <section class="screen on" data-screen="home" id="s-home"></section>
+    <section class="screen" data-screen="catalog" id="s-catalog"></section>
+    <section class="screen" data-screen="product" id="s-product"></section>
+    <section class="screen" data-screen="cart" id="s-cart"></section>
+    <section class="screen" data-screen="checkout" id="s-checkout"></section>
+    <section class="screen" data-screen="done" id="s-done"></section>
+    <section class="screen" data-screen="account" id="s-account"></section>
+  </div>
+
+  <div class="bar" id="bar">
+    <div class="bp"><b id="bar-total">€0.00</b><small id="bar-sub">&nbsp;</small></div>
+    <button class="btn btn-go" id="bar-cta">Continue</button>
+  </div>
+
+  <nav class="tabs" id="tabs"></nav>
+
+  <div class="scrim" id="scrim"></div>
+
+  <!-- filter sheet -->
+  <div class="sheet" id="sheet" aria-hidden="true">
+    <div class="sheet-h"><span class="grab"></span><b>Filters</b>
+      <button class="btn btn-ghost btn-sm" id="sheet-clear">Clear all</button>
+      <button class="hbtn" id="sheet-x" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="sheet-b" id="sheet-b"></div>
+    <div class="sheet-f"><button class="btn btn-go" id="sheet-apply">Show results</button></div>
+  </div>
+
+  <!-- sort sheet -->
+  <div class="sheet" id="sortsheet" aria-hidden="true">
+    <div class="sheet-h"><span class="grab"></span><b>Sort by</b>
+      <button class="hbtn" id="sort-x" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="sheet-b" id="sort-b"></div>
+  </div>
+
+  <!-- menu drawer -->
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="dr-h">
+      <span class="mark" style="display:flex;align-items:center;gap:8px;font-weight:800">
+        <i style="width:32px;height:32px;border-radius:9px;background:var(--brand);display:grid;place-items:center;font-style:normal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        </i> FixMyPC
+      </span>
+      <button class="hbtn" id="dr-x" style="margin-left:auto" aria-label="Close menu">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="dr-b" id="dr-b"></div>
+    <div class="dr-f">
+      <button data-note="support@fixmypc.ie" aria-label="Email us"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></button>
+      <button data-note="01 504 7000" aria-label="Call us"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg></button>
+      <button data-note="WhatsApp 087 452 3344" aria-label="WhatsApp" style="color:#25D366;border-color:#BDECD0"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.6-1.2A9 9 0 1 0 12 3Z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5"/></svg></button>
+      <button data-note="Language: English" aria-label="Language"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></button>
+    </div>
+  </aside>
+
+  <!-- search overlay -->
+  <div class="overlay" id="search" aria-hidden="true">
+    <div class="ov-h">
+      <button class="hbtn" id="sx" aria-label="Close search">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 18 9 12l6-6"/></svg>
+      </button>
+      <input id="sq" placeholder="Search parts, devices, repairs" autocomplete="off">
+    </div>
+    <div class="ov-b" id="sb"></div>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function money(n){ return '€' + n.toFixed(2); }
+  function toast(m, k){
+    var t = document.createElement('div'); t.className = 'toast' + (k ? ' ' + k : ''); t.textContent = m;
+    $('toasts').appendChild(t); setTimeout(function(){ t.remove(); }, 2500);
+  }
+  function stars(n){ return '<span class="stars">' + '★'.repeat(n) + '<span class="dim">' + '★'.repeat(5 - n) + '</span></span>'; }
+
+  /* ══════════ icons ══════════ */
+  var IC = {
+    mobile:'<rect x="6.5" y="2.5" width="11" height="19" rx="2.4"/><path d="M10.5 18.5h3"/>',
+    computer:'<rect x="3" y="4.5" width="18" height="12" rx="1.8"/><path d="M8 20.5h8"/>',
+    storage:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h6M7 13h10"/>',
+    cable:'<path d="M4 8v6a4 4 0 0 0 8 0V9a3 3 0 0 1 6 0v7"/><path d="M2.5 5.5h3M18.5 19.5h3"/>',
+    audio:'<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.6"/><rect x="17" y="14" width="4" height="6" rx="1.6"/>',
+    charger:'<path d="M13 2.5 5.5 13.5H11l-1 8 8.5-11H13l1-8Z"/>',
+    parts:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-8 8l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 8-8l-3.8 3.8Z"/>',
+    tablet:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M11 18h2"/>',
+    gaming:'<path d="M7 11h4M9 9v4M15.5 11h.01M18 13h.01"/><path d="M6.5 7h11a4.5 4.5 0 0 1 4.4 5.4l-.8 4A3 3 0 0 1 16.6 18l-1.4-2H8.8l-1.4 2a3 3 0 0 1-4.5-1.6l-.8-4A4.5 4.5 0 0 1 6.5 7Z"/>',
+    refurb:'<path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/>',
+    software:'<path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/>',
+    services:'<path d="M12 3.5 4.5 7v5.5c0 4.3 3.2 7.6 7.5 8.5 4.3-.9 7.5-4.2 7.5-8.5V7Z"/><path d="m9.5 12 1.8 1.8 3.4-3.6"/>',
+    tag:'<path d="M20.6 12.4 12.4 20.6a2 2 0 0 1-2.8 0l-6.2-6.2a2 2 0 0 1-.6-1.6l.4-5.6a2 2 0 0 1 1.8-1.8l5.6-.4a2 2 0 0 1 1.6.6l6.4 6.4a2 2 0 0 1 0 2.4Z"/><path d="M8.5 8.5h.01"/>',
+    box:'<path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5Z"/><path d="m3 8.5 9 4.5 9-4.5M12 13v7"/>',
+    user:'<circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/>',
+    cart:'<path d="M4 7h16l-1.4 11.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8Z"/><path d="M9 7V5.5a3 3 0 0 1 6 0V7"/>',
+    heart:'<path d="M12 20s-7-4.4-7-9.4A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.6c0 5-7 9.4-7 9.4Z"/>',
+    search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+    home:'<path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20Z"/><path d="M9.5 21v-6h5v6"/>',
+    grid:'<rect x="3" y="3" width="7.5" height="7.5" rx="1.8"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.8"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.8"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.8"/>',
+    truck:'<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="17.5" cy="18" r="1.7"/>',
+    shield:'<path d="M12 3.5 5 6.5v5c0 4 3 7.2 7 8 4-.8 7-4 7-8v-5Z"/>',
+    shop:'<path d="M3 21h18M5 21V9l7-5 7 5v12"/><path d="M10 21v-6h4v6"/>',
+    clock:'<circle cx="12" cy="12" r="9"/><path d="M12 8v5l3 2"/>',
+    spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/>',
+    chev:'<path d="m9 6 6 6-6 6"/>',
+    down:'<path d="m6 9 6 6 6-6"/>'
+  };
+  function svg(k, size, sw){
+    return '<svg width="' + (size || 18) + '" height="' + (size || 18) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 1.7) + '" stroke-linecap="round" stroke-linejoin="round">' + (IC[k] || IC.box) + '</svg>';
+  }
+
+  /* ══════════ data ══════════ */
+  var CATS = [
+    {id:'mobile', name:'Mobile', icon:'mobile', kids:['Phones','Cases','Screen protectors']},
+    {id:'computer', name:'Computer', icon:'computer', kids:['Laptops','Monitors','Components']},
+    {id:'storage', name:'Storage', icon:'storage', kids:['SSD & NVMe','Hard drives','Memory cards']},
+    {id:'accessories', name:'Accessories', icon:'cable', kids:['USB cables','Hubs & adapters','Stands']},
+    {id:'audio', name:'Audio', icon:'audio', kids:['Headphones','Earbuds','Speakers']},
+    {id:'chargers', name:'Chargers', icon:'charger', kids:['Wall','Power banks','Wireless']},
+    {id:'parts', name:'Repair parts', icon:'parts', kids:['Screens','Batteries','Tools']},
+    {id:'tablets', name:'Tablets', icon:'tablet', kids:[]},
+    {id:'gaming', name:'Gaming', icon:'gaming', kids:[]},
+    {id:'refurbished', name:'Refurbished', icon:'refurb', kids:[]},
+    {id:'software', name:'Software', icon:'software', kids:[]},
+    {id:'services', name:'Services', icon:'services', kids:[]}
+  ];
+  var P = [
+    ['Apple iPhone 15 Pro 128GB','Apple','mobile','Phones',699,899,4,2,1,'box'],
+    ['Samsung Galaxy S24 128GB','Samsung','mobile','Phones',649,749,4,6,1,'mobile'],
+    ['Samsung Galaxy A16 5G','Samsung','mobile','Phones',219,229,4,10,1,'mobile'],
+    ['Apple iPhone 13 128GB','Apple','mobile','Phones',529,629,5,14,0,'mobile'],
+    ['iPhone 15 silicone case','Apple','mobile','Cases',22,25,4,16,1,'box'],
+    ['Tempered glass, iPhone 15 Pro','Hoco','mobile','Screen protectors',9.99,12.99,4,41,1,'box'],
+    ['HOCO HB35 4-in-1 USB-A hub','HOCO','accessories','Hubs & adapters',24.95,29.95,4,4,1,'cable'],
+    ['USB-C to HDMI 4K adapter','Ugreen','accessories','Hubs & adapters',26,26,4,7,1,'cable'],
+    ['Braided USB-C to Lightning 2m','Anker','accessories','USB cables',18.50,24,5,31,1,'cable'],
+    ['Crucial P3 1TB NVMe SSD','Crucial','storage','SSD & NVMe',64.99,79.99,5,44,1,'storage'],
+    ['Samsung 990 EVO 2TB NVMe','Samsung','storage','SSD & NVMe',149,169,5,18,1,'storage'],
+    ['SanDisk Ultra 128GB USB 3.0','SanDisk','storage','Memory cards',14.99,19.99,4,63,1,'storage'],
+    ['HOCO W35 Max wireless headphones','HOCO','audio','Headphones',50,55,4,9,1,'audio'],
+    ['Apple EarPods (USB-C)','Apple','audio','Earbuds',20,20,5,2,1,'audio'],
+    ['Anker 737 power bank 24k mAh','Anker','chargers','Power banks',119,139,5,36,1,'charger'],
+    ['65W GaN wall charger, 3 ports','Ugreen','chargers','Wall',39.99,49.99,4,21,1,'charger'],
+    ['iPhone 13 replacement battery','FixMyPC','parts','Batteries',39,39,4,6,1,'parts'],
+    ['Samsung A54 screen assembly','Samsung','parts','Screens',119,119,4,5,0,'parts'],
+    ['Refurb ThinkPad T14 i5 16GB','Lenovo','computer','Laptops',449,529,4,7,1,'computer'],
+    ['Dell UltraSharp 27" QHD monitor','Dell','computer','Monitors',329,379,5,12,1,'computer']
+  ].map(function(r, i){
+    return {id:i+1, name:r[0], brand:r[1], cat:r[2], sub:r[3], price:r[4], was:r[5], rating:r[6],
+            reviews:r[7], stock:!!r[8], icon:r[9]};
+  });
+  function cat(id){ for (var i = 0; i < CATS.length; i++) if (CATS[i].id === id) return CATS[i]; return null; }
+  function countCat(id){ return P.filter(function(p){ return p.cat === id; }).length; }
+  function countSub(c, s){ return P.filter(function(p){ return p.cat === c && p.sub === s; }).length; }
+
+  /* ══════════ state ══════════ */
+  var S = {screen:'home', cat:'mobile', sub:'', sort:'featured', brands:[], rating:0, min:null, max:null,
+           stockOnly:false, dealOnly:false, product:null, q:''};
+  var CART = [], WISH = {}, ADDRS = [
+    {id:1, label:'Home', line:'14 The Maples, Kilcock, Co. Kildare, W23 XY12'},
+    {id:2, label:'Work', line:'Unit 3, Main Street, Kilcock, Co. Kildare'}
+  ];
+  var CO = {fulfil:'post', addr:1, pay:'card', email:'', phone:''};
+
+  function cartCount(){ return CART.reduce(function(a, i){ return a + i.qty; }, 0); }
+  function subtotal(){ return CART.reduce(function(a, i){ return a + i.price * i.qty; }, 0); }
+  function shipping(){ return CO.fulfil === 'collect' ? 0 : (subtotal() >= 75 || subtotal() === 0 ? 0 : 6.50); }
+  function total(){ return subtotal() + shipping(); }
+  function filterCount(){
+    return S.brands.length + (S.rating ? 1 : 0) + (S.min != null || S.max != null ? 1 : 0) +
+           (S.stockOnly ? 1 : 0) + (S.dealOnly ? 1 : 0);
+  }
+
+  /* ══════════ navigation ══════════ */
+  function go(screen, opt){
+    S.screen = screen;
+    if (opt && opt.cat){ S.cat = opt.cat; S.sub = opt.sub || ''; }
+    if (opt && opt.product) S.product = opt.product;
+    [].forEach.call(document.querySelectorAll('.screen'), function(s){
+      s.classList.toggle('on', s.getAttribute('data-screen') === screen);
+    });
+    $('scroller').scrollTop = 0;
+    render();
+  }
+  document.addEventListener('click', function(e){
+    var g = e.target.closest('[data-go]'); if (!g) return;
+    go(g.getAttribute('data-go'), {cat:g.getAttribute('data-cat'), sub:g.getAttribute('data-sub'),
+                                   product:g.getAttribute('data-product') ? +g.getAttribute('data-product') : null});
+  });
+  document.addEventListener('click', function(e){
+    var n = e.target.closest('[data-note]'); if (n) toast(n.getAttribute('data-note'));
+  });
+
+  /* ══════════ header + tabs ══════════ */
+  function paintHead(){
+    var h = '';
+    if (S.screen === 'home'){
+      h = '<button class="mark" data-go="home"><i>' +
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>' +
+          '</i>FixMyPC</button>';
+    } else {
+      var titles = {catalog:(cat(S.cat) ? cat(S.cat).name : 'Shop'), product:'Product', cart:'Your basket',
+                    checkout:'Checkout', done:'Order placed', account:'Account'};
+      h = '<button class="hbtn" id="nav-back" aria-label="Back">' + svg('chev', 21, 2.2).replace('m9 6 6 6-6 6', 'm15 18-6-6 6-6') + '</button>' +
+          '<span class="ht">' + esc(titles[S.screen] || '') + '</span>';
+    }
+    h += '<span style="margin-left:auto;display:flex">' +
+      '<button class="hbtn" id="open-search" aria-label="Search">' + svg('search', 20, 2) + '</button>' +
+      '<button class="hbtn" data-go="cart" aria-label="Basket">' + svg('cart', 20, 1.9) +
+        (cartCount() ? '<span class="n">' + cartCount() + '</span>' : '') + '</button>' +
+      '<button class="hbtn" id="open-menu" aria-label="Menu"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>' +
+      '</span>';
+    $('head').innerHTML = h;
+    if ($('nav-back')) $('nav-back').onclick = function(){
+      go(S.screen === 'product' ? 'catalog' : (S.screen === 'checkout' ? 'cart' : 'home'));
+    };
+    $('open-search').onclick = openSearch;
+    $('open-menu').onclick = openDrawer;
+  }
+  function paintTabs(){
+    var T = [['home','Home','home'],['catalog','Shop','grid'],['search','Search','search'],
+             ['cart','Basket','cart'],['account','Account','user']];
+    $('tabs').innerHTML = T.map(function(t){
+      return '<button class="tab' + (S.screen === t[0] ? ' on' : '') + '" data-tab="' + t[0] + '">' +
+        svg(t[2], 21, 1.8) + '<span>' + t[1] + '</span>' +
+        (t[0] === 'cart' && cartCount() ? '<span class="n">' + cartCount() + '</span>' : '') + '</button>';
+    }).join('');
+  }
+  $('tabs').addEventListener('click', function(e){
+    var t = e.target.closest('[data-tab]'); if (!t) return;
+    var id = t.getAttribute('data-tab');
+    if (id === 'search') openSearch(); else go(id);
+  });
+
+  /* ══════════ product card ══════════ */
+  function pcard(p){
+    var off = p.was > p.price ? Math.round((1 - p.price / p.was) * 100) : 0;
+    return '<article class="pcard' + (p.stock ? '' : ' out') + '">' +
+      '<button class="pic" data-go="product" data-product="' + p.id + '" aria-label="' + esc(p.name) + '">' + svg(p.icon, 60, 1.3) +
+        (off && p.stock ? '<span class="flag">' + off + '% off</span>' : '') +
+        (!p.stock ? '<span class="flag out">Sold out</span>' : '') +
+      '</button>' +
+      '<button class="heart' + (WISH[p.id] ? ' on' : '') + '" data-wish="' + p.id + '" aria-label="Save">' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="' + (WISH[p.id] ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.9"><path d="M12 20s-7-4.4-7-9.4A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.6c0 5-7 9.4-7 9.4Z"/></svg></button>' +
+      '<button class="b" data-go="product" data-product="' + p.id + '" style="background:none;border:0">' +
+        '<span class="bl">' + esc(p.brand) + '</span>' +
+        '<span class="pname">' + esc(p.name) + '</span>' +
+        '<span class="rr">' + stars(p.rating) + (p.reviews ? '(' + p.reviews + ')' : 'New') + '</span>' +
+        '<span class="pr"><b>' + money(p.price) + '</b>' + (off ? '<s>' + money(p.was) + '</s>' : '') + '</span>' +
+      '</button>' +
+      (p.stock ? '<div class="act"><button class="btn btn-go" data-add="' + p.id + '">Add to basket</button></div>'
+               : '<span class="oos-note">Out of stock · <button style="background:none;border:0;color:var(--brand);font:inherit;font-weight:700" data-note="We\'ll text you when it lands">Notify me</button></span>') +
+    '</article>';
+  }
+  document.addEventListener('click', function(e){
+    var w = e.target.closest('[data-wish]');
+    if (w){ var id = w.getAttribute('data-wish'); WISH[id] = !WISH[id]; toast(WISH[id] ? 'Saved' : 'Removed'); render(); return; }
+    var a = e.target.closest('[data-add]');
+    if (a){ addToCart(+a.getAttribute('data-add'), 1); }
+  });
+  function addToCart(id, qty){
+    var p = P.filter(function(x){ return x.id === id; })[0]; if (!p) return;
+    var line = CART.filter(function(l){ return l.id === id; })[0];
+    if (line) line.qty += qty; else CART.push({id:p.id, name:p.name, brand:p.brand, price:p.price, icon:p.icon, qty:qty});
+    toast(p.name.split(' ').slice(0, 3).join(' ') + ' added', 'go');
+    render();
+  }
+
+  /* ══════════ HOME ══════════ */
+  var HERO = [
+    {c:'a', eyebrow:'August offer', t:'Free diagnostics on every laptop repair', s:'No fix, no fee. Drop in to Kilcock or post it to us.', cta:'See repair prices'},
+    {c:'b', eyebrow:'In stock now', t:'SSD upgrades fitted while you wait', s:'From €54, data cloned across and Windows re-activated.', cta:'Shop drives', cat:'storage'},
+    {c:'c', eyebrow:'Certified phones', t:'Refurbished handsets, 12-month warranty', s:'Tested on 40 points, unlocked, ready to go.', cta:'Shop mobile', cat:'mobile'}
+  ];
+  var heroIdx = 0, heroTimer = null;
+  function paintHome(){
+    var deals = P.filter(function(p){ return p.was > p.price && p.stock; }).slice(0, 6);
+    var pop = P.filter(function(p){ return p.reviews > 10; }).slice(0, 6);
+    $('s-home').innerHTML =
+      '<button class="searchbar" id="home-search">' + svg('search', 18, 2) + 'Search parts, devices, repairs</button>' +
+
+      '<div class="hero"><div class="hero-track" id="hero-track">' + HERO.map(function(h){
+        return '<div class="slide ' + h.c + '"><span class="ghost-art">' + svg('parts', 130, 1) + '</span>' +
+          '<span class="eyebrow">' + esc(h.eyebrow) + '</span><b>' + esc(h.t) + '</b><small>' + esc(h.s) + '</small>' +
+          '<button class="cta"' + (h.cat ? ' data-go="catalog" data-cat="' + h.cat + '"' : ' data-note="Repairs journey opens here"') + '>' + esc(h.cta) + '</button></div>';
+      }).join('') + '</div><div class="dots" id="hero-dots"></div></div>' +
+
+      '<div class="quick">' +
+        '<button class="qa" data-note="Repair booking opens here"><i>' + svg('parts', 15) + '</i>Book a repair</button>' +
+        '<button class="qa" data-go="account"><i>' + svg('truck', 15) + '</i>Track an order</button>' +
+        '<button class="qa" data-note="Trade pricing needs an approved account"><i>' + svg('shop', 15) + '</i>Trade counter</button>' +
+      '</div>' +
+
+      '<section class="sec"><div class="sec-h"><h2>Shop by category</h2><button data-go="catalog">See all</button></div>' +
+        '<div class="cats">' + CATS.slice(0, 8).map(function(c){
+          return '<button class="cat" data-go="catalog" data-cat="' + c.id + '"><i>' + svg(c.icon, 22) + '</i><span>' + esc(c.name) + '</span></button>';
+        }).join('') + '</div></section>' +
+
+      '<section class="sec tint"><div class="sec-h"><h2>On offer</h2><button data-go="catalog">More</button></div>' +
+        '<div class="rail">' + deals.map(pcard).join('') + '</div></section>' +
+
+      '<section class="sec"><div class="sec-h"><h2>Why buy here</h2></div>' +
+        '<div class="trust">' +
+          '<div class="trow"><i>' + svg('truck', 17) + '</i><div><b>Next-day An Post delivery</b><small>€6.50, free over €75. Order before 2pm.</small></div></div>' +
+          '<div class="trow"><i>' + svg('shield', 17) + '</i><div><b>12-month warranty, handled here</b><small>We deal with the RMA, not you.</small></div></div>' +
+          '<div class="trow"><i>' + svg('shop', 17) + '</i><div><b>Collect in Kilcock</b><small>Free, usually ready in two hours.</small></div></div>' +
+          '<div class="trow"><i>' + svg('clock', 17) + '</i><div><b>Fitted while you wait</b><small>Most upgrades done same day in the workshop.</small></div></div>' +
+        '</div></section>' +
+
+      '<section class="sec tint"><div class="sec-h"><h2>Popular this month</h2></div>' +
+        '<div class="grid">' + pop.slice(0, 4).map(pcard).join('') + '</div></section>' +
+
+      footerHtml();
+
+    $('home-search').onclick = openSearch;
+    var track = $('hero-track');
+    $('hero-dots').innerHTML = HERO.map(function(h, i){
+      return '<button class="dot' + (i === 0 ? ' on' : '') + '" data-hero="' + i + '" aria-label="Offer ' + (i + 1) + '"></button>';
+    }).join('');
+    track.addEventListener('scroll', function(){
+      var i = Math.round(track.scrollLeft / track.clientWidth);
+      if (i !== heroIdx){ heroIdx = i; paintDots(); }
+    });
+    $('hero-dots').addEventListener('click', function(e){
+      var d = e.target.closest('[data-hero]'); if (!d) return;
+      heroIdx = +d.getAttribute('data-hero'); track.scrollTo({left:track.clientWidth * heroIdx, behavior:'smooth'}); paintDots();
+    });
+    clearInterval(heroTimer);
+    heroTimer = setInterval(function(){
+      if (S.screen !== 'home') return;
+      heroIdx = (heroIdx + 1) % HERO.length;
+      track.scrollTo({left:track.clientWidth * heroIdx, behavior:'smooth'}); paintDots();
+    }, 6000);
+  }
+  function paintDots(){
+    var d = $('hero-dots'); if (!d) return;
+    [].forEach.call(d.children, function(b, i){ b.classList.toggle('on', i === heroIdx); });
+  }
+  function footerHtml(){
+    return '<footer class="footer"><b>Fanatic customer service</b><p>Open 7 days. Most devices back within 24 hours.</p>' +
+      '<div class="cols"><div><u>Shop</u>' +
+        '<button data-go="catalog" data-cat="mobile">Mobile</button><button data-go="catalog" data-cat="storage">Storage</button>' +
+        '<button data-go="catalog" data-cat="parts">Repair parts</button></div>' +
+        '<div><u>Help</u><button data-note="Refund policy">Refund policy</button><button data-note="Privacy policy">Privacy policy</button>' +
+        '<button data-note="Contact: 01 504 7000">Contact</button></div></div>' +
+      '<small>© 2026 FixMyPC · Designed by excytech</small></footer>';
+  }
+
+  /* ══════════ CATALOG ══════════ */
+  function results(){
+    var out = P.filter(function(p){
+      if (S.cat && p.cat !== S.cat) return false;
+      if (S.sub && p.sub !== S.sub) return false;
+      if (S.brands.length && S.brands.indexOf(p.brand) < 0) return false;
+      if (S.rating && p.rating < S.rating) return false;
+      if (S.min != null && p.price < S.min) return false;
+      if (S.max != null && p.price > S.max) return false;
+      if (S.stockOnly && !p.stock) return false;
+      if (S.dealOnly && p.was <= p.price) return false;
+      if (S.q){
+        var q = S.q.toLowerCase();
+        if (p.name.toLowerCase().indexOf(q) < 0 && p.brand.toLowerCase().indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+    var by = {low:function(a,b){return a.price-b.price;}, high:function(a,b){return b.price-a.price;},
+              rating:function(a,b){return b.rating-a.rating || b.reviews-a.reviews;},
+              featured:function(a,b){return (b.stock-a.stock) || (b.reviews-a.reviews);}};
+    return out.sort(by[S.sort] || by.featured);
+  }
+  var SORTS = [['featured','Featured'],['low','Price: low to high'],['high','Price: high to low'],['rating','Best reviewed']];
+
+  function paintCatalog(){
+    var c = cat(S.cat), list = results();
+    var applied = [];
+    if (S.sub) applied.push(['sub', S.sub]);
+    S.brands.forEach(function(b){ applied.push(['brand:' + b, b]); });
+    if (S.rating) applied.push(['rating', S.rating + '★ & up']);
+    if (S.min != null || S.max != null) applied.push(['price', (S.min != null ? money(S.min) : 'Any') + ' – ' + (S.max != null ? money(S.max) : 'Any')]);
+    if (S.stockOnly) applied.push(['stock', 'In stock']);
+    if (S.dealOnly) applied.push(['deal', 'On offer']);
+    if (S.q) applied.push(['q', '“' + S.q + '”']);
+
+    $('s-catalog').innerHTML =
+      '<div class="filterbar">' +
+        '<button class="fb" id="btn-sort">' + svg('down', 15, 2) + (SORTS.filter(function(s){ return s[0] === S.sort; })[0][1]) + '</button>' +
+        '<button class="fb" id="btn-filter">' + svg('grid', 15, 2) + 'Filters' + (filterCount() ? '<span class="n">' + filterCount() + '</span>' : '') + '</button>' +
+      '</div>' +
+      '<div class="crumb"><button data-go="home">Home</button><span>›</span>' +
+        (S.sub ? '<button data-go="catalog" data-cat="' + S.cat + '">' + esc(c.name) + '</button><span>›</span><b style="color:var(--ink)">' + esc(S.sub) + '</b>'
+               : '<b style="color:var(--ink)">' + esc(c ? c.name : 'All') + '</b>') + '</div>' +
+      (c && c.kids.length ? '<div class="chips">' +
+        '<button class="chip' + (!S.sub ? ' on' : '') + '" data-sub="">All<span class="n">' + countCat(c.id) + '</span></button>' +
+        c.kids.map(function(k){
+          return '<button class="chip' + (S.sub === k ? ' on' : '') + '" data-sub="' + esc(k) + '">' + esc(k) +
+                 '<span class="n">' + countSub(c.id, k) + '</span></button>';
+        }).join('') + '</div>' : '') +
+      (applied.length ? '<div class="applied">' + applied.map(function(a){
+        return '<button class="ap" data-drop="' + esc(a[0]) + '">' + esc(a[1]) + '<span>×</span></button>';
+      }).join('') + '<button class="ap" style="background:none;border-color:var(--line-strong);color:var(--muted)" id="clear-all">Clear all</button></div>' : '') +
+      '<div class="sec">' +
+        '<p class="sub" style="margin:0 0 12px">' + (list.length ? 'Showing <b>' + list.length + '</b> of ' + countCat(S.cat) + ' in ' + esc(c.name) : '') + '</p>' +
+        (list.length ? '<div class="grid">' + list.map(pcard).join('') + '</div>'
+          : '<div class="empty"><b>Nothing matches those filters</b><p>Widen the price range or clear a filter. We can usually source a part within 48 hours.</p>' +
+            '<button class="btn btn-ink btn-sm" id="empty-clear">Clear filters</button></div>') +
+      '</div>';
+
+    $('btn-sort').onclick = openSort;
+    $('btn-filter').onclick = openFilters;
+    if ($('clear-all')) $('clear-all').onclick = clearFilters;
+    if ($('empty-clear')) $('empty-clear').onclick = clearFilters;
+    [].forEach.call($('s-catalog').querySelectorAll('[data-sub]'), function(b){
+      b.onclick = function(){ S.sub = this.getAttribute('data-sub'); render(); };
+    });
+    [].forEach.call($('s-catalog').querySelectorAll('[data-drop]'), function(b){
+      b.onclick = function(){
+        var k = this.getAttribute('data-drop');
+        if (k === 'sub') S.sub = '';
+        else if (k.indexOf('brand:') === 0) S.brands.splice(S.brands.indexOf(k.slice(6)), 1);
+        else if (k === 'rating') S.rating = 0;
+        else if (k === 'price'){ S.min = S.max = null; }
+        else if (k === 'q') S.q = '';
+        else if (k === 'stock') S.stockOnly = false;
+        else if (k === 'deal') S.dealOnly = false;
+        render();
+      };
+    });
+  }
+  function clearFilters(){
+    S.sub = ''; S.brands = []; S.rating = 0; S.min = S.max = null; S.stockOnly = S.dealOnly = false; S.q = '';
+    render(); toast('Filters cleared');
+  }
+
+  /* ══════════ filter + sort sheets ══════════ */
+  function openSheet(el){ el.classList.add('on'); $('scrim').classList.add('on'); el.setAttribute('aria-hidden', 'false'); }
+  function closeSheets(){
+    $('sheet').classList.remove('on'); $('sortsheet').classList.remove('on');
+    $('scrim').classList.remove('on');
+    $('drawer').classList.remove('on');
+  }
+  $('scrim').onclick = closeSheets;
+  $('sheet-x').onclick = closeSheets; $('sort-x').onclick = closeSheets; $('dr-x').onclick = closeSheets;
+  $('sheet-apply').onclick = function(){ closeSheets(); render(); };
+  $('sheet-clear').onclick = function(){ clearFilters(); paintSheet(); };
+
+  function openSort(){
+    $('sort-b').innerHTML = SORTS.map(function(s){
+      return '<button class="list-row" data-sort="' + s[0] + '">' + esc(s[1]) +
+        (S.sort === s[0] ? '<span class="cv" style="color:var(--go)">' + svg('chev', 17, 2.6).replace('m9 6 6 6-6 6', 'M20 6 9 17l-5-5') + '</span>' : '') + '</button>';
+    }).join('');
+    [].forEach.call($('sort-b').querySelectorAll('[data-sort]'), function(b){
+      b.onclick = function(){ S.sort = this.getAttribute('data-sort'); closeSheets(); render(); };
+    });
+    openSheet($('sortsheet'));
+  }
+
+  function paintSheet(){
+    var pool = P.filter(function(p){ return p.cat === S.cat; });
+    var brands = [], seen = {};
+    pool.forEach(function(p){ if (!seen[p.brand]){ seen[p.brand] = 0; brands.push(p.brand); } seen[p.brand]++; });
+    brands.sort();
+    var c = cat(S.cat);
+    $('sheet-b').innerHTML =
+      (c && c.kids.length ? '<div class="fgroup"><h4>Subcategory</h4><div class="pills">' +
+        '<button class="pill' + (!S.sub ? ' on' : '') + '" data-fsub="">All</button>' +
+        c.kids.map(function(k){ return '<button class="pill' + (S.sub === k ? ' on' : '') + '" data-fsub="' + esc(k) + '">' + esc(k) + '</button>'; }).join('') +
+        '</div></div>' : '') +
+      '<div class="fgroup"><h4>Price</h4><div class="prow">' +
+        '<label class="cur"><i>€</i><input id="f-min" inputmode="numeric" placeholder="Min" value="' + (S.min != null ? S.min : '') + '" aria-label="Minimum"></label>' +
+        '<label class="cur"><i>€</i><input id="f-max" inputmode="numeric" placeholder="Max" value="' + (S.max != null ? S.max : '') + '" aria-label="Maximum"></label>' +
+      '</div><div class="pills" style="margin-top:10px">' +
+        [['','Any'],['0-50','Under €50'],['50-150','€50–150'],['150-','Over €150']].map(function(r){
+          var on = (r[0] === '' && S.min == null && S.max == null);
+          return '<button class="pill' + (on ? ' on' : '') + '" data-band="' + r[0] + '">' + r[1] + '</button>';
+        }).join('') + '</div></div>' +
+      '<div class="fgroup"><h4>Customer reviews <button data-frate="0">Clear</button></h4>' +
+        [4,3,2].map(function(n){
+          return '<label class="frow"><input type="radio" name="frate" value="' + n + '"' + (S.rating === n ? ' checked' : '') + '>' +
+            stars(n) + ' & up</label>';
+        }).join('') + '</div>' +
+      '<div class="fgroup"><h4>Brands</h4>' + brands.map(function(b){
+          return '<label class="frow"><input type="checkbox" data-fbrand="' + esc(b) + '"' + (S.brands.indexOf(b) > -1 ? ' checked' : '') + '>' +
+            esc(b) + '<span class="n">' + seen[b] + '</span></label>';
+        }).join('') + '</div>' +
+      '<div class="fgroup"><h4>Availability</h4>' +
+        '<label class="frow"><input type="checkbox" id="f-stock"' + (S.stockOnly ? ' checked' : '') + '> In stock only' +
+          '<span class="n">' + pool.filter(function(p){ return p.stock; }).length + '</span></label>' +
+        '<label class="frow"><input type="checkbox" id="f-deal"' + (S.dealOnly ? ' checked' : '') + '> On offer' +
+          '<span class="n">' + pool.filter(function(p){ return p.was > p.price; }).length + '</span></label>' +
+      '</div>';
+
+    function refresh(){
+      S.min = parseFloat($('f-min').value); if (isNaN(S.min)) S.min = null;
+      S.max = parseFloat($('f-max').value); if (isNaN(S.max)) S.max = null;
+      S.stockOnly = $('f-stock').checked; S.dealOnly = $('f-deal').checked;
+      $('sheet-apply').textContent = 'Show ' + results().length + ' results';
+    }
+    [].forEach.call($('sheet-b').querySelectorAll('[data-fsub]'), function(b){
+      b.onclick = function(){ S.sub = this.getAttribute('data-fsub'); paintSheet(); };
+    });
+    [].forEach.call($('sheet-b').querySelectorAll('[data-band]'), function(b){
+      b.onclick = function(){
+        var v = this.getAttribute('data-band');
+        if (!v){ S.min = S.max = null; }
+        else { var parts = v.split('-'); S.min = parts[0] ? +parts[0] : null; S.max = parts[1] ? +parts[1] : null; }
+        paintSheet();
+      };
+    });
+    [].forEach.call($('sheet-b').querySelectorAll('[data-frate]'), function(b){
+      b.onclick = function(){ S.rating = 0; paintSheet(); };
+    });
+    [].forEach.call($('sheet-b').querySelectorAll('input[name="frate"]'), function(i){
+      i.onchange = function(){ S.rating = +this.value; refresh(); };
+    });
+    [].forEach.call($('sheet-b').querySelectorAll('[data-fbrand]'), function(i){
+      i.onchange = function(){
+        var b = this.getAttribute('data-fbrand'), k = S.brands.indexOf(b);
+        if (this.checked && k < 0) S.brands.push(b); else if (!this.checked && k > -1) S.brands.splice(k, 1);
+        refresh();
+      };
+    });
+    $('f-min').oninput = refresh; $('f-max').oninput = refresh;
+    $('f-stock').onchange = refresh; $('f-deal').onchange = refresh;
+    refresh();
+  }
+  function openFilters(){ paintSheet(); openSheet($('sheet')); }
+
+  /* ══════════ menu drawer ══════════ */
+  function openDrawer(){
+    $('dr-b').innerHTML =
+      '<button class="searchbar" id="dr-search" style="margin:6px 0 10px;width:100%">' + svg('search', 17, 2) + 'Search the shop</button>' +
+      '<div class="dr-cap">Categories</div>' +
+      CATS.map(function(c, i){
+        return '<div><button class="dr-row" data-drcat="' + c.id + '"><i>' + svg(c.icon, 17) + '</i>' + esc(c.name) +
+          (c.kids.length ? '<span class="cv">' + svg('down', 17, 2.2) + '</span>' : '') + '</button>' +
+          (c.kids.length ? '<div class="dr-kids" data-drkids="' + c.id + '">' + c.kids.map(function(k){
+            return '<button class="dr-kid" data-go="catalog" data-cat="' + c.id + '" data-sub="' + esc(k) + '">' + esc(k) + '</button>';
+          }).join('') + '<button class="dr-kid" data-go="catalog" data-cat="' + c.id + '" style="color:var(--brand);font-weight:700">All ' + esc(c.name.toLowerCase()) + '</button></div>' : '') +
+        '</div>';
+      }).join('') +
+      '<div class="dr-cap">Your account</div>' +
+      '<button class="dr-row" data-go="account"><i>' + svg('user', 17) + '</i>Orders and repairs</button>' +
+      '<button class="dr-row" data-go="account"><i>' + svg('heart', 17) + '</i>Saved items<span class="cv" style="font-weight:700;color:var(--muted)">' +
+        Object.keys(WISH).filter(function(k){ return WISH[k]; }).length + '</span></button>' +
+      '<button class="dr-row" data-note="Trade applications are reviewed within one working day"><i>' + svg('shop', 17) + '</i>Trade account</button>' +
+      '<div class="dr-cap">Help</div>' +
+      '<button class="dr-row" data-note="Repair booking opens here"><i>' + svg('parts', 17) + '</i>Book a repair</button>' +
+      '<button class="dr-row" data-note="Delivery: €6.50, free over €75"><i>' + svg('truck', 17) + '</i>Delivery and returns</button>';
+
+    $('dr-search').onclick = function(){ closeSheets(); openSearch(); };
+    [].forEach.call($('dr-b').querySelectorAll('[data-drcat]'), function(b){
+      b.onclick = function(){
+        var id = this.getAttribute('data-drcat'), kids = $('dr-b').querySelector('[data-drkids="' + id + '"]');
+        if (!kids){ closeSheets(); go('catalog', {cat:id}); return; }
+        kids.classList.toggle('on'); this.classList.toggle('open');
+      };
+    });
+    [].forEach.call($('dr-b').querySelectorAll('[data-go]'), function(b){ b.addEventListener('click', closeSheets); });
+    $('drawer').classList.add('on'); $('scrim').classList.add('on');
+    $('drawer').setAttribute('aria-hidden', 'false');
+  }
+
+  /* ══════════ search overlay ══════════ */
+  var RECENT = ['ssd upgrade', 'iphone 13 battery', 'usb c hub'];
+  function openSearch(){
+    $('search').classList.add('on'); $('search').setAttribute('aria-hidden', 'false');
+    paintSearch(''); setTimeout(function(){ $('sq').focus(); }, 120);
+  }
+  $('sx').onclick = function(){ $('search').classList.remove('on'); $('search').setAttribute('aria-hidden', 'true'); };
+  $('sq').oninput = function(){ paintSearch(this.value); };
+  $('sq').onkeydown = function(e){ if (e.key === 'Enter') runSearch(this.value); };
+  function paintSearch(q){
+    q = (q || '').trim().toLowerCase();
+    if (!q){
+      $('sb').innerHTML = '<div class="dr-cap" style="padding-left:0">Recent</div>' +
+        RECENT.map(function(r){ return '<button class="sug" data-run="' + esc(r) + '"><i>' + svg('clock', 17) + '</i>' + esc(r) + '</button>'; }).join('') +
+        '<div class="dr-cap" style="padding-left:0">Popular categories</div>' +
+        CATS.slice(0, 6).map(function(c){
+          return '<button class="sug" data-cgo="' + c.id + '"><i>' + svg(c.icon, 17) + '</i>' + esc(c.name) +
+            '<small>' + countCat(c.id) + ' items</small></button>';
+        }).join('');
+    } else {
+      var hits = P.filter(function(p){
+        return p.name.toLowerCase().indexOf(q) > -1 || p.brand.toLowerCase().indexOf(q) > -1 || p.sub.toLowerCase().indexOf(q) > -1;
+      }).slice(0, 8);
+      $('sb').innerHTML = hits.length
+        ? hits.map(function(p){
+            return '<button class="sug" data-pgo="' + p.id + '"><i>' + svg(p.icon, 17) + '</i>' + esc(p.name) + '<small>' + money(p.price) + '</small></button>';
+          }).join('') + '<button class="btn btn-ghost" style="margin-top:14px" data-run="' + esc(q) + '">See all results for “' + esc(q) + '”</button>'
+        : '<div class="empty"><b>No matches for “' + esc(q) + '”</b><p>Try a model number, or ask us to source the part.</p>' +
+          '<button class="btn btn-ink btn-sm" data-note="Parts request form opens here">Ask us to source it</button></div>';
+    }
+    [].forEach.call($('sb').querySelectorAll('[data-run]'), function(b){ b.onclick = function(){ runSearch(this.getAttribute('data-run')); }; });
+    [].forEach.call($('sb').querySelectorAll('[data-cgo]'), function(b){
+      b.onclick = function(){ $('sx').onclick(); go('catalog', {cat:this.getAttribute('data-cgo')}); };
+    });
+    [].forEach.call($('sb').querySelectorAll('[data-pgo]'), function(b){
+      b.onclick = function(){ $('sx').onclick(); go('product', {product:+this.getAttribute('data-pgo')}); };
+    });
+  }
+  function runSearch(q){
+    q = (q || '').trim(); if (!q) return;
+    if (RECENT.indexOf(q.toLowerCase()) < 0) RECENT.unshift(q.toLowerCase());
+    S.q = q; S.cat = ''; S.sub = '';
+    var hit = P.filter(function(p){ return p.name.toLowerCase().indexOf(q.toLowerCase()) > -1; })[0];
+    S.cat = hit ? hit.cat : 'accessories';
+    $('sx').onclick(); go('catalog');
+  }
+
+  /* ══════════ PRODUCT ══════════ */
+  var pQty = 1;
+  function paintProduct(){
+    var p = P.filter(function(x){ return x.id === S.product; })[0] || P[0];
+    var off = p.was > p.price ? Math.round((1 - p.price / p.was) * 100) : 0;
+    $('s-product').innerHTML =
+      '<div class="gal"><div class="gtrack" id="gtrack">' +
+        [0,1,2].map(function(){ return '<div class="gslide">' + svg(p.icon, 200, 1.1) + '</div>'; }).join('') +
+      '</div><span class="gcount" id="gcount">1 / 3</span></div>' +
+      '<div class="sec" style="padding-top:14px">' +
+        '<span class="pcard-bl" style="font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">' + esc(p.brand) + '</span>' +
+        '<h1 style="font-size:19px;line-height:1.3;margin:7px 0 9px;letter-spacing:-.02em">' + esc(p.name) + '</h1>' +
+        '<div style="display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--muted);flex-wrap:wrap">' +
+          stars(p.rating) + (p.reviews ? p.reviews + ' reviews' : 'No reviews yet') +
+          '<span style="background:' + (p.stock ? '#EAF9F0;color:#0B6B3A' : '#F1F2F7;color:var(--muted)') + ';font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px">' +
+            (p.stock ? 'In stock' : 'Out of stock') + '</span>' +
+        '</div>' +
+        '<div class="pbuy"><div class="price"><b>' + money(p.price) + '</b>' +
+          (off ? '<s>' + money(p.was) + '</s><span class="save">Save ' + money(p.was - p.price) + '</span>' : '') + '</div>' +
+          '<p style="font-size:12px;color:var(--muted);margin:4px 0 0">Inc. VAT</p>' +
+          '<div class="deliv">' +
+            '<div>' + svg('truck', 15) + '<span><b>€6.50 delivery</b> — free over €75, arrives Saturday 22 August</span></div>' +
+            '<div>' + svg('shop', 15) + '<span><b>Free collection</b> in Kilcock, ready in about 2 hours</span></div>' +
+          '</div></div>' +
+        (p.stock ?
+          '<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">' +
+            '<span class="stepper"><button id="pq-">−</button><span id="pq">' + pQty + '</span><button id="pq+">+</button></span>' +
+            '<button class="btn btn-go" id="p-add">Add to basket</button></div>' +
+          '<button class="btn btn-ghost" id="p-buy">Buy it now</button>'
+          : '<button class="btn btn-ghost" data-note="We\'ll text you when it lands">Notify me when it\'s back</button>') +
+      '</div>' +
+      '<div class="sec" style="padding-top:0">' +
+        acc('Description', '<p style="margin-top:0">' + esc(p.name) + ' — supplied and supported by FixMyPC. Fitted in the workshop on request, tested before it leaves the counter.</p><p style="margin-bottom:0">No drivers or setup needed for most machines.</p>') +
+        acc('Specifications', '<div style="display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:13.5px">' +
+          '<span style="color:var(--muted)">Brand</span><span style="font-weight:600">' + esc(p.brand) + '</span>' +
+          '<span style="color:var(--muted)">Category</span><span style="font-weight:600">' + esc(cat(p.cat) ? cat(p.cat).name : '') + ' · ' + esc(p.sub) + '</span>' +
+          '<span style="color:var(--muted)">Warranty</span><span style="font-weight:600">12 months, FixMyPC handled</span>' +
+          '<span style="color:var(--muted)">SKU</span><span style="font-weight:600">FMP-' + (1000 + p.id) + '</span></div>') +
+        acc('Delivery and returns', '<p style="margin-top:0"><b>An Post next day</b> — €6.50, free over €75, ordered before 2pm.</p>' +
+          '<p style="margin-bottom:0"><b>Returns</b> — 14 days unopened, refunded within 5 working days.</p>') +
+        acc('Reviews (' + p.reviews + ')', '<p style="margin-top:0">' + stars(p.rating) + ' average from ' + p.reviews + ' verified buyers.</p>' +
+          '<button class="btn btn-ghost btn-sm" style="width:100%" data-note="Full review list opens on the live site">Read the reviews</button>') +
+      '</div>' +
+      '<div class="sec tint"><div class="sec-h"><h2>Goes well with this</h2></div><div class="rail">' +
+        P.filter(function(x){ return x.id !== p.id && x.cat === p.cat; }).slice(0, 4).map(pcard).join('') + '</div></div>';
+
+    var gt = $('gtrack');
+    gt.addEventListener('scroll', function(){
+      $('gcount').textContent = (Math.round(gt.scrollLeft / gt.clientWidth) + 1) + ' / 3';
+    });
+    [].forEach.call($('s-product').querySelectorAll('[data-accord]'), function(a){
+      a.querySelector('.acc-h').onclick = function(){ a.classList.toggle('on'); };
+    });
+    if ($('p-add')){
+      $('pq+').onclick = function(){ if (pQty < 6){ pQty++; $('pq').textContent = pQty; paintBar(); } else toast('Only 6 in stock'); };
+      $('pq-').onclick = function(){ if (pQty > 1){ pQty--; $('pq').textContent = pQty; paintBar(); } };
+      $('p-add').onclick = function(){ addToCart(p.id, pQty); };
+      $('p-buy').onclick = function(){ addToCart(p.id, pQty); go('checkout'); };
+    }
+  }
+  function acc(title, body){
+    return '<div class="acc" data-accord><button class="acc-h">' + esc(title) +
+      '<span class="cv">' + svg('down', 17, 2.2) + '</span></button><div class="acc-b">' + body + '</div></div>';
+  }
+
+  /* ══════════ CART ══════════ */
+  function paintCart(){
+    if (!CART.length){
+      $('s-cart').innerHTML = '<div class="empty" style="margin-top:26px"><b>Your basket is empty</b>' +
+        '<p>Parts, upgrades and refurbished kit — all stocked in Kilcock.</p>' +
+        '<button class="btn btn-ink btn-sm" data-go="catalog">Start shopping</button></div>';
+      return;
+    }
+    $('s-cart').innerHTML = '<div class="sec">' +
+      CART.map(function(l, i){
+        return '<div class="line"><span class="pic">' + svg(l.icon, 26) + '</span>' +
+          '<span class="t"><b>' + esc(l.name) + '</b><small>' + esc(l.brand) + '</small>' +
+            '<span class="stepper" style="margin-top:7px;transform:scale(.85);transform-origin:left">' +
+              '<button data-q="-' + i + '">−</button><span>' + l.qty + '</span><button data-q="+' + i + '">+</button></span>' +
+          '</span><span class="pr">' + money(l.price * l.qty) + '</span></div>';
+      }).join('') +
+      '<div class="sum">' +
+        '<div class="sum-line"><span>Subtotal</span><b>' + money(subtotal()) + '</b></div>' +
+        '<div class="sum-line"><span>Delivery</span><b' + (shipping() === 0 ? ' style="color:var(--go)"' : '') + '>' +
+          (shipping() === 0 ? 'Free' : money(shipping())) + '</b></div>' +
+        (subtotal() < 75 ? '<div class="sum-line" style="color:var(--brand);font-weight:600"><span>Spend ' + money(75 - subtotal()) + ' more for free delivery</span></div>' : '') +
+        '<div class="sum-line sum-total"><span>Total inc. VAT</span><b>' + money(total()) + '</b></div>' +
+      '</div>' +
+      '<button class="btn btn-ghost" style="margin-top:14px" data-go="catalog">Keep shopping</button>' +
+      '</div>' +
+      '<div class="sec tint"><div class="sec-h"><h2>Add these too</h2></div><div class="rail">' +
+        P.filter(function(p){ return p.stock && !CART.filter(function(l){ return l.id === p.id; }).length; }).slice(0, 4).map(pcard).join('') +
+      '</div></div>';
+
+    [].forEach.call($('s-cart').querySelectorAll('[data-q]'), function(b){
+      b.onclick = function(){
+        var v = this.getAttribute('data-q'), i = +v.slice(1);
+        if (v.charAt(0) === '+'){ if (CART[i].qty < 6) CART[i].qty++; else toast('Only 6 in stock'); }
+        else if (CART[i].qty > 1) CART[i].qty--;
+        else { CART.splice(i, 1); toast('Removed from basket'); }
+        render();
+      };
+    });
+  }
+
+  /* ══════════ CHECKOUT ══════════ */
+  function paintCheckout(){
+    var steps = ['Basket','Details','Payment','Done'];
+    $('s-checkout').innerHTML = '<div class="sec">' +
+      '<div style="display:flex;gap:6px;margin-bottom:16px">' + steps.map(function(s, i){
+        return '<span style="flex:1;text-align:center;font-size:10.5px;font-weight:700;color:' + (i <= 1 ? 'var(--brand)' : 'var(--muted)') + '">' +
+          '<span style="display:block;height:3px;border-radius:999px;background:' + (i <= 1 ? 'var(--brand)' : 'var(--line)') + ';margin-bottom:6px"></span>' + s + '</span>';
+      }).join('') + '</div>' +
+
+      '<h2 style="font-size:16px;margin:0 0 10px">How do you want it?</h2>' +
+      '<button class="choice' + (CO.fulfil === 'post' ? ' on' : '') + '" data-ful="post"><span class="dt"></span>' +
+        '<span class="t"><b>Send by post</b><small>An Post next day · Saturday 22 August</small></span>' +
+        '<span class="pr' + (subtotal() >= 75 ? ' free' : '') + '">' + (subtotal() >= 75 ? 'Free' : '€6.50') + '</span></button>' +
+      '<button class="choice' + (CO.fulfil === 'collect' ? ' on' : '') + '" data-ful="collect"><span class="dt"></span>' +
+        '<span class="t"><b>Collect in Kilcock</b><small>Ready in about 2 hours · Mon–Sat</small></span>' +
+        '<span class="pr free">Free</span></button>' +
+
+      (CO.fulfil === 'post' ?
+        '<h2 style="font-size:16px;margin:20px 0 10px">Delivery address</h2>' +
+        ADDRS.map(function(a){
+          return '<button class="choice' + (CO.addr === a.id ? ' on' : '') + '" data-addr="' + a.id + '"><span class="dt"></span>' +
+            '<span class="t"><b>' + esc(a.label) + '</b><small>' + esc(a.line) + '</small></span></button>';
+        }).join('') +
+        '<button class="btn btn-ghost btn-sm" style="width:100%" data-note="New address form opens here">+ Add a new address</button>' : '') +
+
+      '<h2 style="font-size:16px;margin:20px 0 10px">Contact</h2>' +
+      '<div class="field"><label for="co-email">Email</label>' +
+        '<input class="control" id="co-email" type="email" placeholder="you@example.ie" value="' + esc(CO.email) + '">' +
+        '<p class="hint">Receipt and tracking link go here.</p></div>' +
+      '<div class="field"><label for="co-phone">Mobile</label>' +
+        '<input class="control" id="co-phone" type="tel" placeholder="087 123 4567" value="' + esc(CO.phone) + '"></div>' +
+
+      '<h2 style="font-size:16px;margin:20px 0 10px">Payment</h2>' +
+      [['card','Card','Visa, Mastercard, Amex via SumUp'],['applepay','Apple Pay','One tap, no typing'],
+       ['paypal','PayPal','Finish in the PayPal app'],['bank','Bank transfer','Ships once it clears']].map(function(m){
+        return '<button class="choice' + (CO.pay === m[0] ? ' on' : '') + '" data-pay="' + m[0] + '"><span class="dt"></span>' +
+          '<span class="t"><b>' + m[1] + '</b><small>' + m[2] + '</small></span></button>';
+      }).join('') +
+
+      '<div class="sum">' +
+        '<div class="sum-line"><span>Subtotal</span><b>' + money(subtotal()) + '</b></div>' +
+        '<div class="sum-line"><span>' + (CO.fulfil === 'collect' ? 'Collection' : 'Delivery') + '</span><b>' +
+          (shipping() === 0 ? 'Free' : money(shipping())) + '</b></div>' +
+        '<div class="sum-line sum-total"><span>Total inc. VAT</span><b>' + money(total()) + '</b></div>' +
+        '<div class="sum-line" style="font-size:12px"><span>of which VAT at 23%</span><span>' + money(total() - total() / 1.23) + '</span></div>' +
+      '</div></div>';
+
+    [].forEach.call($('s-checkout').querySelectorAll('[data-ful]'), function(b){
+      b.onclick = function(){ CO.fulfil = this.getAttribute('data-ful'); render(); };
+    });
+    [].forEach.call($('s-checkout').querySelectorAll('[data-addr]'), function(b){
+      b.onclick = function(){ CO.addr = +this.getAttribute('data-addr'); render(); };
+    });
+    [].forEach.call($('s-checkout').querySelectorAll('[data-pay]'), function(b){
+      b.onclick = function(){ CO.pay = this.getAttribute('data-pay'); render(); };
+    });
+    $('co-email').oninput = function(){ CO.email = this.value; paintBar(); };
+    $('co-phone').oninput = function(){ CO.phone = this.value; paintBar(); };
+  }
+
+  /* ══════════ DONE ══════════ */
+  function paintDone(){
+    $('s-done').innerHTML = '<div class="done-wrap">' +
+      '<div class="done-ic"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00A24A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>' +
+      '<h2>Order FMP-24817 placed</h2><p>Receipt on its way to ' + esc(CO.email || 'your email') + '</p></div>' +
+      '<div class="sec"><div style="border:1px solid var(--line);border-radius:var(--radius);padding:14px">' +
+        [['Order received','Just now · confirmation emailed', 1],
+         [CO.fulfil === 'collect' ? 'Picked and put aside' : 'Picked and packed','Within 2 hours during shop hours', 0],
+         [CO.fulfil === 'collect' ? 'Ready to collect' : 'Handed to An Post', CO.fulfil === 'collect' ? 'We text you when it\'s on the counter' : 'Tracking number texted to you', 0],
+         [CO.fulfil === 'collect' ? 'Collected' : 'Delivered', CO.fulfil === 'collect' ? 'Bring photo ID or the order email' : 'Saturday 22 August', 0]
+        ].map(function(t){
+          return '<div class="tl' + (t[2] ? ' on' : '') + '"><i>' + (t[2] ? '✓' : '') + '</i><div><b>' + esc(t[0]) + '</b><small>' + esc(t[1]) + '</small></div></div>';
+        }).join('') + '</div>' +
+        '<div style="display:grid;gap:10px;margin-top:16px">' +
+          '<button class="btn btn-ink" data-go="account">Track this order</button>' +
+          '<button class="btn btn-ghost" data-go="home">Back to the shop</button>' +
+        '</div></div>';
+  }
+
+  /* ══════════ ACCOUNT ══════════ */
+  function paintAccount(){
+    var saved = Object.keys(WISH).filter(function(k){ return WISH[k]; }).length;
+    $('s-account').innerHTML =
+      '<div class="acct-head"><b>Hello, Alex</b><small>demo@example.ie · Business account</small></div>' +
+      '<div class="tiles">' +
+        '<button class="tile" data-note="Order list opens here"><i>' + svg('box', 17) + '</i><b>Orders</b><small>2 in progress</small></button>' +
+        '<button class="tile" data-note="Repair tickets open here"><i>' + svg('parts', 17) + '</i><b>Repairs</b><small>1 in the workshop</small></button>' +
+        '<button class="tile" data-note="Saved items"><i>' + svg('heart', 17) + '</i><b>Saved</b><small>' + saved + ' item' + (saved === 1 ? '' : 's') + '</small></button>' +
+        '<button class="tile" data-note="Invoices and VAT receipts"><i>' + svg('tag', 17) + '</i><b>Invoices</b><small>VAT receipts</small></button>' +
+      '</div>' +
+      '<div class="sec">' +
+        '<div class="sec-h"><h2>In progress</h2></div>' +
+        '<div style="border:1px solid var(--line);border-radius:var(--radius);padding:13px;margin-bottom:10px">' +
+          '<div style="display:flex;gap:10px;align-items:center"><span style="width:44px;height:44px;border-radius:11px;background:var(--wash);display:grid;place-items:center;color:var(--brand)">' + svg('truck', 20) + '</span>' +
+          '<div style="flex:1"><b style="font-size:13.5px;display:block">FMP-24810 · 2 items</b><small style="color:var(--muted);font-size:12px">Handed to An Post · arrives tomorrow</small></div>' +
+          '<span style="font-weight:800;font-size:13.5px">€89.94</span></div></div>' +
+        '<div style="border:1px solid var(--line);border-radius:var(--radius);padding:13px">' +
+          '<div style="display:flex;gap:10px;align-items:center"><span style="width:44px;height:44px;border-radius:11px;background:var(--wash);display:grid;place-items:center;color:var(--brand)">' + svg('parts', 20) + '</span>' +
+          '<div style="flex:1"><b style="font-size:13.5px;display:block">REP-8842 · MacBook Air</b><small style="color:var(--muted);font-size:12px">Awaiting your approval on the quote</small></div>' +
+          '<button class="btn btn-go btn-sm" data-note="Quote approval opens here">View</button></div></div>' +
+        '<div class="sec-h" style="margin-top:22px"><h2>Settings</h2></div>' +
+        '<button class="list-row" data-note="Address book">Addresses<span class="cv">' + svg('chev', 17, 2) + '</span></button>' +
+        '<button class="list-row" data-note="Contact preferences">Email and SMS preferences<span class="cv">' + svg('chev', 17, 2) + '</span></button>' +
+        '<button class="list-row" data-note="Two-factor is on: authenticator app">Security and 2FA<span class="cv">' + svg('chev', 17, 2) + '</span></button>' +
+        '<button class="list-row" data-note="Signed out">Sign out<span class="cv">' + svg('chev', 17, 2) + '</span></button>' +
+      '</div>' + footerHtml();
+  }
+
+  /* ══════════ sticky bar ══════════ */
+  function paintBar(){
+    var bar = $('bar'), show = false, label = '', sub = '', why = '';
+    if (S.screen === 'cart' && CART.length){ show = true; label = 'Checkout'; sub = cartCount() + ' items'; }
+    else if (S.screen === 'checkout'){
+      show = true;
+      label = {card:'Pay ' + money(total()), applepay:'Pay with Apple Pay', paypal:'Continue to PayPal', bank:'Get transfer details'}[CO.pay];
+      sub = CO.fulfil === 'collect' ? 'Collecting in Kilcock' : 'Delivered Saturday';
+      if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(CO.email)) why = 'Add the email for your receipt';
+      else if (CO.phone.replace(/\D/g, '').length < 7) why = 'Add a mobile number for the courier';
+    }
+    else if (S.screen === 'product'){
+      var p = P.filter(function(x){ return x.id === S.product; })[0];
+      if (p && p.stock){ show = true; label = 'Add to basket'; sub = 'Qty ' + pQty; }
+    }
+    bar.classList.toggle('on', show);
+    if (!show) return;
+    $('bar-total').textContent = S.screen === 'product'
+      ? money((P.filter(function(x){ return x.id === S.product; })[0] || {price:0}).price * pQty)
+      : money(total());
+    $('bar-sub').textContent = sub;
+    $('bar-cta').textContent = label;
+    $('bar-cta').disabled = !!why;
+    var w = bar.querySelector('.bar-why');
+    if (why){
+      if (!w){ w = document.createElement('p'); w.className = 'bar-why'; bar.appendChild(w); }
+      w.textContent = why;
+    } else if (w) w.remove();
+  }
+  $('bar-cta').onclick = function(){
+    if (S.screen === 'cart') go('checkout');
+    else if (S.screen === 'product'){
+      var p = P.filter(function(x){ return x.id === S.product; })[0];
+      if (p) addToCart(p.id, pQty);
+    }
+    else if (S.screen === 'checkout'){
+      var btn = this, old = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Authorising…';
+      setTimeout(function(){
+        btn.disabled = false; btn.textContent = old;
+        CART = []; go('done');
+      }, 900);
+    }
+  };
+
+  /* ══════════ render ══════════ */
+  function render(){
+    paintHead(); paintTabs();
+    if (S.screen === 'home') paintHome();
+    else if (S.screen === 'catalog') paintCatalog();
+    else if (S.screen === 'product') paintProduct();
+    else if (S.screen === 'cart') paintCart();
+    else if (S.screen === 'checkout') paintCheckout();
+    else if (S.screen === 'done') paintDone();
+    else if (S.screen === 'account') paintAccount();
+    paintBar();
+  }
+  $('promo-x').onclick = function(){ $('promo').remove(); };
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ closeSheets(); $('sx').onclick(); } });
+  render();
+})();
+</script>
+</body>
+</html>

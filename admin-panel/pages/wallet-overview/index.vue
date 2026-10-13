@@ -4,6 +4,7 @@
     ref="listPage"
     list-api="getWalletOverview"
     route-name="wallet-overview"
+    table-class="wallet-overview-table"
     empty-store-variable="allWalletOverview"
     name="Wallet Overview"
     gate="wallet_log"
@@ -181,7 +182,10 @@ export default {
 </script>
 
 <style>
-table {
+/* Scoped to this page's own list: an unqualified `table` selector in an
+   unscoped <style> block reaches every table in the admin, and was
+   collapsing the product grid's Title column to an equal 1/13th share. */
+.wallet-overview-table {
   table-layout: fixed;
 }
 

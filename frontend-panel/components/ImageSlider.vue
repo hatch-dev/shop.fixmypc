@@ -16,14 +16,15 @@
         />
       </ul>
     </slot>
-    <div
+      <div
+      v-if="!currentPerView || imageCount > currentPerView"
       data-glide-el="controls"
       class="glide-nav"
-    >
+      >
       <button
         aria-label="prev"
         class="prev-btn"
-        data-glide-dir="<"
+        data-glide-dir="|<"
       >
         <i
           class="m-0 icon arrow-left"
@@ -32,7 +33,7 @@
       <button
         class="next-btn"
         aria-label="next"
-        data-glide-dir=">"
+        data-glide-dir="|>"
       >
         <i
           class="m-0 icon arrow-right"
@@ -122,6 +123,11 @@
           perView: this.perView,
           autoplay: this.autoplay,
           gap: this.gap,
+          // '|' is glide's pagination pattern: it advances by perView and
+          // snaps to the page boundary. Without it a swipe moves a single
+          // slide, so a 2-up rail kept one product on screen and brought in
+          // only one new one.
+          perSwipe: '|',
           perTouch: 3,
           bound: true,
           rewind: this.loop,
@@ -146,14 +152,6 @@
           }
         })
 
-        if(!this.bullets){
-          this.$nextTick(() => {
-            const step = this.currentPerView
-            this.glide.on('run.before', (evt) => {
-              evt.steps = evt.direction === '>' ? -step : step
-            })
-          })
-        }
 
         if(this.lazyImage) {
           this.$nextTick(() => {
@@ -166,7 +164,12 @@
                   this.$emit('change', {index: evt.steps - 1, direction: 1})
                 } else {
                   //FOR ARROW CLICKS
-                  this.$emit('change', {index: this.glide.index, direction: (evt.direction === '>') ? 1: -1})
+                  // a pagination move reports direction '|' and carries the
+                  // arrow in steps, so read both
+                  const forward = evt.direction === '|'
+                    ? evt.steps === '>'
+                    : evt.direction === '>'
+                  this.$emit('change', {index: this.glide.index, direction: forward ? 1 : -1})
                 }
 
 
@@ -197,4 +200,8 @@
     }
   }
 </script>
-
+<style scoped>
+.glide__arrow--disabled {
+  display: none !important;
+}
+</style>

@@ -9,8 +9,9 @@
     :order-options="orderOptions"
     gate="page"
   >
-    <template v-slot:table="{list}">
+    <template v-slot:table="{list, from}">
       <tr class="lite-bold">
+        <th class="w-50x mx-w-50x">#</th>
         <th>{{ $t('index.title') }}</th>
         <th>{{ $t('category.slug') }}</th>
         <th>{{ $t('category.created') }}</th>
@@ -21,6 +22,7 @@
         v-for="(value, index) in list"
         :key="index"
       >
+        <td class="w-50x mx-w-50x">{{ from + index }}</td>
         <td>
           <nuxt-link
             :to="`/pages/${value.id}`"

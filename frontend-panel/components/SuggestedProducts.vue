@@ -8,7 +8,7 @@
         :per-page="4"
         :total-item="totalSuggested1"
         @change="change(1, $event)"
-        class="b-t pt-20 pt-sm-15 npb-5"
+        class="pt-20 pt-sm-15 npb-5"
       />
 
       <products-dynamic
@@ -18,15 +18,23 @@
         :total-item="totalSuggested2"
         :per-page="4"
         @change="change(2, $event)"
-        class="b-t pt-20 pt-sm-15 pb-15 pb-sm-5"
+        class="pt-20 pt-sm-15 pb-15 pb-sm-5"
       />
     </div>
+    <!--
+      These strips sit below the fold on the product page. A 100px spinner
+      there was a large grey wheel announcing a section the reader had not
+      asked about yet; a row of tiles just says "more products, loading".
+    -->
     <div
-      class="spinner-wrapper flex "
+      class="pt-20 pt-sm-15"
       v-else
     >
-      <spinner
-        :radius="100"
+      <skeleton-base :height="20" width="220px" :mb="18" />
+      <skeleton-product-grid
+        :count="4"
+        rail
+        :label="$t('suggestedProducts.recommendedForYou')"
       />
     </div>
 
@@ -37,7 +45,6 @@
   import { mapGetters } from 'vuex'
   import util from '~/mixin/util'
   import ProductsSlider from '~/components/ProductsSlider'
-  import Spinner from "./Spinner";
   import ProductsDynamic from "~/components/ProductsDynamic";
   export default {
     name: 'SuggestedProducts',
@@ -62,7 +69,7 @@
         default: ''
       },
     },
-    components: {ProductsDynamic, Spinner, ProductsSlider },
+    components: {ProductsDynamic, ProductsSlider },
     computed: {
       ...mapGetters('language', ['langCode']),
       ...mapGetters('detail', ['suggested']),
@@ -85,6 +92,8 @@
             id: this.productId,
             page: page,
             lang: this.langCode,
+            // only a real session: token.get() is `false` when signed out
+            bearer: this.$auth?.loggedIn ? this.$auth.strategy.token.get() : null,
           })
           this.fetchingSuggested = false
         } catch (e) {

@@ -6,20 +6,18 @@
   >
     <template v-slot:rightArea>
 
-      <transition name="fade" mode="out-in">
-        <div
-          class="spinner-wrapper flex"
-          v-if="fetchingComparedData"
-        >
-          <spinner
-            :radius="100"
-          />
-        </div>
-      </transition>
+      <!--
+        No overlay spinner. The tiles are about to land in a known grid, so
+        the grid itself is the loading state: it holds the page's height,
+        gives the reader the shape of what is coming, and is replaced in
+        place rather than cutting from grey to content.
 
-
+        The empty-state test is also guarded by the fetch now - an empty
+        `currentCompared` during the first load is "not arrived yet", not
+        "nothing to compare", and it used to announce the latter.
+      -->
       <div
-        v-if="currentCompared && !currentCompared.length"
+        v-if="!fetchingComparedData && currentCompared && !currentCompared.length"
         class="info-msg"
       >
         {{ $t('compared.noData') }}
@@ -30,16 +28,13 @@
         class="area"
       >
         <div class="area-content">
-          <div class="tile-container">
-            <div
-              class="shimmer-wrapper pt-15"
-              v-if="fetchingComparedData"
-            >
-              <tile-shimmer
+          <div class="tile-container d-flex">
+            <template v-if="fetchingComparedData">
+              <skeleton-product
                 v-for="index in 8"
-                :key="index"
+                :key="`sk-${index}`"
               />
-            </div>
+            </template>
             <template v-else>
               <compared-tile
                 v-for="(value, index) in currentCompared"
@@ -73,8 +68,6 @@
   import ComparedTile from '~/components/ComparedTile'
   import routeParamHelper from '~/mixin/routeParamHelper'
   import Pagination from '~/components/Pagination'
-  import Spinner from "~/components/Spinner";
-  import TileShimmer from "~/components/TileShimmer";
   import global from '~/mixin/global'
 
   export default {
@@ -93,8 +86,6 @@
     },
     watch: {},
     components: {
-      TileShimmer,
-      Spinner,
       LazyImage,
       RatePopup,
       AccountLayout,

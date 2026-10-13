@@ -1,0 +1,672 @@
+@import "./variables.styl"
+
+// Calendar range picker (components/DateRangePicker.vue).
+//
+// The panel is position:fixed and placed by the component against the trigger's
+// bounding box. `.content` is the app's scroll container (overflow-y:auto,
+// height:100vh), so an absolutely positioned panel was clipped as soon as it
+// reached past the card edge; fixed escapes every ancestor's overflow, and the
+// component re-places it on scroll and resize so it stays glued to the button.
+
+.drp
+  position relative
+  flex none
+
+  .drp__trigger
+    display inline-flex
+    align-items center
+    gap 8px
+    max-width 100%
+    height btn-height-sm
+    padding 0 10px 0 12px
+    border 1px solid border-color
+    border-radius var(--radius-md)
+    background surface-color
+    color var(--text-strong)
+    font-size 13px
+    font-family inherit
+    font-weight 600
+    cursor pointer
+    white-space nowrap
+    transition all .14s ease
+
+    &:hover:not(:disabled)
+      border-color var(--border-strong)
+      background var(--hover-color)
+
+    &:disabled
+      opacity .6
+      cursor not-allowed
+
+    &:focus-visible
+      outline none
+      border-color primary-color
+      box-shadow 0 0 0 3px primary-lite-color
+
+  &.is-open .drp__trigger
+    border-color primary-color
+    box-shadow 0 0 0 3px primary-lite-color
+
+  .drp__icon
+    flex none
+    font-size 12px
+    color primary-color
+
+  .drp__caret
+    flex none
+    font-size 9px
+    color var(--text-soft)
+
+  // "Last 30 Days · 16 Aug 2026 – 14 Sep 2026" - the preset names the window,
+  // the dates say exactly what it means. The dates drop out first when space
+  // runs short, because the name alone still identifies the selection.
+  .drp__label
+    display inline-flex
+    align-items baseline
+    gap 6px
+    min-width 0
+
+  .drp__label-name
+    flex none
+    font-weight 600
+
+  .drp__label-sep
+    flex none
+    color var(--text-soft)
+
+  .drp__label-dates
+    overflow hidden
+    text-overflow ellipsis
+    white-space nowrap
+    font-weight 500
+    color var(--text-muted)
+
+  .drp__panel
+    z-index 60
+    background surface-color
+    border 1px solid border-color
+    border-radius var(--radius-lg)
+    box-shadow 0 16px 40px rgba(17, 24, 39, .14), 0 2px 6px rgba(17, 24, 39, .06)
+    color var(--text-color)
+
+    &:focus
+      outline none
+
+  .drp__panel.is-anchored
+    position fixed
+    top 0
+    left 0
+
+  // The little pointer at the trigger, so the panel reads as belonging to the
+  // button rather than floating over the card. A rotated square, with only the
+  // two edges facing outward carrying the border.
+  .drp__arrow
+    position absolute
+    width 10px
+    height 10px
+    margin-left -5px
+    background surface-color
+    transform rotate(45deg)
+
+  .drp__panel.is-bottom .drp__arrow
+    top -6px
+    border-left 1px solid border-color
+    border-top 1px solid border-color
+
+  .drp__panel.is-top .drp__arrow
+    bottom -6px
+    border-right 1px solid border-color
+    border-bottom 1px solid border-color
+
+  .drp__body
+    display flex
+    align-items stretch
+
+  // Quick windows, always on screen beside the calendar rather than behind a
+  // "custom range" step.
+  .drp__rail
+    flex none
+    display flex
+    flex-direction column
+    gap 2px
+    width 132px
+    padding 10px 8px
+    border-right 1px solid border-color
+
+  .drp__rail-item
+    display flex
+    align-items center
+    justify-content space-between
+    gap 8px
+    height 30px
+    padding 0 9px
+    border none
+    border-radius var(--radius-sm)
+    background none
+    color var(--text-color)
+    font-size 12.5px
+    font-family inherit
+    font-weight 500
+    text-align left
+    white-space nowrap
+    cursor pointer
+    transition background .12s ease, color .12s ease
+
+    &:hover
+      background var(--hover-color)
+
+    &:focus-visible
+      outline 2px solid primary-color
+      outline-offset -2px
+
+    &.is-active
+      background primary-lite-color
+      color primary-color
+      font-weight 700
+
+    i
+      font-size 9px
+
+  .drp__cal
+    flex 1 1 auto
+    min-width 0
+    padding 10px 12px 4px
+
+  // Start / end chips: which end the next click sets, and what is in each now.
+  .drp__fields
+    display flex
+    align-items center
+    gap 8px
+    margin-bottom 10px
+
+  .drp__field
+    flex 1 1 0
+    min-width 0
+    display flex
+    flex-direction column
+    gap 1px
+    padding 5px 9px
+    border 1px solid border-color
+    border-radius var(--radius-sm)
+    background var(--page-bg)
+    transition all .12s ease
+
+    em
+      font-style normal
+      font-size 10px
+      font-weight 700
+      letter-spacing .03em
+      text-transform uppercase
+      color var(--text-soft)
+
+    b
+      font-size 12.5px
+      font-weight 600
+      color var(--text-strong)
+      white-space nowrap
+      overflow hidden
+      text-overflow ellipsis
+
+    &.is-active
+      border-color primary-color
+      background surface-color
+
+      em
+        color primary-color
+
+  .drp__field-sep
+    flex none
+    font-size 10px
+    color var(--text-soft)
+
+  .drp__months
+    display flex
+    gap 16px
+
+  .drp__month
+    flex 1 1 0
+    min-width 0
+    width 196px
+
+  .drp__month-head
+    display flex
+    align-items center
+    justify-content space-between
+    gap 4px
+    height 28px
+    margin-bottom 4px
+
+  .drp__month-title
+    flex 1
+    text-align center
+    font-size 13px
+    font-weight 700
+    color var(--text-strong)
+    white-space nowrap
+
+  .drp__nav
+    flex none
+    width 26px
+    height 26px
+    display inline-flex
+    align-items center
+    justify-content center
+    border 1px solid border-color
+    border-radius var(--radius-sm)
+    background surface-color
+    color var(--text-muted)
+    font-size 10px
+    cursor pointer
+    transition all .12s ease
+
+    &:hover:not(:disabled)
+      border-color primary-color
+      background primary-lite-color
+      color primary-color
+
+    &:focus-visible
+      outline none
+      border-color primary-color
+      box-shadow 0 0 0 3px primary-lite-color
+
+    &:disabled
+      opacity .4
+      cursor not-allowed
+
+    // Holds the title centred on the month that has no button on that side
+    &.is-ghost
+      border-color transparent
+      background none
+      pointer-events none
+
+  .drp__dow
+    display grid
+    grid-template-columns repeat(7, 1fr)
+
+    span
+      height 22px
+      display flex
+      align-items center
+      justify-content center
+      font-size 10px
+      font-weight 700
+      text-transform uppercase
+      color var(--text-soft)
+
+  // No column gap: the selected range has to read as one continuous strip, and
+  // a gap would slice it into separate chips. The row gap is on the band, not
+  // on the grid, so weeks still breathe.
+  .drp__grid
+    display grid
+    grid-template-columns repeat(7, 1fr)
+
+  .drp__day
+    position relative
+    height 32px
+    padding 0
+    border none
+    background none
+    font-family inherit
+    cursor pointer
+
+    // The range band. It fills the whole cell inside the range and half a cell
+    // at each end, which is what carries the strip through the two ends.
+    &:before
+      content ''
+      position absolute
+      top 2px
+      bottom 2px
+      left 0
+      right 0
+      background transparent
+      pointer-events none
+
+    &.has-range:before
+      background primary-lite-color
+
+    &.is-start.has-range:before
+      left 50%
+
+    &.is-end.has-range:before,
+    &.is-preview-end.has-range:before
+      right 50%
+
+    // Round the band where a week wraps, so the strip ends cleanly at the edge
+    // of the grid instead of being cut square
+    &:nth-child(7n + 1):before
+      border-top-left-radius var(--radius-sm)
+      border-bottom-left-radius var(--radius-sm)
+
+    &:nth-child(7n):before
+      border-top-right-radius var(--radius-sm)
+      border-bottom-right-radius var(--radius-sm)
+
+    &.is-blank
+      visibility hidden
+      pointer-events none
+
+    &:disabled
+      cursor not-allowed
+
+    &:focus-visible
+      outline none
+
+      .drp__day-in
+        outline 2px solid primary-color
+        outline-offset 1px
+
+  .drp__day-in
+    position relative
+    z-index 1
+    display flex
+    align-items center
+    justify-content center
+    width 28px
+    height 28px
+    margin 0 auto
+    border-radius 50%
+    font-size 12.5px
+    font-weight 500
+    color var(--text-color)
+    transition background .12s ease, color .12s ease
+
+  // The cell itself must stay transparent on hover. base.styl's global
+  // `button:hover:not(.primary-btn, ...)` rule outranks the resting
+  // `.drp .drp__day` declaration, so without this the whole 32px cell fills
+  // with grey and covers the selected-range band underneath.
+  .drp__day:hover:not(:disabled)
+    background none
+
+  .drp__day:hover:not(:disabled) .drp__day-in
+    background var(--hover-color)
+
+  // Today is a ring, never a fill: a fill would be indistinguishable from a
+  // selected end
+  .drp__day.is-today .drp__day-in
+    box-shadow inset 0 0 0 1px var(--border-strong)
+    font-weight 700
+
+  .drp__day.is-in-range .drp__day-in
+    color primary-color
+    font-weight 600
+
+  .drp__day.is-start .drp__day-in,
+  .drp__day.is-end .drp__day-in
+    background primary-color
+    color primary-foreground
+    font-weight 700
+    box-shadow 0 1px 3px rgba(17, 24, 39, .25)
+
+  // The end a hover is proposing - outlined rather than filled, so it cannot be
+  // mistaken for one that has actually been clicked. It follows the filled rule
+  // so the two can never both apply to the same cell.
+  .drp__day.is-preview-end .drp__day-in
+    background surface-color
+    box-shadow inset 0 0 0 1px primary-color
+    color primary-color
+    font-weight 700
+
+  .drp__day.is-start.is-today .drp__day-in,
+  .drp__day.is-end.is-today .drp__day-in
+    box-shadow 0 1px 3px rgba(17, 24, 39, .25)
+
+  .drp__day.is-disabled .drp__day-in,
+  .drp__day:disabled .drp__day-in
+    color var(--text-soft)
+    opacity .5
+
+  .drp__day.is-disabled:hover .drp__day-in
+    background none
+
+  .drp__foot
+    display flex
+    align-items center
+    justify-content space-between
+    gap 16px
+    padding 10px 12px 11px
+    border-top 1px solid border-color
+    background var(--page-bg)
+    border-radius 0 0 var(--radius-lg) var(--radius-lg)
+
+  .drp__summary
+    display flex
+    flex-direction column
+    gap 1px
+    min-width 0
+
+    em
+      font-style normal
+      font-size 10px
+      font-weight 700
+      letter-spacing .03em
+      text-transform uppercase
+      color var(--text-soft)
+
+    b
+      font-size 12.5px
+      font-weight 700
+      color var(--text-strong)
+      white-space nowrap
+
+      &.is-partial
+        color var(--text-muted)
+
+  .drp__days
+    font-size 11px
+    color var(--text-muted)
+    white-space nowrap
+
+  .drp__actions
+    display flex
+    align-items center
+    gap 6px
+    flex none
+
+  .drp__reset
+    display inline-flex
+    align-items center
+    justify-content center
+    gap 6px
+    height 26px
+    padding 0 6px
+    line-height 1
+    border none
+    border-radius var(--radius-sm)
+    background none
+    color var(--text-muted)
+    font-size 12px
+    font-weight 600
+    font-family inherit
+    cursor pointer
+    transition all .12s ease
+
+    // `background none` is doing real work: without it the global
+    // `button:hover` rule in base.styl drops a grey pill behind Reset, which
+    // is the opposite of the subtle tertiary action this is meant to be.
+    &:hover:not(:disabled)
+      background none
+      color primary-color
+
+    &:focus-visible
+      outline 2px solid primary-color
+      outline-offset 1px
+
+    &:disabled
+      opacity .4
+      cursor not-allowed
+
+    i
+      font-size 10px
+
+  // Sized off the app's "xs" button variant, then trimmed further: the footer
+  // should read as a toolbar, not as a form.
+  .drp__btn
+    // Centre the label with flexbox rather than leaving it to line-height.
+    // base.styl gives every bare <button> `height: 40px; line-height: 38px`,
+    // and overriding only the height left a 38px line box inside a 26px
+    // button - the label sat off-centre and the padding read as lopsided.
+    display inline-flex
+    align-items center
+    justify-content center
+    height 26px
+    padding 0 8px
+    line-height 1
+    border-radius var(--radius-sm)
+    border 1px solid border-color
+    background surface-color
+    color var(--text-color)
+    font-size 12px
+    font-weight 600
+    font-family inherit
+    cursor pointer
+    // Transitions here name `all`, never the border colour: in variables.styl
+    // border-color is a Stylus alias for var(--border-color), so writing it in
+    // a transition list compiles to `transition: var(--border-color) .12s ease`
+    // - invalid at computed-value time, which silently drops the transition
+    // entirely. Every rule in this file hit that; they all say `all` now.
+    transition all .12s ease
+
+    &:focus-visible
+      outline none
+      border-color primary-color
+      box-shadow 0 0 0 3px primary-lite-color
+
+    &:disabled
+      opacity .45
+      cursor not-allowed
+
+  // Both hover states are scoped through .drp__actions and spelled out in full.
+  //
+  // Two reasons, both of which bit this footer. base.styl has a global
+  // `button:hover:not(.primary-btn, ...)` that washes any unlisted button with
+  // --hover-color grey, so a property left unset here does not keep its resting
+  // value, it takes that grey. And the primary carries BOTH classes, so when
+  // secondary and primary hover rules had equal specificity the winner came
+  // down to source order - one stale injected <style> in dev and Apply rendered
+  // with the secondary's grey fill behind its own white label.
+  //
+  // So: secondary at (0,5,0), primary at (0,6,0) via the doubled class. No tie
+  // to lose, and nothing global can reach either. There is no grey on hover
+  // anywhere in this footer - the secondary tints toward the brand instead.
+  .drp__actions .drp__btn:hover:not(:disabled)
+    background surface-color
+    border-color primary-color
+    color primary-color
+
+  .drp__actions .drp__btn.drp__btn--primary
+    border-color primary-color
+    background primary-color
+    color primary-foreground
+
+  .drp__actions .drp__btn.drp__btn--primary:hover:not(:disabled)
+    background var(--primary-hover)
+    border-color var(--primary-hover)
+    color primary-foreground
+    box-shadow 0 1px 3px rgba(51, 49, 154, .35)
+
+  .drp__actions .drp__btn.drp__btn--primary:active:not(:disabled)
+    box-shadow none
+
+    &:disabled
+      box-shadow none
+
+// Tablet: the rail keeps its column but the months tighten rather than forcing
+// the panel past the viewport.
+@media only screen and (max-width: 900px)
+  .drp
+    .drp__month
+      width 180px
+
+    .drp__months
+      gap 12px
+
+// Phone: one month, and the panel becomes a sheet pinned to the viewport, so a
+// control sitting at the right edge of a card cannot open off-screen. Day cells
+// grow to a touch target and the footer stacks so Apply stays reachable.
+@media only screen and (max-width: 720px)
+  .drp
+    .drp__label
+      overflow hidden
+      text-overflow ellipsis
+      white-space nowrap
+      max-width 190px
+
+    .drp__panel.is-sheet
+      position fixed
+      left 10px
+      right 10px
+      bottom 10px
+      top auto
+      max-height 88vh
+      display flex
+      flex-direction column
+      overflow hidden
+
+    .drp__body
+      flex-direction column
+      min-height 0
+      overflow-y auto
+
+    // The presets become a scrolling chip row above the calendar
+    .drp__rail
+      flex-direction row
+      width 100%
+      gap 6px
+      padding 10px 12px
+      border-right none
+      border-bottom 1px solid border-color
+      overflow-x auto
+      -webkit-overflow-scrolling touch
+
+    .drp__rail-item
+      flex none
+      height 30px
+      border 1px solid border-color
+      border-radius 999px
+
+      &.is-active
+        border-color primary-color
+
+    .drp__cal
+      padding 12px 12px 6px
+
+    .drp__month
+      width 100%
+
+    .drp__day
+      height 38px
+
+    .drp__day-in
+      width 34px
+      height 34px
+      font-size 13.5px
+
+    .drp__dow span
+      height 24px
+      font-size 11px
+
+    .drp__foot
+      flex none
+      flex-direction column
+      align-items stretch
+      gap 10px
+
+    .drp__actions
+      display grid
+      grid-template-columns auto 1fr 1fr
+      gap 6px
+
+    .drp__btn
+      height 32px
+
+    .drp__reset
+      height 32px
+      justify-content center
+
+// On a narrow phone the dates would push the trigger past the card edge; keep
+// the preset name, which alone still identifies the selection.
+@media only screen and (max-width: 560px)
+  .drp
+    .drp__label-sep,
+    .drp__label-dates
+      display none

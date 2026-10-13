@@ -1,11 +1,5 @@
 <template>
   <div class="rating-review-page">
-    <!-- Add Review Button -->
-    <div class="page-actions">
-      <button class="add-review-btn primary-btn" @click="toggleReviewForm">
-        {{ showReviewForm ? 'Cancel' : 'Add Review' }}
-      </button>
-    </div>
 
     <!-- List Page Component -->
     <list-page
@@ -21,11 +15,21 @@
       @delete-bulk="deleteBulk"
       @list="itemList = $event"
     >
-      <template v-slot:table="{list}">
+      <template v-slot:add-button>
+        <button
+          class="primary-btn"
+          @click.prevent="toggleReviewForm"
+        >
+          {{ showReviewForm ? 'Cancel' : 'Add Review' }}
+        </button>
+      </template>
+
+      <template v-slot:table="{list, from}">
         <tr class="lite-bold">
           <th>
             <input type="checkbox" @change="checkAll">
           </th>
+          <th class="w-50x mx-w-50x">#</th>
           <th>{{ $t('fSale.customer') }}</th>
           <th>{{ $t('fSale.rating') }}</th>
           <th>{{ $t('fSale.review') }}</th>
@@ -39,6 +43,7 @@
           <td>
             <input type="checkbox" :value="value.id" v-model="cbList">
           </td>
+          <td class="w-50x mx-w-50x">{{ from + index }}</td>
           <td><span>{{ customerName(value) }}</span></td>
           <td><span>{{ value.rating }}</span></td>
           <td><span>{{ value.review }}</span></td>
@@ -211,7 +216,7 @@ export default {
       return review?.user?.name || review?.guest_user?.name || "";
     },
     customerName(review) {
-      return review?.user?.name || review?.guest_user?.name || "";
+      return review?.user?.name || review?.guest_user?.name || review?.name || "";
     },
     toggleReviewForm() {
       this.showReviewForm = !this.showReviewForm;
@@ -246,7 +251,9 @@ export default {
     async loadProducts() {
       try {
         const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/';
-        const response = await this.$axios.get('${baseUrl}api/products/all-simple');
+        // Single quotes here meant the literal text '${baseUrl}api/...' was
+        // requested, so this picker has never had anything in it.
+        const response = await this.$axios.get(`${baseUrl}api/products/all-simple`);
         this.products = response.data.data || [];
       } catch (error) {
         console.error('Error loading products:', error);

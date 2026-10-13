@@ -1,0 +1,1320 @@
+<title>FixMyPC Storefront Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+  :root{
+    --ground:#F6F7F9;
+    --surface:#FFFFFF;
+    --panel:#EEF1F5;
+    --ink:#131820;
+    --muted:#5A6472;
+    --faint:#828C9B;
+    --rule:#DDE2E9;
+    --rule-soft:#E9EDF2;
+    --accent:#1B4A8F;
+    --accent-soft:#E7EDF7;
+
+    --sev-crit:#A81E14;
+    --sev-crit-bg:#FBEAE8;
+    --sev-high:#8F4E10;
+    --sev-high-bg:#FBEFE4;
+    --sev-med:#5F5A14;
+    --sev-med-bg:#F5F2DF;
+    --sev-note:#33604C;
+    --sev-note-bg:#E6F0EA;
+
+    --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+    --f-body:"Source Sans 3","Segoe UI",Helvetica,Arial,sans-serif;
+    --f-mono:"JetBrains Mono","SFMono-Regular",Consolas,monospace;
+
+    --max:1140px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#0F131A;
+      --surface:#161B23;
+      --panel:#1C222C;
+      --ink:#E4E9F0;
+      --muted:#98A2B1;
+      --faint:#77828F;
+      --rule:#28303B;
+      --rule-soft:#212936;
+      --accent:#82AEEF;
+      --accent-soft:#1A2534;
+
+      --sev-crit:#F08279;
+      --sev-crit-bg:#2E1817;
+      --sev-high:#E0A163;
+      --sev-high-bg:#2B2015;
+      --sev-med:#CBC26B;
+      --sev-med-bg:#26240F;
+      --sev-note:#7DBFA0;
+      --sev-note-bg:#152420;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0F131A;
+    --surface:#161B23;
+    --panel:#1C222C;
+    --ink:#E4E9F0;
+    --muted:#98A2B1;
+    --faint:#77828F;
+    --rule:#28303B;
+    --rule-soft:#212936;
+    --accent:#82AEEF;
+    --accent-soft:#1A2534;
+
+    --sev-crit:#F08279;
+    --sev-crit-bg:#2E1817;
+    --sev-high:#E0A163;
+    --sev-high-bg:#2B2015;
+    --sev-med:#CBC26B;
+    --sev-med-bg:#26240F;
+    --sev-note:#7DBFA0;
+    --sev-note-bg:#152420;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--ground);
+    color:var(--ink);
+    font-family:var(--f-body);
+    font-size:16px;
+    line-height:1.6;
+    margin:0;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 28px}
+  @media (max-width:640px){.wrap{padding:0 18px}}
+
+  /* ---------- masthead ---------- */
+  .masthead{border-bottom:2px solid var(--ink);background:var(--surface)}
+  .masthead .wrap{padding-top:34px;padding-bottom:26px}
+  .eyebrow{
+    font-family:var(--f-mono);font-size:11px;font-weight:500;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+  }
+  .eyebrow span:not(:last-child)::after{content:"";display:inline-block;width:1px;height:10px;background:var(--rule);margin-left:10px;vertical-align:-1px}
+  h1{
+    font-family:var(--f-display);font-weight:700;font-size:clamp(30px,4.6vw,46px);
+    line-height:1.08;letter-spacing:-.022em;text-wrap:balance;
+    margin:14px 0 10px;
+  }
+  .standfirst{font-size:18px;color:var(--muted);max-width:62ch;margin:0 0 22px}
+  .standfirst strong{color:var(--ink);font-weight:600}
+
+  .facts{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));
+    gap:1px;background:var(--rule);border:1px solid var(--rule);
+  }
+  .fact{background:var(--surface);padding:11px 13px}
+  .fact dt{
+    font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--faint);margin:0 0 4px;
+  }
+  .fact dd{margin:0;font-size:14px;font-weight:600;font-family:var(--f-mono);
+    font-variant-numeric:tabular-nums;line-height:1.35;word-break:break-word}
+
+  /* ---------- severity strip ---------- */
+  .tally{background:var(--surface);border-bottom:1px solid var(--rule)}
+  .tally .wrap{display:flex;flex-wrap:wrap;gap:0;padding-top:0;padding-bottom:0}
+  .tal{
+    flex:1 1 150px;padding:16px 18px 15px;border-left:3px solid var(--tc);
+    border-right:1px solid var(--rule-soft);
+  }
+  .tal:last-child{border-right:none}
+  .tal b{
+    display:block;font-family:var(--f-display);font-weight:700;font-size:34px;
+    line-height:1;letter-spacing:-.03em;color:var(--tc);font-variant-numeric:tabular-nums;
+  }
+  .tal em{
+    display:block;font-style:normal;font-family:var(--f-mono);font-size:10.5px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:7px;
+  }
+  .tal i{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.4}
+
+  /* ---------- sections ---------- */
+  main .wrap{padding-top:44px;padding-bottom:10px}
+  section{margin-bottom:46px}
+  .sec-head{
+    display:flex;align-items:baseline;gap:14px;
+    border-bottom:1px solid var(--ink);padding-bottom:8px;margin-bottom:4px;
+  }
+  .sec-head h2{
+    font-family:var(--f-display);font-weight:600;font-size:22px;letter-spacing:-.015em;
+    margin:0;flex:1 1 auto;
+  }
+  .sec-head .count{
+    font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;color:var(--faint);
+    text-transform:uppercase;white-space:nowrap;
+  }
+  .sec-note{color:var(--muted);font-size:15px;margin:12px 0 22px;max-width:70ch}
+
+  /* ---------- finding rows ---------- */
+  .find{
+    border-top:1px solid var(--rule);
+    border-left:3px solid var(--fc);
+    padding:18px 0 20px 18px;
+    background:var(--surface);
+  }
+  .find:last-of-type{border-bottom:1px solid var(--rule)}
+  .find-top{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:9px}
+  .fid{
+    font-family:var(--f-mono);font-size:11.5px;font-weight:700;letter-spacing:.05em;
+    color:var(--fc);background:var(--fbg);padding:3px 7px;border-radius:2px;
+  }
+  .sev{
+    font-family:var(--f-mono);font-size:10px;font-weight:700;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--fc);
+  }
+  .find h3{
+    font-family:var(--f-display);font-weight:600;font-size:17.5px;letter-spacing:-.008em;
+    margin:0 0 10px;line-height:1.32;text-wrap:balance;padding-right:16px;
+  }
+  .loc{
+    font-family:var(--f-mono);font-size:12px;color:var(--accent);
+    margin:0 0 11px;word-break:break-all;
+  }
+  .find p{margin:0 0 10px;max-width:74ch;color:var(--ink)}
+  .find p:last-child{margin-bottom:0}
+  .lbl{
+    font-family:var(--f-mono);font-size:10px;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--faint);
+  }
+  .fix{
+    border-top:1px dashed var(--rule);margin-top:12px;padding-top:10px;
+    color:var(--muted);font-size:15px;max-width:74ch;
+  }
+  .fix .lbl{color:var(--sev-note)}
+  code{
+    font-family:var(--f-mono);font-size:.87em;background:var(--panel);
+    padding:1.5px 5px;border-radius:2px;word-break:break-word;
+  }
+  pre{
+    font-family:var(--f-mono);font-size:12.5px;line-height:1.62;
+    background:var(--panel);color:var(--ink);
+    border-left:2px solid var(--rule);
+    margin:0 0 12px;padding:12px 14px;overflow-x:auto;
+  }
+  pre b{color:var(--sev-crit);font-weight:700}
+  pre i{color:var(--faint);font-style:normal}
+
+  /* ---------- evidence console ---------- */
+  .console{
+    background:var(--panel);border:1px solid var(--rule);
+    padding:16px 18px;overflow-x:auto;
+  }
+  .console pre{background:none;border:none;padding:0;margin:0;font-size:12.5px}
+
+  /* ---------- tables ---------- */
+  .tbl-scroll{overflow-x:auto;border:1px solid var(--rule);background:var(--surface)}
+  table{border-collapse:collapse;width:100%;min-width:600px;font-size:14.5px}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+  th{
+    font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--faint);font-weight:500;background:var(--panel);white-space:nowrap;
+  }
+  tr:last-child td{border-bottom:none}
+  td.mono{font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pill{
+    display:inline-block;font-family:var(--f-mono);font-size:10px;font-weight:700;
+    letter-spacing:.07em;text-transform:uppercase;padding:2.5px 7px;border-radius:2px;white-space:nowrap;
+  }
+  .p-fail{color:var(--sev-crit);background:var(--sev-crit-bg)}
+  .p-part{color:var(--sev-high);background:var(--sev-high-bg)}
+  .p-ok{color:var(--sev-note);background:var(--sev-note-bg)}
+
+  /* ---------- gaps list ---------- */
+  .gaps{display:grid;grid-template-columns:repeat(auto-fit,minmax(285px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule)}
+  .gap{background:var(--surface);padding:15px 17px}
+  .gap h4{
+    font-family:var(--f-display);font-weight:600;font-size:15px;margin:0 0 6px;letter-spacing:-.005em;
+  }
+  .gap p{margin:0;font-size:14.5px;color:var(--muted);line-height:1.52}
+
+  /* ---------- footer ---------- */
+  footer{border-top:2px solid var(--ink);background:var(--surface);margin-top:20px}
+  footer .wrap{padding-top:22px;padding-bottom:34px}
+  footer p{font-size:14px;color:var(--muted);max-width:74ch;margin:0 0 9px}
+  footer .lbl{display:block;margin-bottom:8px}
+
+  a{color:var(--accent)}
+  a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span>End-to-end QA audit</span>
+      <span>shop.fixmypc.ie</span>
+      <span>9 Sep 2026</span>
+    </div>
+    <h1>Storefront &amp; admin audit: 41 defects across the money path</h1>
+    <p class="standfirst">
+      A full pass over admin product management, catalogue, cart, coupons, checkout, payments,
+      order lifecycle, refunds, accounts and email. <strong>Eight critical findings</strong> —
+      including an unauthenticated admin takeover and four payment gateways that mark orders paid
+      without verifying anything — plus discount arithmetic that overcharges customers today.
+      Every finding below was confirmed against the live <code>mrmobile_db</code> database.
+    </p>
+    <dl class="facts">
+      <div class="fact"><dt>Stack</dt><dd>Laravel 8.83<br>Nuxt 2 &times; 2</dd></div>
+      <div class="fact"><dt>Scope</dt><dd>96 controllers<br>1,136 API routes</dd></div>
+      <div class="fact"><dt>Live data</dt><dd>121 products<br>45 orders</dd></div>
+      <div class="fact"><dt>Findings</dt><dd>41</dd></div>
+      <div class="fact"><dt>Automated tests</dt><dd>0<br><span style="color:var(--faint);font-weight:400">(2 Laravel stubs)</span></dd></div>
+    </dl>
+  </div>
+</header>
+
+<div class="tally">
+  <div class="wrap">
+    <div class="tal" style="--tc:var(--sev-crit)">
+      <b>8</b><em>Critical</em><i>Money loss or full account takeover, exploitable now</i>
+    </div>
+    <div class="tal" style="--tc:var(--sev-high)">
+      <b>15</b><em>High</em><i>Data corruption, oversell, unauthorised access</i>
+    </div>
+    <div class="tal" style="--tc:var(--sev-med)">
+      <b>18</b><em>Medium</em><i>Wrong figures, missing safeguards, weak validation</i>
+    </div>
+    <div class="tal" style="--tc:var(--accent)">
+      <b>33%</b><em>Order corruption</em><i>15 of 45 live orders hold zero line items</i>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+<!-- ============ SECURITY ============ -->
+<section>
+  <div class="sec-head">
+    <h2>Authentication &amp; access control</h2>
+    <span class="count">6 findings &middot; 3 critical</span>
+  </div>
+  <p class="sec-note">
+    The most urgent item in this report is <code>SEC-01</code>. It needs no credentials, no session
+    and no user interaction — only an admin's email address, which is published on the site.
+  </p>
+
+  <article class="find" style="--fc:var(--sev-crit);--fbg:var(--sev-crit-bg)">
+    <div class="find-top"><span class="fid">SEC-01</span><span class="sev">Critical</span></div>
+    <h3>Any admin account can be taken over by an unauthenticated request</h3>
+    <p class="loc">app/Http/Controllers/AdminsController.php:998 &middot; routes/api.php:301 (outside <code>auth:admin</code>)</p>
+    <p>
+      <code>POST /api/admin/verify-code</code> accepts <code>email</code>, <code>code</code> and
+      <code>password</code>, compares the code with <code>!=</code>, and on a match writes a new
+      password hash. Three of the four admins in this database have never used forgot-password, so
+      their stored <code>code</code> is <code>NULL</code>. In PHP 8, <code>null == 0</code> is true —
+      and Laravel's <code>required</code> rule accepts the integer <code>0</code>. A JSON body
+      carrying <code>"code": 0</code> therefore satisfies both the validator and the comparison.
+    </p>
+    <pre><i># resets the password of any admin whose code is NULL</i>
+POST /api/admin/verify-code
+Content-Type: application/json
+
+{"email":"<i>admin@…</i>", "code":<b>0</b>, "password":"attacker-chosen"}</pre>
+    <p>
+      Even where a code <em>is</em> set, it is a 4-digit <code>rand(1000,9999)</code> that is never
+      cleared after use and has no expiry — <code>kilcock@fixmypc.ie</code> still carries
+      <code>7896</code> from a past reset. With the default <code>throttle:api</code> of 60/min the
+      whole keyspace falls in under three hours from a single IP.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Compare with <code>===</code> against a string, reject null/empty codes outright, hash and
+      expire codes (reuse the <code>PasswordResetToken</code> model already written for customers —
+      it does all of this correctly), clear on use, and rate-limit by email.
+      Rotate all four admin passwords now.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-crit);--fbg:var(--sev-crit-bg)">
+    <div class="find-top"><span class="fid">SEC-02</span><span class="sev">Critical</span></div>
+    <h3>Guest identity is a browser-generated random string the server never issues or checks</h3>
+    <p class="loc">frontend-panel/store/user.js:48 &middot; app/Http/Middleware/OptionalAuth.php</p>
+    <p>
+      Guest sessions are keyed on <code>user_token</code>, generated client-side from
+      <code>Math.random()</code> and accepted verbatim by every guest endpoint. The server never
+      issues it, never validates it and never binds it to a session, so it functions as a bearer
+      credential that anyone can guess or forge.
+    </p>
+    <pre>token = Math.random().toString(36).slice(2,5)
+      + (+new Date * Math.random()).toString(36).substring(0,12)
+      + Math.random().toString(36).slice(2,5)</pre>
+    <p>
+      Presenting an arbitrary token grants read and write on that guest's cart, saved addresses,
+      orders (<code>order/by-user</code>), cancellations and order emails. V8's
+      <code>Math.random()</code> is xorshift128+ and recoverable from observed output; the date
+      component narrows the space further.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Issue guest tokens server-side with <code>Str::random(40)</code>, store them in the
+      <code>guest_users</code> table, and return them in an HttpOnly cookie. Reject any token the
+      server did not issue.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">SEC-03</span><span class="sev">High</span></div>
+    <h3>Installer and maintenance endpoints are reachable without authentication</h3>
+    <p class="loc">routes/api.php:212–218, 178–201</p>
+    <p>
+      <code>GET /api/migration</code> runs <code>migrate</code> plus <code>db:seed</code> against the
+      production database with no guard at all. <code>GET /api/update-env</code> rewrites
+      <code>.env</code>; <code>GET /api/read-update-log</code> returns file contents;
+      <code>GET /api/clear-cache</code> flushes config and cache. <code>POST /api/test-otp</code>
+      sends a Twilio SMS to any phone number supplied and <em>returns the OTP in the response body</em> —
+      free SMS at your expense, and an oracle for anyone probing the OTP flow.
+      <code>fresh-migration</code> and <code>create-user</code> (which would drop every table) are
+      held back only by <code>SHARED_SERVER_CONFIGURED=true</code> in <code>.env</code>.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Delete the test routes, move installer routes behind <code>auth:admin</code> or strip them from
+      production builds, and never gate destructive operations on an env flag alone.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">SEC-04</span><span class="sev">High</span></div>
+    <h3>Debug mode is on in production, exposing database credentials on any error</h3>
+    <p class="loc">.env</p>
+    <p>
+      <code>APP_ENV=local</code> and <code>APP_DEBUG=true</code> with
+      <code>APP_URL=https://shop.fixmypc.ie</code>. Any unhandled exception renders an Ignition page
+      containing the full stack trace, source excerpts and the environment block — including
+      <code>DB_PASSWORD</code> and the payment gateway secrets. Several endpoints in this report
+      return <code>$e-&gt;getMessage()</code> straight to the client regardless of debug state.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Set <code>APP_ENV=production</code>, <code>APP_DEBUG=false</code>, and replace raw
+      <code>getMessage()</code> responses with logged errors and a generic message.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">SEC-05</span><span class="sev">Medium</span></div>
+    <h3>Checkout payload encryption uses a hardcoded key and static IV shipped to the browser</h3>
+    <p class="loc">app/Models/Helper/Utils.php:352</p>
+    <p>
+      Checkout parameters travel in an AES-128-CBC blob whose key and IV are compiled into both the
+      server and the client bundle. It provides no confidentiality and no integrity — it is
+      obfuscation, and it is worth naming because <code>order_method</code>, <code>voucher</code>,
+      <code>points_discount</code>, <code>orderId</code> and <code>transactionId</code> all arrive
+      inside it and are trusted as though the wrapper authenticated them.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Drop the wrapper — TLS already covers transport. Validate and re-derive every value server-side
+      rather than trusting the payload.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">SEC-06</span><span class="sev">Medium</span></div>
+    <h3>SVG uploads accepted, and filenames collide under concurrency</h3>
+    <p class="loc">app/Models/Helper/FileHelper.php:307 &middot; Validation.php:1104, 1158</p>
+    <p>
+      <code>mimes:jpeg,png,gif,svg,webp</code> admits SVG, which executes script when served inline
+      from the storefront origin — stored XSS against any admin viewing the product. Filenames are
+      built as <code>prefix-time()-mt_rand(1,9).ext</code>: two uploads in the same second collide
+      one time in nine, silently overwriting another product's image. One upload rule
+      (<code>'file' =&gt; 'required'</code>) sets no type or size limit at all, and the extension is
+      taken from the client.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Drop <code>svg</code> (or sanitise and serve <code>Content-Disposition: attachment</code>), use
+      <code>Str::uuid()</code> for filenames, derive the extension from the detected MIME type, and
+      give every upload rule explicit <code>mimes</code> and <code>max</code>.
+    </div>
+  </article>
+</section>
+
+<!-- ============ PAYMENTS ============ -->
+<section>
+  <div class="sec-head">
+    <h2>Payments</h2>
+    <span class="count">5 findings &middot; 3 critical</span>
+  </div>
+  <p class="sec-note">
+    <code>POST /api/v1/order/payment-done</code> is the single point where an order becomes paid. For
+    four of the nine gateways it performs no verification whatsoever. There are no webhook endpoints
+    anywhere in the route table, so this client-driven call is the only confirmation path that exists.
+  </p>
+
+  <article class="find" style="--fc:var(--sev-crit);--fbg:var(--sev-crit-bg)">
+    <div class="find-top"><span class="fid">PAY-01</span><span class="sev">Critical</span></div>
+    <h3>PayPal and SumUp orders are marked paid without contacting the gateway</h3>
+    <p class="loc">app/Http/Controllers/OrdersController.php:1325, 1338</p>
+    <pre>} else if ((int)$request-&gt;order_method == …PAYPAL) {
+    <b>$paymentDone = true;</b>          <i>// no capture check, no amount check</i>
+
+} else if ((int)$request-&gt;order_method == …SUMUP) {
+    <b>$paymentDone = true;</b>          <i>// same</i></pre>
+    <p>
+      A customer who reaches checkout can call <code>payment-done</code> for their own order with
+      <code>order_method</code> set to PayPal or SumUp and receive goods for free. Nothing verifies
+      that a transaction exists, that it succeeded, or that its amount matches the order.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Capture and verify server-side against the gateway, compare the captured amount and currency to
+      <code>orders.total_amount</code>, and set <code>payment_done</code> only on a match.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-crit);--fbg:var(--sev-crit-bg)">
+    <div class="find-top"><span class="fid">PAY-02</span><span class="sev">Critical</span></div>
+    <h3>Razorpay is confirmed by echoing back a token the client already holds</h3>
+    <p class="loc">app/Http/Controllers/OrdersController.php:1329</p>
+    <p>
+      The only check is <code>$order-&gt;payment_token != $request-&gt;payment_token</code>. That
+      token is the Razorpay <em>order</em> id, handed to the browser in the checkout response before
+      any payment occurs. Replaying it marks the order paid. Razorpay's
+      <code>razorpay_signature</code> — the HMAC that actually proves payment — is never requested and
+      never verified.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Verify <code>razorpay_signature</code> with the SDK's
+      <code>utility-&gt;verifyPaymentSignature()</code> over
+      <code>razorpay_order_id|razorpay_payment_id</code>, then re-fetch the payment and confirm its
+      amount.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-crit);--fbg:var(--sev-crit-bg)">
+    <div class="find-top"><span class="fid">PAY-03</span><span class="sev">Critical</span></div>
+    <h3>A Flutterwave logging failure is treated as a successful payment</h3>
+    <p class="loc">app/Http/Controllers/OrdersController.php:1310</p>
+    <pre>} catch (\Exception $e) {
+    if (str_contains($e-&gt;getMessage(), 'The stream or file')) {
+        <b>$paymentDone = true;</b>      <i>// unwritable log file ⇒ "paid"</i>
+    }</pre>
+    <p>
+      This branch fires when the Flutterwave SDK cannot open its log file — a filesystem permission
+      problem — and converts it into a successful payment. Any exception whose message happens to
+      contain that phrase, including one raised before verification is attempted, produces the same
+      result.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Remove the branch. Fix the log path in the SDK config and let verification failures fail.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">PAY-04</span><span class="sev">High</span></div>
+    <h3>Stripe recomputes its own total, drops discounts, and truncates cents</h3>
+    <p class="loc">app/Http/Controllers/OrdersController.php:1341–1385</p>
+    <p>
+      The Stripe branch rebuilds the total from <code>ordered_products</code> instead of using the
+      stored <code>total_amount</code>, and its formula includes only the voucher — flash discounts
+      and loyalty points are silently omitted, so the card is charged more than the order records.
+      The amount is then converted with <code>(int)($totalPrice * 100)</code>, which truncates:
+    </p>
+    <pre>total 1.15  → Charge amount <b>114</b> cents   <i>(expected 115)</i>
+total 10.10 → Charge amount 1010 cents  <i>ok</i>
+total 46.20 → Charge amount 4620 cents  <i>ok</i></pre>
+    <p>
+      The call also uses the legacy <code>\Stripe\Charge::create</code> with a raw
+      <code>source</code> token. That API predates SCA and will be declined for most European cards —
+      material for an Irish storefront.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Migrate to PaymentIntents, charge <code>(int) round($total * 100)</code>, and take the figure
+      from <code>total_amount</code> so one number governs the whole order.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">PAY-05</span><span class="sev">Medium</span></div>
+    <h3><code>payment-done</code> is not idempotent and accepts a client-supplied transaction id</h3>
+    <p class="loc">app/Http/Controllers/OrdersController.php:1196, 1138</p>
+    <p>
+      Nothing checks whether the order is already paid, so repeat calls re-run the whole branch —
+      on Stripe that means a second charge. Separately,
+      <code>POST /api/v1/order/transaction</code> writes any <code>trans_id</code> the client sends,
+      and order creation accepts client-supplied <code>orderId</code> and <code>transactionId</code>
+      verbatim, letting a caller choose their own order number.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Return early when <code>payment_done</code> is already set, and derive transaction ids from
+      gateway responses only.
+    </div>
+  </article>
+</section>
+
+<!-- ============ MONEY / DISCOUNTS ============ -->
+<section>
+  <div class="sec-head">
+    <h2>Pricing, discounts and tax</h2>
+    <span class="count">10 findings &middot; 2 critical</span>
+  </div>
+  <p class="sec-note">
+    The storefront and the server calculate the total independently and disagree. The customer is
+    shown one figure and charged another — this is happening in live orders today.
+  </p>
+
+  <article class="find" style="--fc:var(--sev-crit);--fbg:var(--sev-crit-bg)">
+    <div class="find-top"><span class="fid">MON-01</span><span class="sev">Critical</span></div>
+    <h3>Flash discounts and loyalty points are deducted on screen but never from the amount charged</h3>
+    <p class="loc">app/Http/Controllers/OrdersController.php:2114–2230 &middot; frontend-panel/pages/checkout.vue:410</p>
+    <p>
+      The storefront shows
+      <code>productPrice − voucher − flashDiscount</code> (points subtracted alongside). Every one of
+      the nine server-side payment branches stores the same expression:
+      <code>'total_amount' =&gt; $totalPrice - $offeredVoucher</code>. The flash discount is written
+      to <code>ordered_flash_discount</code> and the points are debited from the customer's balance —
+      but neither reduces what is charged.
+    </p>
+    <p><span class="lbl">Live evidence — order 65</span></p>
+    <pre>id  total_amount  computed  voucher  <b>flash_disc</b>
+65  <b>1646.00</b>       1646.00   0.00     <b>200.00</b>
+
+<i>customer was shown €1,446.00 — charged €1,646.00</i></pre>
+    <p>
+      Order 62 is worse still: <code>total_amount</code> of 316.00 against line items summing to
+      521.00 and a recorded discount of 75.75, which reconciles to nothing.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Compute the payable total once — <code>$totalPrice - $offeredVoucher - $flashDiscountAmount -
+      $pointsDiscount</code>, floored at zero — assign it to a variable before the payment branches,
+      and use that single variable for <code>total_amount</code>, <code>$re['amount']</code> and
+      every gateway call.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-crit);--fbg:var(--sev-crit-bg)">
+    <div class="find-top"><span class="fid">CPN-01</span><span class="sev">Critical</span></div>
+    <h3>The voucher expiry check can never fire, so expired coupons are accepted at checkout</h3>
+    <p class="loc">app/Http/Controllers/OrdersController.php:1650</p>
+    <pre>if ($start &gt;= $now &amp;&amp; $now &gt;= $end) {   <i>// requires start ≥ now ≥ end</i>
+    return … voucher_expired
+}</pre>
+    <p>
+      The condition is only satisfiable when <code>start &gt;= end</code>, which no real voucher
+      satisfies. Every expired and every not-yet-started voucher passes. The coupon
+      <em>preview</em> endpoint gets it right (<code>$start &lt; $now &amp;&amp; $now &lt; $end</code>),
+      so the two disagree — a customer told "expired" on the cart page succeeds by submitting anyway.
+    </p>
+    <pre><i>voucher window                          checkout   preview</i>
+expired (ended 5d ago)                  <b>ACCEPT</b>     REJECT
+active  (ends in 5d)                    ACCEPT     ACCEPT
+future  (starts in 5d)                  <b>ACCEPT</b>     REJECT</pre>
+    <p><span class="lbl">Live exposure</span> Two published vouchers are exploitable right now:</p>
+    <pre>FIRSTOFFER  €15 flat   min €100   expired <b>2024-12-04</b>
+TEST5       €500 flat  cap €10    expired <b>2026-05-31</b></pre>
+    <div class="fix"><span class="lbl">Fix</span>
+      Invert to <code>if ($now &lt; $start || $now &gt; $end)</code>. Better, extract one
+      <code>Voucher::validFor($user, $subtotal)</code> method and call it from both endpoints so they
+      cannot drift again.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">TAX-01</span><span class="sev">High</span></div>
+    <h3>VAT is charged only when <code>excludeVAT = 1</code> — the flag reads backwards</h3>
+    <p class="loc">app/Http/Controllers/OrdersController.php:1849</p>
+    <pre>$excludeVAT = Product::where(['id' =&gt; …])-&gt;value('excludeVAT');
+if ($taxRule &amp;&amp; <b>$excludeVAT == 1</b>) {     <i>// tax added when "exclude" is set</i></pre>
+    <p>
+      Tax is applied only to products flagged as excluded, and skipped for everything else. In the
+      live catalogue that is <strong>9 products taxed and 112 untaxed</strong> — VAT is not being
+      collected on 93% of the range, while the 9 flagged products have 23% added on top of the price
+      shown on their product page.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Decide the intended meaning, then rename the column to match it — <code>vat_exempt</code> with
+      the condition inverted, most likely. Reconcile past orders with your accountant before
+      changing it, since the correction alters historical VAT liability.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">TAX-02</span><span class="sev">High</span></div>
+    <h3>The 23% rate is hardcoded against <code>tax_rule_id == 1</code></h3>
+    <p class="loc">app/Http/Controllers/ProductsController.php:604–612</p>
+    <pre>if($tax_rule_id==1){
+    $vatInclusivePrice = $selling_price + $selling_price*<b>23</b>/100;</pre>
+    <p>
+      The <code>tax_rules</code> table already holds the rate (<code>VAT23</code>, type percent,
+      price 23) and a second rule (<code>VAT Margin</code>, 0%) that this code cannot express. Add a
+      13.5% or 9% Irish rate and the stored VAT-inclusive price will be wrong; edit rule 1's rate and
+      nothing recalculates.
+    </p>
+    <p><span class="lbl">Consequence in live data</span> The stored values are already inconsistent:</p>
+    <pre>id        title                  selling  vatInclusive  vatInclusiveOffered
+99492285  Samsung Galaxy A54 5G  1000.00  1230.00       1230.00
+99492284  Samsung Galaxy A05s    1000.00  1230.00       <b>0.00</b>   <i>← offer 1000.00</i>
+99492293  Ram Upgrade-64GB         49.00  <b>0.00</b>          0.00   <i>← never computed</i></pre>
+    <div class="fix"><span class="lbl">Fix</span>
+      Read rate and type from the joined <code>tax_rules</code> row, and backfill the existing
+      <code>vatInclusive*</code> columns.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">CART-01</span><span class="sev">High</span></div>
+    <h3>The cart writes client-supplied prices straight to the database</h3>
+    <p class="loc">app/Http/Controllers/CartsController.php:260, 361 &middot; app/Models/Cart.php:13</p>
+    <pre>$request['voucher_discount'] = $request-&gt;original_price - $request-&gt;price;
+$cart = Cart::create(<b>$request-&gt;all()</b>);
+
+<i>// Cart::$fillable includes: price, original_price, voucher_code, voucher_discount</i></pre>
+    <p>
+      Any caller can set <code>price</code>, <code>original_price</code> and
+      <code>voucher_discount</code> to arbitrary values. The order total is recomputed from the
+      product record so the charge itself holds, but these values are copied into
+      <code>ordered_products_inventories.price</code> and
+      <code>product_voucher_discount_applied</code> — the rows that feed admin reporting and
+      reconciliation. Sending <code>price</code> without <code>original_price</code> also stores a
+      negative discount.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Remove the four columns from <code>$fillable</code> and derive them server-side from the
+      product and the applied voucher.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">CPN-02</span><span class="sev">Medium</span></div>
+    <h3>Coupon preview trusts a client-supplied cart value</h3>
+    <p class="loc">app/Http/Controllers/VouchersController.php:56, 92, 145</p>
+    <p>
+      <code>validity()</code> takes <code>$request-&gt;price</code> as the cart total. The
+      server-side recalculation is commented out directly above. A caller who sends a large
+      <code>price</code> clears any <code>min_spend</code> gate and, for percentage vouchers, is shown
+      a discount computed from their own number. The preview also computes on a total
+      <em>including</em> shipping while checkout computes on a total <em>excluding</em> it, so the two
+      figures differ for every percentage voucher even when used honestly. The endpoint additionally
+      writes to the cart while claiming to validate.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Restore the server-side subtotal (the commented block), and make the endpoint read-only.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">CPN-03</span><span class="sev">Medium</span></div>
+    <h3><code>apply_type</code> is enforced at preview but not at checkout</h3>
+    <p class="loc">VouchersController.php:31 vs OrdersController.php:1598</p>
+    <p>
+      The preview filters <code>where('apply_type', 1)</code>; the checkout query does not. Voucher
+      <code>TEST5</code> (<code>apply_type = 2</code>, a product-level code) is rejected on the cart
+      page and accepted at checkout.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span> Apply the same filter in both queries.</div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">CPN-04</span><span class="sev">Medium</span></div>
+    <h3>Voucher caps are truncated to whole units</h3>
+    <p class="loc">OrdersController.php:1663 &middot; VouchersController.php:151</p>
+    <pre>$offeredVoucher = <b>(int)</b>$voucher-&gt;capped_price;
+
+cap €10.99 → discount applied €10
+cap €25.50 → discount applied €25
+cap  €0.99 → discount applied  <b>€0</b></pre>
+    <div class="fix"><span class="lbl">Fix</span> Cast to <code>(float)</code> and round to 2dp.</div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">CPN-05</span><span class="sev">Medium</span></div>
+    <h3>Voucher usage counts include failed and cancelled orders, and race under load</h3>
+    <p class="loc">OrdersController.php:1613, 1638</p>
+    <p>
+      Both <code>usage_limit</code> and <code>limit_per_customer</code> are enforced with
+      <code>Order::where('voucher_id', …)-&gt;count()</code>, which counts unpaid, abandoned and
+      cancelled orders — a customer whose card is declined burns their single-use code. The count is
+      also read outside any lock, so concurrent redemptions of a last-remaining code all pass.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Count only paid, non-cancelled orders, and take a row lock on the voucher for the redemption.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">PRC-01</span><span class="sev">Medium</span></div>
+    <h3>A variant price silently cancels flash sales and offer prices</h3>
+    <p class="loc">OrdersController.php:1795–1808</p>
+    <p>
+      The price ladder is <code>inventory &gt; flash &gt; offered &gt; selling</code>, so any variant
+      carrying its own price beats every discount. Put a variant product into a flash sale and
+      customers pay the variant price with no indication the sale did not apply. The same function
+      also tests the flash price two different ways in its two loops — <code>$flashPrice &gt; 0</code>
+      when checking voucher minimum spend, <code>$flashPrice !== null</code> when charging — so a
+      €0.00 flash price is read differently within one request.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Decide precedence deliberately (a flash price should normally win), extract it into one
+      <code>Product::currentPrice($inventory)</code> method, and call it from both loops and the
+      storefront.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">PRC-02</span><span class="sev">Medium</span></div>
+    <h3>Offer price is unvalidated and four €0.00 products are live on the storefront</h3>
+    <p class="loc">app/Models/Helper/Validation.php:741 &middot; ProductsController.php:591</p>
+    <p>
+      <code>productMain()</code> validates <code>selling</code> as
+      <code>numeric|min:0|not_in:0</code> but says nothing about <code>offered</code> — no numeric
+      check, no <code>lte:selling</code>. An "offer" above the selling price is accepted and charged.
+      Meanwhile five products carry <code>selling = 0.00</code> despite that rule, four of them with
+      <code>status = 1</code> and purchasable now: <em>Storage Upgrade</em>, <em>Ram Upgrade</em>,
+      <em>Storage Upgrade-128GB</em>, <em>Ram Upgrade-16GB</em> — created through a path that bypasses
+      <code>productMain()</code>.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Add <code>offered =&gt; nullable|numeric|min:0|lte:selling</code>, and route bulk import,
+      duplicate and upsell creation through the same validator.
+    </div>
+  </article>
+</section>
+
+<!-- ============ STOCK ============ -->
+<section>
+  <div class="sec-head">
+    <h2>Inventory &amp; stock</h2>
+    <span class="count">4 findings &middot; 3 high</span>
+  </div>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">STK-01</span><span class="sev">High</span></div>
+    <h3>Checkout never compares the quantity ordered against the quantity in stock</h3>
+    <p class="loc">OrdersController.php:1680 &middot; CartsController.php:340</p>
+    <pre>if ((int)$c-&gt;updated_inventory-&gt;quantity &lt; 1 <b>&amp;&amp;</b>
+    (int)$c-&gt;updated_inventory-&gt;is_active !== 1) { … out of stock }</pre>
+    <p>
+      Two problems in one line. The <code>&amp;&amp;</code> means a product at zero stock passes
+      whenever <code>is_active</code> is set, and <code>$c-&gt;quantity</code> — the amount actually
+      being bought — never enters the comparison at all. Add-to-cart does check available stock, but
+      only when merging into an <em>existing</em> cart row; the branch that creates a new row has no
+      check whatsoever. One request adding 100 units of a 5-unit line therefore succeeds and completes
+      checkout, leaving stock at &minus;95.
+    </p>
+    <p>
+      The three negative rows currently in <code>updated_inventories</code> (&minus;13, &minus;2,
+      &minus;1) are all backorder-enabled lines, so those are by design — but the guard against
+      genuine oversell is absent.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Check <code>$c-&gt;quantity &gt; $inventory-&gt;quantity &amp;&amp; !$inventory-&gt;is_active</code>
+      in both places, inside the transaction, with a row lock.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">STK-02</span><span class="sev">High</span></div>
+    <h3>Cart quantity accepts negative numbers, which create stock out of nothing</h3>
+    <p class="loc">app/Models/Helper/Validation.php:795</p>
+    <p>
+      The rule is <code>'quantity' =&gt; 'required'</code> — no <code>integer</code>, no
+      <code>min:1</code>. Order creation then calls
+      <code>UpdatedInventory::decrement('quantity', $cart-&gt;quantity)</code>, and Laravel's
+      <code>decrement</code> with a negative argument increments. Verified against the live schema
+      (rolled back):
+    </p>
+    <pre>inventory 62 before: qty=6
+decrement(quantity, <b>-5</b>)
+inventory 62 after : qty=<b>11</b>   <i>← stock created from nothing</i></pre>
+    <p>
+      A negative line also subtracts from the order total, and no floor is applied before the amount
+      reaches the gateway.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      <code>'quantity' =&gt; 'required|integer|min:1|max:…'</code>, and floor the payable total at zero.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">STK-03</span><span class="sev">High</span></div>
+    <h3>Stock is deducted before payment, and the one rollback that exists deletes the wrong rows</h3>
+    <p class="loc">OrdersController.php:1900, 2166–2180</p>
+    <p>
+      <code>decrement</code> runs while the order is still unpaid. Of the nine payment branches only
+      Razorpay attempts to restore stock on failure, and that loop is wrong:
+    </p>
+    <pre>$ops = OrderedProduct::where('order_id', $order-&gt;id)-&gt;get();  <i>// immediately overwritten</i>
+
+foreach (<b>$existingCart</b> as $ops) {
+    OrderedProduct::where('id', <b>$ops-&gt;id</b>)-&gt;delete();   <i>// cart id used as ordered_product id</i>
+    UpdatedInventory::where('id', $ops-&gt;inventory_id)-&gt;increment('quantity', $ops-&gt;quantity);
+}</pre>
+    <p>
+      The loop variable shadows the query result and then deletes <code>ordered_products</code> rows
+      whose ids happen to match <em>cart</em> ids — unrelated rows from other orders — while the real
+      ones survive as orphans. Every other failure path (abandoned Stripe, closed browser, declined
+      card) leaves the deduction in place permanently.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Reserve stock rather than deducting it, commit the deduction on confirmed payment, and expire
+      reservations on a schedule. At minimum, fix the loop and give every failure branch the same
+      rollback.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">STK-04</span><span class="sev">Medium</span></div>
+    <h3>Variants that have ever been ordered can never be removed</h3>
+    <p class="loc">app/Http/Controllers/UpdatedInventoriesController.php:58–74</p>
+    <p>
+      Any inventory id present in <code>ordered_products</code> and absent from the submitted list
+      blocks the entire save with a generic "inventory in use" message — there is no way to retire a
+      discontinued variant, and no indication of which one is blocking. The check also relies on
+      <code>array_search(...) &gt; -1</code>, which reads as a false-vs-int comparison and only
+      behaves because <code>array_unique</code> preserves keys.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Soft-delete retired variants (historical orders keep their reference), and name the blocking
+      variant in the error.
+    </div>
+  </article>
+</section>
+
+<!-- ============ ORDERS ============ -->
+<section>
+  <div class="sec-head">
+    <h2>Order lifecycle, cancellation &amp; refunds</h2>
+    <span class="count">9 findings &middot; 1 critical</span>
+  </div>
+
+  <article class="find" style="--fc:var(--sev-crit);--fbg:var(--sev-crit-bg)">
+    <div class="find-top"><span class="fid">INT-01</span><span class="sev">Critical</span></div>
+    <h3>A third of live orders contain no line items</h3>
+    <p class="loc">OrdersController.php:1786</p>
+    <p>
+      Every item in the checkout loop is wrapped in
+      <code>if ($cart-&gt;shipping_place_id &amp;&amp; !is_null($cart-&gt;product_inner))</code>. When
+      a cart row has no shipping place selected it is skipped silently — and if that is true of
+      every row, the order is still created, still returned to the customer as a success, and still
+      recorded with <code>total_amount = 0.00</code>.
+    </p>
+    <pre>orders with zero ordered_products: <b>15 of 45</b>  (33%)
+
+id  order            total   method
+44  2026080538dZL8   0.00    2 (COD)
+45  20261105TSHde14  0.00    2 (COD)
+…   <i>13 more, all cash on delivery</i>
+72  20262805YN7Wo9   0.00    2 (COD)</pre>
+    <p>
+      The customer sees a confirmation; the admin sees a €0.00 order with nothing to pick. There is
+      no <code>DB::transaction</code> around order creation either, so any exception mid-loop leaves
+      the order, some line items and the stock deductions committed.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Validate that every selected cart row has a shipping place <em>before</em> creating the order,
+      abort with a field error if not, and wrap the whole creation in a transaction. Reconcile the
+      15 existing rows.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">RFN-01</span><span class="sev">High</span></div>
+    <h3>"Refund" flips a boolean and moves no money</h3>
+    <p class="loc">app/Http/Controllers/CancellationsController.php:18</p>
+    <pre>Cancellation::where('id', $id)-&gt;update(['refunded' =&gt; true]);
+return Validation::success($request, __('lang.refunded'), $cancellation);</pre>
+    <p>
+      That is the entire refund implementation. No gateway refund call for Stripe, Razorpay, PayPal,
+      SumUp, Flutterwave, iyzico or PayFast; no refunded amount stored; no stock returned; no loyalty
+      points reversed; no voucher redemption released. The admin sees "Refunded" and the customer's
+      money stays put. The action is also a <code>GET</code>, is not idempotent, and — unlike every
+      neighbouring order action — carries no <code>Utils::userCan()</code> permission check. Partial
+      refunds are not modelled at all.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Make it <code>POST</code>, add the permission check, call the gateway's refund API, and record
+      amount, gateway reference and timestamp. Until then, tell the team the flag is bookkeeping only.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">RFN-02</span><span class="sev">High</span></div>
+    <h3>Customers can mark their own cancellation refunded</h3>
+    <p class="loc">CancellationsController.php:183 &middot; app/Models/Cancellation.php:16</p>
+    <pre>Cancellation::create(<b>$request-&gt;all()</b>);
+<i>// Cancellation::$fillable = ['order_id','user_id','title','message',<b>'refunded'</b>,'user_token']</i></pre>
+    <p>
+      <code>POST /api/v1/cancellation/cancel-order</code> is customer-facing. Including
+      <code>"refunded": 1</code> in the body writes it straight through, and the admin refunds queue
+      then shows the request as already settled.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Remove <code>refunded</code> from <code>$fillable</code> and pass an explicit whitelist instead
+      of <code>$request-&gt;all()</code>.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">ORD-01</span><span class="sev">High</span></div>
+    <h3>Cancelling an order changes nothing except a flag</h3>
+    <p class="loc">CancellationsController.php:157 &middot; OrdersController.php:760</p>
+    <p>
+      <code>cancelOrder</code> sets <code>cancelled = true</code> and leaves <code>status</code>
+      untouched, so the order stays PENDING in every admin list and report. Stock is not returned,
+      points are not reversed, and the voucher redemption is not released. The admin-side
+      <code>updateStatus</code> has the same gap in the other direction — no restoration on any
+      status change. Order 40 is in this state now: <code>cancelled=1, status=1 (PENDING)</code>.
+    </p>
+    <p>
+      The root cause is the status enum itself: <code>PENDING, CONFIRMED, PICKED_UP, ON_THE_WAY,
+      DELIVERED</code>. There is no CANCELLED, RETURNED or REFUNDED state, which is why cancellation
+      had to become a parallel boolean.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Add the missing states to <code>config/constants.php</code>, and centralise transitions in one
+      method that restores stock, reverses points and releases the voucher.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">ADM-01</span><span class="sev">High</span></div>
+    <h3>Order deletion has no permission check and leaves orphaned records everywhere</h3>
+    <p class="loc">OrdersController.php:807</p>
+    <p>
+      <code>delete()</code> checks only <code>$this-&gt;isVendor</code> — the
+      <code>Utils::userCan($this-&gt;user, 'order.delete')</code> guard that every sibling method
+      carries is missing, so any admin role reaches it. It removes <code>ordered_products</code> and
+      <code>cancellations</code>, then the order, leaving
+      <code>ordered_products_inventories</code>, <code>ordered_voucher</code>,
+      <code>ordered_flash_discount</code> and <code>point_transactions</code> pointing at a row that
+      no longer exists. Stock is not restored and it accepts a comma-separated id list, so one call
+      can wipe many orders. There is no soft delete and no audit trail.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Add the permission check, soft-delete instead of hard-delete, and cascade or clean the child
+      tables.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">CART-02</span><span class="sev">High</span></div>
+    <h3>"Buy now" deselects every cart in the database, for every customer</h3>
+    <p class="loc">app/Http/Controllers/CartsController.php:263</p>
+    <pre>Cart::where('selected', …PUBLIC)
+    -&gt;where('id', '!=', $cart-&gt;id)
+    -&gt;update(['selected' =&gt; …PRIVATE]);   <i>// no user_id / user_token filter</i></pre>
+    <p>
+      The intent is to isolate the one item being bought. With no ownership filter it unticks the
+      cart of every other shopper on the site. Anyone else mid-checkout finds their basket empty and,
+      because the order loop skips unselected rows, this feeds directly into <code>INT-01</code>.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Scope the update to the same <code>user_id</code> / <code>user_token</code> /
+      <code>admin_id</code> branch used to find the cart.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">CART-03</span><span class="sev">High</span></div>
+    <h3>Cart delete, select and shipping-update accept any row id without an ownership check</h3>
+    <p class="loc">CartsController.php:504 (delete), 505→ (changeSelected), 391 (updateShipping)</p>
+    <pre>Cart::find($id)-&gt;delete();                              <i>// delete — no owner check</i>
+Cart::whereIn('id', $request-&gt;checked)-&gt;update(…);      <i>// changeSelected — none</i>
+Cart::whereIn('id', $cartIds)-&gt;…                        <i>// updateShipping — none</i></pre>
+    <p>
+      All three take ids straight from the request. Sequential cart ids make enumeration trivial: an
+      attacker can empty other shoppers' baskets, tick items they did not choose, or reassign their
+      shipping method and cost. <code>updateShipping</code> also writes
+      <code>selected_address</code> onto a guest without checking the address belongs to them, and
+      dereferences the lookup without a null guard.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Add the owner clause to all three queries — the same branch already used by
+      <code>byUser()</code> — and confirm the address belongs to the caller.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">ORD-02</span><span class="sev">Medium</span></div>
+    <h3>First-time guest checkout dereferences a null user record</h3>
+    <p class="loc">OrdersController.php:1728–1745</p>
+    <pre>$guestUser = GuestUser::where('user_token', …)-&gt;first();
+if (!$guestUser) { GuestUser::create([…]); }      <i>// result never assigned back</i>
+if (!<b>$guestUser</b>-&gt;default_address) {              <i>// $guestUser is still null</i></pre>
+    <p>
+      For a guest whose token has no record yet, this raises <code>Error: Attempt to read property
+      on null</code> — which the <code>catch (\Exception)</code> block does not catch in PHP 8, so it
+      surfaces as a 500 after the order row has already been created. The
+      <code>UserAddress::…-&gt;first()-&gt;id</code> two lines below has the same shape. The success
+      path later reads <code>$guestUser-&gt;name</code> unguarded as well.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Assign the created record (<code>$guestUser = GuestUser::create(…)</code>), null-check the
+      address, and catch <code>\Throwable</code>.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">ORD-03</span><span class="sev">Medium</span></div>
+    <h3>Order status accepts any integer, and bundle items are taxed</h3>
+    <p class="loc">Validation.php:68 &middot; OrdersController.php:1862</p>
+    <p>
+      <code>Validation::orderStatus()</code> requires only <code>id</code> —
+      <code>status</code> and <code>payment_done</code> are unvalidated, so status can be set to any
+      value or moved backwards from DELIVERED, and the response reports
+      <code>payment_done: 1</code> whether or not that was written. Separately, tax is computed as
+      <code>$taxQtyOffer * $cart-&gt;quantity</code> while the goods price uses
+      <code>quantity - bundleQtyOffer</code> — so free bundle items are charged VAT. The flash
+      discount base has the mirror-image problem: it sums <code>product.selling</code> rather than the
+      price actually paid, so the discount is calculated off list price.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Validate <code>status</code> with <code>Rule::in(array_values(config('constants.orderStatus')))</code>,
+      apply the bundle offset to tax, and base the flash discount on the charged price.
+    </div>
+  </article>
+</section>
+
+<!-- ============ ACCOUNTS / EMAIL ============ -->
+<section>
+  <div class="sec-head">
+    <h2>Customer accounts &amp; email</h2>
+    <span class="count">4 findings</span>
+  </div>
+  <p class="sec-note">
+    Worth saying plainly: the <em>customer</em> password reset flow
+    (<code>PasswordResetToken</code>) is well built — throttled, single-use, expiring, and it
+    invalidates sessions on reset. It is the model the admin flow in <code>SEC-01</code> should adopt.
+  </p>
+
+  <article class="find" style="--fc:var(--sev-high);--fbg:var(--sev-high-bg)">
+    <div class="find-top"><span class="fid">EML-01</span><span class="sev">High</span></div>
+    <h3>Order confirmation emails are only sent if the browser stays open long enough to ask</h3>
+    <p class="loc">routes/api.php:1019 &middot; OrdersController.php:2309</p>
+    <p>
+      Order creation sends no mail. The confirmation depends on the client calling
+      <code>GET /api/v1/order/send-order-email/{id}</code> after the fact. A closed tab, a dropped
+      connection or a payment redirect that does not return means the customer never hears from you —
+      and there is no queue, no retry and no record of whether it went.
+    </p>
+    <p>
+      The endpoint has no ownership check either: it takes any order id, so ids can be enumerated to
+      trigger repeat mail to their real owners. It is a <code>GET</code> with a side effect, so a
+      prefetch or crawler resends it, and <code>$order-&gt;guest_user-&gt;email</code> is
+      dereferenced without a null guard.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Dispatch a queued mailable from order creation, verify ownership on any manual resend, and make
+      the resend a <code>POST</code>.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">EML-02</span><span class="sev">Medium</span></div>
+    <h3>No email on any status change</h3>
+    <p class="loc">OrdersController.php:760</p>
+    <p>
+      <code>updateStatus</code> writes the status and returns. Nothing notifies the customer when an
+      order is confirmed, picked up, on the way or cancelled. The delivered notice exists only as a
+      separate button the admin must remember to press
+      (<code>GET admin/order/send-delivered-email/{id}</code>).
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Fire an <code>OrderStatusChanged</code> event from the transition method and queue the mail
+      from a listener.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">ACC-01</span><span class="sev">Medium</span></div>
+    <h3>Signup verification codes are brute-forceable and the reset flow enumerates accounts</h3>
+    <p class="loc">UsersController.php:876 (verify), 786 (forgot)</p>
+    <p>
+      <code>verify()</code> compares with <code>==</code> and has no attempt limit beyond the global
+      60/min. Registration codes are 6 digits (a deliberate widening, per the comment in
+      <code>MailHelper</code>), but the other flows remain at
+      <code>rand(1000,9999)</code>. <code>forgotPassword</code> returns a distinct "does not exist"
+      message for unknown addresses, confirming which emails hold accounts.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Compare with <code>===</code>, count failed attempts per account and lock after five, and
+      return the same response whether or not the address is known.
+    </div>
+  </article>
+
+  <article class="find" style="--fc:var(--sev-med);--fbg:var(--sev-med-bg)">
+    <div class="find-top"><span class="fid">ACC-02</span><span class="sev">Medium</span></div>
+    <h3>Loyalty points are credited before payment and never reversed</h3>
+    <p class="loc">OrdersController.php:1995</p>
+    <p>
+      Points are written to <code>point_transactions</code> during order creation, before any gateway
+      confirms. An abandoned or declined payment still earns them, and neither cancellation, refund
+      nor order deletion debits them back. Points spent on an order that then fails are gone the same
+      way — the debit is written up front with no compensating credit.
+    </p>
+    <div class="fix"><span class="lbl">Fix</span>
+      Credit on confirmed payment, and reverse both directions in the cancellation and refund paths.
+    </div>
+  </article>
+</section>
+
+<!-- ============ COVERAGE ============ -->
+<section>
+  <div class="sec-head">
+    <h2>Coverage by flow</h2>
+    <span class="count">Every area requested</span>
+  </div>
+  <div class="tbl-scroll">
+    <table>
+      <thead>
+        <tr><th>Flow</th><th>Verdict</th><th>What holds, and what does not</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Product create / edit</td><td><span class="pill p-part">Partial</span></td>
+          <td>Permissions and slug uniqueness are enforced. Offer price unvalidated; €0.00 products bypass the validator entirely; mass assignment lets a request write <code>admin_id</code> and <code>purchased</code>.</td></tr>
+        <tr><td>Categories &amp; brands</td><td><span class="pill p-ok">Pass</span></td>
+          <td>Multi-language joins, slug and meta validation behave correctly. No findings.</td></tr>
+        <tr><td>Variations &amp; pricing</td><td><span class="pill p-fail">Fail</span></td>
+          <td><code>PRC-01</code> — variant prices override flash sales and offers; one function uses two different flash-price rules.</td></tr>
+        <tr><td>Discounts &amp; coupons</td><td><span class="pill p-fail">Fail</span></td>
+          <td><code>CPN-01…05</code> — expiry check unreachable, two live expired codes usable, preview and checkout disagree on four separate axes.</td></tr>
+        <tr><td>Inventory &amp; stock</td><td><span class="pill p-fail">Fail</span></td>
+          <td><code>STK-01…03</code> — no quantity comparison, negative quantities create stock, deduction precedes payment with a broken rollback.</td></tr>
+        <tr><td>Product display</td><td><span class="pill p-part">Partial</span></td>
+          <td>Storefront price ladder is coherent; it disagrees with the server's ladder on variant products, and <code>vatInclusive*</code> is 0.00 on recent rows.</td></tr>
+        <tr><td>Add to cart</td><td><span class="pill p-fail">Fail</span></td>
+          <td><code>CART-01…03</code> — client-supplied prices, no stock check on new rows, no ownership checks, global deselect.</td></tr>
+        <tr><td>Cart updates</td><td><span class="pill p-fail">Fail</span></td>
+          <td>Delete, select and shipping-update are all IDOR-able by sequential id.</td></tr>
+        <tr><td>Checkout</td><td><span class="pill p-fail">Fail</span></td>
+          <td><code>INT-01</code> — 33% of live orders hold no line items; no transaction; no idempotency on double-submit.</td></tr>
+        <tr><td>Shipping</td><td><span class="pill p-part">Partial</span></td>
+          <td>Single-price-per-rule de-duplication works. A missing shipping place silently voids the whole order rather than blocking checkout.</td></tr>
+        <tr><td>Tax</td><td><span class="pill p-fail">Fail</span></td>
+          <td><code>TAX-01/02</code> — VAT charged on 9 of 121 products; 23% hardcoded; <code>tax_rules</code> table effectively unused.</td></tr>
+        <tr><td>Payment success</td><td><span class="pill p-fail">Fail</span></td>
+          <td><code>PAY-01…03</code> — PayPal, SumUp, Razorpay and Flutterwave can all be marked paid without payment.</td></tr>
+        <tr><td>Payment failure</td><td><span class="pill p-fail">Fail</span></td>
+          <td>Only Razorpay rolls back, incorrectly. No webhooks, so an abandoned redirect leaves a permanent unpaid order holding stock.</td></tr>
+        <tr><td>Order creation</td><td><span class="pill p-fail">Fail</span></td>
+          <td>Totals omit flash and points discounts; guest path can 500 after the row is written.</td></tr>
+        <tr><td>Order status</td><td><span class="pill p-fail">Fail</span></td>
+          <td>Any integer accepted, no transition rules, no CANCELLED/REFUNDED state, no history.</td></tr>
+        <tr><td>Refunds</td><td><span class="pill p-fail">Fail</span></td>
+          <td><code>RFN-01/02</code> — no money moves; customers can self-mark refunded.</td></tr>
+        <tr><td>Customer accounts</td><td><span class="pill p-part">Partial</span></td>
+          <td>Password reset is genuinely good. Verification codes are brute-forceable; guest identity is forgeable.</td></tr>
+        <tr><td>Emails</td><td><span class="pill p-fail">Fail</span></td>
+          <td>Confirmation depends on a client call; nothing on status change; no queue or retry.</td></tr>
+        <tr><td>Security &amp; validation</td><td><span class="pill p-fail">Fail</span></td>
+          <td><code>SEC-01</code> unauthenticated admin takeover; installer routes open; debug mode on in production.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ GAPS ============ -->
+<section>
+  <div class="sec-head">
+    <h2>Missing by design, not by defect</h2>
+    <span class="count">Absent capabilities</span>
+  </div>
+  <p class="sec-note">
+    These are not bugs in existing code — they are scenarios the system has no mechanism for at all,
+    and several of the findings above are downstream of them.
+  </p>
+  <div class="gaps">
+    <div class="gap"><h4>Gateway webhooks</h4>
+      <p>No webhook route exists for any provider. Payment confirmation depends entirely on the customer's browser completing a round trip, which is why <code>PAY-01</code> through <code>PAY-03</code> matter so much.</p></div>
+    <div class="gap"><h4>Stock reservation</h4>
+      <p>Stock is one mutable integer with no ledger and no locking. Two shoppers can buy the last unit simultaneously, and there is no way to reconcile a discrepancy after the fact.</p></div>
+    <div class="gap"><h4>Checkout idempotency</h4>
+      <p>No idempotency key and no in-flight guard. A double-click or a retried request creates two orders and deducts stock twice.</p></div>
+    <div class="gap"><h4>Order status history</h4>
+      <p>Status is a single column that is overwritten. There is no record of who changed what or when — nothing to audit after a dispute.</p></div>
+    <div class="gap"><h4>Partial cancellation and refund</h4>
+      <p>Both are all-or-nothing at order level. A customer returning one item of four has no path through the system.</p></div>
+    <div class="gap"><h4>Decimal money handling</h4>
+      <p>Every calculation runs through PHP floats with <code>number_format</code> at the edges. Use integer minor units or <code>decimal</code> casts end to end.</p></div>
+    <div class="gap"><h4>Automated tests</h4>
+      <p><code>tests/</code> holds the two Laravel example stubs and nothing else. None of the arithmetic in this report has a regression test, so every fix risks a new one.</p></div>
+    <div class="gap"><h4>Auth rate limiting</h4>
+      <p>Login, verify-code and forgot-password inherit the global <code>throttle:api</code> of 60/min with no per-account counter or lockout.</p></div>
+  </div>
+</section>
+
+<!-- ============ EVIDENCE ============ -->
+<section>
+  <div class="sec-head">
+    <h2>Verification log</h2>
+    <span class="count">Run against mrmobile_db, 9 Sep 2026</span>
+  </div>
+  <p class="sec-note">
+    Output from the checks behind the findings above. The stock test ran inside a transaction that was
+    rolled back; no data was modified during this audit.
+  </p>
+  <div class="console">
+<pre>=== voucher expiry check (OrdersController::action) =========================
+  expired  (started 10d ago, ended 5d ago)   checkout=<b>ACCEPT</b>   preview=REJECT
+  active   (started 1d ago, ends in 5d)      checkout=ACCEPT   preview=ACCEPT
+  future   (starts in 5d, ends in 10d)       checkout=<b>ACCEPT</b>   preview=REJECT
+
+=== negative cart quantity -> stock INCREASES ==============================
+  inventory 62 before: qty=6
+  after decrement(qty=-5)   : qty=11   <b>&lt;&lt;&lt; STOCK CREATED FROM NOTHING</b>
+  (rolled back)
+
+=== capped_price (int) truncation =========================================
+  capped_price 10.99  -> applied discount 10
+  capped_price 25.5   -> applied discount 25
+  capped_price 0.99   -> applied discount <b>0</b>
+
+=== Stripe amount float->int cents ========================================
+  total 1.15    -> Charge amount <b>114</b> cents (expected 115)
+  total 46.2    -> Charge amount 4620 cents (expected 4620)
+
+=== admin verify-code: loose comparison ===================================
+  PHP 8.2.12   null == 0 : true      null == '0' : false
+
+  admins: id | email                            | code
+    1    kilcock@fixmypc.ie                     code='7896'
+    3    rohab.brar@fixmypc.ie                  code=<b>NULL</b>
+    4    admin@yopmail.com                      code=<b>NULL</b>
+    5    admintest@yopmail.com                  code=<b>NULL</b>
+
+  code=int 0        validation=PASS     compare-passes=YES   <b>*** TAKEOVER ***</b>
+  code=float 0.0    validation=PASS     compare-passes=YES   <b>*** TAKEOVER ***</b>
+  code=false        validation=PASS     compare-passes=YES   <b>*** TAKEOVER ***</b>
+  code=string '0'   validation=PASS     compare-passes=no
+  code=empty string validation=blocked  compare-passes=YES
+
+=== order totals vs line items ============================================
+  id  total_amount  computed  diff     voucher  flash
+  65  1646.00       1646.00   0        0.00     <b>200.00</b>   <i>← discount not applied</i>
+  62  316.00        521.00    <b>-205</b>     0.00     75.75    <i>← reconciles to nothing</i>
+  72  0.00          0.00      0        0.00     0.00     <i>← no line items</i>
+
+  orders with zero ordered_products : <b>15 of 45</b>
+  order 40                          : cancelled=1  status=1 (PENDING)
+  products with selling = 0.00      : 5  (4 published)
+  products with excludeVAT = 1      : <b>9</b>    (VAT charged)
+  products with excludeVAT ≠ 1      : <b>112</b>  (no VAT charged)</pre>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="lbl">Suggested order of work</span>
+    <p>
+      <strong>Today:</strong> rotate the four admin passwords and patch <code>SEC-01</code>; disable
+      PayPal and SumUp in the payment settings until <code>PAY-01</code> is fixed; expire or delete
+      <code>FIRSTOFFER</code> and <code>TEST5</code>; set <code>APP_DEBUG=false</code>; delete the
+      installer and test routes.
+    </p>
+    <p>
+      <strong>This week:</strong> the single-total fix for <code>MON-01</code>, the voucher date
+      inversion, the cart ownership checks, and a transaction around order creation. Then decide the
+      intended meaning of <code>excludeVAT</code> with your accountant before touching
+      <code>TAX-01</code> — the correction changes historical VAT liability, and the 15 empty orders
+      need reconciling alongside it.
+    </p>
+    <p style="color:var(--faint);font-size:13px;margin-top:16px">
+      Static review of 96 controllers and 1,136 API routes, with findings verified against the live
+      database. No live payment transactions were attempted; gateway behaviour is assessed from the
+      integration code. Line numbers refer to the working tree at the time of the audit.
+    </p>
+  </div>
+</footer>

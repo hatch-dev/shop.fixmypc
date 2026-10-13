@@ -20,16 +20,16 @@
         :title="name"
         :gate="gate"
         :add-button="addButton"
+        :has-custom-add="hasAddButtonSlot"
         :order-by-options="orderOptions"
         @delete-bulk="deleteBulk"
       >
       <template v-slot:extra-filters>
         <slot name="extra-filters" />
       </template>
-        <slot
-          name="add-button"
-        >
-        </slot>
+      <template v-slot:add-button>
+        <slot name="add-button" />
+      </template>
       </table-top>
     </slot>
 
@@ -53,10 +53,11 @@
 
           <div v-if="hasRows" class="n-product-table">
           <div class="table-wrapper">
-            <table class="mn-w-600x">
+            <table class="mn-w-600x" :class="tableClass">
               <slot
                 name="table"
                 v-bind:list="list"
+                v-bind:from="listFrom"
               />
             </table>
           </div>
@@ -93,6 +94,16 @@
   export default {
     name: "ListPage",
     props: {
+      /*
+       * Extra class for the rendered <table>. Pages that want a different
+       * column-sizing model ask for it here; before this they declared a
+       * bare `table { ... }` rule in an unscoped <style> block, which
+       * applied to every list in the admin.
+       */
+      tableClass: {
+        type: String,
+        default: ''
+      },
       addButton: {
         type: Boolean,
         default: true
@@ -112,6 +123,18 @@
       deleteApi: {
         type: String,
         default: ''
+      },
+      /*
+       * What the confirmation asks before deleting.
+       *
+       * The default is the generic "are you sure?" this list has always used.
+       * It is overridable because some records are not equivalent: deleting an
+       * order destroys a financial record and its audit trail, and the prompt
+       * should say so rather than reading like removing a tag.
+       */
+      deleteMessage: {
+        type: String,
+        default: null
       },
       routeName: {
         type: String,
@@ -160,6 +183,12 @@
       list() {
         return this.result?.data || []
       },
+      listFrom() {
+        return this.result?.from || 1
+      },
+      hasAddButtonSlot() {
+        return !!this.$slots['add-button'] || !!(this.$scopedSlots && this.$scopedSlots['add-button'])
+      },
       hasRows() {
         return Array.isArray(this.list) && this.list.length > 0
       },
@@ -198,7 +227,7 @@
         return this.$router.push(`/${this.routeName}/${id}`)
       },
       async deleteItem(id) {
-        if (confirm(this.$t('admin.dltMsg'))) {
+        if (confirm(this.deleteMessage || this.$t('admin.dltMsg'))) {
           try {
             this.deleting = true
             await this.deleteData({params: id, api: this.deleteApi })

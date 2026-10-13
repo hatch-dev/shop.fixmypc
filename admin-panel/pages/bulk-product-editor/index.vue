@@ -143,6 +143,7 @@
       <!-- Product List -->
       <list-page
         ref="productList"
+        table-class="bulk-picker-table"
         list-api="getProducts"
         :name="$t('title.prod')"
         :filters="filters"
@@ -401,14 +402,6 @@
                   />
                 </template>
 
-                <!-- Upsell -->
-                <template v-else-if="col.key === 'updated_upsell'">
-                  <dropdown
-                    :selectedKey="bulkData.updated_upsell_id ? String(bulkData.updated_upsell_id) : null"
-                    :options="updatedUpsellOptions"
-                    @clicked="({key}) => bulkData.updated_upsell_id = key"
-                  />
-                </template>
 
                 <!-- Bundle -->
                 <template v-else-if="col.key === 'bundle'">
@@ -583,10 +576,6 @@
                   {{ allUpsells[product.upsell_id]?.title }}
                 </template>
 
-                <!-- UpSell -->
-                <template v-if="col.key === 'updated_upsell'">
-                  {{ updated_upsells.find(u => u.id == product.updated_upsell_id)?.title }}
-                </template>
 
                 <!-- Bundle -->
                 <template v-if="col.key === 'bundle'">
@@ -627,7 +616,7 @@
             <!-- Product Row -->
             <tr
               :key="'product-' + value.id"
-              :class="['admin-row']"
+              :class="['admin-row', { 'row-refused': isRefusedRow(value.id) }]"
             >
 
               <!-- Expand -->
@@ -1031,14 +1020,6 @@
                   />
                  </template>
 
-                 <!-- Upsell -->
-                 <template v-if="col.key === 'updated_upsell'">
-                  <dropdown
-                    :selectedKey="value.updated_upsell_id ? String(value.updated_upsell_id) : undefined"
-                    :options="updatedUpsellOptions"
-                    @clicked="({key}) => {value.updated_upsell_id = key || null; autoSave(value);}"
-                  />
-                 </template>
 
                   <!-- Bundle -->
                  <template v-if="col.key === 'bundle'">
@@ -1901,6 +1882,8 @@ export default {
       showBulkConfirm: false,
       isSyncingFromRoute: false,
       isFocusMode: false,
+      // Product ids the last bulk save refused, so their rows stand out.
+      refusedRowIds: [],
       itemList: [],
       filters: {
         category_id: '',
@@ -1924,7 +1907,6 @@ export default {
       subCategories: [],
       allUpsells: {},
       bundles: [],
-      updated_upsells: [],
       loadingUpsells: false,
       statusObj: {
         1: { title: 'Public' },
@@ -1953,7 +1935,6 @@ export default {
         discount_value: '',
         discount_type: 'fixed',
         upsell_id: null,
-        updated_upsell_id: null,
         bundle_deal_id: null,
         status: '',
       },
@@ -1977,7 +1958,6 @@ export default {
         { key: 'selling', label: 'Selling', visible: true },
         { key: 'discount', label: 'Discount', visible: true },
         { key: 'crosssell', label: 'Cross Sell', visible: true },
-        { key: 'updated_upsell', label: 'Upsell', visible: true },
         { key: 'bundle', label: 'Bundle', visible: true },
         { key: 'status', label: 'Status', visible: true },
         { key: 'procurement', label: 'Procurement', visible: true },
@@ -1989,15 +1969,7 @@ export default {
     }
   },
   computed: {
-    updatedUpsellOptions() {
-      return [
-        { key: '', title: 'Select Upsell' },
-        ...this.updated_upsells.map(u => ({
-          key: String(u.id),
-          title: u.title
-        }))
-      ]
-    },
+
 
     bundleOptions() {
       return [
@@ -2091,10 +2063,6 @@ export default {
     },
     handleProductList(list) {
       list.forEach(item => {
-        item.updated_upsell_id =
-          item.updated_upsell_id !== null
-            ? String(item.updated_upsell_id)
-            : null
 
         item.bundle_deal_ids = item.bundle_deal_id
           ? item.bundle_deal_id.split(',').map(String)
@@ -2196,7 +2164,6 @@ export default {
         'selling',
         'discount',
         'crosssell',
-        'updated_upsell',
         'bundle',
         'status',
         'procurement'
@@ -2349,7 +2316,7 @@ export default {
       }
 
       try {
-        const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/'
+        const baseUrl = this.apiBase();
 
         if(this.editingVariant){
           await this.$axios.post(
@@ -2408,7 +2375,7 @@ export default {
       })
 
       try {
-        const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/'
+        const baseUrl = this.apiBase();
 
         await this.$axios.post(
           `${baseUrl}api/admin/product/upload-images/${this.editingImageProduct.id}`,
@@ -2449,7 +2416,7 @@ export default {
     },
     async fetchProductImages(productId) {
       try {
-        const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/'
+        const baseUrl = this.apiBase();
         const res = await this.$axios.get(
           `${baseUrl}api/admin/product/all-images/${productId}`
         )
@@ -2467,7 +2434,6 @@ export default {
         discount_value: '',
         discount_type: 'fixed',
         upsell_id: null,
-        updated_upsell_id: null,
         bundle_deal_ids: [],
         bundle_deal_id: null,
         status: '',
@@ -2540,10 +2506,6 @@ export default {
           product.upsell_id = this.bulkData.upsell_id
         }
 
-        // Upsell
-        if (this.bulkData.updated_upsell_id !== null) {
-          product.updated_upsell_id = this.bulkData.updated_upsell_id
-        }
 
         // Bundle
         if (this.bulkData.bundle_deal_ids?.length) {
@@ -2649,7 +2611,7 @@ export default {
           duration: 0
         })
 
-        const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/'
+        const baseUrl = this.apiBase();
         const formData = new FormData()
 
         const formatted = products.map(product => ({
@@ -2667,9 +2629,7 @@ export default {
           discount_value: product.discount_value,
           offered: this.calculateFinalProductPrice(product),
 
-          upsell_id: product.upsell_id,
-          updated_upsell_id: product.updated_upsell_id,
-          bundle_deal_id: product.bundle_deal_id,
+          upsell_id: product.upsell_id,          bundle_deal_id: product.bundle_deal_id,
           status: product.status,
           procurement: product.procurement,
           primary_category_id: product.primaryCategoryId,
@@ -2701,20 +2661,61 @@ export default {
 
         formData.append("products", JSON.stringify(formatted))
 
-        await this.$axios.post(
+        const { data } = await this.$axios.post(
           `${baseUrl}api/admin/product/bulk-update`,
           formData,
           { headers: { 'Content-Type': 'multipart/form-data' } }
         )
 
         this.$toast.dismiss(toastId)
-        this.$toast.success("Bulk update successful")
+
+        /*
+         * A refused save answers HTTP 200 with the reasons in the body -- the
+         * convention across this API -- so a call that only watches for a
+         * thrown error reports every refusal as a success. Nothing is written
+         * when that happens, and the response names the rows at fault.
+         */
+        if (!this.reportBulkRefusal(data)) {
+          this.$toast.success("Bulk update successful")
+        }
 
       } catch (e) {
         this.$toast.dismiss(toastId)
         this.$toast.error("Bulk update failed")
         console.error(e)
       }
+    },
+    // Rows the last save refused, so the grid can point at them.
+    isRefusedRow(id) {
+      return this.refusedRowIds.includes(String(id))
+    },
+    /*
+     * Surface a refused bulk save. Returns true when the save was refused, so
+     * the caller knows not to claim success.
+     *
+     * The API answers a refusal with HTTP 200 and status 201 in the body,
+     * carrying a flat list of reasons and a map of product id -> reasons.
+     * Nothing was written.
+     */
+    reportBulkRefusal(data) {
+      if (!data || Number(data.status) === 200) {
+        this.refusedRowIds = []
+        return false
+      }
+
+      const reasons = (data.data && data.data.form) || []
+
+      this.$toast.error(data.message || "Bulk update failed")
+
+      reasons.slice(0, 5).forEach(reason => this.$toast.error(reason))
+
+      if (reasons.length > 5) {
+        this.$toast.error(`...and ${reasons.length - 5} more.`)
+      }
+
+      this.refusedRowIds = Object.keys((data.data && data.data.rows) || {})
+
+      return true
     },
     autoSave(product) {
       if (!this.isPageLoaded) return
@@ -2726,7 +2727,7 @@ export default {
             toastId = this.$toast.warning("Saving changes...", {
               duration: 0
             })
-            const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/'
+            const baseUrl = this.apiBase();
             const formData = new FormData()
             const products = [{
               id: product.id,
@@ -2742,7 +2743,6 @@ export default {
               discount_value: product.discount_value,
               offered: this.calculateFinalProductPrice(product),
               upsell_id: product.upsell_id,
-              updated_upsell_id: product.updated_upsell_id,
               bundle_deal_id: product.bundle_deal_id,
               status: product.status,
               procurement: product.procurement,
@@ -2767,7 +2767,7 @@ export default {
               formData.append(`images[${product.id}]`, product.newImage)
             }
             formData.append("products", JSON.stringify(products))
-            await this.$axios.post(
+            const { data } = await this.$axios.post(
               `${baseUrl}api/admin/product/bulk-update`,
               formData,
               { headers: { 'Content-Type': 'multipart/form-data' } }
@@ -2775,9 +2775,13 @@ export default {
             await new Promise(resolve => setTimeout(resolve, 200))
             this.$toast.dismiss(toastId)
             await new Promise(resolve => setTimeout(resolve, 200))
-            this.$toast.success("Changes saved", {
-              duration: 2000
-            })
+
+            // Same as the full save: a refusal arrives with HTTP 200.
+            if (!this.reportBulkRefusal(data)) {
+              this.$toast.success("Changes saved", {
+                duration: 2000
+              })
+            }
           } catch (e) {
             this.$toast.error("Changes failed")
           }
@@ -2939,7 +2943,7 @@ export default {
     async fetchUpsells() {
       this.loadingUpsells = true
       try {
-        const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/';
+        const baseUrl = this.apiBase();
         const response = await this.$axios.get(`${baseUrl}api/upsells/active`);
         this.allUpsells = response.data
       } catch (e) {
@@ -2949,7 +2953,7 @@ export default {
       }
     },
     async fetchCategories() {
-        const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/';
+        const baseUrl = this.apiBase();
         const response = await this.$axios.get(`${baseUrl}api/admin/product/with-categories`, {
           params: {
             category_id: this.filters.category_id
@@ -2960,7 +2964,6 @@ export default {
         this.brands = response.data.brands;
         this.products = response.data.products;
         this.bundles = response.data.bundles;
-        this.updated_upsells = response.data.updated_upsells;
     },
     toggleStock(value) {
       this.filters.stock = this.filters.stock === value ? '' : value
@@ -3015,7 +3018,6 @@ export default {
         )
 
         this.$set(product, 'upsell_id', product.upsell_id ? Number(product.upsell_id) : null)
-        this.$set(product, 'updated_upsell_id', product.updated_upsell_id ? Number(product.updated_upsell_id) : null)
         this.$set(product, 'bundle_deal_id', product.bundle_deal_id ? Number(product.bundle_deal_id) : null)
 
         this.$set(product, 'status', product.status ? Number(product.status) : 1)
@@ -3463,6 +3465,16 @@ select.custom-dropdown {
   background: #f8fbff;
 }
 
+/* A row the last bulk save refused. Written as .admin-row.row-refused rather
+   than .row-refused alone because this <style> block is unscoped, and a bare
+   class here reaches every table in the admin. Placed after the :hover rule so
+   it wins the equal-specificity tie while the pointer is over the row. */
+.admin-row.row-refused,
+.admin-row.row-refused:hover {
+  background: #fff5f5;
+  box-shadow: inset 3px 0 0 #dc2626;
+}
+
 
 .row-selected {
   background: #eef4ff;
@@ -3648,7 +3660,10 @@ input[type="checkbox"] {
   padding: 0 !important;
 }
 
-table {
+/* Scoped to this page's own picker list. As a bare `table` selector in an
+   unscoped <style> block it reached every table in the admin, and was
+   collapsing the product grid's Title column to an equal 1/13th share. */
+.bulk-picker-table {
   table-layout: fixed;
 }
 

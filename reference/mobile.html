@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DELL Latitude 3520 (mobile) — FixMyPC Shop</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+/* ============================================================================
+   FixMyPC Shop — mobile product page with optional configurator, v1
+   Same idea as the desktop page: sold as specified, customising is a choice,
+   and the price bar is always on screen.
+   ========================================================================== */
+:root{
+  --ink:#16174A;--ink-soft:#3A3C6E;--brand:#2D2DA0;--brand-700:#22227E;--brand-50:#F1F1FC;
+  --go:#00A24A;--go-700:#00873E;--wash:#F7F7FD;--line:#E8E9F5;--line-strong:#CFD1E8;
+  --muted:#6B7191;--danger:#C8324B;--amber:#B26A00;--star:#F0A500;
+  --radius:14px;--radius-lg:18px;
+  --shadow-sm:0 1px 3px rgba(22,23,74,.07);--shadow-md:0 10px 28px rgba(22,23,74,.12);
+  --shadow-up:0 -6px 24px rgba(22,23,74,.12);
+  --sans:"Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+  --bar-h:84px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#EFEFF6;font-family:var(--sans);color:var(--ink);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:3px solid rgba(45,45,160,.35);outline-offset:2px;border-radius:8px}
+.phone{max-width:402px;margin:0 auto;background:#fff;min-height:100dvh;position:relative;overflow:hidden}
+@media (min-width:760px){
+  body{padding:24px 0}
+  .phone{border-radius:36px;box-shadow:0 30px 80px rgba(22,23,74,.28);height:calc(100dvh - 48px);overflow:hidden;
+    border:1px solid #DCDDEC;transform:translateZ(0)}
+  .scroller{height:100%;overflow-y:auto;overscroll-behavior:contain}
+  .bar,.sheet,.scrim,.toasts,.modal{position:absolute!important}
+}
+.scroller{padding-bottom:calc(var(--bar-h) + 34px)}   /* clear the sticky price bar */
+
+.head{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:9px 10px}
+.hbtn{width:38px;height:38px;border-radius:11px;border:0;background:none;display:grid;place-items:center;color:var(--ink-soft);position:relative}
+.hbtn:active{background:var(--brand-50)}
+.hbtn .n{position:absolute;top:2px;right:2px;background:var(--go);color:#fff;font-size:9.5px;font-weight:800;min-width:16px;height:16px;
+  border-radius:999px;display:grid;place-items:center;padding:0 4px}
+.head b{flex:1;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.gal{background:var(--wash);position:relative}
+.gtrack{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.gtrack::-webkit-scrollbar{display:none}
+.gslide{flex:0 0 100%;scroll-snap-align:center;aspect-ratio:1;display:grid;place-items:center}
+.gslide svg{width:52%;height:52%;color:var(--brand);opacity:.33}
+.gcount{position:absolute;right:12px;bottom:12px;background:rgba(22,23,74,.72);color:#fff;font-size:11.5px;font-weight:700;
+  padding:4px 10px;border-radius:999px}
+.pad{padding:16px}
+.brandline{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:20px;line-height:1.28;letter-spacing:-.02em;margin:7px 0 9px}
+.meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.stars{color:var(--star);font-size:13px}
+.pill{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px}
+.pill.stock{background:#EAF9F0;color:#0B6B3A}
+.pill.sku{background:var(--wash);color:var(--muted)}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:12.5px}
+.chip i{color:var(--brand);display:grid;place-items:center;font-style:normal}
+.chip.up{border-color:var(--go);background:#EFFAF3;color:#0B6B3A}
+.chip.up i{color:var(--go)}
+
+.pricebox{border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.price{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.price b{font-size:27px;letter-spacing:-.03em}
+.price small{color:var(--muted);font-size:12.5px}
+.deliv{display:grid;gap:7px;margin-top:11px;padding-top:11px;border-top:1px dashed var(--line-strong);font-size:12.5px;color:var(--ink-soft)}
+.deliv div{display:flex;gap:8px}
+.deliv svg{flex:0 0 auto;color:var(--brand);margin-top:1px}
+.deliv b{color:var(--ink)}
+
+.cust-open{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1.5px dashed var(--line-strong);
+  background:var(--wash);border-radius:var(--radius);padding:14px;margin-bottom:16px}
+.cust-open:active{border-color:var(--brand);background:var(--brand-50)}
+.cust-open i{width:38px;height:38px;border-radius:11px;background:#fff;border:1px solid var(--line);color:var(--brand);
+  display:grid;place-items:center;flex:0 0 auto;font-style:normal}
+.cust-open b{display:block;font-size:14.5px}
+.cust-open small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.cust-open .cv{margin-left:auto;color:var(--muted)}
+
+.sec{border-top:8px solid var(--wash);padding:18px 16px}
+.sec h2{font-size:16px;margin:0 0 4px}
+.sec .sub{font-size:12.5px;color:var(--muted);margin:0 0 14px}
+.acc{border-bottom:1px solid var(--line)}
+.acc-h{width:100%;display:flex;align-items:center;gap:10px;background:none;border:0;padding:15px 2px;text-align:left;font-size:14.5px;font-weight:700}
+.acc-h .tag{margin-left:auto;font-size:12px;font-weight:600;color:var(--muted)}
+.acc-h .cv{color:var(--muted);transition:transform .2s;margin-left:8px}
+.acc.on .cv{transform:rotate(180deg)}
+.acc-b{display:none;padding:0 2px 16px;font-size:13.5px;color:var(--ink-soft);line-height:1.6}
+.acc.on .acc-b{display:block}
+.stage{display:flex;gap:11px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.stage:last-child{border-bottom:0}
+.stage i{width:28px;height:28px;border-radius:9px;background:var(--brand-50);color:var(--brand);display:grid;place-items:center;flex:0 0 auto;font-style:normal}
+.stage b{display:block;font-size:13.5px}
+.stage small{color:var(--muted);font-size:12px;display:block}
+.stage .when{font-size:11px;font-weight:800;color:var(--brand);text-transform:uppercase;letter-spacing:.05em}
+.svc-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.svc-row:last-child{border-bottom:0}
+.svc-row .t{flex:1}
+.svc-row .t b{display:block;font-size:13.5px}
+.svc-row .t small{color:var(--muted);font-size:12px}
+.svc-row .pr{font-weight:800;white-space:nowrap}
+dl.spec{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;margin:0;font-size:13.5px}
+dl.spec dt{color:var(--muted)}
+dl.spec dd{margin:0;font-weight:600;color:var(--ink)}
+
+/* promo + breadcrumb */
+.promo{background:#DDE0FA;font-size:11.5px;font-weight:700;padding:8px 13px;display:flex;align-items:center;gap:8px}
+.promo .c{background:#fff;border-radius:999px;padding:3px 9px;font-size:11px;white-space:nowrap}
+.promo .off{color:var(--go)}
+.promo button{margin-left:auto;background:none;border:0;color:var(--ink-soft);font-size:15px;line-height:1;padding:0 2px}
+.crumb{display:flex;gap:7px;align-items:center;padding:11px 16px 0;font-size:12.5px;color:var(--muted)}
+.crumb button{background:none;border:0;color:var(--ink-soft);font:inherit;padding:0}
+.crumb b{color:var(--brand)}
+
+/* addons + colour */
+.optblock{margin-bottom:16px}
+.optblock h3{font-size:13.5px;margin:0 0 9px}
+.optblock h3 span{font-weight:500;color:var(--muted)}
+.addons{display:flex;gap:8px;flex-wrap:wrap}
+.addon{border:1.5px solid var(--line-strong);background:#fff;border-radius:10px;padding:8px 13px;font-size:13px;font-weight:600;color:var(--ink-soft)}
+.addon.on{border-color:var(--brand);background:var(--brand-50);color:var(--brand)}
+.swatches{display:flex;gap:10px}
+.sw{width:38px;height:38px;border-radius:50%;border:2px solid var(--line-strong);padding:3px;background:#fff}
+.sw i{display:block;width:100%;height:100%;border-radius:50%}
+.sw.on{border-color:var(--brand);box-shadow:0 0 0 3px rgba(45,45,160,.12)}
+.speclist{list-style:disc;margin:0 0 18px;padding-left:20px;display:grid;gap:7px}
+.speclist li{font-size:13.5px;color:var(--ink-soft);line-height:1.45}
+.speclist b{color:var(--ink)}
+.speclist .up{color:var(--go);font-weight:700}
+
+/* frequently bought together */
+.fbt{background:var(--brand-50);border:1px solid #DCDDF7;border-radius:var(--radius);padding:15px;margin-bottom:16px}
+.fbt h3{margin:0 0 12px;font-size:15px}
+.fbt-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.fbt-pic{width:60px;height:60px;border-radius:11px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;color:var(--brand);flex:0 0 auto}
+.fbt-top .tot{flex:1}
+.fbt-top .tot span{font-size:12.5px;color:var(--ink-soft);display:block}
+.fbt-top .tot b{font-size:19px;color:var(--danger)}
+.fbt-row{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:1px solid #DCDDF7;font-size:13px;width:100%;
+  text-align:left;background:none;border-left:0;border-right:0;border-bottom:0}
+.fbt-row .dot{width:18px;height:18px;border-radius:5px;border:2px solid var(--line-strong);flex:0 0 auto;position:relative;background:#fff}
+.fbt-row.on .dot{border-color:var(--go);background:var(--go)}
+.fbt-row.on .dot:after{content:"";position:absolute;left:4.5px;top:1.5px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg)}
+.fbt-row .t{flex:1;min-width:0}
+.fbt-row .pr{white-space:nowrap;display:flex;gap:8px;align-items:baseline}
+.fbt-row .pr s{color:var(--muted);font-size:11.5px}
+.fbt-row .pr b{font-weight:800}
+
+/* benefits + features + carousels + newsletter */
+.benefits{background:#E9F8EE;padding:20px 16px;display:grid;gap:16px}
+.benefits div{display:flex;gap:12px;align-items:flex-start}
+.benefits i{color:var(--brand);flex:0 0 auto;font-style:normal}
+.benefits b{display:block;font-size:14.5px;color:var(--brand)}
+.benefits small{color:var(--ink-soft);font-size:12.5px;line-height:1.45;display:block}
+.features{padding:20px 16px;text-align:center;border-top:8px solid var(--wash)}
+.features h2{font-size:19px;margin:0 0 9px;letter-spacing:-.02em}
+.features p{margin:0;font-size:13.5px;color:var(--ink-soft)}
+.car{padding:18px 0 6px;border-top:8px solid var(--wash)}
+.car-h{display:flex;align-items:baseline;gap:10px;padding:0 16px 12px}
+.car-h h2{font-size:16px;margin:0}
+.car-h span{margin-left:auto;font-size:12px;color:var(--muted)}
+.track{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 16px 6px;scrollbar-width:none}
+.track::-webkit-scrollbar{display:none}
+.pcard{flex:0 0 162px;scroll-snap-align:start;border:1px solid var(--line);border-radius:var(--radius);background:#fff;
+  display:flex;flex-direction:column;position:relative;overflow:hidden}
+.pcard .pic{aspect-ratio:1;background:var(--wash);display:grid;place-items:center;color:var(--brand);border-bottom:1px solid var(--line)}
+.pcard .pic svg{opacity:.34;width:52%;height:52%}
+.pcard.out .pic{opacity:.6}
+.pcard .flag{position:absolute;top:8px;left:8px;background:var(--go);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px}
+.pcard .flag.out{background:var(--ink);opacity:.86}
+.pcard .b{padding:10px 11px 12px;display:flex;flex-direction:column;gap:5px;flex:1}
+.pcard h3{margin:0;font-size:12.5px;font-weight:600;line-height:1.35;color:var(--brand);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px}
+.pcard .rr{font-size:11px;color:var(--muted)}
+.pcard .pr{display:flex;align-items:baseline;gap:7px;margin-top:auto;padding-top:4px}
+.pcard .pr b{font-size:14.5px}
+.pcard .pr s{font-size:11px;color:var(--muted)}
+.pcard .oos{font-size:11px;font-weight:700;color:var(--muted);padding:0 11px 11px;display:block}
+.news{background:var(--brand);color:#fff;padding:22px 16px}
+.news h2{font-size:21px;margin:0 0 8px;letter-spacing:-.02em}
+.news p{margin:0 0 14px;font-size:12.5px;opacity:.85}
+.news .form{display:flex;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:5px 5px 5px 16px}
+.news input{flex:1;min-width:0;background:none;border:0;color:#fff;font-size:14px;font-family:inherit}
+.news input::placeholder{color:rgba(255,255,255,.7)}
+.news input:focus{outline:none}
+.news .form button{background:var(--go);color:#fff;border:0;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:700}
+.paylogos{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}
+.paylogos span{background:#fff;color:var(--ink);border-radius:6px;padding:4px 7px;font-size:9.5px;font-weight:800}
+.social{display:flex;gap:9px;margin-bottom:14px}
+.social button{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:none;color:#fff;display:grid;place-items:center}
+
+/* footer */
+.foot{background:var(--brand);color:#fff;padding:22px 16px 26px}
+.foot b{font-size:16px;display:block;margin-bottom:5px}
+.foot p{margin:0 0 14px;font-size:12.5px;opacity:.85}
+.foot .btn-ghost{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:#fff}
+.foot-links{display:flex;flex-wrap:wrap;gap:14px;margin:16px 0}
+.foot-links button{background:none;border:0;color:#fff;opacity:.85;font-size:12.5px;padding:0}
+.foot small{font-size:11px;opacity:.7;display:block;border-top:1px solid rgba(255,255,255,.18);padding-top:14px}
+
+/* sticky price bar */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(255,255,255,.98);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);box-shadow:var(--shadow-up);padding:10px 14px calc(12px + env(safe-area-inset-bottom))}
+.bar-top{display:flex;align-items:center;gap:12px;margin-bottom:9px}
+.bar-top .bp b{font-size:19px;letter-spacing:-.02em;display:block;line-height:1.15}
+.bar-top .bp small{font-size:11.5px;color:var(--muted)}
+.bar-top .mini{margin-left:auto;background:none;border:1px solid var(--line-strong);border-radius:999px;padding:7px 13px;
+  font-size:12.5px;font-weight:700;color:var(--brand)}
+.btn{border:0;border-radius:999px;padding:13px 18px;font-size:15px;font-weight:700;width:100%;transition:.15s}
+.btn-go{background:var(--go);color:#fff;box-shadow:0 6px 16px rgba(0,162,74,.24)}
+.btn-go:active{background:var(--go-700)}
+.btn-ink{background:var(--brand);color:#fff}
+.btn-ghost{background:#fff;border:1px solid var(--line-strong);color:var(--ink)}
+.btn-sm{padding:9px 14px;font-size:13px;width:auto}
+.reset{background:none;border:0;color:var(--muted);font-size:12.5px;font-weight:600;padding:6px}
+
+/* sheets */
+.scrim{position:fixed;inset:0;background:rgba(22,23,74,.42);opacity:0;pointer-events:none;transition:opacity .22s;z-index:60}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;top:0;z-index:65;background:#fff;transform:translateY(100%);
+  transition:transform .26s ease;display:flex;flex-direction:column}
+.sheet.on{transform:none}
+.sheet.short{top:auto;max-height:82dvh;border-radius:22px 22px 0 0}
+@media (min-width:760px){.sheet.short{max-height:82%}}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.sheet-h b{font-size:16px;flex:1}
+.sheet-b{flex:1;overflow:auto;padding:14px 16px 20px}
+.sheet-f{padding:12px 16px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--line);
+  display:flex;gap:10px;align-items:center;background:#fff}
+.sheet-f .btn{flex:1}
+.tabrail{display:flex;gap:8px;padding:10px 16px;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:none}
+.tabrail::-webkit-scrollbar{display:none}
+.tabbtn{flex:0 0 auto;border:1px solid var(--line-strong);background:#fff;border-radius:999px;padding:8px 14px;font-size:13px;
+  font-weight:700;color:var(--ink-soft);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.tabbtn.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.tabbtn .dotmark{width:6px;height:6px;border-radius:50%;background:var(--go)}
+.tabbtn.on .dotmark{background:#fff}
+.help{font-size:13px;color:var(--muted);margin:0 0 14px}
+.opt{display:flex;gap:11px;align-items:flex-start;width:100%;text-align:left;border:1.5px solid var(--line-strong);
+  border-radius:var(--radius);padding:13px;background:#fff;margin-bottom:10px}
+.opt.on{border-color:var(--brand);background:var(--brand-50)}
+.opt[disabled]{opacity:.5}
+.opt .dot{width:19px;height:19px;border-radius:50%;border:2px solid var(--line-strong);flex:0 0 auto;margin-top:1px;position:relative}
+.opt.check .dot{border-radius:6px}
+.opt.on .dot{border-color:var(--go)}
+.opt.on .dot:after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--go)}
+.opt.check.on .dot:after{border-radius:2px;inset:2px}
+.opt .t{flex:1;min-width:0}
+.opt .t b{display:block;font-size:14px}
+.opt .t small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;line-height:1.4}
+.opt .pr{font-size:13px;font-weight:800;white-space:nowrap;color:var(--brand)}
+.opt .pr.inc{color:var(--go)}
+.opt .lead{display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:var(--amber);background:#FFF6E6;
+  border:1px solid #F0DCB6;border-radius:999px;padding:2px 8px}
+.opt .pic{width:44px;height:44px;border-radius:11px;background:var(--wash);display:grid;place-items:center;color:var(--brand);flex:0 0 auto}
+.opt .pr s{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.control{width:100%;border:1px solid var(--line-strong);border-radius:12px;padding:12px 14px;font-size:15px;font-family:inherit;color:var(--ink)}
+.control:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(45,45,160,.10);outline:none}
+textarea.control{min-height:100px;resize:vertical}
+.hint{font-size:12px;color:var(--muted);margin:7px 0 0}
+.bfoot{display:flex;align-items:center;gap:12px;padding:12px 13px;background:var(--wash);border:1px solid var(--line);
+  border-radius:var(--radius);font-size:13px;margin-top:4px}
+
+/* build summary sheet */
+.sline{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.sline:last-of-type{border-bottom:0}
+.sline .t{flex:1;min-width:0}
+.sline .t b{display:block;font-weight:600}
+.sline .t small{color:var(--muted);font-size:11.5px}
+.sline .pr{font-weight:700;white-space:nowrap}
+.sline .pr.inc{color:var(--go)}
+.sline .x{background:none;border:0;color:var(--muted);font-size:16px;padding:0 2px;line-height:1}
+.sum-t{border-top:1px solid var(--line-strong);margin-top:10px;padding-top:11px}
+.trow{display:flex;justify-content:space-between;font-size:13.5px;color:var(--ink-soft);padding:3px 0}
+.trow b{color:var(--ink)}
+.ttotal{font-size:18px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+.lead-note{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--ink-soft);background:var(--wash);
+  border:1px solid var(--line);border-radius:11px;padding:11px;margin-top:12px}
+.lead-note svg{flex:0 0 auto;color:var(--brand);margin-top:1px}
+.tl{display:flex;gap:11px;padding-bottom:14px;position:relative}
+.tl:last-child{padding-bottom:0}
+.tl:before{content:"";position:absolute;left:11px;top:24px;bottom:0;width:2px;background:var(--line)}
+.tl:last-child:before{display:none}
+.tl i{width:24px;height:24px;border-radius:50%;background:var(--line);color:var(--muted);display:grid;place-items:center;flex:0 0 auto;font-style:normal;z-index:1}
+.tl.on i{background:var(--go);color:#fff}
+.tl b{display:block;font-size:13.5px}
+.tl small{color:var(--muted);font-size:12px}
+
+.toasts{position:fixed;left:14px;right:14px;bottom:calc(var(--bar-h) + 14px);z-index:70;display:grid;gap:8px}
+.toast{background:var(--ink);color:#fff;padding:12px 15px;border-radius:12px;font-size:13px;box-shadow:var(--shadow-md)}
+.toast.go{background:#0B6B3A}
+.note-strip{margin:12px 14px 0;background:var(--brand-50);border:1px solid #D9DAF7;border-radius:var(--radius);
+  padding:11px 13px;font-size:12px;color:var(--ink-soft);display:flex;gap:9px}
+.note-strip b{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="phone">
+<div class="scroller" id="scroller">
+
+  <div class="promo" id="promo">
+    <span>SHOP AND <b>SAVE BIG</b></span>
+    <span class="c">FROM <b>€55</b></span>
+    <span>UP TO <b class="off">30% OFF</b></span>
+    <button id="promo-x" aria-label="Close">×</button>
+  </div>
+
+  <header class="head">
+    <button class="hbtn" data-note="Back to Laptops" aria-label="Back">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18 9 12l6-6"/></svg>
+    </button>
+    <b>DELL Latitude 3520</b>
+    <button class="hbtn" data-note="Search" aria-label="Search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+    <button class="hbtn" data-note="Basket" aria-label="Basket"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 7h16l-1.4 11.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8Z"/><path d="M9 7V5.5a3 3 0 0 1 6 0V7"/></svg><span class="n" id="cart-n">0</span></button>
+  </header>
+
+  <div class="note-strip">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:0 0 auto;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+    <div><b>Mobile prototype.</b> Sold as specified — customising is optional and opens full screen. Price stays on the bar.</div>
+  </div>
+
+  <div class="crumb">
+    <button data-note="Home">Home</button><span>›</span>
+    <button data-note="Laptops">Laptops</button><span>›</span><b>DELL Latitude 3520</b>
+  </div>
+
+  <div class="gal">
+    <div class="gtrack" id="gtrack"></div>
+    <span class="gcount" id="gcount">1 / 4</span>
+  </div>
+
+  <div class="pad">
+    <span class="brandline">DELL</span>
+    <h1>Latitude 3520 — 15.6" business laptop</h1>
+    <div class="meta">
+      <span class="stars">★★★★<span style="color:var(--line-strong)">★</span></span>
+      <span>12 reviews</span>
+      <span class="pill stock">In stock · 4 units</span>
+      <span class="pill sku">dell-lat-3520</span>
+    </div>
+
+    <div class="chips" id="chips"></div>
+
+    <div class="pricebox">
+      <div class="price"><b id="price-big">€689.99</b><small id="price-note">Inc. VAT · standard build</small></div>
+      <div class="deliv">
+        <div><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="17.5" cy="18" r="1.7"/></svg>
+          <span><b>Free delivery</b> over €75 — arrives Saturday 22 August</span></div>
+        <div><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 21h18M5 21V9l7-5 7 5v12"/><path d="M10 21v-6h4v6"/></svg>
+          <span><b>Free collection</b> in Kilcock, and it takes a day off the build</span></div>
+      </div>
+    </div>
+
+    <div class="optblock">
+      <h3>Addons</h3>
+      <div class="addons" id="addons"></div>
+    </div>
+    <div class="optblock">
+      <h3>Colour <span id="colour-name">· Graphite</span></h3>
+      <div class="swatches" id="swatches"></div>
+    </div>
+
+    <ul class="speclist" id="speclist"></ul>
+
+    <button class="cust-open" id="cust-open">
+      <i><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></i>
+      <span><b id="cust-open-t">Customise this machine</b><small id="cust-open-s">Memory, storage, Windows, licences, warranty, services</small></span>
+      <span class="cv"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 6 6 6-6 6"/></svg></span>
+    </button>
+
+    <div class="fbt">
+      <h3>Frequently bought together</h3>
+      <div class="fbt-top">
+        <span class="fbt-pic" id="fbt-pic"></span>
+        <span class="tot"><span>Total price</span><b id="fbt-total">€689.99</b></span>
+        <button class="btn btn-ink" style="width:auto;padding:11px 16px;font-size:13.5px" id="fbt-add">Add all</button>
+      </div>
+      <div id="fbt-rows"></div>
+    </div>
+  </div>
+
+  <section class="benefits">
+    <div><i><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="17.5" cy="18" r="1.7"/></svg></i>
+      <div><b>Quick delivery and pickups</b><small>€6.50 An Post next day, free over €75, or collect free in Kilcock.</small></div></div>
+    <div><i><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3.5 5 6.5v5c0 4 3 7.2 7 8 4-.8 7-4 7-8v-5Z"/><path d="m9.5 12 1.8 1.8 3.4-3.6"/></svg></i>
+      <div><b>Secure payments</b><small>Handled by SumUp. Nothing card-related touches our servers.</small></div></div>
+    <div><i><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5Z"/><path d="M12 20v-7l9-4.5"/></svg></i>
+      <div><b>Warranty and returns</b><small>12-month warranty handled in Kilcock, 14-day returns.</small></div></div>
+  </section>
+
+  <section class="features">
+    <h2>DELL Latitude 3520 Features</h2>
+    <p><b>Dell Latitude 3520</b> is a dependable 15.6-inch business laptop built for everyday productivity — reliable performance, a durable chassis and the ports people still need. We build it here, so it can be upgraded, licensed and set up before it reaches your desk.</p>
+  </section>
+
+  <section class="car">
+    <div class="car-h"><h2>Recommended for you</h2><span>Page 1 of 2</span></div>
+    <div class="track" id="rec"></div>
+  </section>
+
+  <section class="car">
+    <div class="car-h"><h2>People who viewed this also viewed</h2><span>Page 1 of 1</span></div>
+    <div class="track" id="viewed"></div>
+  </section>
+
+  <section class="news">
+    <h2>Free Monthly Newsletter</h2>
+    <p>News, tips and tricks to keep your devices safe. We never spam — unsubscribe in one click.</p>
+    <div class="form"><input id="news-email" placeholder="Your email" aria-label="Your email"><button id="news-go">Subscribe</button></div>
+  </section>
+
+  <div class="sec" style="padding-top:14px">
+    <div id="details"></div>
+  </div>
+
+  <footer class="foot">
+    <b>FixMyPC, Kilcock</b>
+    <p>Open 7 days. Most devices back within 24 hours.</p>
+    <button class="btn btn-ghost" data-note="01 504 7000">Call the shop</button>
+    <b style="font-size:13px;margin-top:14px">Payment</b>
+    <div class="paylogos"><span>PayPal</span><span>Mastercard</span><span>VISA</span><span>AMEX</span><span>Discover</span></div>
+    <b style="font-size:13px">Social</b>
+    <div class="social">
+      <button data-note="Instagram" aria-label="Instagram"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></button>
+      <button data-note="Facebook" aria-label="Facebook"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-8h2.7l.4-3h-3.1V8.2c0-.9.3-1.5 1.5-1.5h1.7V4.1c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3V10H7.3v3h2.7v8z"/></svg></button>
+      <button data-note="X" aria-label="X"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 3h3l-6.6 7.6L21.8 21h-6l-4.7-6.1L5.6 21h-3l7-8.1L2.5 3h6.2l4.3 5.6zm-1 16h1.7L7.6 4.7H5.8z"/></svg></button>
+      <button data-note="LinkedIn" aria-label="LinkedIn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M6.9 8.5H3.7V21h3.2zM5.3 3a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8ZM21 13.9c0-3.4-1.8-5-4.3-5-2 0-2.9 1.1-3.4 1.9V8.5H10V21h3.3v-6.9c0-1.5.9-2.3 2-2.3 1 0 1.9.6 1.9 2.2V21H21Z"/></svg></button>
+    </div>
+    <div class="foot-links">
+      <button data-note="Delivery: €6.50, free over €75">Delivery</button>
+      <button data-note="14-day returns">Returns</button>
+      <button data-note="Warranty handled in Kilcock">Warranty</button>
+      <button data-note="Privacy policy">Privacy</button>
+    </div>
+    <small>© 2026 FixMyPC · Designed by excytech</small>
+  </footer>
+</div>
+
+<!-- sticky price bar -->
+<div class="bar">
+  <div class="bar-top">
+    <span class="bp"><b id="bar-total">€689.99</b><small id="bar-sub">Standard build · ready tomorrow</small></span>
+    <button class="mini" id="open-summary">View build</button>
+  </div>
+  <button class="btn btn-go" id="add">Add to basket</button>
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<!-- customiser sheet -->
+<div class="sheet" id="cust" aria-hidden="true">
+  <div class="sheet-h">
+    <button class="hbtn" id="cust-x" aria-label="Close">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <b>Customise</b>
+    <button class="reset" id="reset">Reset</button>
+  </div>
+  <div class="tabrail" id="tabrail"></div>
+  <div class="sheet-b" id="cust-b"></div>
+  <div class="sheet-f">
+    <span style="flex:0 0 auto"><b id="cust-total" style="font-size:17px;display:block;line-height:1.15">€689.99</b>
+      <small id="cust-changes" style="font-size:11.5px;color:var(--muted)">No changes</small></span>
+    <button class="btn btn-go" id="cust-next" style="flex:1">Next</button>
+  </div>
+</div>
+
+<!-- build summary sheet -->
+<div class="sheet short" id="summary" aria-hidden="true">
+  <div class="sheet-h">
+    <b>Your build</b>
+    <span style="font-size:11.5px;font-weight:700;color:var(--muted);background:var(--wash);border-radius:999px;padding:4px 9px" id="ref">BUILD-4821</span>
+    <button class="hbtn" id="sum-x" aria-label="Close">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <div class="sheet-b" id="sum-b"></div>
+  <div class="sheet-f">
+    <button class="btn btn-ghost" id="sum-edit">Customise</button>
+    <button class="btn btn-go" id="sum-add">Add to basket</button>
+  </div>
+</div>
+
+<!-- confirmation sheet -->
+<div class="sheet short" id="done" aria-hidden="true">
+  <div class="sheet-h"><b id="done-t">Added to your basket</b>
+    <button class="hbtn" id="done-x" aria-label="Close">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <div class="sheet-b" id="done-b"></div>
+  <div class="sheet-f">
+    <button class="btn btn-ghost" id="done-keep">Keep looking</button>
+    <button class="btn btn-go" id="done-checkout">Checkout</button>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function money(n){ return '€' + n.toFixed(2); }
+  function toast(m, k){
+    var t = document.createElement('div'); t.className = 'toast' + (k ? ' ' + k : ''); t.textContent = m;
+    $('toasts').appendChild(t); setTimeout(function(){ t.remove(); }, 2600);
+  }
+  function svg(d, size, sw){
+    return '<svg width="' + (size || 18) + '" height="' + (size || 18) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 1.7) + '" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+  }
+  var D = {
+    laptop:'<rect x="3" y="5" width="18" height="11" rx="1.8"/><path d="M2 20h20"/>',
+    chip:'<rect x="7" y="7" width="10" height="10" rx="1.6"/><path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/>',
+    disk:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h6M7 13h10"/>',
+    win:'<path d="M4 6.5 11 5.5v6H4ZM13 5.2 20 4v7.5h-7ZM4 12.5h7v6L4 17.5ZM13 12.5h7V20l-7-1.2Z"/>',
+    shield:'<path d="M12 3.5 5 6.5v5c0 4 3 7.2 7 8 4-.8 7-4 7-8v-5Z"/>',
+    tools:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-8 8l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 8-8l-3.8 3.8Z"/>',
+    cable:'<path d="M4 8v6a4 4 0 0 0 8 0V9a3 3 0 0 1 6 0v7"/><path d="M2.5 5.5h3M18.5 19.5h3"/>',
+    bag:'<path d="M4 7h16l-1.4 11.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8Z"/><path d="M9 7V5.5a3 3 0 0 1 6 0V7"/>',
+    mouse:'<rect x="8" y="3" width="8" height="18" rx="4"/><path d="M12 7v3"/>',
+    truck:'<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="17.5" cy="18" r="1.7"/>',
+    clock:'<circle cx="12" cy="12" r="9"/><path d="M12 8v5l3 2"/>',
+    check:'<path d="M20 6 9 17l-5-5"/>',
+    box:'<path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5Z"/><path d="m3 8.5 9 4.5 9-4.5M12 13v7"/>',
+    screen:'<rect x="2.5" y="4" width="19" height="12" rx="2"/><path d="M9 20h6M12 16v4"/>'
+  };
+
+  /* ══════════════ same model as the desktop page ══════════════ */
+  var BASE = {name:'DELL Latitude 3520 — 15.6" business laptop', price:689.99, lead:1};
+  var GROUPS = [
+    {id:'ram', title:'Memory', help:'One slot is free, so an upgrade sits alongside the module already fitted.',
+     opts:[{id:'8', label:'8GB DDR4', note:'Standard build', delta:0, lead:0},
+           {id:'16', label:'16GB DDR4', note:'Comfortable for 20+ tabs and Teams', delta:45, lead:1},
+           {id:'32', label:'32GB DDR4', note:'Virtual machines, CAD, heavy spreadsheets', delta:95, lead:1}]},
+    {id:'storage', title:'Storage', help:'Bigger drives are cloned from the original, so Windows and your licence come across.',
+     opts:[{id:'256', label:'256GB NVMe', note:'Standard build', delta:0, lead:0},
+           {id:'512', label:'512GB NVMe', note:'Original drive returned to you', delta:40, lead:1},
+           {id:'1tb', label:'1TB NVMe', note:'Best value per gigabyte', delta:75, lead:1},
+           {id:'2tb', label:'2TB NVMe', note:'Media libraries and local backups', delta:145, lead:2}]},
+    {id:'os', title:'Windows', help:'Pro adds BitLocker, Remote Desktop and domain join — needed for a work network.',
+     opts:[{id:'home', label:'Windows 11 Home', note:'Standard build', delta:0, lead:0},
+           {id:'pro', label:'Windows 11 Pro', note:'BitLocker, domain join, Remote Desktop', delta:79, lead:0},
+           {id:'proplus', label:'Pro + clean build', note:'No manufacturer software, drivers only', delta:99, lead:1}]},
+    {id:'office', title:'Software', help:'Licences are keyed to your email and installed before the machine leaves us.',
+     opts:[{id:'none', label:'None', note:'Use what you already have', delta:0, lead:0},
+           {id:'m365p', label:'Microsoft 365 Personal', note:'1 year, 1 person, 1TB OneDrive', delta:69, lead:0},
+           {id:'m365b', label:'Microsoft 365 Business Standard', note:'1 year per user, business email', delta:149, lead:0},
+           {id:'free', label:'LibreOffice, set up for you', note:'Free suite, configured and tested', delta:0, lead:0}]},
+    {id:'warranty', title:'Warranty', help:'Extended cover is handled in Kilcock — you deal with us, not a helpline.',
+     opts:[{id:'12', label:'12 months', note:'Standard build, return to base', delta:0, lead:0},
+           {id:'24', label:'24 months', note:'Parts and labour', delta:59, lead:0},
+           {id:'36', label:'36 months', note:'Parts and labour', delta:99, lead:0},
+           {id:'adp', label:'36 months + accidental damage', note:'Drops and spills, one claim a year', delta:189, lead:0}]}
+  ];
+  var SERVICES = [
+    {id:'transfer', label:'Data transfer from your old machine', price:35, lead:1,
+     note:'Documents, photos, browser profiles, email. Free if you bring the old machine in.'},
+    {id:'setup', label:'Full setup, updates and accounts', price:25, lead:0, note:'Updates, drivers, printer, Wi-Fi, email tested.'},
+    {id:'wipe', label:'Secure wipe and recycling of the old device', price:15, lead:0, note:'Three-pass wipe with a certificate, then recycling.'},
+    {id:'domain', label:'Business profile or domain join', price:45, lead:1, requires:{os:['pro','proplus']},
+     note:'Entra ID or on-prem domain, policy applied, BitLocker key escrowed.'},
+    {id:'onsite', label:'On-site delivery and install', price:75, lead:1, note:'Kildare, Dublin, north Wicklow. Old machine taken away.'},
+    {id:'backup', label:'Backup set up and first restore tested', price:29, lead:0, note:'OneDrive or an external drive, tested with you.'}
+  ];
+  var ADDONS = [
+    {id:'case', name:'Targus 15.6" laptop case', note:'Padded, fits the charger', price:34.99, was:44.99, icon:D.bag},
+    {id:'mouse', name:'Logitech M240 silent mouse', note:'Bluetooth, 18-month battery', price:24.99, was:29.99, icon:D.mouse},
+    {id:'dock', name:'HOCO HB35 4-in-1 USB-A hub', note:'3 USB-A ports plus ethernet', price:24.95, was:29.95, icon:D.cable},
+    {id:'hdmi', name:'AceFast USB-C to HDMI 4K cable', note:'1.8m, 60Hz', price:10.00, was:29.95, icon:D.cable},
+    {id:'screen', name:'Dell 24" Full HD monitor', note:'Height adjustable', price:139.00, was:169.00, icon:D.screen}
+  ];
+  var BUNDLE = {min:2, off:0.10};
+  var TABS = GROUPS.map(function(g){ return {id:g.id, label:g.title, kind:'group'}; })
+    .concat([{id:'services', label:'Services', kind:'services'},
+             {id:'extras', label:'Extras', kind:'addons'},
+             {id:'custom', label:'Custom', kind:'custom'}]);
+  var DEFAULTS = {ram:'8', storage:'256', os:'home', office:'none', warranty:'12'};
+
+  var pick = {}, svc = {}, addon = {}, custom = '', tab = 'ram', cart = 0, shot = 0, detailsTouched = false;
+  var variant = 'None', colour = 3, wish = {};
+  var VARIANTS = ['None', 'With 24" monitor', 'With dock'];
+  var COLOURS = [['Silver','#D9DCE3'],['Ivory','#EFEAE1'],['Sand','#E4D8C3'],['Graphite','#3B3F49']];
+  var ADDONS_BUY = [
+    {id:'hoco', name:'Hoco UA27 Type-C to HDTV 4K Cable', price:10, was:28},
+    {id:'acefast', name:'AceFast C1-10 USB-C to HDMI 4K Cable', price:10, was:29.95},
+    {id:'x89', name:'HOCO X89 Wind Type-C to Lightning Cable', price:10, was:15},
+    {id:'case', name:'Targus 15.6" laptop case', price:34.99, was:44.99},
+    {id:'mouse', name:'Logitech M240 silent mouse', price:24.99, was:29.99}
+  ];
+  var RECS = [
+    ['DELL Latitude 3520', 689.99, 789.99, D.laptop, true, 4, 12],
+    ['HP Pavilion 14-ce3606sa 14"', 659.99, 719.99, D.laptop, true, 4, 5],
+    ['HP Notebook 14-bp060na', 299.99, 349.99, D.laptop, false, 3, 2],
+    ['HP EliteBook 840 G2 refurb', 259.99, 299.99, D.laptop, true, 4, 8]
+  ];
+  var VIEWED = [
+    ['Apple EarPods (USB-C)', 20, 20, D.box, true, 5, 2],
+    ['HOCO HB35 4-in-1 USB-A hub', 24.95, 29.95, D.cable, true, 4, 4],
+    ['Hoco Type-C to USB adapter', 16.59, 16.59, D.cable, false, 4, 3],
+    ['Dell 24" Full HD monitor', 139, 169, D.screen, true, 5, 12]
+  ];
+  for (var k in DEFAULTS) pick[k] = DEFAULTS[k];
+
+  function group(id){ for (var i = 0; i < GROUPS.length; i++) if (GROUPS[i].id === id) return GROUPS[i]; return null; }
+  function opt(g, o){ var G = group(g); if (!G) return null;
+    for (var i = 0; i < G.opts.length; i++) if (G.opts[i].id === o) return G.opts[i]; return null; }
+  function blocked(s){
+    if (!s.requires) return false;
+    for (var g in s.requires) if (s.requires[g].indexOf(pick[g]) < 0) return true;
+    return false;
+  }
+  function changed(){
+    var n = 0;
+    for (var g in DEFAULTS) if (pick[g] !== DEFAULTS[g]) n++;
+    n += Object.keys(svc).filter(function(x){ return svc[x]; }).length;
+    n += Object.keys(addon).filter(function(x){ return addon[x]; }).length;
+    if (custom) n++;
+    return n;
+  }
+  function lines(){
+    var out = [{key:'base', name:BASE.name, note:'Standard build', price:BASE.price, fixed:true}];
+    GROUPS.forEach(function(g){
+      var o = opt(g.id, pick[g.id]);
+      if (o && o.delta > 0) out.push({key:'g:' + g.id, name:o.label, note:g.title + ' upgrade', price:o.delta});
+      else if (g.id === 'office' && o && o.id === 'free') out.push({key:'g:' + g.id, name:o.label, note:'Software', price:0});
+    });
+    SERVICES.forEach(function(s){ if (svc[s.id]) out.push({key:'s:' + s.id, name:s.label, note:'Workshop service', price:s.price}); });
+    var picked = ADDONS.filter(function(a){ return addon[a.id]; });
+    picked.forEach(function(a){ out.push({key:'a:' + a.id, name:a.name, note:'Accessory', price:a.price}); });
+    if (picked.length >= BUNDLE.min){
+      var raw = picked.reduce(function(t, a){ return t + a.price; }, 0);
+      out.push({key:'bundle', name:'Bundle discount', note:(BUNDLE.off * 100) + '% off accessories', price:-(raw * BUNDLE.off), fixed:true});
+    }
+    if (custom) out.push({key:'custom', name:'Custom work', note:'Quoted before we charge anything', price:0, quote:true});
+    return out;
+  }
+  function subtotal(){ return lines().reduce(function(t, l){ return t + l.price; }, 0); }
+  function machinePrice(){ return lines().reduce(function(t, l){ return t + (l.key.indexOf('a:') === 0 || l.key === 'bundle' ? 0 : l.price); }, 0); }
+  function addonTotal(){
+    var picked = ADDONS_BUY.filter(function(a){ return addon[a.id]; });
+    var raw = picked.reduce(function(t, a){ return t + a.price; }, 0);
+    return picked.length >= BUNDLE.min ? raw * (1 - BUNDLE.off) : raw;
+  }
+  function shipping(){ return svc.onsite ? 0 : (subtotal() >= 75 ? 0 : 6.50); }
+  function total(){ return subtotal() + shipping(); }
+  function leadDays(){
+    var hw = 0;
+    GROUPS.forEach(function(g){ var o = opt(g.id, pick[g.id]); if (o && o.lead > hw) hw = o.lead; });
+    var extra = 0;
+    SERVICES.forEach(function(s){ if (svc[s.id]) extra += s.lead; });
+    return BASE.lead + hw + extra;
+  }
+  function readyText(){
+    if (custom) return 'Ready once the custom work is quoted';
+    var d = leadDays();
+    return d <= 1 ? 'ready tomorrow' : 'ready in ' + d + ' working days';
+  }
+
+  /* ══════════════ gallery ══════════════ */
+  var SHOTS = [D.laptop, D.chip, D.disk, D.bag];
+  $('gtrack').innerHTML = SHOTS.map(function(d){ return '<div class="gslide">' + svg(d, 190, 1.1) + '</div>'; }).join('');
+  $('gtrack').addEventListener('scroll', function(){
+    var i = Math.round(this.scrollLeft / this.clientWidth);
+    if (i !== shot){ shot = i; $('gcount').textContent = (i + 1) + ' / ' + SHOTS.length; }
+  });
+
+  /* ══════════════ main page ══════════════ */
+  function paintMain(){
+    var n = changed();
+    var rows = [
+      ['Core i5-1135G7', D.chip, false], ['15.6" Full HD', D.screen, false],
+      [opt('ram', pick.ram).label, D.chip, pick.ram !== DEFAULTS.ram],
+      [opt('storage', pick.storage).label, D.disk, pick.storage !== DEFAULTS.storage],
+      [opt('os', pick.os).label, D.win, pick.os !== DEFAULTS.os],
+      [opt('warranty', pick.warranty).label, D.shield, pick.warranty !== DEFAULTS.warranty]
+    ];
+    if (pick.office !== 'none') rows.push([opt('office', pick.office).label, D.box, true]);
+    $('chips').innerHTML = rows.map(function(r){
+      return '<span class="chip' + (r[2] ? ' up' : '') + '"><i>' + svg(r[1], 14) + '</i>' + esc(r[0]) + '</span>';
+    }).join('');
+
+    $('price-big').textContent = money(total());
+    $('price-note').innerHTML = n ? 'Inc. VAT · ' + n + ' change' + (n > 1 ? 's' : '') + ' · standard build ' + money(BASE.price) : 'Inc. VAT · standard build';
+    $('bar-total').textContent = money(total());
+    $('bar-sub').textContent = (n ? n + ' change' + (n > 1 ? 's' : '') : 'Standard build') + ' · ' + readyText();
+    $('cust-total').textContent = money(total());
+    $('cust-changes').textContent = n ? n + ' change' + (n > 1 ? 's' : '') : 'No changes';
+    $('cust-open-t').textContent = n ? 'Edit your build' : 'Customise this machine';
+    $('cust-open-s').textContent = n ? n + ' change' + (n > 1 ? 's' : '') + ' applied · ' + money(total()) + ' as configured'
+      : 'Memory, storage, Windows, licences, warranty, services';
+    paintOptions();
+    paintFbt();
+    paintDetails();
+  }
+
+  function paintOptions(){
+    $('addons').innerHTML = VARIANTS.map(function(v){
+      return '<button class="addon' + (variant === v ? ' on' : '') + '" data-variant="' + esc(v) + '">' + esc(v) + '</button>';
+    }).join('');
+    $('swatches').innerHTML = COLOURS.map(function(c, i){
+      return '<button class="sw' + (colour === i ? ' on' : '') + '" data-colour="' + i + '" aria-label="' + esc(c[0]) + '"><i style="background:' + c[1] + '"></i></button>';
+    }).join('');
+    $('colour-name').textContent = '· ' + COLOURS[colour][0];
+
+    var rows = [
+      ['Operating System', opt('os', pick.os).label, pick.os !== DEFAULTS.os],
+      ['Processor', 'Intel Core i5-1135G7', false],
+      ['Storage', opt('storage', pick.storage).label, pick.storage !== DEFAULTS.storage],
+      ['RAM', opt('ram', pick.ram).label, pick.ram !== DEFAULTS.ram],
+      ['Warranty', opt('warranty', pick.warranty).label, pick.warranty !== DEFAULTS.warranty]
+    ];
+    if (pick.office !== 'none') rows.push(['Software', opt('office', pick.office).label, true]);
+    rows.push(['Additional', svc.transfer ? 'Data transfer booked' : 'Free data transfer when purchasing in-store', !!svc.transfer]);
+    $('speclist').innerHTML = rows.map(function(r){
+      return '<li><b>' + esc(r[0]) + '</b> – ' + esc(r[1]) + (r[2] ? ' <span class="up">· upgraded</span>' : '') + '</li>';
+    }).join('');
+  }
+
+  function paintFbt(){
+    var picked = ADDONS_BUY.filter(function(a){ return addon[a.id]; });
+    $('fbt-pic').innerHTML = svg(D.laptop, 30, 1.2);
+    $('fbt-rows').innerHTML =
+      '<button class="fbt-row on" disabled><span class="dot"></span>' +
+        '<span class="t">This item: <b>DELL Latitude 3520</b>' + (changed() ? ' <span style="color:var(--go);font-weight:700">as configured</span>' : '') + '</span>' +
+        '<span class="pr"><b>' + money(machinePrice()) + '</b></span></button>' +
+      ADDONS_BUY.map(function(a){
+        return '<button class="fbt-row' + (addon[a.id] ? ' on' : '') + '" data-addon="' + a.id + '">' +
+          '<span class="dot"></span><span class="t">' + esc(a.name) + '</span>' +
+          '<span class="pr">' + (a.was > a.price ? '<s>' + money(a.was) + '</s>' : '') + '<b>' + money(a.price) + '</b></span></button>';
+      }).join('') +
+      (picked.length >= BUNDLE.min ? '<p style="margin:10px 0 0;font-size:12.5px;color:var(--go);font-weight:700">Bundle discount applied — ' + (BUNDLE.off * 100) + '% off the accessories</p>' : '');
+    $('fbt-total').textContent = money(machinePrice() + addonTotal());
+    $('fbt-add').textContent = 'Add ' + (1 + picked.length);
+  }
+
+  function paintCarousels(){
+    function card(r, i, key){
+      var off = r[2] > r[1] ? Math.round((1 - r[1] / r[2]) * 100) : 0, id = key + i;
+      return '<article class="pcard' + (r[4] ? '' : ' out') + '">' +
+        '<div class="pic">' + svg(r[3], 60, 1.2) +
+          (off && r[4] ? '<span class="flag">' + off + '% off</span>' : '') +
+          (!r[4] ? '<span class="flag out">Sold out</span>' : '') + '</div>' +
+        '<div class="b"><h3>' + esc(r[0]) + '</h3>' +
+          '<span class="rr">' + '★'.repeat(r[5]) + ' (' + r[6] + ')</span>' +
+          '<span class="pr"><b>' + money(r[1]) + '</b>' + (off ? '<s>' + money(r[2]) + '</s>' : '') + '</span></div>' +
+        (r[4] ? '' : '<span class="oos">Out of stock</span>') + '</article>';
+    }
+    $('rec').innerHTML = RECS.map(function(r, i){ return card(r, i, 'r'); }).join('');
+    $('viewed').innerHTML = VIEWED.map(function(r, i){ return card(r, i, 'v'); }).join('');
+  }
+
+  function paintDetails(){
+    var stages = [
+      [D.check, 'Order confirmed', 'Build sheet printed with your reference', 'Same day'],
+      [D.tools, 'Parts fitted and drive cloned', 'Memory and storage done in the workshop', leadDays() > 1 ? 'Day 1–' + leadDays() : 'Day 1'],
+      [D.win, 'Software and licences', 'Windows edition, licences, updates', 'With the build'],
+      [D.shield, 'Tested and signed off', 'Burn-in, battery, ports, photos on the job card', 'Before dispatch'],
+      [D.truck, svc.onsite ? 'Delivered and installed' : 'Dispatched or ready to collect',
+        svc.onsite ? 'Set up at the desk, old machine taken away' : 'An Post next day or free collection', readyText()]
+    ];
+    $('details').innerHTML =
+      acc('How we build it', leadDays() <= 1 ? 'Ships tomorrow' : leadDays() + ' working days',
+        stages.map(function(s){
+          return '<div class="stage"><i>' + svg(s[0], 15) + '</i><div><b>' + esc(s[1]) + '</b><small>' + esc(s[2]) + '</small>' +
+            '<span class="when">' + esc(s[3]) + '</span></div></div>';
+        }).join('')) +
+      acc('Services and costs', 'From €15', SERVICES.map(function(s){
+          return '<div class="svc-row"><span class="t"><b>' + esc(s.label) + '</b><small>' + esc(s.note) + '</small></span>' +
+            '<span class="pr">' + money(s.price) + (s.lead ? '<br><small style="font-weight:600;color:var(--muted)">+' + s.lead + ' day</small>' : '') + '</span></div>';
+        }).join('') +
+        '<div class="svc-row"><span class="t"><b>Custom work</b><small>Anything else — imaging, software, hardware swaps</small></span><span class="pr">Quoted</span></div>') +
+      acc('Full specification', 'As configured',
+        '<dl class="spec"><dt>Processor</dt><dd>Intel Core i5-1135G7</dd><dt>Display</dt><dd>15.6" Full HD</dd>' +
+        '<dt>Memory</dt><dd>' + esc(opt('ram', pick.ram).label) + '</dd>' +
+        '<dt>Storage</dt><dd>' + esc(opt('storage', pick.storage).label) + '</dd>' +
+        '<dt>Windows</dt><dd>' + esc(opt('os', pick.os).label) + '</dd>' +
+        '<dt>Software</dt><dd>' + esc(opt('office', pick.office).label) + '</dd>' +
+        '<dt>Warranty</dt><dd>' + esc(opt('warranty', pick.warranty).label) + '</dd></dl>') +
+      acc('Delivery and returns', 'Free over €75',
+        '<p style="margin-top:0"><b>An Post next day</b> — €6.50, free over €75, ordered before 2pm.</p>' +
+        '<p style="margin-bottom:0"><b>Returns</b> — 14 days unopened. Fitted upgrades aren\'t refundable once installed, so ask us first if you\'re unsure.</p>');
+    [].forEach.call($('details').querySelectorAll('.acc'), function(a, i){
+      if (i === 0 && !detailsTouched) a.classList.add('on');
+      a.querySelector('.acc-h').onclick = function(){ detailsTouched = true; a.classList.toggle('on'); };
+    });
+  }
+  function acc(title, tag, body){
+    return '<div class="acc"><button class="acc-h">' + esc(title) + '<span class="tag">' + esc(tag) + '</span>' +
+      '<span class="cv"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg></span></button>' +
+      '<div class="acc-b">' + body + '</div></div>';
+  }
+
+  /* ══════════════ customiser sheet ══════════════ */
+  function paintCust(){
+    $('tabrail').innerHTML = TABS.map(function(t){
+      var mark = t.kind === 'group' ? pick[t.id] !== DEFAULTS[t.id]
+        : t.kind === 'services' ? Object.keys(svc).some(function(k){ return svc[k]; })
+        : t.kind === 'addons' ? Object.keys(addon).some(function(k){ return addon[k]; })
+        : !!custom;
+      return '<button class="tabbtn' + (tab === t.id ? ' on' : '') + '" data-tab="' + t.id + '">' + esc(t.label) +
+        (mark ? '<span class="dotmark"></span>' : '') + '</button>';
+    }).join('');
+
+    var t = TABS.filter(function(x){ return x.id === tab; })[0], html = '';
+    if (t.kind === 'group'){
+      var g = group(t.id);
+      html = '<p class="help">' + esc(g.help) + '</p>' + g.opts.map(function(o){
+        return '<button class="opt' + (pick[g.id] === o.id ? ' on' : '') + '" data-pick="' + g.id + ':' + o.id + '">' +
+          '<span class="dot"></span><span class="t"><b>' + esc(o.label) + '</b><small>' + esc(o.note) + '</small>' +
+          (o.lead ? '<span class="lead">+' + o.lead + ' day' + (o.lead > 1 ? 's' : '') + '</span>' : '') + '</span>' +
+          '<span class="pr' + (o.delta ? '' : ' inc') + '">' + (o.delta ? '+' + money(o.delta) : 'Included') + '</span></button>';
+      }).join('');
+    } else if (t.kind === 'services'){
+      html = '<p class="help">Work we do before the machine goes out. They run alongside the build where they can.</p>' +
+        SERVICES.map(function(s){
+          var no = blocked(s);
+          return '<button class="opt check' + (svc[s.id] ? ' on' : '') + '" data-svc="' + s.id + '"' + (no ? ' disabled' : '') + '>' +
+            '<span class="dot"></span><span class="t"><b>' + esc(s.label) + '</b><small>' + esc(s.note) + '</small>' +
+            (no ? '<span class="lead">Needs Windows 11 Pro</span>' : (s.lead ? '<span class="lead">+' + s.lead + ' day</span>' : '')) +
+            '</span><span class="pr">+' + money(s.price) + '</span></button>';
+        }).join('');
+    } else if (t.kind === 'addons'){
+      var picked = ADDONS.filter(function(a){ return addon[a.id]; });
+      var raw = picked.reduce(function(x, a){ return x + a.price; }, 0);
+      var disc = picked.length >= BUNDLE.min ? raw * BUNDLE.off : 0;
+      html = '<p class="help">Two or more accessories with the machine take ' + (BUNDLE.off * 100) + '% off the accessory lines.</p>' +
+        ADDONS.map(function(a){
+          return '<button class="opt check' + (addon[a.id] ? ' on' : '') + '" data-addon="' + a.id + '">' +
+            '<span class="dot"></span><span class="pic">' + svg(a.icon, 20) + '</span>' +
+            '<span class="t"><b>' + esc(a.name) + '</b><small>' + esc(a.note) + '</small></span>' +
+            '<span class="pr">' + money(a.price) + (a.was > a.price ? '<s>' + money(a.was) + '</s>' : '') + '</span></button>';
+        }).join('') +
+        '<div class="bfoot"><span>' + picked.length + ' selected</span>' +
+          (disc ? '<span style="color:var(--go);font-weight:700">−' + money(disc) + '</span>'
+                : '<span style="color:var(--muted)">One more for ' + (BUNDLE.off * 100) + '% off</span>') +
+          '<b style="margin-left:auto">' + money(raw - disc) + '</b></div>';
+    } else {
+      html = '<p class="help">Anything not on the list — imaged to match your other machines, specific software, a keyboard swap. An engineer prices it within one working day and nothing is charged until you approve it.</p>' +
+        '<textarea class="control" id="custom-text" placeholder="For example: image this to match our other four Latitudes and install Sage.">' + esc(custom) + '</textarea>' +
+        '<button class="btn btn-ghost" id="custom-add" style="margin-top:12px">' + (custom ? 'Update the request' : 'Add this request') + '</button>' +
+        (custom ? '<button class="reset" id="custom-drop" style="width:100%;margin-top:8px">Remove the request</button>' : '');
+    }
+    $('cust-b').innerHTML = html;
+    $('cust-b').scrollTop = 0;
+
+    var i = 0; TABS.forEach(function(x, n){ if (x.id === tab) i = n; });
+    $('cust-next').textContent = i === TABS.length - 1 ? 'Done' : 'Next · ' + TABS[i + 1].label;
+
+    if ($('custom-add')) $('custom-add').onclick = function(){
+      var v = $('custom-text').value.trim();
+      if (v.length < 8){ toast('Tell us a little more so we can price it'); $('custom-text').focus(); return; }
+      custom = v; toast('Added — priced within one working day', 'go'); render();
+    };
+    if ($('custom-drop')) $('custom-drop').onclick = function(){ custom = ''; render(); };
+  }
+  $('cust-next').onclick = function(){
+    var i = 0; TABS.forEach(function(x, n){ if (x.id === tab) i = n; });
+    if (i === TABS.length - 1){ closeSheets(); toast(changed() ? changed() + ' change' + (changed() > 1 ? 's' : '') + ' applied' : 'Standard build kept'); return; }
+    tab = TABS[i + 1].id; render();
+  };
+  $('reset').onclick = function(){
+    for (var g in DEFAULTS) pick[g] = DEFAULTS[g];
+    svc = {}; addon = {}; custom = '';
+    render(); toast('Back to the standard build');
+  };
+
+  /* ══════════════ summary sheet ══════════════ */
+  function paintSummary(){
+    var L = lines();
+    $('sum-b').innerHTML = L.map(function(l){
+      return '<div class="sline"><span class="t"><b>' + esc(l.name) + '</b><small>' + esc(l.note) + '</small></span>' +
+        '<span class="pr' + (l.price === 0 && !l.quote ? ' inc' : '') + '">' +
+          (l.quote ? 'Quote' : (l.price === 0 ? 'Included' : (l.price < 0 ? '−' + money(-l.price) : money(l.price)))) + '</span>' +
+        (l.fixed ? '' : '<button class="x" data-drop="' + esc(l.key) + '" aria-label="Remove">×</button>') + '</div>';
+    }).join('') +
+    '<div class="sum-t">' +
+      '<div class="trow"><span>Subtotal</span><b>' + money(subtotal()) + '</b></div>' +
+      '<div class="trow"><span>' + (svc.onsite ? 'On-site delivery' : 'Delivery') + '</span><b' + (shipping() === 0 ? ' style="color:var(--go)"' : '') + '>' +
+        (shipping() === 0 ? (svc.onsite ? 'In the service' : 'Free') : money(shipping())) + '</b></div>' +
+      '<div class="trow ttotal"><span>Total inc. VAT</span><b>' + money(total()) + '</b></div>' +
+      '<div class="lead-note">' + svg(D.clock, 15, 2) + '<div><b>Machine ' + esc(readyText()) + '</b><br>Free collection in Kilcock takes a day off.</div></div>' +
+    '</div>';
+  }
+
+  /* ══════════════ sheets ══════════════ */
+  function openSheet(el){
+    closeSheets(true);
+    el.classList.add('on'); $('scrim').classList.add('on'); el.setAttribute('aria-hidden', 'false');
+  }
+  function closeSheets(keepScrim){
+    ['cust','summary','done'].forEach(function(id){
+      $(id).classList.remove('on'); $(id).setAttribute('aria-hidden', 'true');
+    });
+    if (!keepScrim) $('scrim').classList.remove('on');
+  }
+  $('cust-open').onclick = function(){ paintCust(); openSheet($('cust')); };
+  $('cust-x').onclick = function(){ closeSheets(); };
+  $('open-summary').onclick = function(){ paintSummary(); openSheet($('summary')); };
+  $('sum-x').onclick = function(){ closeSheets(); };
+  $('sum-edit').onclick = function(){ paintCust(); openSheet($('cust')); };
+  $('scrim').onclick = function(){ closeSheets(); };
+  $('done-x').onclick = function(){ closeSheets(); };
+  $('done-keep').onclick = function(){ closeSheets(); };
+  $('done-checkout').onclick = function(){ closeSheets(); toast('Prototype: continues to checkout'); };
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeSheets(); });
+
+  /* ══════════════ interactions ══════════════ */
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('[data-tab]');
+    if (t){ tab = t.getAttribute('data-tab'); render(); return; }
+    var p = e.target.closest('[data-pick]');
+    if (p){
+      var parts = p.getAttribute('data-pick').split(':');
+      pick[parts[0]] = parts[1];
+      SERVICES.forEach(function(s){
+        if (svc[s.id] && blocked(s)){ svc[s.id] = false; toast(s.label + ' removed — needs Windows 11 Pro'); }
+      });
+      render(); return;
+    }
+    var s = e.target.closest('[data-svc]');
+    if (s && !s.disabled){ var sid = s.getAttribute('data-svc'); svc[sid] = !svc[sid]; render(); return; }
+    var a = e.target.closest('[data-addon]');
+    if (a){ var aid = a.getAttribute('data-addon'); addon[aid] = !addon[aid]; render(); return; }
+    var d = e.target.closest('[data-drop]');
+    if (d){
+      var k = d.getAttribute('data-drop'), q = k.split(':');
+      if (q[0] === 'g') pick[q[1]] = DEFAULTS[q[1]];
+      else if (q[0] === 's') svc[q[1]] = false;
+      else if (q[0] === 'a') addon[q[1]] = false;
+      else if (k === 'custom') custom = '';
+      SERVICES.forEach(function(x){ if (svc[x.id] && blocked(x)) svc[x.id] = false; });
+      render(); return;
+    }
+    var v = e.target.closest('[data-variant]');
+    if (v){ variant = v.getAttribute('data-variant'); render(); toast(variant === 'None' ? 'No addon selected' : variant + ' selected'); return; }
+    var c = e.target.closest('[data-colour]');
+    if (c){ colour = +c.getAttribute('data-colour'); render(); return; }
+    var n = e.target.closest('[data-note]');
+    if (n) toast(n.getAttribute('data-note'));
+  });
+
+  $('promo-x').onclick = function(){ $('promo').remove(); };
+  $('fbt-add').onclick = function(){ addToBasket(); };
+  $('news-go').onclick = function(){
+    var v = $('news-email').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)){ toast('Enter a valid email address'); return; }
+    toast('Subscribed — check your inbox', 'go'); $('news-email').value = '';
+  };
+
+  /* ══════════════ add to basket ══════════════ */
+  function addToBasket(){
+    cart++; $('cart-n').textContent = cart;
+    var L = lines(), n = changed();
+    $('done-t').textContent = custom ? 'Added — custom work to be quoted' : (n ? 'Your build is in the basket' : 'Added to your basket');
+    $('done-b').innerHTML =
+      '<p style="margin-top:0;color:var(--muted);font-size:13px">Reference <b style="color:var(--ink)">BUILD-4821</b>' +
+        (n ? ' — ' + n + ' change' + (n > 1 ? 's' : '') + ' from the standard build.' : ' — standard build.') + '</p>' +
+      '<div style="border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:16px">' +
+        L.map(function(l){
+          return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:4px 0">' +
+            '<span>' + esc(l.name) + '</span><b>' + (l.quote ? 'Quote' : (l.price === 0 ? 'Included' : (l.price < 0 ? '−' + money(-l.price) : money(l.price)))) + '</b></div>';
+        }).join('') +
+        '<div style="display:flex;justify-content:space-between;border-top:1px solid var(--line-strong);margin-top:8px;padding-top:8px;font-size:15.5px;font-weight:800">' +
+        '<span>Total inc. VAT</span><span>' + money(total()) + '</span></div></div>' +
+      '<b style="font-size:13.5px;display:block;margin-bottom:11px">What happens next</b>' +
+      [['Order confirmed', 'As soon as payment clears', 1],
+       ['Built and tested in Kilcock', leadDays() + ' working day' + (leadDays() > 1 ? 's' : ''), 0],
+       [custom ? 'Custom work quoted for approval' : 'Software and licences applied', custom ? 'Within one working day' : 'With the build', 0],
+       [svc.onsite ? 'Delivered and installed' : 'Dispatched or ready to collect', readyText(), 0]
+      ].map(function(t){
+        return '<div class="tl' + (t[2] ? ' on' : '') + '"><i>' + (t[2] ? '✓' : '') + '</i><div><b>' + esc(t[0]) + '</b><small>' + esc(t[1]) + '</small></div></div>';
+      }).join('');
+    openSheet($('done'));
+  }
+  $('add').onclick = addToBasket;
+  $('sum-add').onclick = addToBasket;
+
+  function render(){
+    paintMain();
+    if ($('cust').classList.contains('on')) paintCust();
+    if ($('summary').classList.contains('on')) paintSummary();
+  }
+  paintCarousels();
+  render();
+})();
+</script>
+</body>
+</html>

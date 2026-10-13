@@ -1,6 +1,7 @@
 <template>
   <div class="order-chart card mtb-20 mtb-sm-15">
-    <div class="dply-felx right mb-10 mb-xs-5">
+    <div class="dply-felx sided mb-15 mb-xs-10 chart-head">
+      <h5 class="chart-title"><b>{{ $t('index.revenue') }}</b></h5>
       <dropdown
         v-if="months"
         class="right-dropdown"

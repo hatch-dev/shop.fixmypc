@@ -1,79 +1,63 @@
 <template>
-  <div
-    class="gap-20 flex sided align-start b-b pb-20 pt-10 mb-10 cart-product-tile"
-    v-if="product"
-  >
-    <div class="flex gap-15">
-      <nuxt-link
-        class="w-100x img-wrapper"
-        :to="productLink(product)"
+  <div class="checkout-tile" v-if="product">
+    <nuxt-link
+      class="tile-media"
+      :to="productLink(product)"
+      :title="title"
+    >
+      <lazy-image
+        :data-src="getThumbImageURL(productImage)"
         :title="title"
-      >
-        <lazy-image
-          :data-src="getThumbImageURL(productImage)"
-          :title="title"
-          :alt="title"
-        />
-      </nuxt-link>
-    </div>
-    <div class="content-wrap flex align-start grow block-sm gap-15">
-      <div class="grow">
+        :alt="title"
+      />
+    </nuxt-link>
 
-        <div>
-          <h5 class="semi-bold mb-5">
-            <nuxt-link
-              class="ellipsis-1"
-              :to="productLink(product)"
-              :title="title"
-            >
-              {{ title }}
-            </nuxt-link>
-          </h5>
-          <p class="qty-text">
-            Qty: {{ productQuantity }}
-          </p>
-          <h6 class="color-lite mb-15 mt-10">
-            <span class="mr-15" v-for="i in currentAttr">
-              <b class="mr-5">{{i[0]}}</b> : {{i[1]}}
-            </span>
+    <div class="tile-body">
+      <div class="tile-info">
+        <h5 class="tile-title">
+          <nuxt-link
+            :to="productLink(product)"
+            :title="title"
+          >
+            {{ title }}
+          </nuxt-link>
+        </h5>
 
-            <span
-              v-if="hasBundleDeal"
-              class="ellipsis-1 mr-10"
-            >
-              <span class="bold mr-5">{{ $t('cartProductTile.bundleOffer') }}: </span>
-              {{ bundleDeal.title }}
-            </span>
+        <ul class="tile-meta">
+          <li>
+            <span class="meta-label">Qty</span>
+            <span class="meta-value">{{ productQuantity }}</span>
+          </li>
+          <li v-for="(i, index) in currentAttr" :key="`attr-${index}`">
+            <span class="meta-label">{{ i[0] }}</span>
+            <span class="meta-value">{{ i[1] }}</span>
+          </li>
+          <li v-if="hasBundleDeal">
+            <span class="meta-label">{{ $t('cartProductTile.bundleOffer') }}</span>
+            <span class="meta-value">{{ bundleDeal.title }}</span>
+          </li>
+        </ul>
 
-            <!-- Show upsell discount if applicable -->
-            <span v-if="hasUpsellDiscount">
-              <price-format
-                class="color-reduced strike-through"
-                :price="originalPrice"
-              />
-              <span class="bold color-offer">{{ $t('date.offer', {amount: upsellDiscountPercent }) }}</span>
-            </span>
-            
-            <!-- Show regular discount if no upsell discount -->
-            <span
-              v-if="!hasUpsellDiscount && hasRegularDiscount"
-            >
-              <price-format
-                class="color-reduced strike-through"
-                :price="regularPrevPrice"
-              />
-              <span class="bold color-offer">{{ $t('date.offer', {amount: regularDiscountPercent }) }}</span>
-            </span>
-            
-            <!-- Upsell badge -->
-            <span v-if="hasUpsellPrice" class="upsell-badge">
-              {{ $t('cartProductTile.upsellOffer') }}
-            </span>
-          </h6>
-
+        <div class="tile-tags" v-if="hasUpsellPrice || hasUpsellDiscount || hasRegularDiscount">
+          <span
+            v-if="hasUpsellDiscount"
+            class="tag tag-offer"
+          >
+            {{ $t('date.offer', {amount: upsellDiscountPercent }) }}
+          </span>
+          <span
+            v-else-if="hasRegularDiscount"
+            class="tag tag-offer"
+          >
+            {{ $t('date.offer', {amount: regularDiscountPercent }) }}
+          </span>
+          <span v-if="hasUpsellPrice" class="tag tag-upsell">
+            {{ $t('cartProductTile.upsellOffer') }}
+          </span>
         </div>
 
         <form
+          class="tile-shipping"
           v-if="isShipping && currentAddresses.length && isSingleShipping"
         >
           <p v-if="!currentShipRule" class="error">{{ noShipMessage }}</p>
@@ -127,22 +111,53 @@
             </label>
           </div>
         </form>
-
       </div>
 
-      <div class="mt-sm-10 mn-w-90x right-text">
-        <h5 class="price inl-b-sm">
-          <price-format
-            :price="displayPrice"
-          />
-        </h5>
+      <div class="tile-price">
+        <span class="price-now">
+          <price-format :price="displayPrice" :decimals="2" />
+        </span>
+        <!--
+          Which convention this line is priced on, and its split behind the
+          icon — the same badge and the same popover as the basket card, from
+          the same mixin, so a customer moving from one screen to the other is
+          reading one thing rather than two descriptions of it.
 
-        <p class="inl-b-sm" v-if="hasBundleDeal">(-) x {{ bundleDeal.free }}</p>
-
+          It replaces the sentence that used to be printed here: "Inc-VAT
+          €829.02 (VAT 23% €155.02)", restating in the line what the summary
+          beside it already states for the basket.
+        -->
+        <span
+          v-if="cartVatBasis"
+          class="price-basis-badge"
+          :class="cartVatBasis.inclusive ? 'is-inclusive' : 'is-exclusive'"
+        >{{ cartVatBasis.short }}<info-popover
+          v-if="vatExplainer"
+          variant="badge"
+          :title="vatExplainer.title"
+          :label="vatExplainer.label"
+          :lede="vatExplainer.lede"
+          :rows="vatExplainer.rows"
+          :note="vatExplainer.note"
+        /></span>
+        <span
+          v-if="hasUpsellDiscount"
+          class="price-was"
+        >
+          <price-format :price="originalPrice" :decimals="2" />
+        </span>
+        <span
+          v-else-if="hasRegularDiscount"
+          class="price-was"
+        >
+          <price-format :price="regularPrevPrice" :decimals="2" />
+        </span>
+        <span class="price-note" v-if="hasBundleDeal">(-) x {{ bundleDeal.free }}</span>
       </div>
     </div>
   </div>
 </template>
+
 
 <script>
   import {mapGetters, mapActions} from 'vuex'
@@ -154,6 +169,7 @@
   import PriceFormat from "~/components/PriceFormat"
   import AjaxButton from "~/components/AjaxButton"
   import Dropdown from "./Dropdown";
+  import InfoPopover from "~/components/InfoPopover"
 
   export default {
     name: 'CheckoutProductTile',
@@ -204,6 +220,7 @@
       },
     },
     components: {
+      InfoPopover,
       Dropdown,
       AjaxButton,
       PriceFormat,
@@ -363,7 +380,7 @@
         return this.$t('cartProductTile.noShipMessage', {state: state, country: this.address?.countryTitle})
       },
 
-      ...mapGetters('common', ['currencyIcon', 'setting']),
+      ...mapGetters('common', ['currencyIcon', 'setting', 'currencyPosition']),
     },
     mixins: [util, productPriceHelper, productImageHelper],
     methods: {
@@ -395,25 +412,239 @@
 </script>
 
 <style scoped>
-.upsell-badge {
-  background-color: #ff6b6b;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
-  margin-left: 8px;
+.checkout-tile {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid #EDEDF3;
 }
 
-.color-offer {
-  color: #ff6b6b;
+.checkout-tile:last-child {
+  border-bottom: none;
+  padding-bottom: 4px;
 }
 
-.strike-through {
+/* Thumbnail keeps a fixed box so a tall and a wide image line up the same */
+.tile-media {
+  flex: 0 0 88px;
+  width: 88px;
+  height: 88px;
+  border: 1px solid #ECECF2;
+  border-radius: 10px;
+  background: #F7F7FA;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.tile-media >>> img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.tile-body {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tile-info {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.tile-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 1.35em;
+  font-weight: 600;
+  color: #130E2B;
+}
+
+.tile-title a {
+  color: inherit;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tile-title a:hover {
+  color: #33319A;
+}
+
+.tile-meta {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font-size: 13px;
+  line-height: 1.4em;
+  color: #737987;
+}
+
+.tile-meta .meta-label::after {
+  content: ':';
+  margin-right: 4px;
+}
+
+.tile-meta .meta-value {
+  color: #130E2B;
+  font-weight: 600;
+}
+
+.tile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  line-height: 1.5em;
+  white-space: nowrap;
+}
+
+.tag-offer {
+  background: #FFECEC;
+  color: #D83A3A;
+}
+
+.tag-upsell {
+  background: #EEEEFB;
+  color: #33319A;
+}
+
+.tile-shipping {
+  margin-top: 12px;
+}
+
+.tile-price {
+  flex: 0 0 auto;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.price-now {
+  display: block;
+  font-size: 18px;
+  line-height: 1.3em;
+  font-weight: 700;
+  color: #130E2B;
+}
+
+.price-was {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  color: #9A9AAA;
   text-decoration: line-through;
 }
 
-.color-reduced {
-  color: #999;
+.price-note {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: #737987;
+}
+
+/* The pricing-basis badge, in the same two quiet tints as the basket card:
+   this is a fact about the price, not a warning about it. Right-aligned with
+   the column, and one line — the sentence it replaced was the only thing in
+   this tile that wrapped. */
+.price-basis-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.price-basis-badge.is-exclusive {
+  background: #DBE8FF;
+  color: #1D4ED8;
+}
+
+.price-basis-badge.is-inclusive {
+  background: #DCF6E4;
+  color: #15803D;
+}
+
+.price-basis-badge:focus-visible {
+  outline: 2px solid rgba(26, 86, 219, .45);
+  outline-offset: 1px;
+}
+
+@media only screen and (max-width: 767px) {
+  .checkout-tile {
+    gap: 12px;
+    padding: 16px 0;
+  }
+
+  .tile-media {
+    flex: 0 0 68px;
+    width: 68px;
+    height: 68px;
+    padding: 6px;
+    border-radius: 8px;
+  }
+
+  /*
+   * Price drops under the details instead of squeezing the title into a
+   * two-word column on a 360px screen.
+   */
+  .tile-body {
+    display: block;
+  }
+
+  .tile-title {
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+
+  .tile-meta {
+    gap: 4px 14px;
+    font-size: 12.5px;
+  }
+
+  .tile-price {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 10px;
+    text-align: left;
+  }
+
+  .price-now {
+    font-size: 16px;
+  }
+
+  .price-was,
+  .price-note {
+    margin-top: 0;
+  }
 }
 </style>

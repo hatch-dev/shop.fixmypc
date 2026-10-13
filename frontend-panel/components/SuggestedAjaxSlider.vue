@@ -3,8 +3,7 @@
     ref="main-slider"
     class="flow-hidden"
   >
-
-      <ul
+    <ul
         class="c_slider__container shimmer-wrapper"
         :style="[parentWidthStyle, { transform: translateXInPx }]"
       >
@@ -16,13 +15,16 @@
             style="max-width: 100px"
             :style="itemWidthStyle"
           >
+            <!-- plain tiles, as the home page rails render them -->
             <product-tile
               v-if="value"
               :product="value"
+              :show-collection="false"
               class="mb-20 mb-sm-15"
             />
-            <tile-shimmer
+            <skeleton-product
               v-else
+              class="mb-20 mb-sm-15"
             />
           </li>
 
@@ -34,7 +36,6 @@
 <script>
 
   import ProductTile from '~/components/ProductTile'
-  import TileShimmer from '~/components/TileShimmer'
   import { Draggable } from 'draggable-vue-directive'
 
   export default {
@@ -67,8 +68,7 @@
       }
     },
     components: {
-      ProductTile,
-      TileShimmer
+      ProductTile
     },
     computed: {
       parentWidthStyle(){

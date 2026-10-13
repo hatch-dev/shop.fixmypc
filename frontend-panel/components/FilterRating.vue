@@ -1,35 +1,38 @@
 <template>
-  <div class="sidebar-section star-filter mt-xs-10 mb-xs-10">
-    <h4 class="title">
+  <div class="side-block">
+    <h3>
       {{ $t('productReview.customerReviews') }}
-    </h4>
-    <button
-      class="clear-btn"
-      :disabled="!rating"
-      aria-label="submit"
-      @click.prevent="filterRating(0)"
+      <button
+        type="button"
+        :disabled="!rating"
+        aria-label="submit"
+        @click.prevent="filterRating(0)"
+      >
+        {{ $t('listingLayout.clear') }}
+      </button>
+    </h3>
+
+    <label
+      class="f-row"
+      v-for="value in ratingSteps"
+      :key="value"
     >
-      {{ $t('listingLayout.clear') }}
-    </button>
-    <button
-      class="mtb-5"
-      aria-label="submit"
-      :class="{active: parseInt(rating) === value}"
-      v-for="value in 4"
-      @click.prevent="filterRating(value)"
-    >
-      <rating-star
-        :rating="value"
-      />
-      & {{ $t('listingLayout.up') }}
-    </button>
-  </div><!--sidebar-section-->
+      <input
+        type="radio"
+        name="rate"
+        :value="value"
+        :checked="parseInt(rating) === value"
+        @change="filterRating(value)"
+      >
+      <span class="stars">{{ filledStars(value) }}<span class="off">{{ emptyStars(value) }}</span></span>
+      &amp; {{ $t('listingLayout.up') }}
+    </label>
+  </div><!--side-block-->
 </template>
 
 <script>
 
 
-    import RatingStar from "./RatingStar";
     export default {
       name: "FilterRating",
       props: {
@@ -38,10 +41,10 @@
       data() {
         return {
           rating: this.$route.query.rating || '',
+          ratingSteps: [4, 3, 2, 1],
         }
       },
       components: {
-        RatingStar
       },
       mixins: [],
       computed: {
@@ -52,6 +55,12 @@
 
       },
       methods: {
+        filledStars(value) {
+          return '★'.repeat(value)
+        },
+        emptyStars(value) {
+          return '★'.repeat(5 - value)
+        },
         clearRating() {
           this.rating = ''
         },

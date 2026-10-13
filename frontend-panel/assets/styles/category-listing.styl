@@ -1,0 +1,1297 @@
+/* ==========================================================================
+   Category listing screen — 1:1 port of reference/shop_category_v1.html
+   Every rule is scoped under .category-listing so the rest of the shop is
+   untouched. Brand tokens are mapped onto the theme variables that are
+   already integrated (--primary-color / --primary-hover-color, #05B942).
+   ========================================================================== */
+
+.category-listing
+  --ink #130E2B
+  --ink-soft #3A3C6E
+  --brand var(--primary-color)
+  --brand-700 var(--primary-hover-color)
+  --brand-50 #F1F1FC
+  --go #05B942
+  --go-700 #049937
+  --wash #F7F7FD
+  --line #E4E5F3
+  --line-strong #CFD1E8
+  --muted #6B7191
+  --danger #C8324B
+  --star #FFA41C
+  --radius 12px
+  --radius-lg 16px
+  --shadow-md 0 10px 30px rgba(22, 23, 74, .10)
+  --shadow-lg 0 24px 60px rgba(22, 23, 74, .18)
+
+  font-size 14.5px
+  color var(--ink)
+
+/* ─────────── breadcrumb ─────────── */
+.category-listing .crumb
+  margin 0
+  padding 14px 0
+
+.category-listing .crumb nav[aria-label="breadcrumb"]
+  margin 0
+
+.category-listing .crumb .breadcrumb
+  display flex
+  align-items center
+  gap 8px
+  flex-wrap wrap
+  font-size 13px
+  color var(--muted)
+
+.category-listing .crumb .breadcrumb li
+  display flex
+  align-items center
+  gap 8px
+
+.category-listing .crumb .breadcrumb li:after
+  content '\203A'
+  opacity .5
+  color var(--muted)
+
+.category-listing .crumb .breadcrumb li:last-child:after
+  content none
+
+.category-listing .crumb .breadcrumb li a
+  padding 0
+  color var(--muted)
+  text-decoration none
+
+.category-listing .crumb .breadcrumb li a:after
+  content none
+  background none
+
+.category-listing .crumb .breadcrumb li a:hover
+  color var(--brand)
+  text-decoration underline
+
+.category-listing .crumb .breadcrumb li:last-child
+  color var(--ink)
+  font-weight 600
+
+.category-listing .crumb .breadcrumb li:last-child span
+  color var(--ink)
+
+/* ─────────── page head ─────────── */
+.category-listing .page-head
+  display flex
+  align-items flex-end
+  justify-content space-between
+  gap 20px
+  flex-wrap wrap
+  margin-bottom 16px
+
+.category-listing .page-head h1
+  margin 0 0 4px
+  font-size 26px
+  line-height 1.2
+  letter-spacing -.02em
+  font-weight 600
+  color var(--ink)
+
+.category-listing .page-head p
+  margin 0
+  font-size 13.5px
+  line-height 1.5
+  color var(--muted)
+
+/* ─────────── subcategory rail ─────────── */
+/* The track is inset on whichever side can scroll and the arrow sits in that
+   gutter, entirely outside the chips - it can never cover one. */
+.category-listing .rail-wrap
+  position relative
+  margin-bottom 14px
+  transition padding .18s ease
+
+.category-listing .rail-wrap.has-prev
+  padding-left 36px
+
+.category-listing .rail-wrap.has-next
+  padding-right 36px
+
+.category-listing .rail-arrow
+  align-items center
+  background #fff
+  border 1px solid #E4E4F0
+  border-radius 50%
+  box-shadow 0 2px 8px rgba(19, 14, 43, .14)
+  color var(--brand)
+  cursor pointer
+  display flex
+  height 28px
+  justify-content center
+  padding 0
+  position absolute
+  top 50%
+  transform translateY(-50%)
+  transition background .18s ease, border-color .18s ease
+  width 28px
+  z-index 2
+
+/* invisible padding so the small arrow is still a comfortable tap target */
+.category-listing .rail-arrow:after
+  content ''
+  bottom -9px
+  left -9px
+  position absolute
+  right -9px
+  top -9px
+
+/* solid brand fill on hover - no pale wash showing through the glyph */
+.category-listing .rail-arrow:hover,
+.category-listing .rail-arrow:active
+  background var(--brand)
+  border-color var(--brand)
+  color #fff
+
+.category-listing .rail-arrow--prev
+  left 0
+
+.category-listing .rail-arrow--next
+  right 0
+
+.category-listing .rail
+  display flex
+  flex-wrap nowrap
+  gap 10px
+  overflow-x auto
+  overflow-y hidden
+  padding 2px 1px
+  scroll-behavior smooth
+  scroll-snap-type x proximity
+  scroll-padding-left 2px
+  -webkit-overflow-scrolling touch
+  scrollbar-width none
+  -ms-overflow-style none
+
+.category-listing .rail::-webkit-scrollbar
+  display none
+
+.category-listing .sub-chip
+  display inline-flex
+  align-items center
+  gap 9px
+  flex 0 0 auto
+  scroll-snap-align start
+  border 1px solid var(--line-strong)
+  background #fff
+  border-radius 999px
+  padding 9px 15px 9px 11px
+  font-size 13.5px
+  font-weight 600
+  color var(--ink-soft)
+  cursor pointer
+  white-space nowrap
+  text-decoration none
+  transition .15s
+
+/* the tail gets its own snap point so the end of the track lands flush */
+.category-listing .sub-chip:last-child
+  scroll-snap-align end
+
+.category-listing .sub-chip:hover
+  border-color var(--brand)
+  color var(--brand)
+
+.category-listing .sub-chip.on
+  background var(--brand)
+  border-color var(--brand)
+  color #fff
+
+.category-listing .sub-chip .ico
+  width 26px
+  height 26px
+  border-radius 8px
+  background var(--brand-50)
+  color var(--brand)
+  display flex
+  align-items center
+  justify-content center
+  flex 0 0 auto
+  overflow hidden
+
+.category-listing .sub-chip.on .ico
+  background rgba(255, 255, 255, .2)
+  color #fff
+
+.category-listing .sub-chip .ico img
+  width 18px
+  height 18px
+  object-fit contain
+
+.category-listing .sub-chip .n
+  font-size 11.5px
+  font-weight 800
+  line-height 1.5
+  color var(--muted)
+  background var(--wash)
+  border-radius 999px
+  padding 2px 8px
+
+.category-listing .sub-chip.on .n
+  background rgba(255, 255, 255, .22)
+  color #fff
+
+/* ─────────── two column body ─────────── */
+.category-listing .body
+  display grid
+  grid-template-columns 266px 1fr
+  gap 28px
+  padding-bottom 60px
+
+/* Grid items default to min-width: auto, so a child that cannot shrink - the
+   nowrap results bar - widens the column past the page and pushes the product
+   grid off screen. This is what lets the column actually be 1fr. */
+.category-listing .body > *
+  min-width 0
+
+.category-listing .side
+  position sticky
+  /* clears the sticky masthead (logo row + nav bar) */
+  top 145px
+  align-self start
+  max-height calc(100vh - 165px)
+  overflow-y auto
+  overflow-x hidden
+  padding-right 6px
+  scrollbar-width thin
+  scrollbar-color var(--line-strong) transparent
+
+.category-listing .side::-webkit-scrollbar
+  width 6px
+
+.category-listing .side::-webkit-scrollbar-track
+  background transparent
+
+.category-listing .side::-webkit-scrollbar-thumb
+  background var(--line-strong)
+  border-radius 999px
+
+.category-listing .side::-webkit-scrollbar-thumb:hover
+  background var(--muted)
+
+.category-listing .side-block
+  border-bottom 1px solid var(--line)
+  padding 16px 0
+
+.category-listing .side-block:first-child
+  padding-top 4px
+
+.category-listing .side-block:last-child
+  border-bottom 0
+
+.category-listing .side-block h3
+  display flex
+  align-items center
+  gap 8px
+  margin 0 0 10px
+  font-size 12px
+  line-height 1.4
+  letter-spacing .12em
+  text-transform uppercase
+  color var(--muted)
+  font-weight 800
+
+.category-listing .side-block h3 button
+  margin-left auto
+  height auto
+  line-height 1.4
+  background none
+  border 0
+  padding 0
+  font-size 12px
+  letter-spacing 0
+  text-transform none
+  color var(--brand)
+  cursor pointer
+  font-weight 700
+
+.category-listing .side-block h3 button:disabled
+  color var(--muted)
+  opacity .55
+  cursor default
+
+/* ─────────── category tree ─────────── */
+.category-listing .tree
+  display grid
+  gap 1px
+  list-style none
+  margin 0
+  padding 0
+
+.category-listing .tree li
+  display block
+  list-style none
+
+.category-listing .tree-row
+  display flex
+  align-items center
+  width 100%
+  gap 8px
+  -webkit-user-select none
+  user-select none
+  background none
+  border 0
+  padding 8px 10px
+  border-radius 9px
+  font-size 14px
+  line-height 1.4
+  height auto
+  color var(--ink-soft)
+  cursor pointer
+  text-align left
+  text-decoration none
+  transition background .15s, color .15s
+
+.category-listing .tree-row:hover
+  background var(--brand-50)
+  color var(--brand)
+
+.category-listing .tree-row:hover .n,
+.category-listing .kid:hover .n
+  background #fff
+  color var(--brand)
+
+.category-listing .tree-row.on
+  background var(--brand)
+  color #fff
+  font-weight 700
+  box-shadow 0 2px 10px rgba(51, 49, 154, .28)
+
+.category-listing .tree-row.on:hover
+  background var(--brand-700)
+  color #fff
+
+.category-listing .tree-row.on .n
+  background rgba(255, 255, 255, .2)
+  color #fff
+
+/* the branch you are inside: marked with an accent bar, so the solid fill
+   stays unmistakably with the page you are actually on */
+.category-listing .tree-row.in-path
+  background none
+  color var(--brand)
+  font-weight 700
+  box-shadow inset 3px 0 0 var(--brand)
+
+.category-listing .tree-row.in-path:hover
+  background var(--brand-50)
+
+.category-listing .tree-row.in-path .n
+  color var(--brand)
+
+.category-listing .tree-row.in-path .ci
+  opacity 1
+
+/* counts read as badges, matching the sub category rail on the same page */
+.category-listing .tree-row .n
+  margin-left auto
+  flex 0 0 auto
+  min-width 24px
+  padding 2px 8px
+  border-radius 999px
+  background var(--wash)
+  font-size 11.5px
+  line-height 1.5
+  font-weight 700
+  text-align center
+  color var(--muted)
+  transition background .15s, color .15s
+
+.category-listing .tree-row .tw
+  width 16px
+  height 16px
+  flex 0 0 auto
+  display flex
+  align-items center
+  justify-content center
+  opacity .6
+  transition transform .18s
+
+.category-listing .tree-row.is-open .tw
+  transform rotate(90deg)
+
+.category-listing .tree-row .ci
+  width 18px
+  height 18px
+  flex 0 0 auto
+  display flex
+  align-items center
+  justify-content center
+  color var(--brand)
+  opacity .9
+  overflow hidden
+
+.category-listing .tree-row.on .ci
+  color #fff
+
+.category-listing .tree-row .ci img
+  width 18px
+  height 18px
+  object-fit contain
+
+.category-listing .kids
+  display none
+  gap 1px
+  margin 2px 0 6px 26px
+  padding-left 10px
+  border-left 1px solid var(--line)
+  list-style none
+
+.category-listing .kids.on
+  display grid
+
+.category-listing .kid
+  display flex
+  align-items center
+  gap 8px
+  width 100%
+  -webkit-user-select none
+  user-select none
+  background none
+  border 0
+  padding 7px 10px
+  border-radius 8px
+  font-size 13.5px
+  line-height 1.4
+  height auto
+  color var(--ink-soft)
+  cursor pointer
+  text-align left
+  text-decoration none
+
+.category-listing .kid:hover
+  background var(--brand-50)
+  color var(--brand)
+
+/* the current sub category is the page you are on, so it takes the fill */
+.category-listing .kid.on
+  background var(--brand)
+  color #fff
+  font-weight 700
+  box-shadow 0 2px 10px rgba(51, 49, 154, .28)
+
+.category-listing .kid.on:hover
+  background var(--brand-700)
+  color #fff
+
+.category-listing .kid.on .n
+  background rgba(255, 255, 255, .2)
+  color #fff
+
+.category-listing .kid .n
+  margin-left auto
+  flex 0 0 auto
+  min-width 24px
+  padding 2px 8px
+  border-radius 999px
+  background var(--wash)
+  font-size 11.5px
+  line-height 1.5
+  font-weight 700
+  text-align center
+  color var(--muted)
+  transition background .15s, color .15s
+
+/* ─────────── filter rows ─────────── */
+.category-listing .f-row
+  display flex
+  align-items center
+  gap 9px
+  margin 0
+  padding 6px 2px
+  font-size 13.5px
+  color var(--ink-soft)
+  cursor pointer
+
+.category-listing .f-row input
+  width 17px
+  height 17px
+  min-width 17px
+  flex 0 0 auto
+  margin 0
+  accent-color var(--primary-color)
+
+.category-listing .f-row .n
+  margin-left auto
+  font-size 11.5px
+  color var(--muted)
+  font-weight 700
+
+.category-listing .stars
+  color var(--star)
+  letter-spacing 1px
+  font-size 13px
+  line-height 1
+
+.category-listing .stars .off
+  color var(--line-strong)
+
+/* price */
+.category-listing .price-row
+  display flex
+  gap 8px
+  align-items center
+
+.category-listing .price-row .cur
+  display flex
+  align-items center
+  border 1px solid var(--line-strong)
+  border-radius 9px
+  overflow hidden
+  flex 1
+  min-width 0
+  margin 0
+  background #fff
+
+.category-listing .price-row .cur span
+  padding 0 9px
+  color var(--muted)
+  background var(--wash)
+  align-self stretch
+  display flex
+  align-items center
+  font-size 13px
+
+.category-listing .price-row .cur input
+  border 0
+  border-radius 0
+  padding 9px 10px
+  width 100%
+  min-width 0
+  height auto
+  line-height 1.4
+  font-size 13.5px
+  background #fff
+
+/* brands */
+.category-listing .brand-search
+  width 100%
+  border 1px solid var(--line-strong)
+  border-radius 9px
+  padding 8px 11px
+  height auto
+  line-height 1.4
+  font-size 13px
+  margin-bottom 8px
+
+.category-listing .scroll-list
+  max-height 186px
+  overflow auto
+  padding-right 4px
+
+.category-listing .no-match
+  margin 4px 2px
+  font-size 13px
+  color var(--muted)
+
+/* ─────────── buttons ─────────── */
+.category-listing .btn
+  border 0
+  border-radius 999px
+  padding 10px 18px
+  height auto
+  line-height 1.4
+  font-size 13.5px
+  font-weight 700
+  cursor pointer
+  transition .15s
+
+.category-listing .btn-sm
+  padding 8px 14px
+  font-size 13px
+
+.category-listing .btn-ink
+  background var(--brand)
+  color #fff
+
+.category-listing .btn-ink:hover
+  background var(--brand-700)
+
+.category-listing .btn-go
+  background var(--go)
+  color #fff
+
+.category-listing .btn-go:hover
+  background var(--go-700)
+
+.category-listing .btn-ghost
+  background #fff
+  border 1px solid var(--line-strong)
+  color var(--ink)
+
+.category-listing .btn-ghost:hover
+  border-color var(--brand)
+  color var(--brand)
+  background var(--brand-50)
+
+/* ─────────── results bar ─────────── */
+.category-listing .res-bar
+  display flex
+  align-items center
+  gap 14px
+  flex-wrap wrap
+  background var(--wash)
+  border 1px solid var(--line)
+  border-radius var(--radius)
+  padding 12px 16px
+  margin-bottom 16px
+
+.category-listing .res-bar .count
+  font-size 13.5px
+  color var(--ink-soft)
+
+.category-listing .res-bar .count b
+  color var(--ink)
+  font-weight 700
+
+.category-listing .res-tools
+  margin-left auto
+  display flex
+  align-items center
+  gap 10px
+
+.category-listing .res-tools .custom-dropdown > span
+  border 1px solid var(--line-strong)
+  border-radius 999px
+  padding 0 12px 0 16px
+  gap 8px
+  height 36px
+  line-height 36px
+  font-size 13.5px
+  background #fff
+  color var(--ink)
+  box-shadow none
+
+.category-listing .res-tools .custom-dropdown > span:hover
+  background #fff !important
+  border-color var(--brand)
+
+.category-listing .res-tools .custom-dropdown > span > span
+  min-width 0
+  max-width 190px
+
+.category-listing .res-tools .custom-dropdown > span > .icon
+  margin 0
+
+.category-listing .res-tools .custom-dropdown .dropdown-inner
+  left auto
+  right 0
+
+.category-listing .view-tog
+  display flex
+  border 1px solid var(--line-strong)
+  border-radius 999px
+  overflow hidden
+  background #fff
+
+.category-listing .view-tog button
+  border 0
+  background none
+  padding 8px 12px
+  height 36px
+  line-height 0
+  border-radius 0
+  cursor pointer
+  color var(--muted)
+  display flex
+  align-items center
+  justify-content center
+
+.category-listing .view-tog button.on
+  background var(--brand)
+  color #fff
+
+/* ─────────── applied filter chips ─────────── */
+.category-listing .chips
+  display flex
+  gap 8px
+  flex-wrap wrap
+  margin-bottom 16px
+
+.category-listing .chip-x
+  display inline-flex
+  align-items center
+  gap 8px
+  background var(--brand-50)
+  border 1px solid #D5D6F5
+  color var(--brand)
+  border-radius 999px
+  padding 6px 8px 6px 13px
+  height auto
+  line-height 1.4
+  font-size 12.5px
+  font-weight 700
+  cursor pointer
+
+.category-listing .chip-x:hover
+  background #E5E5FA
+
+.category-listing .chip-x .x
+  width 17px
+  height 17px
+  border-radius 50%
+  background var(--brand)
+  color #fff
+  display flex
+  align-items center
+  justify-content center
+  font-size 11px
+  line-height 1
+
+.category-listing .chip-clear
+  background none
+  border 0
+  color var(--muted)
+  font-size 12.5px
+  font-weight 700
+  cursor pointer
+  padding 6px
+  height auto
+  line-height 1.4
+
+.category-listing .chip-clear:hover
+  color var(--danger)
+
+/* ─────────── product grid ─────────── */
+.category-listing .tile-container
+  display grid
+  grid-template-columns repeat(auto-fill, minmax(232px, 1fr))
+  gap 16px
+  min-width 0
+
+.category-listing .tile-container > *
+  min-width 0
+
+/* the shared ProductTile, dressed as the mockup card */
+.category-listing .body .tile-container .p-tile
+  width 100%
+  min-width 0
+  display flex
+
+.category-listing .body .tile-container .p-tile .card-wrapper
+  flex 1
+  display flex
+  flex-direction column
+  border 1px solid var(--line)
+  border-radius var(--radius-lg)
+  overflow hidden
+  background #fff
+  text-align left
+  transition box-shadow .15s, transform .15s, border-color .15s
+
+.category-listing .body .tile-container .p-tile .card-wrapper:hover
+  border 1px solid var(--line-strong)
+  box-shadow var(--shadow-md)
+  transform translateY(-2px)
+
+.category-listing .body .tile-container .p-tile .p-tile-img-link
+  display block
+  padding 0
+
+.category-listing .body .tile-container .p-tile .img-wrapper
+  position relative
+  height 180px
+  padding 0
+  background var(--wash)
+  border-bottom 1px solid var(--line)
+  display flex
+  align-items center
+  justify-content center
+
+.category-listing .body .tile-container .p-tile .img-wrapper img
+  max-height 78%
+  max-width 78%
+
+.category-listing .body .tile-container .p-tile .img-wrapper .wishlist-icon
+  top 8px
+  right 8px
+  width 32px
+  height 32px
+  border-radius 50%
+  background #fff
+  border 1px solid var(--line)
+  box-shadow none
+  color var(--muted)
+
+.category-listing .body .tile-container .p-tile .img-wrapper .wishlist-icon:hover,
+.category-listing .body .tile-container .p-tile .img-wrapper .wishlist-icon.active
+  background #fff
+  border-color #EFC3CC
+
+.category-listing .body .tile-container .p-tile .badge-stack
+  top 10px
+  left 10px
+  gap 5px
+  max-width calc(100% - 48px)
+
+.category-listing .body .tile-container .p-tile .badge-same
+  margin 0
+  padding 3px 8px
+  border 0
+  border-radius 999px
+  background var(--go)
+  color #fff
+  font-size 10.5px
+  font-weight 800
+  line-height 1.4
+
+.category-listing .body .tile-container .p-tile .badge-flash-sale.badge-same,
+.category-listing .body .tile-container .p-tile .badge-clearance.badge-same
+  background var(--brand)
+
+.category-listing .body .tile-container .p-tile .badge-new.badge-same
+  background var(--ink)
+
+.category-listing .body .tile-container .p-tile .product-tile-content
+  display flex
+  flex-direction column
+  gap 7px
+  flex 1
+  padding 13px 14px 14px
+  border-top 0
+  background none
+
+.category-listing .body .tile-container .p-tile .item-title
+  display flex
+  flex-direction column
+  gap 7px
+  flex 1
+  margin 0
+
+.category-listing .body .tile-container .p-tile h5.ellipsis.ellipsis-2
+  margin 0
+  font-size 14px
+  font-weight 700
+  line-height 1.35
+  color var(--ink)
+
+.category-listing .body .tile-container .p-tile .tile-rating-div
+  display flex
+  align-items center
+  gap 7px
+  margin 0
+  font-size 12px
+  color var(--muted)
+
+/* the stars are a fixed 88x15 svg (RatingStar.vue), so font-size does nothing
+   to them - the svg itself has to be sized. viewBox keeps the ratio, and the
+   .rating overlay is a percentage of this width so it clips right. */
+.category-listing .body .tile-container .p-tile .tile-rating-div .rating-stars svg
+  height auto
+  width 72px
+
+.category-listing .body .tile-container .p-tile .tile-rating-div .color-lite
+  font-size 11.5px
+  color var(--muted)
+
+.category-listing .body .tile-container .p-tile .ptile-price-and-reducedpercent
+  display flex
+  flex-direction column
+  align-items stretch
+  gap 10px
+  margin-top auto
+
+.category-listing .body .tile-container .p-tile .price-wrapper
+  display flex
+  align-items baseline
+  gap 9px
+  margin 0
+
+.category-listing .body .tile-container .p-tile .price-wrapper .price span
+  font-size 17px
+  font-weight 700
+  letter-spacing -.01em
+  color var(--ink)
+
+.category-listing .body .tile-container .p-tile .price-wrapper .strike-through span
+  font-size 13px
+  font-weight 400
+  color var(--muted)
+
+.category-listing .body .tile-container .p-tile .add-to-cart-btn
+  display block
+  width 100%
+  padding 0
+  border 0
+  border-radius 0
+
+.category-listing .body .tile-container .p-tile .add-to-cart-btn:hover
+  background none
+
+.category-listing .body .tile-container .p-tile .add-to-cart-btn button
+  width 100%
+  height auto !important
+  line-height 1.4 !important
+  padding 8px 14px
+  border 0
+  border-radius 999px
+  background var(--go)
+  color #fff
+  font-size 13px
+  font-weight 700
+  cursor pointer
+  transition .15s
+
+.category-listing .body .tile-container .p-tile .add-to-cart-btn button:hover
+  background var(--go-700)
+
+/* overrides the global `button:disabled { opacity: .6 }` from ajax-button.styl
+   so the out of stock pill reads as the mockup's solid .oos chip */
+.category-listing .body .tile-container .p-tile .add-to-cart-btn button.out-of-stock,
+.category-listing .body .tile-container .p-tile .add-to-cart-btn button:disabled
+  background #fff
+  border 1px solid var(--line-strong)
+  color var(--muted)
+  opacity 1
+  cursor not-allowed
+
+/* list view */
+.category-listing .tile-container.view-list
+  grid-template-columns 1fr
+  gap 14px
+
+.category-listing .body .tile-container.view-list .p-tile .card-wrapper
+  flex-direction row
+
+.category-listing .body .tile-container.view-list .p-tile .p-tile-img-link
+  width 190px
+  min-width 190px
+  flex 0 0 auto
+
+.category-listing .body .tile-container.view-list .p-tile .img-wrapper
+  height 100%
+  min-height 170px
+  border-bottom 0
+  border-right 1px solid var(--line)
+
+.category-listing .body .tile-container.view-list .p-tile .product-tile-content
+  flex 1
+
+/* the badges belong over the image panel, not spilling onto the text column */
+.category-listing .body .tile-container.view-list .p-tile .badge-stack
+  max-width 170px
+
+/* ─────────── empty state ─────────── */
+.category-listing .empty
+  border 1px dashed var(--line-strong)
+  border-radius var(--radius-lg)
+  padding 48px 26px
+  text-align center
+  background var(--wash)
+
+.category-listing .empty .ico
+  width 56px
+  height 56px
+  border-radius 16px
+  background #fff
+  border 1px solid var(--line)
+  display flex
+  align-items center
+  justify-content center
+  margin 0 auto 16px
+  color var(--brand)
+
+.category-listing .empty b
+  display block
+  font-size 18px
+  margin-bottom 6px
+  color var(--ink)
+
+.category-listing .empty p
+  margin 0 auto 18px
+  max-width 46ch
+  font-size 13.5px
+  color var(--muted)
+
+.category-listing .empty-acts
+  display flex
+  gap 10px
+  justify-content center
+  flex-wrap wrap
+
+/* ─────────── mobile bar + drawer ─────────── */
+.category-listing .mob-bar
+  display none
+  gap 10px
+  padding 10px 0
+
+.category-listing .mob-bar .btn
+  flex 1
+
+.category-listing .drawer
+  position fixed
+  top 0
+  bottom 0
+  left 0
+  width 320px
+  max-width 88vw
+  background #fff
+  z-index 100000
+  display flex
+  flex-direction column
+  box-shadow var(--shadow-lg)
+
+.category-listing .drawer-head
+  display flex
+  align-items center
+  justify-content space-between
+  padding 16px 18px
+  border-bottom 1px solid var(--line)
+
+.category-listing .drawer-head b
+  font-size 16px
+  color var(--ink)
+
+.category-listing .drawer-body
+  overflow auto
+  padding 8px 14px 20px
+  flex 1
+
+.category-listing .drawer-body .side
+  position static
+  max-height none
+  overflow visible
+  padding 0
+
+.category-listing .drawer-foot
+  padding 14px 18px
+  border-top 1px solid var(--line)
+  display flex
+  gap 10px
+
+.category-listing .drawer-foot .btn
+  flex 1
+
+.category-listing .drawer .x
+  background none
+  border 0
+  font-size 22px
+  line-height 1
+  color var(--muted)
+  cursor pointer
+  width 34px
+  height 34px
+  border-radius 9px
+  padding 0
+
+.category-listing .drawer .x:hover
+  background var(--brand-50)
+  color var(--brand)
+
+.category-listing .scrim
+  position fixed
+  inset 0
+  background rgba(22, 23, 74, .34)
+  z-index 99999
+
+.drawer-slide-enter-active,
+.drawer-slide-leave-active
+  transition transform .25s
+
+.drawer-slide-enter,
+.drawer-slide-leave-to
+  transform translateX(-100%)
+
+.scrim-fade-enter-active,
+.scrim-fade-leave-active
+  transition opacity .25s
+
+.scrim-fade-enter,
+.scrim-fade-leave-to
+  opacity 0
+
+/* ─────────── responsive ─────────── */
+@media only screen and (max-width: 1080px)
+  .category-listing .body
+    grid-template-columns 240px 1fr
+    gap 22px
+
+@media only screen and (max-width: 900px)
+  .category-listing .body
+    grid-template-columns 1fr
+    padding-bottom 40px
+
+  .category-listing .mob-bar
+    display flex
+
+  .category-listing .tile-container
+    grid-template-columns repeat(auto-fill, minmax(160px, 1fr))
+    gap 12px
+
+  .category-listing .body .tile-container .p-tile .img-wrapper
+    height 140px
+
+  .category-listing .page-head h1
+    font-size 21px
+
+@media only screen and (max-width: 576px)
+  .category-listing .res-bar
+    flex-wrap nowrap
+
+  .category-listing .res-bar .count
+    flex 1 1 auto
+    min-width 0
+    overflow hidden
+    text-overflow ellipsis
+    white-space nowrap
+
+  .category-listing .res-tools
+    flex 0 0 auto
+    gap 8px
+    margin-left auto
+
+  .category-listing .rail
+    margin-left -15px
+    margin-right -15px
+    padding-left 15px
+    padding-right 15px
+
+  .category-listing .tile-container
+    grid-template-columns repeat(2, 1fr)
+
+  .category-listing .body .tile-container.view-list .p-tile .card-wrapper
+    flex-direction column
+
+  .category-listing .body .tile-container.view-list .p-tile .p-tile-img-link
+    width 100%
+    min-width 0
+
+  /* stacked here, so the panel needs a real height again - height: 100%
+     with min-height: 0 collapsed it to nothing and left the badges sitting
+     on the product title */
+  .category-listing .body .tile-container.view-list .p-tile .img-wrapper
+    border-bottom 1px solid var(--line)
+    border-right 0
+    height 180px
+    min-height 180px
+
+/* ─────────── phone: the page head and rail take less of the screen ─────────── */
+@media only screen and (max-width: 576px)
+  .category-listing .crumb
+    padding 10px 0
+
+  .category-listing .crumb .breadcrumb
+    font-size 12px
+    gap 6px
+
+  .category-listing .page-head
+    margin-bottom 12px
+
+  .category-listing .page-head h1
+    font-size 19px
+    margin-bottom 3px
+
+  /* the meta description can run long - three lines is enough to set the scene
+     without pushing the products off the first screen */
+  .category-listing .page-head p
+    display -webkit-box
+    -webkit-line-clamp 3
+    -webkit-box-orient vertical
+    overflow hidden
+    font-size 12.5px
+    line-height 1.5
+
+  .category-listing .rail
+    gap 8px
+
+  .category-listing .rail-wrap
+    margin-bottom 10px
+
+  .category-listing .rail-arrow
+    height 26px
+    width 26px
+
+  .category-listing .rail-wrap.has-prev
+    padding-left 32px
+
+  .category-listing .rail-wrap.has-next
+    padding-right 32px
+
+  .category-listing .sub-chip
+    font-size 12.5px
+    gap 7px
+    padding 6px 12px 6px 6px
+
+  .category-listing .sub-chip .ico
+    border-radius 7px
+    height 22px
+    width 22px
+
+  .category-listing .sub-chip .ico img
+    height 15px
+    width 15px
+
+  .category-listing .sub-chip .n
+    font-size 11px
+    padding 1px 7px
+
+  .category-listing .mob-bar
+    gap 8px
+    padding 6px 0
+
+  .category-listing .mob-bar .btn
+    font-size 13px
+    padding 9px 14px
+
+  .category-listing .res-bar
+    gap 10px
+    padding 9px 12px
+
+  .category-listing .res-bar .count
+    font-size 12.5px
+
+/* ─────────── two-up cards: badges, heart and rating must not collide ─────────── */
+@media only screen and (max-width: 768px)
+  /* Discount stays top left; flash sale / clearance drop below the heart on the
+     right instead of running into both the heart and the discount badge. */
+  .category-listing .body .tile-container .p-tile .badge-stack
+    gap 4px
+    left 8px
+    top 8px
+    max-width calc(100% - 44px)
+
+  .category-listing .body .tile-container .p-tile .badge-same
+    font-size 9.5px
+    padding 2px 7px
+
+  .category-listing .body .tile-container .p-tile .img-wrapper .wishlist-icon
+    height 30px
+    right 8px
+    top 8px
+    width 30px
+
+  /* the review count was wrapping onto its own line in a narrow card */
+  .category-listing .body .tile-container .p-tile .tile-rating-div
+    flex-wrap nowrap
+    gap 5px
+    min-width 0
+
+  .category-listing .body .tile-container .p-tile .tile-rating-div .rating-stars
+    flex 0 0 auto
+
+  .category-listing .body .tile-container .p-tile .tile-rating-div .rating-stars svg
+    width 62px
+
+  .category-listing .body .tile-container .p-tile .tile-rating-div .color-lite
+    font-size 10.5px
+    min-width 0
+    overflow hidden
+    text-overflow ellipsis
+    white-space nowrap
+
+  .category-listing .body .tile-container .p-tile .product-tile-content
+    padding 11px 11px 12px
+
+  .category-listing .body .tile-container .p-tile h5.ellipsis.ellipsis-2
+    font-size 13.5px
+
+  .category-listing .body .tile-container .p-tile .price-wrapper .price span
+    font-size 15px
+
+  .category-listing .body .tile-container .p-tile .price-wrapper .strike-through span
+    font-size 12px

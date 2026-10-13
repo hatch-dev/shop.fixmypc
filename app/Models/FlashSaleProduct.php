@@ -10,7 +10,14 @@ class FlashSaleProduct extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_id', 'flash_sale_id', 'price', 'admin_id'
+        'product_id', 'flash_sale_id', 'price', 'admin_id',
+        /*
+         * How many units may go at the sale price; null is no cap.
+         * quantity_sold is deliberately NOT fillable -- it is derived
+         * from the orders by Helper\FlashSaleAllowance and must never
+         * come from a request.
+         */
+        'quantity_limit'
     ];
 
     protected $hidden = [

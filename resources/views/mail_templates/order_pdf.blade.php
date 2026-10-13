@@ -229,6 +229,32 @@
                     <td>{{__('lang.order_amount', [], $lang)}}</td>
                     <td>{{ $setting->currency_icon }}{{ $order->calculated_price['total_price'] }}</td>
                 </tr>
+                {{--
+                    A business customer's accounts department matches the
+                    invoice to its own purchase order by this number; without
+                    it on the document the invoice cannot be paid.
+                --}}
+                @if($order->purchase_order_number)
+                    <tr>
+                        <td>{{__('lang.purchase_order', [], $lang)}}</td>
+                        <td>{{ $order->purchase_order_number }}</td>
+                    </tr>
+                @endif
+                {{-- The company the goods are billed to, and its VAT number. --}}
+                @if($order->user && $order->user->businessProfile)
+                    @if($order->user->businessProfile->company_name)
+                        <tr>
+                            <td>{{__('lang.billed_to', [], $lang)}}</td>
+                            <td>{{ $order->user->businessProfile->company_name }}</td>
+                        </tr>
+                    @endif
+                    @if($order->user->businessProfile->vat_number)
+                        <tr>
+                            <td>{{__('lang.vat_number', [], $lang)}}</td>
+                            <td>{{ $order->user->businessProfile->vat_number }}</td>
+                        </tr>
+                    @endif
+                @endif
             </table>
         </td>
     </tr>
@@ -242,18 +268,44 @@
 
     <tr>
         <td style="width: 50%;" class="lh">
+            @php
+                /*
+                 * A collection order has no delivery address at all -- the
+                 * contact details captured at the shipping step stand in for
+                 * one. This block dereferenced $order->address unguarded, so
+                 * rendering the invoice for a collection order threw, and
+                 * because the invoice is built before the receipt is sent it
+                 * took the customer's receipt down with it.
+                 */
+                $shipTo = $order->contactDetails();
+
+                $shipName = $order->address && $order->address->name
+                    ? $order->address->name
+                    : $shipTo['name'];
+
+                $shipPhone = $order->address && $order->address->phone
+                    ? $order->address->phone
+                    : $shipTo['phone'];
+
+                $shipEmail = isset($order->user->email) && $order->user->email
+                    ? $order->user->email
+                    : (isset($order->guest_user->email) && $order->guest_user->email
+                        ? $order->guest_user->email
+                        : $shipTo['email']);
+            @endphp
             <div style="max-width: 300px;">
-                <h5 class="mb-5">{{ $order->address->name }}</h5>
+                @if($shipName)
+                    <h5 class="mb-5">{{ $shipName }}</h5>
+                @endif
                 <p>{{ $order->formatted_address }}</p>
 
-                @if($order->user)
-                    <p>{{__('lang.email', [], $lang)}}: {{ $order->user->email }}</p>
-                @elseif($order->guest_user)
-                    <p>{{__('lang.email', [], $lang)}}: {{ $order->guest_user->email }}</p>
+                @if($shipEmail)
+                    <p>{{__('lang.email', [], $lang)}}: {{ $shipEmail }}</p>
                 @endif
 
-
-                <p>{{__('lang.phone', [], $lang)}}: {{ $order->address->phone }}</p>
+                @if($shipPhone)
+                    <p>{{__('lang.phone', [], $lang)}}: {{ $shipPhone }}</p>
+                @endif
             </div>
         </td>
         <td style="width: 50%;">{{ $order->order_method }}</td>
@@ -292,10 +344,52 @@
 
 <div style="width: 100%; clear: both; display: block; margin-top: 20px;">
     <table class="border-tr td-right-align" style="margin-left: auto; width: 180px; max-width: 180px;">
-        <tr>
-            <td style="min-width: 110px">{{__('lang.subtotal', [], $lang)}}</td>
-            <td style="min-width: 40px">{{ $setting->currency_icon }}{{ $order->calculated_price['subtotal'] }}</td>
-        </tr>
+        {{--
+            Subtotal at list price, then the discount that brought the goods
+            down to what was charged. The invoice showed a single "Subtotal" of
+            the goods at the charged price, so a business or trade customer's
+            invoice never named the discount they had been given - the figure
+            their own finance department is checking for.
+        --}}
+        @php
+            $grossSubtotal = $order->calculated_price['subtotal_inc_vat'] ?? null;
+            $grossDiscount = (float) ($order->calculated_price['discount_inc_vat'] ?? 0);
+            $lineDiscount = (float) ($order->calculated_price['discount'] ?? 0);
+        @endphp
+
+        {{--
+            The goods gross, and what they net down to. "Subtotal" was in
+            whichever convention each product is quoted in, so it could not be
+            labelled as either; these are both put through the same split.
+            Older orders that predate the gross figures fall back to what they
+            have rather than restating anything.
+        --}}
+        @if (!is_null($grossSubtotal))
+            <tr>
+                <td style="min-width: 110px">{{__('lang.products_inc_vat', [], $lang)}}</td>
+                <td style="min-width: 40px">{{ $setting->currency_icon }}{{ number_format((float) $grossSubtotal, 2) }}</td>
+            </tr>
+
+            @if ($grossDiscount > 0)
+                <tr>
+                    <td>{{__('lang.discount', [], $lang)}}</td>
+                    <td>-{{ $setting->currency_icon }}{{ number_format($grossDiscount, 2) }}</td>
+                </tr>
+            @endif
+        @else
+            <tr>
+                <td style="min-width: 110px">{{__('lang.subtotal', [], $lang)}}</td>
+                <td style="min-width: 40px">{{ $setting->currency_icon }}{{ $lineDiscount > 0 ? $order->calculated_price['original_subtotal'] : $order->calculated_price['subtotal'] }}</td>
+            </tr>
+
+            @if ($lineDiscount > 0)
+                <tr>
+                    <td>{{__('lang.product_discount', [], $lang)}}</td>
+                    <td>-{{ $setting->currency_icon }}{{ number_format($lineDiscount, 2) }}</td>
+                </tr>
+            @endif
+        @endif
+
         <tr>
             <td>{{__('lang.shipping_cost', [], $lang)}}</td>
 
@@ -322,7 +416,60 @@
             </tr>
         @endif
 
-        @if ((int) $order->calculated_price['tax'] > 0)
+        {{--
+            The discounts beside the order rather than on its lines. The
+            invoice used to list the total after the voucher only, so an order
+            paid with a flash, loyalty or points discount showed a Total that
+            did not follow from the rows above it.
+
+            Tested with > 0 rather than (int) > 0: a 0.50 discount is real and
+            an int cast rounds it away.
+        --}}
+        @if ((float) ($order->calculated_price['flash_discount'] ?? 0) > 0)
+            <tr>
+                <td>{{__('lang.flash_discount', [], $lang)}}</td>
+                <td>-{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['flash_discount'], 2) }}</td>
+            </tr>
+        @endif
+
+        @if ((float) ($order->calculated_price['bundle_discount'] ?? 0) > 0)
+            <tr>
+                <td>{{__('lang.bundle_discount', [], $lang)}}</td>
+                <td>-{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['bundle_discount'], 2) }}</td>
+            </tr>
+        @endif
+
+        @if ((float) ($order->calculated_price['loyalty_discount'] ?? 0) > 0)
+            <tr>
+                {{-- The wording frozen on the order, not the group's current name. --}}
+                <td>{{ $order->calculated_price['loyalty_label'] ?: __('lang.loyalty_discount', [], $lang) }}</td>
+                <td>-{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['loyalty_discount'], 2) }}</td>
+            </tr>
+        @endif
+
+        @if ((float) ($order->calculated_price['points_discount'] ?? 0) > 0)
+            <tr>
+                <td>{{__('lang.points_discount', [], $lang)}}</td>
+                <td>-{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['points_discount'], 2) }}</td>
+            </tr>
+        @endif
+
+        {{--
+            The VAT statement: net, then the tax on it. `tax` alone is the
+            VAT *added*, which is zero for the products whose prices already
+            contain their VAT - so an invoice for one of those showed no VAT
+            at all on a price that carries 23%.
+        --}}
+        @if (isset($order->calculated_price['inc_vat']))
+            <tr>
+                <td>{{__('lang.net_products_inc_vat', [], $lang)}}</td>
+                <td>{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['inc_vat'], 2) }}</td>
+            </tr>
+            <tr>
+                <td>{{__('lang.vat_included', [], $lang)}}</td>
+                <td>{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['vat'], 2) }}</td>
+            </tr>
+        @elseif ((int) $order->calculated_price['tax'] > 0)
             <tr>
                 <td>{{__('lang.tax', [], $lang)}}</td>
                 <td>{{ $setting->currency_icon }}{{ $order->calculated_price['tax'] }}</td>
@@ -330,9 +477,21 @@
         @endif
 
         <tr>
-            <td>{{__('lang.total', [], $lang)}}</td>
+            <td>{{__('lang.total_inc_vat', [], $lang)}}</td>
             <td>{{ $setting->currency_icon }}{{ $order->calculated_price['total_price'] }}</td>
         </tr>
+
+        {{-- A split payment: how the total was paid. A payment, not a discount. --}}
+        @if ((float) ($order->calculated_price['wallet_paid'] ?? 0) > 0)
+            <tr>
+                <td>Paid from wallet</td>
+                <td>-{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['wallet_paid'], 2) }}</td>
+            </tr>
+            <tr>
+                <td>Paid by {{ $order->order_method }}</td>
+                <td>{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['amount_due'], 2) }}</td>
+            </tr>
+        @endif
     </table>
 </div>
 

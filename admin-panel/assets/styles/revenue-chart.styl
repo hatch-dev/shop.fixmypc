@@ -1,0 +1,473 @@
+@import "./variables.styl"
+
+.revenue-chart
+  padding 20px
+
+  .chart-head
+    .chart-title
+      margin 0
+      font-size 16px
+      color var(--text-strong)
+
+    .chart-sub
+      font-size 13px
+      color muted-color
+
+    .chart-head__left
+      display flex
+      flex-direction column
+      gap 4px
+      min-width 0
+
+    .chart-summary
+      display flex
+      align-items baseline
+      gap 10px
+      flex-wrap wrap
+      min-width 0
+
+    .chart-total
+      font-size 20px
+      font-weight 700
+      line-height 1.1
+      color var(--text-strong)
+      white-space nowrap
+
+      // An absence, not a figure: same slot, but plainly worded and muted so
+      // it cannot be misread as a total of zero.
+      &.is-empty
+        font-size 14px
+        font-weight 600
+        color var(--text-muted)
+
+    // Collected vs outstanding, under the headline order value
+    .chart-money
+      display inline-flex
+      align-items center
+      gap 10px
+      flex-basis 100%
+      margin-top 2px
+      font-size 12px
+      font-weight 600
+
+    .chart-money__received
+      color var(--success-text)
+
+    .chart-money__pending
+      color var(--warning-text)
+
+    .chart-meta
+      font-size 12px
+      font-weight 500
+      color var(--text-muted)
+      white-space nowrap
+
+  .revenue-plot
+    display flex
+    align-items flex-end
+    gap 24px
+    height 240px
+    padding 0 6px
+    border-bottom 1px solid border-color
+
+    // 30- and 90-day ranges put far more bars in the same width; the fixed
+    // 24px gap alone would need 2000px+ and pushed the card sideways.
+    &.is-dense
+      gap 6px
+
+      .revenue-bar-value
+        display none
+
+    &.is-ultra-dense
+      gap 2px
+
+      .revenue-bar-value
+        display none
+
+      .revenue-bar
+        border-radius 3px 3px 0 0
+
+    .revenue-bar-col
+      position relative
+      flex 1 1 0
+      /*
+       * min-width:0 is load-bearing, not tidiness. A flex item defaults to
+       * min-width:auto, i.e. it refuses to shrink below its content - and the
+       * caption inside is white-space:nowrap. One wide caption ("€11.4k") made
+       * its column claim more than its share, every later column took less, and
+       * the bars drifted out from under the axis labels, which do set
+       * min-width:0. The tooltip then looked like it belonged to the next day.
+       */
+      min-width 0
+      height 100%
+      display flex
+      flex-direction column
+      align-items center
+      justify-content flex-end
+      padding 0
+      border none
+      background none
+      font inherit
+      cursor pointer
+
+      .revenue-bar-tip
+        position absolute
+        left 50%
+        transform translateX(-50%)
+        display flex
+        flex-direction column
+        align-items center
+        gap 2px
+        padding 8px 12px
+        border-radius 8px
+        background var(--text-strong)
+        color #fff
+        white-space nowrap
+        z-index 3
+        box-shadow 0 8px 20px rgba(17, 24, 39, .25)
+
+        b
+          font-size 12px
+          font-weight 600
+
+        span
+          font-size 13px
+          font-weight 700
+
+        em
+          font-size 11px
+          font-style normal
+          opacity .8
+
+        &:after
+          content ''
+          position absolute
+          bottom -5px
+          left 50%
+          transform translateX(-50%) rotate(45deg)
+          width 10px
+          height 10px
+          background var(--text-strong)
+
+        // Sat above the bar, a tooltip on a tall bar pushed out of the plot and
+        // over the chart heading. Tall bars carry it inside the bar instead, where
+        // it needs no pointer.
+        &.is-below:after
+          display none
+
+      .revenue-bar-value
+        margin-bottom 10px
+        font-size 12px
+        font-weight 500
+        color muted-color
+        white-space nowrap
+        // Clipped rather than allowed to push the column wider - see the
+        // min-width note above.
+        max-width 100%
+        overflow hidden
+        text-overflow ellipsis
+
+      .revenue-bar
+        width 100%
+        max-width 54px
+        border-radius 8px 8px 0 0
+        background #E9ECF5
+        transition height .35s ease, background .2s ease, box-shadow .2s ease
+
+      &:hover
+        .revenue-bar-value
+          color primary-color
+
+        .revenue-bar
+          background #D6DBEC
+
+      &:focus
+        outline none
+
+      &.selected
+        .revenue-bar-value
+          color primary-color
+          font-weight 600
+
+        .revenue-bar
+          background linear-gradient(180deg, #4D6FF2 0%, #1C34C0 100%)
+          box-shadow 0 8px 18px rgba(28, 52, 192, .25)
+
+      &.active
+        .revenue-bar-value
+          color primary-color
+          font-weight 600
+
+        .revenue-bar
+          background linear-gradient(180deg, #4D6FF2 0%, #1C34C0 100%)
+          box-shadow 0 8px 18px rgba(28, 52, 192, .25)
+
+        &:hover
+          .revenue-bar
+            background linear-gradient(180deg, #3F61EE 0%, #162BA8 100%)
+
+  .revenue-labels
+    display flex
+    gap 24px
+    margin-top 12px
+    padding 0 6px
+
+    &.is-dense
+      gap 6px
+
+    &.is-ultra-dense
+      gap 2px
+
+    // A thinned tick renders empty text and keeps its cell, so there is no
+    // hiding rule here to be overridden by the app's global .hidden utility.
+    .revenue-bar-label:empty
+      min-height 1em
+
+    .revenue-bar-label
+      flex 1 1 0
+      min-width 0
+      text-align center
+      font-size 13px
+      color muted-color
+      overflow hidden
+      text-overflow ellipsis
+      white-space nowrap
+
+      // 30 and 90 day ranges put far more ticks on the axis than months did
+      &.dense
+        font-size 10px
+        letter-spacing -.02em
+
+      &.active
+        color var(--text-strong)
+        font-weight 700
+
+  // Placeholder bars while the range is being fetched
+  .revenue-bar-col.is-skeleton
+    cursor default
+    justify-content flex-end
+
+  .revenue-empty
+    height 240px
+    display flex
+    align-items center
+    justify-content center
+    color var(--text-muted)
+    font-size 13px
+
+  // The window the figures describe, restated under the heading so a custom
+  // range is legible without reopening the picker.
+  .chart-applied
+    display flex
+    align-items center
+    flex-wrap wrap
+    gap 6px
+    margin -12px 0 16px
+    font-size 12px
+    color var(--text-muted)
+
+    b
+      color var(--text-strong)
+      font-weight 600
+
+  .chart-applied__unit
+    color var(--text-soft)
+
+  .chart-applied__note
+    display inline-flex
+    align-items center
+    gap 5px
+    max-width 100%
+    overflow hidden
+    text-overflow ellipsis
+    white-space nowrap
+    color var(--warning-text)
+
+    i
+      font-size 11px
+
+  // An all-zero range still draws its axis, with the reason stated over it,
+  // rather than collapsing to a bare sentence that loses the dates.
+  .revenue-graph.is-empty
+    position relative
+
+    .revenue-plot
+      opacity .5
+
+  .revenue-empty-overlay
+    position absolute
+    top 0
+    left 0
+    right 0
+    height 240px
+    display flex
+    flex-direction column
+    align-items center
+    justify-content center
+    gap 8px
+    z-index 2
+    pointer-events none
+    color var(--text-muted)
+    font-size 13px
+
+    i
+      font-size 22px
+      color var(--text-soft)
+
+    em
+      font-size 11.5px
+      font-style normal
+      color var(--text-soft)
+
+  // Range picker plus the comparison toggle, kept on one line so the card
+  // header stays a single row on a laptop. Both sit on the same 38px baseline
+  // as the picker trigger, so the row reads as one control strip.
+  .chart-controls
+    display flex
+    align-items center
+    gap 10px
+    flex-wrap wrap
+    justify-content flex-end
+    min-width 0
+
+  // The native checkbox does the work - label, tab stop, space bar - and is
+  // painted over rather than replaced, so the focus ring lands on the real
+  // control. It stays in the layout (not display:none) for screen readers.
+  // The height stays on the picker trigger's 38px baseline - that is what keeps
+  // the two controls on one line - so compactness comes out of the horizontal
+  // padding and the checkbox-to-label gap instead.
+  .chart-compare
+    position relative
+    display inline-flex
+    align-items center
+    gap 4px
+    height btn-height-sm
+    padding 0 8px
+    border 1px solid border-color
+    border-radius var(--radius-md)
+    background surface-color
+    font-size 14px
+    font-weight 600
+    color var(--text-muted)
+    cursor pointer
+    user-select none
+    white-space nowrap
+    transition all .14s ease
+
+    input
+      position absolute
+      width 1px
+      height 1px
+      margin 0
+      padding 0
+      opacity 0
+      pointer-events none
+
+    .chart-compare__box
+      flex none
+      display inline-flex
+      align-items center
+      justify-content center
+      width 15px
+      height 15px
+      border 1px solid var(--border-strong)
+      border-radius 4px
+      background surface-color
+      color primary-foreground
+      transition all .12s ease
+
+      i
+        font-size 8px
+        opacity 0
+        transition opacity .12s ease
+
+    &:hover
+      border-color var(--border-strong)
+      background var(--hover-color)
+      color var(--text-color)
+
+    // Comparing: the control itself states it, and the applied line below
+    // spells out which window it is being compared against.
+    &.is-on
+      border-color primary-color
+      background primary-lite-color
+      color primary-color
+
+      .chart-compare__box
+        border-color primary-color
+        background primary-color
+
+        i
+          opacity 1
+
+    &.is-disabled
+      opacity .6
+      cursor not-allowed
+
+    // The ring goes on the whole control rather than the painted box: the real
+    // checkbox is visually hidden, and a focus ring has to be where the eye is.
+    &:focus-within
+      border-color primary-color
+      box-shadow 0 0 0 3px primary-lite-color
+      color primary-color
+
+  .chart-applied__vs
+    color var(--text-soft)
+
+//RESPONSIVE
+@media only screen and (max-width: 576px)
+  .revenue-chart
+    padding 15px
+
+    .revenue-plot
+      gap 10px
+      height 200px
+
+      .revenue-bar
+        max-width 34px
+
+    .revenue-labels
+      gap 10px
+
+      .revenue-bar-label
+        font-size 11px
+
+
+// Tablet: the heading keeps the row, the controls move to their own line and
+// stay right aligned rather than being pushed apart across the full width.
+@media only screen and (max-width: 900px)
+  .revenue-chart
+    .chart-head
+      flex-wrap wrap
+      gap 12px
+
+    .chart-controls
+      width 100%
+      justify-content flex-start
+
+// Phone: one control per line, each full width, so neither can overflow the
+// card and the labels stay legible.
+@media only screen and (max-width: 560px)
+  .revenue-chart
+    .chart-controls
+      flex-direction column
+      align-items stretch
+      gap 8px
+
+    .chart-compare
+      justify-content flex-start
+      width 100%
+
+    .drp
+      width 100%
+
+      .drp__trigger
+        width 100%
+        justify-content flex-start
+
+        .drp__label
+          flex 1
+          min-width 0
+
+        .drp__caret
+          margin-left auto

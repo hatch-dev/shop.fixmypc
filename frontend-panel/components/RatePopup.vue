@@ -7,13 +7,17 @@
     class="rating-popup popup-top-auto"
   >
     <template v-slot:content>
+      <!--
+        Stars and a review box, held at the size they will be, so the popover
+        does not open small and grow once the existing rating arrives.
+      -->
       <div
         v-if="fetchingRatingData"
-        class="mn-h-200x flex"
+        class="mn-h-200x"
       >
-        <spinner
-          :radius="70"
-        />
+        <skeleton-base :height="26" width="150px" :mb="22" />
+        <skeleton-base :height="12" width="100px" :mb="10" />
+        <skeleton-base :height="110" width="100%" :radius="8" />
       </div>
       <div
         v-else
@@ -124,7 +128,6 @@
   import util from '~/mixin/util'
   import validation from '~/mixin/validation'
   import PopOver from '~/components/PopOver'
-  import Spinner from '~/components/Spinner'
   import {mapGetters, mapActions} from 'vuex'
   import AjaxButton from "~/components/AjaxButton";
 
@@ -157,8 +160,7 @@
     },
     components: {
       AjaxButton,
-      PopOver,
-      Spinner
+      PopOver
     },
     computed: {
       ratingComputed() {

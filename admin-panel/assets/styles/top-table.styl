@@ -1,0 +1,139 @@
+@import "./variables.styl"
+
+// Shared by the top categories / brands / products tables (TopTable.vue).
+// Lifted out of OrderStatistic.vue when those three copies were collapsed into
+// one component.
+
+.dash-table-wrap
+  overflow-x auto
+
+.dash-table
+  width 100%
+  border-collapse separate
+  border-spacing 0
+  margin 0
+
+  .dash-head
+    th
+      position static
+      text-align left
+      text-transform uppercase
+      font-size 11px
+      font-weight 700
+      letter-spacing .04em
+      color muted-color
+      background var(--hover-color)
+      padding 12px 16px
+      border none
+      white-space nowrap
+
+      &:first-child
+        width 50%
+        border-radius 8px 0 0 8px
+        padding-left 16px
+
+      &:nth-child(2)
+        width 25%
+
+      &:last-child
+        border-radius 0 8px 8px 0
+        text-align right
+        padding-right 16px
+
+  tr:hover:not(.dash-head)
+    background transparent
+
+  td
+    text-align left
+    padding 12px 16px
+    border-bottom 1px solid var(--border-color)
+    font-size 14px
+    color font-color
+    vertical-align middle
+
+    &:first-child
+      padding-left 16px
+
+    &:last-child
+      padding-right 16px
+
+  tr:last-child td
+    border-bottom none
+
+  .dash-empty
+    text-align center
+    color var(--text-muted)
+    font-size 13px
+    padding 28px 16px
+
+  .dash-cell
+    display flex
+    align-items center
+    gap 12px
+    min-width 0
+
+  .dash-rank
+    flex none
+    width 26px
+    height 26px
+    display flex
+    align-items center
+    justify-content center
+    border-radius 7px
+    background var(--hover-color)
+    color muted-color
+    font-size 12px
+    font-weight 600
+
+  .dash-link
+    display flex
+    align-items center
+    gap 12px
+    min-width 0
+    color inherit
+
+    &:hover .dash-name
+      color primary-color
+
+  .dash-name
+    font-size 14px
+    font-weight 500
+    color var(--text-strong)
+    overflow hidden
+    text-overflow ellipsis
+    white-space nowrap
+
+  .dash-sold
+    color font-color
+
+  .dash-amount
+    text-align right
+    white-space nowrap
+    font-weight 600
+    color success-foreground
+
+@media only screen and (max-width: 576px)
+  .dash-table
+    td
+      padding 10px 12px
+
+    .dash-cell
+      gap 8px
+
+// Heading block of the Order Statistics card: title plus the window the
+// figures below actually describe.
+.stat-head
+  display flex
+  align-items baseline
+  gap 10px
+  flex-wrap wrap
+  min-width 0
+
+  h5
+    margin 0
+
+.stat-head__range
+  font-size 12px
+  font-weight 500
+  color var(--text-muted)
+  white-space nowrap

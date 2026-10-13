@@ -23,7 +23,7 @@ class Setting extends Model
     ];
 
     protected $fillable = [
-        'currency', 'currency_icon', 'currency_position', 'phone', 'address_1' , 'email',
+        'currency', 'currency_icon', 'currency_position', 'phone', 'whatsapp', 'address_1' , 'email',
         'address_2', 'city', 'state', 'zip', 'country', 'admin_id', 'decimal_format', 'google_login',
         'facebook_login', 'attach_pdf', 'guest_checkout', 'send_seller_email', 'enable_ga', 'ga_id',
         'vendor_registration', 'cookie_banner',

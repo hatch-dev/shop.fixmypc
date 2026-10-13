@@ -1,15 +1,24 @@
 <template>
-  <div class="category-wrapper">
+  <div class="side-block category-wrapper" v-if="categories && categories.length">
+    <h3>
+      {{ $t('searchPopup.categories') }}
+      <button
+        v-if="backBtn"
+        type="button"
+        aria-label="Go back"
+        @click.prevent="$emit('go-back')"
+      >
+        {{ $t('date.gb') }}
+      </button>
+    </h3>
 
-    <ul class="table-tree">
+    <ul class="tree">
       <tree-node
         v-for="value in categories"
         :node="value"
         :key="value.id"
       />
     </ul>
-
-
   </div>
 </template>
 
@@ -25,6 +34,10 @@
         categories: {
           type: Array,
           default: []
+        },
+        backBtn: {
+          type: Boolean,
+          default: false
         },
       },
       data() {

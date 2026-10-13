@@ -93,9 +93,20 @@
     },
     methods: {
 
+      /*
+       * Swap a picture that will not load for the store's placeholder.
+       *
+       * Guarded against re-entry: if the placeholder is itself missing - or
+       * DEFAULT_IMAGE is unset, which makes this resolve to the uploads
+       * directory rather than a file - the error fires again on the very src
+       * being assigned, and the handler retries forever against the server.
+       */
       onError(e) {
+        const fallback = this.getImageURL()
 
-        e.target.src = this.getImageURL()
+        if (e.target.src !== fallback) {
+          e.target.src = fallback
+        }
       },
     },
     watch: {

@@ -12,13 +12,13 @@
         <div class="tile-container">
           <transition name="fade" mode="out-in">
             <div
-              class="shimmer-wrapper"
+              class="flex wrap align-start discover-area"
               v-if="loading"
               key="shimmer"
             >
-              <tile-shimmer
+              <skeleton-product
                 v-for="index in 15"
-                :key="index"
+                :key="`sk-discover-${index}`"
               />
             </div>
             <div
@@ -52,7 +52,6 @@
 <script>
   import {mapActions, mapGetters} from 'vuex'
   import util from '~/mixin/util'
-  import TileShimmer from "./TileShimmer";
   import ProductTile from "./ProductTile";
 
   export default {
@@ -65,7 +64,7 @@
     },
     watch: {},
     props: {},
-    components: {ProductTile, TileShimmer},
+    components: {ProductTile},
     computed: {
       ...mapGetters('language', ['langCode']),
       ...mapGetters('home', ['products'])

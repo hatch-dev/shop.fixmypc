@@ -13,7 +13,10 @@
         {{ $t('date.kr') }}
       </p>
 
-      <div class="bank-detail mt-30 mt-sm-20 mb-30 mb-sm-20">
+      <!-- The settings are fetched in mounted() when the store has none (the
+           bank page never loads them); until then this threw on .bank_name
+           and took the whole popup down. -->
+      <div class="bank-detail mt-30 mt-sm-20 mb-30 mb-sm-20" v-if="paymentGateway">
         <div>
           <label class="bold block mb-5">{{ $t('date.bn') }}</label>
           <label class="color-lite">{{ paymentGateway.bank_name }}</label>
@@ -170,7 +173,7 @@
         this.$emit('close', this.transId)
       },
       ...mapActions('user', ['getUserToken']),
-      ...mapActions('common', ['getRequest','postRequest', 'setToastMessage', 'setToastError'])
+      ...mapActions('common', ['getRequest','postRequest', 'setToastMessage', 'setToastError', 'setPaymentGateway'])
     },
     created() {
     },

@@ -19,7 +19,9 @@ class OrderedProduct extends Model
 
     protected $fillable = [
         'product_id', 'inventory_id', 'quantity', 'shipping_place_id', 'shipping_type', 'purchased', 'commission',
-        'commission_amount', 'tax_price',
+        // tax_rate / tax_inclusive: how the line was treated for VAT, frozen
+        // at checkout so a later change to the tax rule cannot restate it.
+        'commission_amount', 'tax_price', 'tax_rate', 'tax_inclusive',
         'selling', 'shipping_price', 'bundle_offer', 'order_id', 'withdrawn', 'withdrawal_id'
     ];
 

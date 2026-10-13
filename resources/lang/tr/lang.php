@@ -12,6 +12,9 @@ return [
     "phone"=> "Telefon",
     "order"=> "Sipariş",
     "order_date"=> "Sipariş tarihi",
+    "purchase_order" => "Purchase order",
+    "billed_to" => "Billed to",
+    "vat_number" => "VAT number",
     "order_amount"=> "Sipariş miktarı",
     "ship_to"=> "Gönderim",
     "order_method"=> "Sipariş Yöntemi",
@@ -25,7 +28,13 @@ return [
     "shipping_cost"=> "Nakliye maliyeti",
     "bundle_offer"=> "Paket teklifi",
     "voucher"=> "Kupon",
+    "flash_discount" => "Flaş indirimi",
+    "loyalty_discount" => "Sadakat indirimi",
+    "points_discount" => "Puanlar",
     "tax"=> "Vergi",
+    "net_ex_vat"=> "Net (Ex-VAT)",
+    "vat"=> "VAT",
+    "total_inc_vat"=> "Total (Inc-VAT)",
     "notes"=> "Notlar",
     "order_number"=> "Lütfen herhangi bir sorgu yaparken sipariş numaranızı her zaman belirtin",
     "question_str"=> "Sipariş ile ilgili herhangi bir sorunuz için lütfen iletişime geçin",
@@ -73,6 +82,7 @@ return [
     "couldnt_found"=> "Hiçbir şey bulamadık.",
     "no_found"=> "E-posta bulunamadı.",
     "email_exists"=> "E-posta zaten var.",
+    "clearance_already_live" => "This product already has a clearance deal running. Finish or unpublish that one first.",
     "went_wrong"=> "Bir şeyler ters gitti",
     "no_access"=> "Yetkisiz erişim.",
     "invalid_parameter"=> "Geçersiz Parametre.",
@@ -105,6 +115,8 @@ return [
     "accepted_paypal"=> "Paypal ile ödeme kabul edilmemektedir.",
     "accepted_card"=> "Kartla ödeme kabul edilmemektedir.",
     "accepted_gateway"=> "Ağ geçidi kabul edilmedi.",
+    "payment_unconfirmed" => "Ödemenizi ödeme sağlayıcısıyla doğrulayamadık. Kartınızdan çekim yapıldıysa lütfen sipariş numaranızla destek ekibiyle iletişime geçin.",
+    "payment_already_used" => ":order numaralı sipariş için bu ödeme zaten kaydedildi.",
     "accepted_cod"=> "Kapıda ödeme kabul edilmemektedir.",
     "delete_footer"=> "Lütfen bu sayfanın ilk altbilgi bağlantısını silin.",
     "using_collection"=> "Silinemiyor. Ürün bu koleksiyonu kullanıyor.",
@@ -206,4 +218,210 @@ return [
     "invalid_ip" => "Geçersiz IP",
     "invalid_amount" => "Geçersiz miktar",
     "invalid_validation" => "Geçersiz doğrulama",
+    // QA audit: order status lifecycle, checkout guards and status emails
+    "invalid_status_change" => "That status change is not allowed for this order.",
+    "paid_cancelled_order" => "This order has been cancelled, so it cannot be marked as paid.",
+    "paid_refunded_order" => "This order has been refunded, so it cannot be marked as paid.",
+    "select_shipping" => "Please choose a delivery option for :product before checking out.",
+    "select_address" => "Please choose a delivery address before checking out.",
+    "select_contact_details" => "Please provide your contact details for collection.",
+    "order_status_subject" => "Order #:order is now :status",
+    "order_status_intro" => "Your order",
+    "order_status_is_now" => "is now",
+    "order_summary" => "Order summary",
+    "order_id" => "Order",
+    "status" => "Status",
+    "view_order" => "View order",
+    "thanks_shopping" => "Thanks for shopping with",
+
+    "refund_failed" => "The refund could not be completed. Check the gateway and try again.",
+
+    "cart_owner_required" => "We could not identify your basket. Please refresh the page and try again.",
+    "cart_quantity_minimum" => "The quantity must be at least 1. Remove the item to take it out of your basket.",
+    "cart_quantity_maximum" => "You can order at most :max of this item in one line.",
+
+
+    /*
+    |----------------------------------------------------------------------
+    | Email templates
+    |----------------------------------------------------------------------
+    | Copy shared by resources/views/mail_templates. Kept in the language
+    | files so nothing user-facing is hard-coded inside a Blade template.
+    */
+
+    // Shell: header, support strip, footer
+    "mail_visit_store" => "Visit store",
+    "mail_need_help" => "Need a hand?",
+    "mail_support_line" => "Our support team is here to help.",
+    "mail_help_centre" => "Help centre",
+    "mail_privacy" => "Privacy",
+    "mail_refunds" => "Returns & refunds",
+    "mail_contact" => "Contact",
+    "mail_transactional_note" => "This is a service message about your account or a recent order, so it is sent regardless of your marketing preferences.",
+    "mail_newsletter_reason" => "You are receiving this because you subscribed to news and offers from :store.",
+    "mail_unsubscribe" => "Unsubscribe",
+    "mail_sent_to" => "Sent to :email",
+
+    // One-time codes
+    "mail_verification_code" => "Verification code",
+    "mail_code_expiry" => "Expires in :minutes minutes and can only be used once.",
+
+    // Account registration
+    "mail_welcome_eyebrow" => "Welcome",
+    "mail_verify_title" => "Confirm your email address",
+    "mail_verify_sub" => "One quick step and your account is ready.",
+    "mail_verify_body" => "Enter the code below on the sign-up screen to finish creating your account.",
+    "mail_ignore_registration" => "Didn't create an account? You can safely ignore this email and nothing further will happen.",
+
+    // Forgotten password (code)
+    "mail_reset_eyebrow" => "Password reset",
+    "mail_reset_code_title" => "Reset your password",
+    "mail_reset_code_sub" => "Use the code below to choose a new password.",
+    "mail_reset_code_body" => "Enter this code on the password reset screen to set a new password.",
+    "mail_ignore_reset" => "Didn't ask to reset your password? Ignore this email — your password will not change.",
+
+    // Sign-in code
+    "mail_login_eyebrow" => "Sign in",
+    "mail_login_title" => "Your sign-in code",
+    "mail_login_sub" => "Use this code to finish signing in.",
+    "mail_login_body" => "Enter this code on the sign-in screen to continue.",
+    "mail_login_warning" => "Never share this code. Our team will never ask you for it.",
+    "mail_ignore_login" => "Didn't try to sign in? Ignore this email, and change your password if you weren't expecting it.",
+
+    // Password reset link
+    "mail_reset_link_body" => "We received a request to set a new password for your account. Choose a new one using the button below.",
+    "mail_set_new_password" => "Set a new password",
+    "mail_link_expiry" => "This link expires in :minutes minutes and can only be used once.",
+    "mail_link_fallback" => "If the button doesn't work, copy this address into your browser:",
+
+    // Vendor activation
+    "mail_seller_eyebrow" => "Vendor account",
+    "mail_seller_title" => "Your vendor account is live",
+    "mail_seller_sub" => "You can start listing products straight away.",
+    "mail_open_dashboard" => "Open vendor dashboard",
+
+    // Order confirmation
+    "mail_order_eyebrow" => "Order confirmed",
+    "mail_order_title" => "Thanks for your order",
+    "mail_order_sub" => "We've got it. Your invoice is attached to this email and we'll let you know the moment it ships.",
+    "mail_order_details" => "Order details",
+    "mail_order_number" => "Order number",
+    "mail_order_placed_on" => "Placed on",
+    "mail_payment_method" => "Payment method",
+    "mail_delivery_address" => "Delivery address",
+    "mail_items_ordered" => "Items ordered",
+    "mail_item_count" => "{1} :count item|[2,*] :count items",
+    "mail_product" => "Product",
+    "mail_qty" => "Qty",
+    "mail_each" => "each",
+    "mail_free" => "Free",
+    "mail_total_paid" => "Total paid",
+    "mail_track_order" => "Track your order",
+    "mail_view_order" => "View your order",
+    "mail_next_update" => "We'll email you again as soon as your order is on its way.",
+    "mail_quote_order" => "Please quote your order number in any correspondence about this order.",
+
+    // Vendor: new order
+    "mail_vendor_eyebrow" => "New order",
+    "mail_vendor_title" => "You have a new order to fulfil",
+    "mail_vendor_sub" => "Order #:order is ready to be picked and dispatched.",
+    "mail_customer" => "Customer",
+    "mail_fulfil_order" => "Fulfil this order",
+
+    // Order status change
+    "mail_status_eyebrow" => "Order update",
+    "mail_status_title" => "Your order is now :status",
+    "mail_status_sub" => "Order #:order has moved to a new stage.",
+
+    // Delivered
+    "mail_delivered_eyebrow" => "Delivered",
+    "mail_delivered_title" => "Your order has arrived",
+    "mail_delivered_sub" => "Order #:order was marked as delivered. We hope it's everything you expected.",
+    "mail_review_prompt" => "How did we do? A short review helps other shoppers and helps us get better.",
+
+    // Subjects
+    "mail_subject_registration" => "Confirm your email address",
+    "mail_subject_login" => "Your sign-in code",
+    "mail_subject_forgot" => "Reset your password",
+    "mail_subject_order" => "Order #:order is confirmed",
+    "mail_subject_delivered" => "Order #:order has been delivered",
+    "mail_subject_vendor_order" => "New order #:order to fulfil",
+    "mail_subject_seller" => "Your vendor account is live",
+
+
+    /* ---------------------------------------------------------------------
+     | Trade application decisions.
+     |
+     | Written to be read by the customer: the approval says what changed and
+     | where to use it, the rejection says what the account can still do
+     | rather than only what it cannot. Neither carries anything from the
+     | review beyond the note the reviewer chose to leave, which the customer
+     | already sees on their dashboard.
+     * -------------------------------------------------------------------- */
+    "mail_trade_eyebrow" => "Trade account",
+
+    "mail_trade_approved_subject" => "Your Trade Account Has Been Approved",
+    "mail_trade_approved_title" => "Your trade account is approved",
+    "mail_trade_approved_sub" => "Trade pricing is switched on and ready to use.",
+    "mail_trade_approved_body" => "Good news — we have reviewed your trade application and approved it. Your account is active and there is nothing else for you to do.",
+    "mail_trade_approved_pricing" => "Trade pricing now applies automatically. You will see your rates on each product and in your basket, and they are the prices you will be charged at checkout.",
+    "mail_trade_approved_cta" => "Start shopping at trade prices",
+    "mail_trade_approved_account" => "Sign in any time to see your trade status, your orders and your invoices in your account: :url",
+
+    "mail_trade_rejected_subject" => "Update on Your Trade Account Application",
+    "mail_trade_rejected_title" => "About your trade application",
+    "mail_trade_rejected_sub" => "We were not able to approve it this time.",
+    "mail_trade_rejected_body" => "Thank you for applying for a trade account. We have reviewed your application and we are not able to approve it at this time.",
+    "mail_trade_rejected_retail" => "Your account is still open and working normally — you can sign in and order at our standard prices exactly as before.",
+    "mail_trade_rejected_cta" => "Continue shopping",
+    "mail_trade_rejected_support" => "If your circumstances have changed, or you think we have got this wrong, reply to this email or contact us at :email and we will take another look.",
+
+    "mail_trade_panel" => "Your application",
+    "mail_trade_company" => "Company",
+    "mail_trade_status" => "Status",
+    "mail_trade_status_approved" => "Approved",
+    "mail_trade_status_rejected" => "Not approved",
+    "mail_trade_reason_prefix" => "What the reviewer said:",
+    "mail_trade_note_prefix" => "A note from the reviewer:",
+
+    /* Account upgrades (App\Models\Helper\AccountUpgrade) */
+    "mail_upgrade_business_subject" => "Your Business Account Is Ready",
+    "mail_upgrade_business_eyebrow" => "Business account",
+    "mail_upgrade_business_title" => "Your account is now a business account",
+    "mail_upgrade_business_sub" => "Business pricing is switched on.",
+    "mail_upgrade_business_body" => "You have upgraded your account to a business account. There is nothing else you need to do.",
+    "mail_upgrade_business_pricing" => "Business pricing now applies automatically at the quantity breaks shown on each product, in your basket and at checkout.",
+    "mail_upgrade_business_check" => "We will check the company details you gave us, and will only be in touch if something needs correcting.",
+    "mail_upgrade_business_cta" => "Start shopping",
+    "mail_upgrade_panel" => "Your account",
+    "mail_upgrade_type" => "Account type",
+    "mail_upgrade_type_business" => "Business",
+    "mail_upgrade_not_you" => "If you did not make this change, contact us straight away at :email.",
+    "mail_trade_received_subject" => "We Have Received Your Trade Application",
+    "mail_trade_received_title" => "Your trade application is with us",
+    "mail_trade_received_sub" => "We usually review applications within one working day.",
+    "mail_trade_received_body" => "Thank you for applying for a trade account. Our team will review your application and email you as soon as it has been decided.",
+    "mail_trade_received_business" => "Your business account and its pricing carry on exactly as before while we review it.",
+    "mail_trade_received_personal" => "You can keep ordering at our standard prices while we review it.",
+    "mail_trade_received_cta" => "View your application",
+    "mail_trade_received_not_you" => "If you did not make this application, contact us straight away at :email.",
+    "mail_trade_trade" => "Trade",
+    "mail_trade_status_pending" => "Under review",
+    "mail_trade_rejected_business" => "Your business account is unchanged — business pricing still applies to your orders exactly as before.",
+
+
+    /* Category hierarchy */
+    'category_parent_self' => 'A category cannot be its own parent.',
+    'category_parent_cycle' => 'That parent sits underneath this category, which would create a loop.',
+    'category_parent_missing' => 'The selected parent category no longer exists.',
+    'category_parent_too_deep' => 'Categories can only be nested :max levels deep.',
+    'category_slug_format' => 'The slug may only contain lowercase letters, numbers and hyphens.',
+    'category_title_exists' => 'A category with this name already exists under the same parent.',
+    'category_not_found' => 'That category no longer exists.',
+    'category_has_children' => 'This category has subcategories. Choose what should happen to them before deleting it.',
+    'category_deleted' => 'Category deleted.',
+    'category_status_updated' => 'Category status updated.',
+
+    'invalid_image' => 'Upload a JPG, PNG, GIF, WebP, AVIF or SVG image.',
+    'image_too_large' => 'That image is too large. The maximum is :max MB.',
 ];

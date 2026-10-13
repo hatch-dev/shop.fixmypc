@@ -1,7 +1,6 @@
 import Service from '@/services/service.js'
 
 const state = () => ({
-  allUpdatedUpsells: null,
   allCategories: null,
   allTaxRules: null,
   allAttributes: null,
@@ -9,6 +8,7 @@ const state = () => ({
   allBrands: null,
   allProductCollections: null,
   allBundleDeals: null,
+  allClearances: null,
   allShippingRules: null,
   allPages: null,
   allPermissions: null,
@@ -16,7 +16,6 @@ const state = () => ({
   allRoles: null
 })
 const getters = {
-  allUpdatedUpsells: ({allUpdatedUpsells}) => allUpdatedUpsells,
   allTaxRules: ({allTaxRules}) => allTaxRules,
   allAttributeValues: ({allAttributeValues}) => allAttributeValues,
   allAttributes: ({allAttributes}) => allAttributes,
@@ -24,6 +23,7 @@ const getters = {
   allCategories: ({allCategories}) => allCategories,
   allProductCollections: ({allProductCollections}) => allProductCollections,
   allBundleDeals: ({allBundleDeals}) => allBundleDeals,
+  allClearances: ({allClearances}) => allClearances,
   allShippingRules: ({allShippingRules}) => allShippingRules,
   allPermissions: ({allPermissions}) => allPermissions,
   allRoles: ({allRoles}) => allRoles,
@@ -31,16 +31,7 @@ const getters = {
   allPages: ({allPages}) => allPages
 }
 const mutations = {
-  SET_ALL_UPDATED_UPSELLS(state, upsells) {
-    state.allUpdatedUpsells = {}
 
-    upsells.forEach((item) => {
-      state.allUpdatedUpsells = {
-        ...state.allUpdatedUpsells,
-        ...{ [item.id]: { title: item.title } }
-      }
-    })
-  },
   SET_ALL_PERMISSIONS(state, allPermissions) {
     state.allPermissions = allPermissions
   },
@@ -56,10 +47,27 @@ const mutations = {
       state.allPages = {...state.allPages, ...{[item.id]: {title: item.title}}}
     })
   },
+  /**
+   * The category picker's options, roots with their children attached.
+   *
+   * `product/dropdown-data` has always eager-loaded `child` on every root and
+   * sent it down, and this dropped it on the floor - it kept the title and
+   * nothing else. So the product form could only ever offer top-level
+   * categories, and a subcategory could not be put on a product at all, even
+   * though the API accepts them and reads them back.
+   *
+   * `child` is kept as a plain array of {id, title}; the shape below is what
+   * every consumer of `allCategories` already expects, plus that one key.
+   */
   SET_ALL_CATEGORIES(state, allCategories) {
     state.allCategories = {}
     allCategories.forEach((item) => {
-      state.allCategories = {...state.allCategories, ...{[item.id]: {title: item.title}}}
+      const children = (item.child || []).map(c => ({id: String(c.id), title: c.title}))
+
+      state.allCategories = {
+        ...state.allCategories,
+        ...{[item.id]: {title: item.title, child: children}}
+      }
     })
   },
   SET_ALL_SUBSCRIPTION_EMAIL_FORMATS(state, allSubscriptionEmailFormats) {
@@ -99,7 +107,17 @@ const mutations = {
   SET_ALL_TAX_RULES(state, allTaxRules) {
     state.allTaxRules = {}
     allTaxRules.forEach((item) => {
-      state.allTaxRules = {...state.allTaxRules, ...{[item.id]: {title: item.title}}}
+      /*
+       * Keep the rate and its type alongside the title. Only `title` used to
+       * survive, so the product form could show which rule was selected but
+       * had no way to work out what it costs — which is why the profit
+       * calculator ignored VAT entirely. The dropdown reads `title` and is
+       * unaffected by the extra keys.
+       */
+      state.allTaxRules = {
+        ...state.allTaxRules,
+        ...{[item.id]: {title: item.title, price: item.price, type: item.type}}
+      }
     })
   },
   EMPTY_ALL_LIST(state, storeAllVariable) {
@@ -147,7 +165,6 @@ const actions = {
       commit('SET_ALL_ATTRIBUTES', result.attributes)
       commit('SET_ALL_BRANDS', result.brands)
       commit('SET_ALL_TAX_RULES', result.tax_rules)
-      commit('SET_ALL_UPDATED_UPSELLS', result.updated_upsells)
     } else {
       return Promise.reject({statusCode: data.status, message: data.message})
     }

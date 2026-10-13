@@ -38,9 +38,27 @@ class SubscriptionEmailsController extends ControllerHelper
             $existingEmail = SubscriptionEmail::where('email', $request->email)->first();
 
             if (is_null($existingEmail)) {
-                SubscriptionEmail::create($request->all());
+                /*
+                 * Which surface asked, checked against a closed list rather
+                 * than taken from the request. It is a record of what this
+                 * subscriber was promised, so an unrecognised value is stored
+                 * as nothing rather than as a consent nobody can evidence.
+                 */
+                $source = in_array($request->source, SubscriptionEmail::sources(), true)
+                    ? $request->source
+                    : null;
+
+                SubscriptionEmail::create([
+                    'email' => $request->email,
+                    'source' => $source,
+                ]);
             }
 
+            /*
+             * The same answer whether or not the address was already on the
+             * list. Saying "you are already subscribed" turns this box into a
+             * way of testing whether a given person shops here.
+             */
             return response()->json(new Response('', true));
         } catch (\Exception $ex) {
             return response()->json(Validation::error(null, explode('.', $ex->getMessage())[0]));

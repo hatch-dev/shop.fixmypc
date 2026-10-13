@@ -26,6 +26,18 @@ class PaymentsController extends ControllerHelper
                 return response()->json($validate);
             }
 
+            // Only SumUp or Stripe can take cards at checkout.
+            if (!is_null($request->card_gateway) && $request->card_gateway !== '' &&
+                !in_array((int)$request->card_gateway, Payment::cardGateways(), true)) {
+                return response()->json(Validation::error($request->token,
+                    'Card payments can be handled by SumUp or Stripe only.'
+                ));
+            }
+
+            foreach (Payment::RETIRED_GATEWAYS as $gateway) {
+                $request[$gateway] = 0;
+            }
+
             $request['created_at'] =  null;
             $request['updated_at'] =  null;
 

@@ -86,6 +86,25 @@ const actions = {
     }
   },
   async nuxtClientInit({commit, state, dispatch}, {error, app}) {
+
+    /*
+     * Re-establish the guest identity on every page load.
+     *
+     * The token is not persisted in the store, so without this a returning
+     * guest is anonymous until something happens to ask for a token — and the
+     * product pages that render first would show an empty wishlist heart for
+     * items the guest had already saved. Only a guest who already holds a
+     * token is exchanged; a first-time visitor is not given one just for
+     * browsing.
+     */
+    if (!app.$auth?.loggedIn && localStorage.getItem('user_token')) {
+      try {
+        await dispatch('user/getUserToken')
+      } catch (e) {
+        // A guest without a usable token simply browses signed-out.
+      }
+    }
+
     //const cookies = req.headers.cookie;
     //const defaultLanguage = cookies && cookies.includes('defaultLanguage=') ? cookies.split('defaultLanguage=')[1].split(';')[0] : 'en';
 

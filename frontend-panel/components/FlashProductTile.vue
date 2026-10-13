@@ -51,22 +51,35 @@
         <h4 class="price-wrapper">
           <span class="price">
             <price-format
-              :price="reducedPrice"
+              :price="livePrice"
             />
           </span>
-          <span class="strike-through">
+          <!--
+            Only when there is genuinely something to strike through. This
+            used to render unconditionally, so a sale with no compare price
+            printed a struck-through 0.00 beside the real one.
+          -->
+          <span class="strike-through" v-if="livePrevPrice">
             <price-format
-              :price="prevPrice"
+              :price="livePrevPrice"
             />
           </span>
         </h4>
+        <!-- Same guard: 0 / 0 rendered the badge as "NaN% off". -->
         <h5
           class="color-primary"
+          v-if="liveReducedPercent"
         >
           <span class="discount">
-            {{ $t('home.off', {percent: reducedPercent}) }}
+            {{ $t('home.off', {percent: liveReducedPercent}) }}
           </span>
         </h5>
+
+        <!-- The gross figure beside a net headline, as on every tile. -->
+        <p class="price-vat-alt" v-if="liveVatCounterpart">
+          {{ liveVatCounterpart.label }}
+          <price-format :price="liveVatCounterpart.amount" />
+        </p>
 
       </div>
 
@@ -102,18 +115,22 @@
     },
     mixins: [util, productPriceHelper, compareHelper],
     computed: {
-      reducedPrice() {
-        return this.product?.price
-      },
-      quantity() {
-        return this.product?.quantity || 0
-      },
-      reducedPercent() {
-        return 100 - parseInt(((this.reducedPrice / this.prevPrice) * 100).toString())
-      },
-      sold() {
-        return this.product?.sold || 0
-      },
+      /*
+       * The price, the compare price and the badge all come from
+       * productPriceHelper, which reads the figures the server decided --
+       * exactly as ProductTile does.
+       *
+       * This tile used to render product.price, the raw flash price, and
+       * work the badge out by dividing it by the compare price. So a
+       * business or approved-trade account whose band took the price below
+       * the flash price was shown the walk-up figure on the flash sale page
+       * and its own rate everywhere else, and a sale with no compare price
+       * divided by zero and rendered "NaN% off".
+       *
+       * quantity/sold/remainingQtyStyle went with them: nothing in the
+       * flash sale payload has ever carried a per-product stock allowance,
+       * so they read undefined and rendered nothing.
+       */
       // Calculate rating percentage for star display
       ratingPercentage() {
         const rating = this.product?.rating || 0;
@@ -122,11 +139,6 @@
       reviewCountText() {
         const reviewCount = this.product?.review_count || this.product?.reviews_count || 0;
         return `${reviewCount} ${reviewCount === 1 ? this.$t('product.review') : this.$t('product.reviews')}`;
-      },
-      remainingQtyStyle() {
-        return {
-          width: `${(this.sold / this.quantity) * 100}%`
-        }
       },
       ...mapGetters('common', ['currencyIcon', 'setting'])
     },

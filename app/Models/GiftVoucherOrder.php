@@ -20,5 +20,25 @@ class GiftVoucherOrder extends Model
         'payment_method',
         'reference',
         'status',
+        // who the codes are for, when bought as a gift
+        'recipient_name',
+        'recipient_email',
+        'sender_name',
+        'message',
     ];
+
+    public function codes()
+    {
+        return $this->hasMany(GiftVoucherCode::class, 'gift_voucher_order_id');
+    }
+
+    public function design()
+    {
+        return $this->belongsTo(GiftVoucher::class, 'voucher_id');
+    }
+
+    public function buyer()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

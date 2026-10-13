@@ -3,7 +3,7 @@
     <button
       aria-label="subtract"
       @click.prevent="qty(-1)"
-      :disabled="max === 0 || value <= 1"
+      :disabled="value <= 1"
     >
       -
     </button>
@@ -51,13 +51,18 @@
           return
         }
 
-        if (this.max === 0) {
+        const newQty = this.value + direction
+
+        /*
+         * Going down is always allowed. Once a reservation runs out a line can
+         * be over what is left, or sold out entirely; "-" is how the shopper
+         * brings it back within stock. Only going up is limited.
+         */
+        if (direction > 0 && this.max === 0) {
           return
         }
 
-        const newQty = this.value + direction
-
-        if (newQty > this.max) {
+        if (direction > 0 && newQty > this.max) {
           this.setToastError(this.$t('quantityNav.maximumExceeds'))
           return
         }
@@ -81,7 +86,3 @@
     }
   }
 </script>
-
-<style>
-
-</style>

@@ -57,7 +57,14 @@ class RouteServiceProvider extends ServiceProvider
     protected function configureRateLimiting()
     {
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
+            /*
+             * One storefront page load is around twenty API calls, and a
+             * guest is keyed by IP - shared by everyone behind the same NAT.
+             * At 60 a minute, three product pages and an add-to-basket tripped
+             * it, and the request that met the 429 was whichever came last:
+             * usually the recommendations, shown as "could not load".
+             */
+            return Limit::perMinute(300)->by(optional($request->user())->id ?: $request->ip());
         });
     }
 }

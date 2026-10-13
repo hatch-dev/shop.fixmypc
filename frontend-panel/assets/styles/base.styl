@@ -2,13 +2,13 @@
 @import "variables.styl"
 
 :root {
-  --primary-color: #33319A;
-  --primary-hover-color: #3f0f74;
+  --primary-color: rgba(51, 49, 154, 1);
+  --primary-hover-color: rgb(22, 21, 95);
 }
 
 *{
   box-sizing border-box
-}
+} 
 body,
 html {
   margin: 0;
@@ -27,6 +27,7 @@ body {
   font-weight: 400;
   color: font-color;
   overflow-x: hidden;
+  overflow-x: clip;
   max-width 1920px;
   margin 0 auto;
 }

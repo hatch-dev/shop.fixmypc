@@ -214,7 +214,7 @@
         return this.product?.video_thumb || ''
       },
       wishListed(){
-        return this.$auth?.user?.id && this.product?.wishlisted
+        return !!this.product?.wishlisted
       },
       isFavourited(){
         return this.wishListed ? 'heart-fill-icon' : 'heart-icon'

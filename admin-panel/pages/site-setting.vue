@@ -23,7 +23,7 @@
       </div>
 
 
-      <div class="dply-felx f-wrap gap-10">
+      <div class="logo-grid">
 
         <div class="input-wrapper b-b pb-15">
           <label class="mb-15">
@@ -318,5 +318,21 @@
     }
   }
 </script>
+
+<style scoped>
+.logo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 8px;
+}
+
+@media only screen and (max-width: 992px) {
+  .logo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
 
 

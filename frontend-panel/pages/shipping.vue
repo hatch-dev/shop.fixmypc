@@ -1,419 +1,389 @@
 <template>
-  <!-- <div class="container-fluid mtb-20 mtb-sm-15"> -->
-    <!-- <div class="product-detail checkout-detail"> -->
-
-      <div>
+  <div>
+      <Breadcrumbs />
         <navigation-step /> 
         <div class="container-fluid my-5">
           <div class="row g-4">
             <div class="col-lg-8">
-              <!-- <div
-                class="detail-left p-20 p-sm-15 pb-10 area mr-20 mr-sm mb-sm-15 "
-              >
-                <h5 class="mb-20">{{ $t('date.dad') }}</h5>
+             <!--
+               The four sections are open cards in the checkout Payment style:
+               a header with a one-line hint, then the choices as one joined
+               list, the chosen row tinted with an accent on its leading edge.
+               Styles: assets/css/checkout-sections.css. The ids are the
+               targets revealBlocker scrolls to.
+             -->
+             <section class="cart-sec" aria-labelledby="ship-sec-method-title">
+               <div class="cart-sec-head">
+                 <span class="cart-sec-ico" :class="{ 'is-done': !!deliveryType }" aria-hidden="true">
+                   <svg v-if="deliveryType" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                   <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h11v10H3zM14 9h4l3 3.5V16h-7" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7" cy="17.5" r="1.8" fill="#fff" stroke="currentColor" stroke-width="1.6"/><circle cx="17.5" cy="17.5" r="1.8" fill="#fff" stroke="currentColor" stroke-width="1.6"/></svg>
+                 </span>
+                 <div class="cart-sec-heading">
+                   <h2 id="ship-sec-method-title" class="cart-sec-title">Delivery or Collection?</h2>
+                   <p v-if="productSummary.length" class="cart-sec-sub">
+                     {{ productSummary.map(item => item.text).join(', ') }}
+                   </p>
+                 </div>
+               </div>
+               <div class="cart-sec-body">
+                 <div
+                   id="delivery-options"
+                   class="ship-choices"
+                   role="radiogroup"
+                   aria-label="Delivery or collection"
+                 >
+                   <div
+                     :class="['ship-choice', { active: deliveryType === 'delivery' }]"
+                     role="radio"
+                     tabindex="0"
+                     :aria-checked="String(deliveryType === 'delivery')"
+                     @click="setDeliveryType('delivery')"
+                     @keydown.enter.prevent="setDeliveryType('delivery')"
+                     @keydown.space.prevent="setDeliveryType('delivery')"
+                   >
+                     <span class="ship-choice-mark" aria-hidden="true"></span>
+                     <span class="ship-choice-body">
+                       <span class="ship-choice-title">Send by Post</span>
+                       <span class="ship-choice-sub">Tracked delivery to your address.</span>
+                     </span>
+                     <span class="ship-choice-ico" aria-hidden="true">
+                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 6h11v10H3zM14 9h4l3 3.5V16h-7" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="7" cy="17.5" r="1.8" fill="#fff" stroke="currentColor" stroke-width="1.5"/><circle cx="17.5" cy="17.5" r="1.8" fill="#fff" stroke="currentColor" stroke-width="1.5"/></svg>
+                     </span>
+                   </div>
 
-                <div class="flex align-start gap-15 start">
+                   <div
+                     :class="['ship-choice', { active: deliveryType === 'collection' }]"
+                     role="radio"
+                     tabindex="0"
+                     :aria-checked="String(deliveryType === 'collection')"
+                     @click="setDeliveryType('collection')"
+                     @keydown.enter.prevent="setDeliveryType('collection')"
+                     @keydown.space.prevent="setDeliveryType('collection')"
+                   >
+                     <span class="ship-choice-mark" aria-hidden="true"></span>
+                     <span class="ship-choice-body">
+                       <span class="ship-choice-title">Collection in Store <span v-if="collectionFree" class="ship-choice-free">Free</span></span>
+                       <span class="ship-choice-sub">Pick it up from our store; we&rsquo;ll email you when it&rsquo;s ready.</span>
+                     </span>
+                     <span class="ship-choice-ico" aria-hidden="true">
+                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 9.5 5.5 4h13L20 9.5M4 9.5h16M4 9.5V20h16V9.5M9.5 20v-5h5v5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+                     </span>
+                   </div>
+                 </div>
 
-                  <transition
-                    name="fade"
-                    mode="out-in"
-                  >
-                    <div
-                      class="spinner-wrapper flex layer-white"
-                      v-if="loading"
-                    >
-                      <spinner
-                        :radius="100"
-                      />
-                    </div>
-                  </transition>
+                 <!--
+                   Sits outside the radiogroup: a link inside an element with
+                   role="radio" would pick the option every time it was clicked.
+                 -->
+                  <div v-if="isCollection" class="pickup">
+                    <template v-if="collectionPoints.length">
+                      <p class="pickup-heading">
+                        {{ collectionPoints.length > 1 ? 'Choose a collection store' : 'Your collection store' }}
+                        <span v-if="collectionPoints.length > 1" class="pickup-count">{{ collectionPoints.length }} stores</span>
+                      </p>
 
-                  <div class="address-wrapper">
-                    <user-address
-                      ref="shippingAddress"
-                      :has-radio="true"
-                      @editing="editAddress"
-                      @selected-address="selectedCurrentAddress = $event"
-                      @add-address="addressPopup = true"
-                    />
-                  </div>
-
-                  <form
-                    class="address-form"
-                    @submit.prevent="savingAddressData"
-                  >
-                    <pop-over
-                      v-if="addressPopup"
-                      :title="$t('filter.address')"
-                      @close="closeAddressPopup"
-                      elem-id="shipping-address-pop-over"
-                      :layer="true"
-                    >
-                      <template
-                        v-slot:content
+                      <!--
+                        A real radio per store inside a label: the whole card
+                        picks it, arrow keys move between stores, and the phone
+                        and directions links still work on their own (a click
+                        on a link inside a label does not tick the radio).
+                      -->
+                      <div
+                        class="pickup-list"
+                        :role="collectionPoints.length > 1 ? 'radiogroup' : null"
+                        aria-label="Collection store"
                       >
-                        <div class="flex block-xxs gap-15">
-                          <div
-                            class="input-wrap flex-1"
-                            :class="{invalid: !addressData.name && hasAddressErrors}"
-                          >
-                            <label>
-                              {{ $t('addressPopup.name') }}
-                            </label>
-                            <input
-                              type="text"
-                              v-model="addressData.name"
-                            />
-                            <span
-                              class="error"
-                              v-if="!addressData.name && hasAddressErrors"
-                            >
-                            {{ $t('addressPopup.isRequired', {type: $t('addressPopup.name')}) }}
-                          </span>
-                          </div>
-
-                          <div
-                            class="input-wrap flex-1"
-                            :class="{invalid: !emailValid && hasAddressErrors}"
-                          >
-                            <label>
-                              {{ $t('addressPopup.email') }}
-                            </label>
-                            <div class="icon-input">
-                              <i
-                                class="icon email-icon"
-                              />
-                              <input
-                                type="text"
-                                :placeholder="$t('contact.your', { type: $t('contact.email') })"
-                                v-model.trim="addressData.email"
-                              >
-                            </div>
-
-                            <span
-                              class="error"
-                              v-if="!addressData.email && hasAddressErrors"
-                            >
-                              {{ $t('addressPopup.isRequired', {type: $t('addressPopup.email') }) }}
-                            </span>
-                            <span
-                              class="error"
-                              v-else-if="invalidEmail && hasAddressErrors"
-                            >
-                              {{ $t('contact.invalidEmail') }}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div class="flex block-xxs gap-15">
-                          <div
-                            v-if="phoneList"
-                            class="input-wrap flex-1"
-                            :class="{invalid: !numberValid && hasAddressErrors}"
-                          >
-                            <label>
-                              {{ $t('addressPopup.phone') }}
-                            </label>
-                            <div class="input-text">
-                          <span>
-                            {{ phoneList[addressData.country] }}
-                          </span>
-                              <input
-                                type="text"
-                                v-model="addressData.phone"
-                              />
-                            </div>
-                            <span
-                              class="error"
-                              v-if="!addressData.phone && hasAddressErrors"
-                            >
-                              {{ $t('addressPopup.isRequired', {type: $t('addressPopup.phone')}) }}
-                            </span>
-
-                            <span
-                              class="error"
-                              v-else-if="invalidNumber && hasAddressErrors"
-                            >
-                              {{ $t('invent.in') }}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div
-                          class="input-wrap"
-                          :class="{invalid: !addressData.address_1 && hasAddressErrors}"
+                        <component
+                          :is="collectionPoints.length > 1 ? 'label' : 'div'"
+                          v-for="point in collectionPoints"
+                          :key="point.id"
+                          class="pickup-card"
+                          :class="{
+                            'is-choosable': collectionPoints.length > 1,
+                            'is-chosen': collectionPoints.length === 1 || pickupPlaceId === point.id
+                          }"
                         >
-                          <label>
-                            {{ $t('addressPopup.address') }}
-                          </label>
                           <input
-                            class="mb-10"
-                            type="text"
-                            v-model="addressData.address_1"
-                            :placeholder="$t('addressPopup.addressPlaceholder')"
-                          />
-                          <input
-                            type="text"
-                            v-model="addressData.address_2"
-                            :placeholder="$t('addressPopup.address2Placeholder')"
-                          />
-                          <span
-                            class="error"
-                            v-if="!addressData.address_1 && hasAddressErrors"
+                            v-if="collectionPoints.length > 1"
+                            class="pickup-radio"
+                            type="radio"
+                            name="collection-point"
+                            :value="point.id"
+                            :checked="pickupPlaceId === point.id"
+                            @change="choosePickup(point.id)"
                           >
-                          {{ $t('addressPopup.isRequired', {type: $t('addressPopup.address')}) }}
-                        </span>
-                        </div>
-
-                        <div class="flex block-xxs gap-15 sided">
-                          <div
-                            class="input-wrap flex-1"
-                            :class="{invalid: !addressData.city && hasAddressErrors}"
-                          >
-                            <label>
-                              {{ $t('addressPopup.city') }}
-                            </label>
-                            <input
-                              type="text"
-                              v-model="addressData.city"
-                            />
-                            <span
-                              class="error"
-                              v-if="!addressData.city && hasAddressErrors"
-                            >
-                            {{ $t('addressPopup.isRequired', {type: $t('addressPopup.city')}) }}
+                          <span v-if="collectionPoints.length > 1" class="pickup-mark" aria-hidden="true"></span>
+                          <span v-else class="pickup-store-ico" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 9.5 5.5 4h13L20 9.5M4 9.5h16M4 9.5V20h16V9.5M9.5 20v-5h5v5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
                           </span>
-                          </div>
 
-                          <div
-                            v-if="Object.keys(states).length"
-                            class="input-wrap flex-1"
-                          >
-                            <label>
-                              {{ $t('addressPopup.state') }}
-                            </label>
-                            <dropdown
-                              :selected-key="addressData.state"
-                              position="right"
-                              :position-fixed="false"
-                              :options="states"
-                              key-name="name"
-                              @clicked="selectState"
-                            />
-                          </div>
-                        </div>
+                          <span class="pickup-body">
+                            <span class="pickup-top">
+                              <span class="pickup-name">{{ point.name }}</span>
+                              <span class="pickup-price" :class="{ 'is-free': point.free }">
+                                {{ point.free ? 'Free' : point.priceLabel }}
+                              </span>
+                            </span>
 
-                        <div class="flex block-xxs gap-15 sided">
-                          <div
-                            class="input-wrap flex-1"
-                            :class="{invalid: !addressData.zip && hasAddressErrors}"
-                          >
-                            <label>
-                              {{ $t('addressPopup.zipCode') }}
-                            </label>
-                            <input
-                              type="text"
-                              v-model="addressData.zip"
-                            />
-                            <span
-                              class="error"
-                              v-if="!addressData.zip && hasAddressErrors"
-                            >
-                            {{ $t('addressPopup.isRequired', {type: $t('addressPopup.zipCode')}) }}
+                            <address class="pickup-address">
+                              {{ point.address }}
+                              <span v-if="point.country" class="pickup-country">{{ point.country }}</span>
+                            </address>
+
+                            <span class="pickup-actions">
+                              <a
+                                v-if="point.phone"
+                                class="pickup-action"
+                                :href="'tel:' + point.phone"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+                                {{ point.phone }}
+                              </a>
+                              <a
+                                class="pickup-action"
+                                :href="point.mapUrl"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.6" stroke="currentColor" stroke-width="1.7"/></svg>
+                                Get directions
+                                <span class="visually-hidden">(opens in a new tab)</span>
+                              </a>
+                            </span>
                           </span>
+                        </component>
+                      </div>
+
+                      <p class="pickup-note">
+                        We&rsquo;ll email you when your order is ready to collect. Bring your order number.
+                      </p>
+                    </template>
+
+                    <!--
+                      Better than an empty box: a shopper choosing collection
+                      needs to know where to go, and if no rule carries a
+                      pickup address there is nothing to show.
+                    -->
+                    <p v-else class="collection-point-missing">
+                      We will confirm the collection address with you by email once your
+                      order is ready. Call {{ supportPhone }} if you need it sooner.
+                    </p>
+                  </div>
+               </div>
+             </section>
+
+             <section
+               v-if="deliveryType && !isCollection"
+               id="deliveryAccordion"
+               class="cart-sec"
+               aria-labelledby="ship-sec-address-title"
+             >
+               <div class="cart-sec-head">
+                 <span class="cart-sec-ico" aria-hidden="true">
+                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9.5" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg>
+                 </span>
+                 <div class="cart-sec-heading">
+                   <h2 id="ship-sec-address-title" class="cart-sec-title">Delivery Address</h2>
+                   <p class="cart-sec-sub">Choose where we should send your order.</p>
+                 </div>
+               </div>
+               <div class="cart-sec-body">
+                 <user-address
+                   ref="shippingAddress"
+                   :has-radio="true"
+                   :invalid="showBlockingError && !selectedCurrentAddress"
+                   @editing="editAddress"
+                   @selected-address="selectedCurrentAddress = $event"
+                   @add-address="addressPopup = true"
+                 />
+
+                 <div
+                   v-if="undeliverableMessage && selectedCurrentAddress"
+                   class="ship-restricted ship-undeliverable"
+                   role="alert"
+                 >
+                   <p class="ship-restricted-title">{{ undeliverableMessage }}</p>
+                   <p class="ship-undeliverable-hint">
+                     Choose or add an address in a country we deliver to, or collect in store.
+                   </p>
+                 </div>
+               </div>
+             </section>
+
+             <!--
+               Products the shopper cannot receive this way: sold only in other
+               countries. The server refuses the order with the same message;
+               this says so before they press continue, and lets them take the
+               line out of this order without leaving the page.
+             -->
+             <div
+               v-if="restrictedLines.length"
+               id="restrictedItems"
+               class="ship-restricted"
+               role="alert"
+             >
+               <p class="ship-restricted-title">
+                 {{ restrictedLines.length === 1 ? 'This item' : 'These items' }}
+                 {{ isCollection ? 'cannot be collected' : `cannot be sent to ${quote.country_name}` }}:
+               </p>
+               <ul class="ship-restricted-list">
+                 <li v-for="line in restrictedLines" :key="line.id">
+                   <span>{{ line.title }}</span>
+                   <a
+                     href="#"
+                     role="button"
+                     class="ship-restricted-remove"
+                     @click.prevent="removeFromOrder(line.id)"
+                   >Remove from this order</a>
+                 </li>
+               </ul>
+             </div>
+
+             <!--
+               Nothing is being delivered on a collection order, so no address
+               is asked for. The store still has to be able to reach the
+               customer when the order is ready, and the address form was
+               previously the only place a guest ever gave a name, email and
+               phone - so those are asked for on their own instead.
+             -->
+             <section
+               v-if="isCollection"
+               id="contactAccordion"
+               class="cart-sec"
+               aria-labelledby="ship-sec-contact-title"
+             >
+               <div class="cart-sec-head">
+                 <span class="cart-sec-ico" aria-hidden="true">
+                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c1.2-4 4.2-6 8-6s6.8 2 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                 </span>
+                 <div class="cart-sec-heading">
+                   <h2 id="ship-sec-contact-title" class="cart-sec-title">Contact Details</h2>
+                   <p class="cart-sec-sub">We&rsquo;ll use these to let you know when your order is ready to collect.</p>
+                 </div>
+               </div>
+               <div class="cart-sec-body">
+                    <div class="address-form-panel">
+                      <div v-if="isLoggedIn" class="collection-contact-summary">
+                        <strong>{{ contactDetails.name }}</strong>
+                        <span>{{ contactDetails.email }}</span>
+                        <span v-if="contactDetails.phone">tel: {{ contactDetails.phone }}</span>
+                      </div>
+
+                      <form v-else class="address-form" @submit.prevent>
+                        <div class="address-form-grid">
+                          <div class="address-field">
+                            <label for="collection-name">Full Name</label>
+                            <input
+                              id="collection-name"
+                              v-model="contactDetails.name"
+                              type="text"
+                              class="address-input"
+                              placeholder="Enter name"
+                              :class="{ 'field-invalid': hasContactErrors && !contactDetails.name.trim() }"
+                            >
                           </div>
 
-                          <div
-                            v-if="countryList"
-                            class="input-wrap flex-1"
-                          >
-                            <label>
-                              {{ $t('addressPopup.country') }}
-                            </label>
-                            <dropdown
-                              :selected-key="addressData.country"
-                              :options="countryList"
-                              :position-fixed="false"
-                              key-name="name"
-                              :searching="true"
-                              @clicked="selectCountry"
-                            />
+                          <div class="address-field">
+                            <label for="collection-email">Email Address</label>
+                            <input
+                              id="collection-email"
+                              v-model="contactDetails.email"
+                              type="email"
+                              class="address-input"
+                              placeholder="Enter email"
+                              :class="{ 'field-invalid': hasContactErrors && !isValidEmail(contactDetails.email) }"
+                            >
+                          </div>
+
+                          <div class="address-field">
+                            <label for="collection-phone">Contact Number</label>
+                            <input
+                              id="collection-phone"
+                              v-model="contactDetails.phone"
+                              type="text"
+                              class="address-input"
+                              placeholder="123 456 7890"
+                              :class="{ 'field-invalid': hasContactErrors && !isValidNumber(contactDetails.phone) }"
+                            >
                           </div>
                         </div>
-
-                        <div class="input-wrap mb-0">
-                          <label>
-                            {{ $t('shipping.instruction') }}
-                          </label>
-                          <textarea
-                            v-model="addressData.delivery_instruction"
-                          />
-                        </div>
-
-                      </template>
-
-                      <template v-slot:pop-footer>
-                        <div class="flex sided mlr-0 gap-10">
-                          <button
-                            aria-label="submit"
-                            class="outline-btn plr-30 plr-sm-15"
-                            @click.prevent="clearData"
-                          >
-                            {{ $t('addressPopup.cancel') }}
-                          </button>
-                          <ajax-button
-                            class="primary-btn plr-30 plr-sm-15"
-                            :fetching-data="submittingAddressData"
-                            :loading-text="$t('addressPopup.saving')"
-                            :text=" $t('addressPopup.thisAddress', {type: editing > 0 ? $t('addressPopup.update') : $t('addressPopup.save')})"
-                          />
-                        </div>
-                      </template>
-
-                    </pop-over>
-
-                  </form>
-                </div>
-
-
-                <div v-if="selectedSippingPlace" class="pickup-addr">
-                  <h5 class="mt-30 mb-10">{{ $t('date.sl') }}</h5>
-                  <div class="flex start">
-                    <p class="success-msg" v-html="selectedSippingPlace"/>
-                  </div>
-
-                </div>
-
-                <div class="mt-30">
-                  <h5 class="mb-10">{{ $t('date.os') }}</h5>
-
-
-                  
-                </div>
-              </div> -->
-              <div class="delivery-box mb-3">
-                <div class="delivery-header">
-                  <div class="delivery-left">
-                    <div class="check-circle">✓</div>
-                    <div>
-                      <div class="delivery-title mb-2">Delivery or Collection?</div>
-                      <div class="delivery-sub">
-                        For Delivery <br />
-                        <strong>
-                          <div v-for="(item, index) in productSummary" :key="index">
-                            {{ item.text }}
-                          </div>
-                        </strong>
-                      </div>
+                      </form>
                     </div>
-                  </div>
-                  <button class="delivery-edit-btn" @click="goToCart">Edit</button>
-                </div>
-                <div class="delivery-options">
-                  <div
-                    :class="['delivery-option', { active: deliveryType === 'delivery' }]"
-                    @click="setDeliveryType('delivery')"
-                  >
-                    <div class="icon-circle">
-                      <i class="fa-solid fa-file-pen"></i>
-                    </div>
-                    <span class="delivery-type">Send by Post 
-                      <small>
-                        ({{ deliveryPrice > 0 ? '€' + formattedDeliveryPrice : 'Free' }})
-                      </small>
-                    </span>
-                  </div>
+               </div>
+             </section>
 
-                  <div
-                    :class="['delivery-option', { active: deliveryType === 'collection' }]"
-                    @click="setDeliveryType('collection')"
-                  >
-                    <div class="icon-circle">
-                      <i class="fa-solid fa-file-pen"></i>
-                    </div>
-                    <span class="delivery-type">Collection Store <small>(Free)</small></span>
-                  </div>
-                </div>
-              </div>
-              <div class="accordion mt-3 mb-3" id="deliveryAccordion">
-                <div class="accordion-item ">
-                  <h5 class="accordion-header"  id="headingAddress">
-                    <button type="button" class="accordion-button" data-bs-toggle="collapse" data-bs-target="#collapseAddress" aria-expanded="true" aria-controls="collapseAddress">
-                      <span class="delivery-heading">Delivery Address</span>
-                    </button>
-                  </h5>
-                  <div id="collapseAddress" class="accordion-collapse collapse show" aria-labelledby="headingAddress" data-bs-parent="#deliveryAccordion">
-                    <div class="container mt-2">
-                      <div class="container ">
-                        <div class="row g-3">
-                          <user-address
-                            ref="shippingAddress"
-                            :has-radio="true"
-                            @editing="editAddress"
-                            @selected-address="selectedCurrentAddress = $event"
-                            @add-address="addressPopup = true"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <!-- <cart-list
-                :error-from-api="errorFromApi"
-                :cart-products="checkedProduct"
-                :cart-shipping="cartShipping"
-                :checked="checked"
-                :current-addresses="currentAddresses"
-                :is-shipping="true"
-                :address="selectedCurrentAddress"
-                @shipping-changed="shippingChanged"
-                @cart-changed="cartChanged"
-                @current-shipping="currentShipping"
-              /> -->
-              <div class="accordion mt-3 mb-3" id="paymentAccordion">
-              <div class="accordion-item ">
-                <h5 class="accordion-header"  id="headingPayment">
-                  <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#collapsePayment" aria-expanded="false" aria-controls="collapsePayment">
-                    <span class="delivery-heading">Payment Method</span>
-                  </button>
-                </h5>
-                <div id="collapsePayment" class="accordion-collapse collapse" aria-labelledby="headingPayment" data-bs-parent="#paymentAccordion">
-                  <div class="container mt-2">
-                    <div class="container ">
-                      <div class="row g-3">
-                        <payment-gateways
-                          ref="paymentGateways"
-                          :total-price="totalPrice"
-                          :voucher="voucherResult"
-                          :hide-confirm-btn="true"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+             <!--
+               Read-only here (2026-09-26): the list says what we accept, and
+               the choice is made on the Payment step, which asks for it
+               itself (require-choice on /checkout).
+             -->
+             <section id="paymentAccordion" class="cart-sec" aria-labelledby="ship-sec-payment-title">
+               <div class="cart-sec-head">
+                 <span class="cart-sec-ico" aria-hidden="true">
+                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="5" width="19" height="14" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 10h19" stroke="currentColor" stroke-width="1.8"/></svg>
+                 </span>
+                 <div class="cart-sec-heading">
+                   <h2 id="ship-sec-payment-title" class="cart-sec-title">Payment Method</h2>
+                   <p class="cart-sec-sub">
+                     <svg class="cart-sec-lock" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3" stroke="currentColor" stroke-width="1.8"/></svg>
+                     Methods we accept &mdash; you&rsquo;ll choose one on the next step.
+                   </p>
+                 </div>
+               </div>
+               <div class="cart-sec-body">
+                 <payment-gateways
+                   ref="paymentGateways"
+                   :total-price="totalPrice"
+                   :voucher="voucherResult"
+                   :hide-confirm-btn="true"
+                   :readonly="true"
+                   :collection-order="isCollection"
+                 />
+               </div>
+             </section>
             </div>
-            </div>
+            <!--
+              The button stays live while something is missing. Greying it out
+              left the shopper with a dead control and no clue what it wanted;
+              now the note below says what is outstanding, and pressing it
+              jumps to the section that needs filling in.
+            -->
             <checkout-right
               route-link="checkout"
               :checked-product="checkedProduct"
+              :has-shipping="true"
+              :shipping-choice="cartShipping"
+              :shipping-quote="quote"
               :btn-text="$t('date.ptp')"
+              mobile-bar
               @calculated-price="priceCalculated"
               :submitting="checkingOut"
-              :disabled="fetchingAddressData || Object.keys(cartShipping).length === 0 || !selectedCurrentAddress"
+              :disabled="fetchingAddressData || Object.keys(cartShipping).length === 0"
               @go-next="goToCheckout"
-            />
+            >
+              <template #checkout>
+                <p
+                  v-if="blockingReason"
+                  class="checkout-blocked"
+                  :class="{ 'checkout-blocked-error': showBlockingError }"
+                  role="status"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 7.5v5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="12" cy="16.5" r="1.15" fill="currentColor"/>
+                  </svg>
+                  <span>{{ blockingReason }}</span>
+                </p>
+              </template>
+            </checkout-right>
           </div>
         </div>
       </div>
-    <!-- </div> -->
-
-  <!-- </div> -->
 </template>
-
-
 <script>
+  import '~/assets/css/cart-flow.css'
+  import '~/assets/css/checkout-sections.css'
   import CartList from '~/components/CartList'
   import AjaxButton from '~/components/AjaxButton'
   import Dropdown from '~/components/Dropdown'
@@ -427,12 +397,14 @@
   import Spinner from "~/components/Spinner"
   import global from '~/mixin/global'
   import PaymentGateways from "~/components/PaymentGateways";
-
+  import Breadcrumbs from '../components/Breadcrumbs.vue'
   export default {
     middleware: ['common-middleware'],
     data() {
       return {
-        deliveryType: 'delivery',
+        // Deliberately unset. Defaulting to 'delivery' meant a shopper who
+        // never looked at the two tiles was silently opted into paid postage.
+        deliveryType: null,
         voucherResult: null,
         addressPopup: false,
         cartShipping: {},
@@ -464,16 +436,59 @@
         },
         submittingAddressData: false,
         selectedCurrentAddress: null,
-        errorFromApi: null
+        // Stands in for the address on a collection order.
+        contactDetails: {
+          name: '',
+          email: '',
+          phone: ''
+        },
+        hasContactErrors: false,
+        // Turns the "what is missing" note red once they have actually pressed
+        // the button; before that it is only a hint, not a complaint.
+        showBlockingError: false,
+        errorFromApi: null,
+        /*
+         * What the server says this order would cost to receive, for the
+         * current choice and address (cart/shipping-quote). The page never
+         * picks a shipping row itself any more - products have no rule.
+         */
+        quote: null,
+        quoteSeq: 0,
+        // The collection point chosen, when there is more than one.
+        pickupPlaceId: null
       }
     },
     watch: {
+      deliveryType() {
+        this.refreshQuote()
+      },
+      selectedCurrentAddress(address, previous) {
+        if (address?.id !== previous?.id) {
+          this.refreshQuote()
+        }
+      },
+      blockingReason(reason) {
+        if (!reason) {
+          this.showBlockingError = false
+        }
+      },
       profile() {
         this.addressData.name = this.profile.name
         this.addressData.email = this.profile.email
+        this.fillContactFromProfile()
       },
       location() {
         this.settingCountry()
+      },
+      /*
+       * After a reload the basket is first restored from localStorage with
+       * its money stripped, and the server's priced rows replace it a moment
+       * later as new objects. checkedProduct held the stripped ones, so the
+       * summary sat on "Updating prices..." for good. Re-read on every
+       * replacement, the way /checkout does.
+       */
+      cartProducts() {
+        this.getCheckedProducts()
       },
     },
     components: {
@@ -488,30 +503,109 @@
     },
     mixins: [util, addressHelper, validation, global],
     computed: {
+      isCollection() {
+        return this.deliveryType === 'collection'
+      },
+      isLoggedIn() {
+        return this.$auth.loggedIn
+      },
+      /*
+       * A signed-in shopper's contact details come off their account, so there
+       * is nothing to fill in and nothing to validate. A guest has to type them,
+       * because the address form they are no longer shown was the only other
+       * place they would have been asked.
+       */
+      contactValid() {
+        if (this.isLoggedIn) {
+          return !!this.contactDetails.email
+        }
+
+        return !!this.contactDetails.name.trim() &&
+          this.isValidEmail(this.contactDetails.email) &&
+          this.isValidNumber(this.contactDetails.phone)
+      },
+      readyToContinue() {
+        const addressed = this.isCollection ? this.contactValid : !!this.selectedCurrentAddress
+
+        return addressed
+      },
+      /*
+       * What is still outstanding, in the shopper's words. What counts differs
+       * by delivery method: a posted order needs an address, a collection order
+       * needs none - it needs contact details so the store can say when the
+       * order is ready.
+       */
+      blockingReason() {
+        // Still loading, or the basket has not been read yet: nothing to say.
+        if (this.fetchingAddressData || !Object.keys(this.cartShipping).length) {
+          return null
+        }
+
+        if (!this.deliveryType) {
+          return 'Choose whether to have your order posted to you or to collect it in store.'
+        }
+
+        if (this.isCollection) {
+          if (!this.contactValid) {
+            return 'Add your name, email and phone number so we can tell you when your order is ready to collect.'
+          }
+        } else if (!this.currentAddresses) {
+          /*
+           * The address list only mounts once delivery has been picked, so for
+           * a moment there is no list rather than an empty one. Undefined means
+           * "not fetched yet" - claiming they have no address would be a guess.
+           */
+          return null
+        } else if (!this.currentAddresses.length) {
+          return 'Add a delivery address before you continue to payment.'
+        } else if (!this.selectedCurrentAddress) {
+          return 'Select the delivery address for this order before you continue to payment.'
+        }
+
+        // Items that cannot go to this address, or nowhere to deliver to.
+        if (this.quote && !this.quote.ok) {
+          return this.quote.message
+        }
+
+        // How to pay is asked on the Payment step, not here.
+        return null
+      },
+      /*
+       * Nowhere delivers to the address's country. Said at the address, as
+       * soon as it is chosen - not only in the summary box or as a toast
+       * after pressing continue. Items sold only elsewhere have their own
+       * list below, so this is only the whole-country refusal.
+       */
+      undeliverableMessage() {
+        const quote = this.quote
+
+        if (!quote || quote.ok || this.isCollection || this.restrictedLines.length) {
+          return null
+        }
+
+        return quote.country_name ? quote.message : null
+      },
+      restrictedLines() {
+        const byCart = this.quote?.restricted_carts || {}
+
+        return this.checkedProduct
+          .filter(line => byCart[line.id])
+          .map(line => ({
+            id: line.id,
+            title: line?.flash_product?.title || '',
+            message: byCart[line.id]
+          }))
+      },
+      collectionFree() {
+        const point = (this.quote?.collection_points || [])[0]
+
+        return !point || (this.quote?.collection_points || []).every(p => !(parseFloat(p.pickup_price) > 0))
+      },
       productSummary() {
         if (!this.checkedProduct.length) return []
         return this.checkedProduct.map(p => ({
           text: `${p.quantity} x ${p?.flash_product?.title}`
         }))
-      },
-      formattedDeliveryPrice() {
-        return this.deliveryPrice.toFixed(2)
-      },
-      deliveryPrice() {
-        console.log(Object.values(this.cartShipping), "shipping");
-        let total = 0
-        Object.values(this.cartShipping)
-          .forEach(item => {
-            if (
-              item &&
-              item.shipping_place
-            ) {
-              total += Number(
-                item.shipping_place.price || 0
-              )
-            }
-          })
-        return total
       },
       totalPrice() {
         return this.cartPrice?.totalPrice || 0
@@ -521,6 +615,67 @@
       },
       numberValid() {
         return this.addressData.phone && !this.invalidNumber
+      },
+      supportPhone() {
+        return this.setting?.phone || 'us'
+      },
+      /*
+       * The store's collection points - the shipping rows with pickup
+       * switched on - as the server's quote lists them. Products no longer
+       * carry a shipping rule to read them from.
+       */
+      collectionPoints() {
+        const seen = {}
+        const points = []
+
+        ;[this.quote?.collection_points || []].forEach(places => {
+
+          places.forEach(place => {
+
+            if (parseInt(place?.pickup_point) !== 1 || seen[place.id]) {
+              return
+            }
+
+            // Postal order, not the order the columns happen to sit in.
+            const lines = [
+              place.pickup_address_line_1,
+              place.pickup_address_line_2,
+              [place.pickup_city, place.pickup_state].filter(i => i).join(', '),
+              place.pickup_zip,
+              place.pickup_country
+            ].filter(i => i && String(i).trim())
+
+            if (!lines.length) {
+              return
+            }
+
+            seen[place.id] = true
+
+            const price = parseFloat(place.pickup_price) || 0
+            const country = (place.pickup_country || '').trim()
+
+            points.push({
+              id: place.id,
+              lines: lines,
+              // the first address line names the store; the rest reads as one line
+              name: lines[0],
+              address: [
+                place.pickup_address_line_2,
+                place.pickup_city,
+                place.pickup_state,
+                place.pickup_zip
+              ].filter(i => i && String(i).trim()).join(', '),
+              country: country,
+              free: price <= 0,
+              priceLabel: (this.$store.getters['common/currencyIcon'] || '€') + price.toFixed(2),
+              phone: place.pickup_phone,
+              mapUrl: 'https://www.google.com/maps/search/?api=1&query='
+                + encodeURIComponent(lines.join(', '))
+            })
+          })
+        })
+
+        return points
       },
       selectedSippingPlace(){
         const cartShippingValues = Object.values(this.cartShipping)
@@ -557,22 +712,96 @@
       ...mapGetters('resource', ['countryList', 'phoneList']),
       ...mapGetters('language', ['langCode']),
       ...mapGetters('user', ['allAddress', 'profile']),
-      ...mapGetters('common', ['location']),
-      ...mapGetters('cart', ['cartProducts']),
+      ...mapGetters('common', ['location', 'setting']),
+      ...mapGetters('cart', {cartProducts: 'checkoutProducts'}),
     },
     methods: {
-      goToCart() {
-        this.$router.push('/cart')
+      fillContactFromProfile() {
+        // $auth.user is there from the moment the page loads; the profile
+        // getter arrives a little later and carries the phone number.
+        const account = this.profile || this.$auth.user
+
+        if (!this.isLoggedIn || !account) {
+          return
+        }
+
+        this.contactDetails = {
+          name: account.name || '',
+          email: account.email || '',
+          phone: account.phone || ''
+        }
       },
       setDeliveryType(type) {
         this.deliveryType = type
         Object.keys(this.cartShipping).forEach(key => {
           this.cartShipping[key].shipping_type = type === 'delivery' ? 1 : 2
-          if (!this.cartShipping[key].shipping_place) {
-            const product = this.checkedProduct.find(p => p.id == key)
-            this.cartShipping[key].shipping_place = product?.shipping_place || product?.flash_product?.shipping_rule?.shipping_places?.[0] || null
-          }
         })
+      },
+      /*
+       * Ask the server what this order would cost to receive. Answers that
+       * arrive out of order are dropped: the shopper can switch between post
+       * and collection, or between addresses, faster than the network.
+       */
+      async refreshQuote() {
+        const seq = ++this.quoteSeq
+
+        if (!this.deliveryType || (!this.isCollection && !this.selectedCurrentAddress?.id)) {
+          this.quote = null
+          return
+        }
+
+        try {
+          const data = await this.shippingQuote({
+            shipping_type: this.isCollection ? 2 : 1,
+            selected_address: this.isCollection ? null : this.selectedCurrentAddress.id,
+            pickup_place_id: this.isCollection ? this.pickupPlaceId : null,
+            user_token: await this.getUserToken()
+          })
+
+          if (seq !== this.quoteSeq) return
+
+          this.quote = data?.status === 200 ? data.data : null
+
+          // One collection point: it is the one, nothing to choose.
+          const points = this.quote?.collection_points || []
+          if (this.isCollection && !this.pickupPlaceId && points.length === 1) {
+            this.pickupPlaceId = points[0].id
+          }
+        } catch (e) {
+          if (seq === this.quoteSeq) this.quote = null
+        }
+      },
+      choosePickup(id) {
+        this.pickupPlaceId = id
+        this.refreshQuote()
+      },
+      // Untick a line the shopper cannot receive here; it stays in the basket.
+      async removeFromOrder(cartId) {
+        /*
+         * A Buy Now checkout is one item: removing it ends the Buy Now and
+         * goes back to the basket, which it never touched. Re-posting the
+         * selection here (below) would untick every basket line instead.
+         */
+        if (this.$store.getters['cart/buyNowInProgress']) {
+          await this.$store.dispatch('cart/cancelBuyNow')
+          this.$router.push('/cart')
+          return
+        }
+
+        const checked = this.checkedProduct
+          .map(line => parseInt(line.id))
+          .filter(id => id !== parseInt(cartId))
+
+        await this.cartChangedAction({payload: {checked}, lang: this.langCode})
+
+        this.getCheckedProducts()
+
+        if (!this.checkedProduct.length) {
+          this.$router.push('/cart')
+          return
+        }
+
+        this.refreshQuote()
       },
       initAddress() {
         this.addressData = {
@@ -623,6 +852,23 @@
       priceCalculated(evt) {
         this.cartPrice = evt
       },
+      /*
+       * The summary sits in its own column, so on a long page the section that
+       * needs attention can be well off screen when the button is pressed.
+       */
+      revealBlocker(id) {
+        if (typeof document === 'undefined') {
+          return
+        }
+
+        this.$nextTick(() => {
+          const target = document.getElementById(id)
+
+          if (target && target.scrollIntoView) {
+            target.scrollIntoView({behavior: 'smooth', block: 'center'})
+          }
+        })
+      },
       getCheckedProducts() {
         this.checked = []
         this.checkedProduct = []
@@ -633,16 +879,23 @@
 
             this.checkedProduct.push(obj)
 
-            const sp = obj?.shipping_place || obj?.flash_product?.shipping_rule?.shipping_places?.[0] || obj?.available_shipping?.[0] || null;
-
+            /*
+             * No shipping row is chosen here. Which row applies, and what it
+             * costs, is decided by the server from the address (or the
+             * collection point) - the old "first row of the product's rule"
+             * charged Irish postage to a UK address.
+             */
             this.cartShipping = {
               ...this.cartShipping,
               ...{
                 [obj.id]: {
                   cart: obj.id,
-                  shipping_place: sp,
+                  shipping_place: this.isCollection && this.pickupPlaceId ? {id: this.pickupPlaceId} : null,
                   single_shipping: true,
-                  shipping_type: this.deliveryType === 'delivery' ? 1 : 2,
+                  // null until the shopper picks; setDeliveryType fills it in
+                  shipping_type: this.deliveryType
+                    ? (this.deliveryType === 'delivery' ? 1 : 2)
+                    : null,
                 }
               }
             }
@@ -651,32 +904,84 @@
 
       },
       async goToCheckout() {
-        let unableToShip = false
+        // Only the collection point is ever sent; the server picks the row.
         Object.keys(this.cartShipping).forEach(key => {
-          const item = this.cartShipping[key]
-
-          if (!item.shipping_place) {
-            const product = this.checkedProduct.find(p => p.id == key)
-            item.shipping_place = product?.shipping_place || product?.flash_product?.shipping_rule?.shipping_places?.[0] || product?.available_shipping?.[0] || null;
-          }
+          this.cartShipping[key].shipping_place =
+            this.isCollection && this.pickupPlaceId ? {id: this.pickupPlaceId} : null
         })
-        // if (unableToShip) {
-        //   this.setToastError(this.$t('shipping.unableShipped'))
-        //   return
-        // }
         if (!this.checkedProduct.length) {
           this.cartPopOver = false
           this.setToastError(this.$t('shipping.noProductSelected'))
           this.$router.push('/cart')
           return
         }
+        /*
+         * Posted or collected is the shopper's call, and nothing below it means
+         * anything until it is made.
+         */
+        if (!this.deliveryType) {
+          this.showBlockingError = true
+          this.setToastError(this.$t('shipping.chooseDeliveryType'))
+          this.revealBlocker('delivery-options')
+          return
+        }
+
+        /*
+         * A collection order has no address to select; it needs contact details
+         * instead, which the API stores against the shopper so they are still
+         * there when the order is created.
+         */
+        if (this.isCollection && !this.contactValid) {
+          this.hasContactErrors = true
+          this.showBlockingError = true
+          this.setToastError(this.$t('shipping.addContactDetails'))
+          this.revealBlocker('contactAccordion')
+          return
+        }
+
+        /*
+         * A posted order does need one. This was only ever enforced by greying
+         * the button out, so a shopper who had not picked an address had no way
+         * to find out why nothing happened.
+         */
+        if (!this.isCollection && !this.selectedCurrentAddress) {
+          this.showBlockingError = true
+          this.setToastError(
+            this.currentAddresses && this.currentAddresses.length
+              ? this.$t('shipping.selectAddress')
+              : this.$t('shipping.addAddress')
+          )
+          this.revealBlocker('deliveryAccordion')
+          return
+        }
+
+        /*
+         * Something in the basket cannot be sent there, or nowhere delivers
+         * to that country. The server would refuse the same way; saying so
+         * here points at the line to take out instead of a toast alone.
+         */
+        if (this.quote && !this.quote.ok) {
+          this.showBlockingError = true
+          this.setToastError(this.quote.message)
+          this.revealBlocker(this.restrictedLines.length
+            ? 'restrictedItems'
+            : (this.isCollection ? 'delivery-options' : 'deliveryAccordion'))
+          return
+        }
+
         try {
           this.checkingOut = true
-          this.$store.commit('cart/SET_SELECTED_ADDRESS', this.selectedCurrentAddress)
+          this.$store.commit('cart/SET_SELECTED_ADDRESS', this.isCollection ? null : this.selectedCurrentAddress)
+          this.$store.commit('cart/SET_COLLECTION_CONTACT', this.isCollection ? {...this.contactDetails} : null)
           const data = await this.updateCartShipping({
             cart: this.cartShipping,
+            shipping_type: this.isCollection ? 2 : 1,
+            pickup_place_id: this.isCollection ? this.pickupPlaceId : null,
             user_token: await this.getUserToken(),
-            selected_address: this.selectedCurrentAddress?.id
+            selected_address: this.isCollection ? null : this.selectedCurrentAddress?.id,
+            contact_name: this.isCollection ? this.contactDetails.name : null,
+            contact_email: this.isCollection ? this.contactDetails.email : null,
+            contact_phone: this.isCollection ? this.contactDetails.phone : null
           })
           this.checkingOut = false
           if (data?.status === 200) {
@@ -686,7 +991,13 @@
             if (data.data?.form) {
               this.setToastError(data.data?.form[0])
             } else if (data.data?.product) {
-              this.errorFromApi = data.data?.product[0]
+              const productErrors = data.data.product[0] || {}
+              this.errorFromApi = productErrors
+              const firstError = Object.values(productErrors)[0]
+              const errorMessage = Array.isArray(firstError)
+                ? firstError[0]
+                : firstError
+              this.setToastError(errorMessage)
             }
           }
         } catch (e) {
@@ -775,15 +1086,23 @@
       ...mapActions('resource', ['setCountryList', 'setPhoneList']),
       ...mapActions('user', ['userAddressAction', 'getUserToken']),
       ...mapActions('common', ['fetchLocation', 'setToastMessage', 'setToastError', 'getRequest']),
-      ...mapActions('cart', ['getCartByUser', 'updateCartShipping'])
+      ...mapActions('cart', ['getCartByUser', 'updateCartShipping', 'shippingQuote']),
+      ...mapActions('cart', {cartChangedAction: 'cartChanged'})
     },
-    async asyncData({store, $auth, error}) {
+    async asyncData({store, $auth, error, redirect}) {
       try {
         if(!store.state?.common?.setting?.guest_checkout) {
           if (!$auth.loggedIn) {
             $auth.redirect('login')
             return false
           }
+        } else if (!$auth.loggedIn) {
+          /*
+           * Guests get their own version of this step, which asks for the
+           * contact details an account would already have supplied.
+           */
+          redirect('/guest-checkout')
+          return false
         }
         if(!store.state.common.paymentGateway){
           const data = await store.dispatch('common/getRequest', {
@@ -797,6 +1116,18 @@
       }
     },
     async mounted() {
+      // The payment step shows this; loading it now means it is there on arrival.
+      this.$store.dispatch('user/loadWalletBalance')
+
+      /*
+       * The store-wide promotion, so the summary on this page can show the
+       * discount the shopper opted into on the basket. Only the basket
+       * carries the banner, so without this a checkout reached directly --
+       * a deep link, or a refresh -- had no promotion to derive the amount
+       * from and quietly dropped the row.
+       */
+      this.$store.dispatch('cart/loadFlashPromotion')
+
       try {
         if (!this.countryList || !this.phoneList) {
           this.loading = true
@@ -832,6 +1163,7 @@
           this.addressData.name = this.profile?.name
           this.addressData.email = this.profile?.email
         }
+        this.fillContactFromProfile()
       })
       if (!this.addressData.country) {
         this.settingCountry()
@@ -839,203 +1171,390 @@
     },
   }
 </script>
-<style>
-.custom-dropdown{
-  width:250px;
-}
-
-.pop-over .pop-over-inner .pop-over-content{
-  max-height:700px;
-}
-
-
-.address-card {
-    border: 1px solid #dcdde1;
+<style scoped>
+  /* Lines that cannot be sent to the chosen address (sell only in). */
+  .ship-restricted {
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    border: 1px solid #f2c4c4;
     border-radius: 12px;
-    padding: 18px;
+    background: #fdf1f1;
+    color: #a12321;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .ship-restricted-title {
+    margin: 0 0 8px;
+    font-weight: 600;
+  }
+
+  .ship-restricted-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ship-restricted-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 12px;
+    padding: 6px 0;
+    border-top: 1px solid rgba(161, 35, 33, .12);
+    color: #3b1a1a;
+  }
+
+  .ship-restricted-list li:first-child {
+    border-top: 0;
+  }
+
+  .ship-undeliverable {
+    margin: 12px 0 0;
+  }
+
+  .ship-undeliverable .ship-restricted-title {
+    margin-bottom: 0;
+  }
+
+  .ship-undeliverable-hint {
+    margin: 4px 0 0;
+    color: #3b1a1a;
+  }
+
+  .ship-restricted-remove {
+    color: #a12321;
+    font-weight: 600;
+    text-decoration: underline;
+    white-space: nowrap;
+  }
+
+  /* ---- Where a collection order is collected from ---- */
+  .pickup {
+    margin-top: 18px;
+  }
+
+  .pickup-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #151438;
+  }
+
+  .pickup-count {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #6b7280;
+  }
+
+  .pickup-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pickup-card {
     position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: flex-start;
+    gap: 14px;
+    margin: 0;
+    padding: 16px 18px;
+    border: 1px solid #E3E3EF;
+    border-radius: 12px;
     background: #fff;
+    font-weight: 400;
+    transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+  }
+
+  .pickup-card.is-choosable {
     cursor: pointer;
-    transition: 0.3s;
-    height: 100%;
   }
 
-  .address-card.active {
-    border: 2px solid #333199;
-    background: #f3f4ff;
+  .pickup-card.is-choosable:hover {
+    border-color: #C7CBE4;
+    background: #FAFAFE;
   }
 
-  .badge-custom {
-    background: #333199;
-    color: #fff;
-    font-size: 12px;
-    border-radius: 20px;
-    padding: 3px 10px;
-    margin-left: 8px;
+  .pickup-card.is-chosen {
+    border-color: #33319A;
+    background: #F7F7FE;
+    box-shadow: 0 0 0 1px #33319A inset;
   }
 
-  .check-icon {
+  /* the native radio stays in the page for keyboard and screen readers */
+  .pickup-radio {
     position: absolute;
-    top: -10px;
-    right: -10px;
-    background: #333199;
-    color: #fff;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
   }
 
-  .address-card.active .check-icon {
-    display: flex;
-  }
-
-  /* Add New Card */
-  .add-card {
-    border: 2px dashed #dcdde1;
-    border-radius: 16px;
-    background: #f8f9fc;
-    cursor: pointer;
-    min-height: 180px;
-    transition: 0.3s;
-  }
-
-  .add-card:hover {
-    background: #eef0ff;
-    border-color: #4b4bff;
-  }
-
-  .plus-circle {
-    width: 50px;
-    height: 50px;
+  .pickup-mark {
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    border: 1.5px solid #C7CBE4;
     border-radius: 50%;
     background: #fff;
-    border: 1px solid #dcdde1;
+    transition: border-color .15s ease;
+  }
+
+  .pickup-card.is-choosable:hover .pickup-mark {
+    border-color: #33319A;
+  }
+
+  .pickup-card.is-chosen .pickup-mark {
+    border: 6px solid #33319A;
+  }
+
+  .pickup-radio:focus-visible + .pickup-mark {
+    box-shadow: 0 0 0 3px rgba(51, 49, 154, .25);
+  }
+
+  .pickup-store-ico {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 26px;
-    color: #333;
-  }
-  .new-address {
-    width: 160px;
-}
-.save-address {
- width: 330px;
-}
-span.delivery-heading {
-    font-size: 18px;
-    font-weight: 500;
-    color: #130E2B;
-}
-.form-label {
-    margin-bottom: 10px;
-    color: #130E2B;
-    font-size: 14px;
-    font-weight: 500;
-}
-.delivery-filed {
-    padding: 12px 12px !important;
+    width: 36px;
+    height: 36px;
     border-radius: 10px;
+    background: #EEEEFC;
+    color: #33319A;
+  }
+
+  .pickup-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .pickup-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .pickup-name {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #151438;
+    overflow-wrap: anywhere;
+  }
+
+  .pickup-card.is-chosen .pickup-name {
+    color: #33319A;
+  }
+
+  .pickup-price {
+    flex: 0 0 auto;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #151438;
+  }
+
+  .pickup-price.is-free {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #E7F8EE;
+    color: #05803A;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .pickup-address {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    margin: 0;
+    font-style: normal;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: #4b5262;
+  }
+
+  .pickup-country {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #F1F2F7;
+    color: #4b5262;
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+
+  .pickup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-top: 6px;
+  }
+
+  .pickup-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #33319A;
+    text-decoration: none;
+  }
+
+  .pickup-action:hover {
+    text-decoration: underline;
+  }
+
+  .pickup-note {
+    margin: 12px 0 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #6b7280;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 575px) {
+    .pickup-card {
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .pickup-name {
+      font-size: 14.5px;
+    }
+  }
+
+  /*
+   * Sits under "Proceed to Payment" and says what is still outstanding. Amber
+   * while it is only a hint; red once the button has been pressed and the
+   * shopper is owed an answer.
+   */
+  .checkout-blocked {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 10px 0 0;
+    padding: 10px 12px;
+    border: 1px solid #f0dfae;
+    border-radius: 10px;
+    background: #fdf8ec;
+    font-size: 12px;
+    line-height: 1.55;
+    color: #7a5c14;
+    text-align: left;
+  }
+
+  .checkout-blocked svg {
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+
+  /* The same red the address section wears once the button has been pressed
+     and the question is still unanswered. */
+  .payment-invalid {
+    border-color: #e0a3a3;
+    box-shadow: 0 0 0 1px #e0a3a3;
+    border-radius: 12px;
+  }
+
+  .checkout-blocked-error {
+    border-color: #f2c4c4;
+    background: #fdf1f1;
+    color: #a12321;
+  }
+
+  /*
+   * The collection contact form mirrors the delivery address form, whose own
+   * styles are scoped to UserAddress.vue and so do not reach this page.
+   */
+  .address-form-panel {
+    width: 100%;
+  }
+
+  .collection-contact-note {
+    margin: 0 0 18px;
+    color: #565a75;
     font-size: 14px;
-    color: #8C8999;
-}
-span.default-address {
+    line-height: 1.4;
+  }
+
+  .collection-contact-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: #130e2b;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .address-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 18px;
+    row-gap: 13px;
+  }
+
+  .address-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .address-field label {
+    margin-bottom: 8px;
+    color: rgba(19, 14, 43, 1);
     font-size: 14px;
     font-weight: 500;
-    color: #130E2B;
-}
-.cart-product-list-card .add-cart-small-text{
-      margin-top: 35px !important;
-}
-.delivery-box {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  border: 1px solid #E3E3EF;
-}
+    line-height: 1.2;
+  }
 
-.delivery-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
+  .address-input {
+    width: 100%;
+    height: 55px;
+    padding: 0 16px;
+    border: 1px solid #d8dce8;
+    border-radius: 8px;
+    background: #fff;
+    color: #000;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
 
-.delivery-left {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
+  .address-input::placeholder {
+    color: #8d91a6;
+    opacity: 1;
+  }
 
-.check-circle {
-  width: 30px;
-  height: 30px;
-  background: #16a34a;
-  color: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
+  .address-input:focus {
+    border-color: #333199;
+  }
 
-.delivery-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #130E2B;
-}
+  .field-invalid {
+    border-color: #d83d4a;
+  }
 
-.delivery-sub {
-  font-size: 14px;
-  font-weight: 500;
-  color: #232159;
-}
-
-.delivery-options {
-  display: flex;
-  gap: 20px;
-}
-
-.delivery-option {
-  flex: 1;
-  background: #E9F6EE;
-  border-radius: 14px;
-  padding: 15px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.delivery-option.active {
-  background: #b4d8c7;
-}
-
-.icon-circle {
-  width: 40px;
-  height: 40px;
-  background: #16a34a;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-}
-
-.delivery-type{
-  font-weight: 600;
-  color: #130E2B;
-  font-size: 20px;
-}
-.delivery-edit-btn {
-    border: 1px solid #33319A;
-    padding: 0px 20px;
-    border-radius: 100px;
-    color: #33319A;
-}
+  @media (max-width: 767px) {
+    .address-form-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
 </style>

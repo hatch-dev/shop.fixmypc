@@ -12,7 +12,7 @@
           <div class="detail" v-html="detail"></div>
         </div>
       </div>
-    </div>
+    </div> 
 </template>
 
 <script>

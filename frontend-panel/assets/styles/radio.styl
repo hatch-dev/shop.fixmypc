@@ -63,9 +63,15 @@
 }
 
 .rd-attr .input-content{
-  padding: 6px 20px;
+  padding: 10px 14px;
   font-size: 14px;
   font-weight: 500;
+  color: rgba(19, 14, 43, 1);
+  background: transparent;
+  border-color: rgba(227, 227, 239, 1);
+  border-radius: 8px;
+  font-size:14px;
+  position:relative;
 }
 
 .rd-attr .rd-checkmark:before {
@@ -112,7 +118,6 @@
   border-radius: 8px;
   margin: 0;
   overflow hidden
-  padding: 9px 14px 10px 14px
 }
 
 .rd-attr .rd-checkmark:hover {
@@ -125,7 +130,12 @@
 }
 
 .rd-attr input:checked ~ .rd-checkmark {
-  border-color: primary-color;
+   border-color: primary-color;
+   background:rgba(249, 251, 255, 1);
+
+}
+.rd-attr input:checked ~ .input-content{
+ color:rgba(51, 49, 154, 1);
 }
 
 .rd-attr input:checked ~ .rd-checkmark:before {

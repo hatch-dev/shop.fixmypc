@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CompareList;
+use App\Models\Helper\ListingPrices;
 use App\Models\Helper\Response;
 use App\Models\Helper\Utils;
 use App\Models\Helper\Validation;
@@ -69,12 +70,24 @@ class CompareListsController extends Controller
                         ->select(['products.id', 'products.slug', 'pl.badge', 'pl.title',
                             'products.selling', 'products.offered',
                             'products.image', 'flash_sale_products.price',
+                            'flash_sale_products.discount_type as flash_discount_type',
+                            'flash_sale_products.discount_value as flash_discount_value',
                             'flash_sales.end_time']);
 
                 }]);
             } else {
                 $query = $query->with(['product']);
             }
+
+            /*
+             * The variations, so the tile advertises the cheapest one a
+             * customer can actually buy rather than the product-level offer —
+             * the same relation the shop listing loads for the same reason.
+             */
+            $query = $query->with(['product.product_inventories' => function ($q) {
+                $q->select('id', 'product_id', 'quantity', 'price', 'is_active')
+                    ->withCount('inventory_attributes');
+            }]);
 
 
             $data = $query->where('user_id', $user->id)
@@ -91,6 +104,13 @@ class CompareListsController extends Controller
                     $item['created'] = Utils::formatDate($item->created_at);
                 }
             }
+
+            /*
+             * A comparison whose prices are not the customer's own prices is
+             * the one place a wrong figure is guaranteed to be read carefully.
+             * Same calculation as every other tile.
+             */
+            ListingPrices::decorateRelation($data, 'product', $user);
 
             return response()->json(new Response($request->token, $data));
 

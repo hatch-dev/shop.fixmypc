@@ -5817,6 +5817,7 @@
   "region": "Europe",
   "subregion": "Northern Europe",
   "states": {
+    "CW": { "code": "CW", "name": "Carlow" },
     "CN": { "code": "CN", "name": "Cavan" },
     "CE": { "code": "CE", "name": "Clare" },
     "C":  { "code": "C",  "name": "Cork" },

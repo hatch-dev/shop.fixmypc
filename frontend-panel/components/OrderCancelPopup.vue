@@ -7,13 +7,19 @@
     class="cancel-popup"
   >
     <template v-slot:content>
+      <!--
+        The form this modal is about to show, drawn at its own size. A popover
+        is sized by its content, so a spinner in a 200px box made the panel
+        open small and then resize under the pointer once the reasons landed.
+      -->
       <div
         v-if="fetchingCancelledData"
-        class="mn-h-200x flex"
+        class="mn-h-200x"
       >
-        <spinner
-          :radius="70"
-        />
+        <skeleton-base :height="12" width="90px" :mb="10" />
+        <skeleton-base :height="44" width="100%" :radius="8" :mb="22" />
+        <skeleton-base :height="12" width="110px" :mb="10" />
+        <skeleton-base :height="96" width="100%" :radius="8" />
       </div>
       <div
         v-else
@@ -83,7 +89,6 @@
   import util from '~/mixin/util'
   import validation from '~/mixin/validation'
   import PopOver from '~/components/PopOver'
-  import Spinner from '~/components/Spinner'
   import {mapGetters, mapActions} from 'vuex'
   import AjaxButton from "~/components/AjaxButton"
 
@@ -107,8 +112,7 @@
     },
     components: {
       AjaxButton,
-      PopOver,
-      Spinner
+      PopOver
     },
     computed: {
       ...mapGetters('language', ['langCode']),

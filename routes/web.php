@@ -24,6 +24,57 @@ Route::get('/.well-known/apple-developer-merchantid-domain-association', functio
     ]);
 });
 
+/*
+ * Newsletter unsubscribe — the target of the List-Unsubscribe header.
+ *
+ * Registered ahead of the {any} catch-all below, and outside the session
+ * middleware, because the POST arrives machine-to-machine from Gmail or
+ * Yahoo with no cookies. The signed URL is what authenticates it.
+ */
+Route::match(['get', 'post'], 'newsletter/unsubscribe',
+    [\App\Http\Controllers\NewsletterSubscriptionController::class, 'unsubscribe'])
+    ->name('newsletter.unsubscribe');
+
+/*
+ * Browser previews for the email templates. Registered outside production
+ * only: the pages render sample customer data and need no authentication.
+ */
+if (!app()->environment('production')) {
+    Route::get('mail-preview',
+        [\App\Http\Controllers\MailPreviewController::class, 'index']);
+
+    Route::get('mail-preview/{template}',
+        [\App\Http\Controllers\MailPreviewController::class, 'show']);
+}
+
+/*
+ * Serve the project-root uploads/ directory.
+ *
+ * The app is laid out for shared hosting, where the document root IS the
+ * project root, so Apache serves /uploads/... straight off disk and never
+ * reaches Laravel. Under `php artisan serve` (and any docroot=public/ setup)
+ * that directory is invisible: every image URL fell through to the {any}
+ * catch-all below and came back as a 500 HTML page, which is why product,
+ * category and brand thumbnails were blank across the admin panel.
+ *
+ * Registered ahead of the catch-all. Where a real web server already serves
+ * the file this route is simply never reached.
+ */
+Route::get('uploads/{path}', function ($path) {
+    foreach ([base_path('uploads'), public_path('uploads')] as $dir) {
+        $full = realpath($dir . DIRECTORY_SEPARATOR . $path);
+
+        // realpath + prefix check keeps ../ out of the served tree
+        if ($full === false || strpos($full, realpath($dir)) !== 0 || !is_file($full)) {
+            continue;
+        }
+
+        return response()->file($full, ['Cache-Control' => 'public, max-age=604800']);
+    }
+
+    abort(404);
+})->where('path', '.*');
+
 Route::group(['middleware' => 'web'], function () {
     Route::get('install', [InstallController::class, 'install']);
     Route::get('update', [InstallController::class, 'update']);

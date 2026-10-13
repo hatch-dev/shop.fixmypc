@@ -6,19 +6,13 @@
   >
     <template v-slot:rightArea>
 
-      <transition name="fade" mode="out-in">
-        <div
-          class="spinner-wrapper flex"
-          v-if="fetchingAjaxData"
-        >
-          <spinner
-            :radius="100"
-          />
-        </div>
-      </transition>
-
+      <!--
+        The store cards' own grid stands in for them while they load, instead
+        of a spinner over an empty panel. The empty-state test waits for the
+        fetch to finish: mid-load, an empty list means "not here yet".
+      -->
       <div
-        v-if="currentList && !currentList.length"
+        v-if="!fetchingAjaxData && currentList && !currentList.length"
         class="info-msg"
       >
         {{ $t('store.noData') }}
@@ -31,6 +25,17 @@
         <div class="area-content user-following">
           <div class="tile-container">
 
+            <template v-if="fetchingAjaxData">
+              <skeleton-card
+                v-for="index in 6"
+                :key="`sk-${index}`"
+                ratio="16:9"
+                :lines="2"
+                footer
+              />
+            </template>
+
+            <template v-else>
               <store-tile
                 v-for="(value, index) in currentList"
                 :key="`store-tile-${index}`"
@@ -47,6 +52,7 @@
                   />
                 </template>
               </store-tile>
+            </template>
           </div>
         </div>
       </div>
@@ -72,8 +78,6 @@
   import ComparedTile from '~/components/ComparedTile'
   import routeParamHelper from '~/mixin/routeParamHelper'
   import Pagination from '~/components/Pagination'
-  import Spinner from "~/components/Spinner";
-  import TileShimmer from "~/components/TileShimmer";
   import StoreTile from "~/components/StoreTile";
   import FollowBtn from "~/components/FollowBtn";
   import global from '~/mixin/global'
@@ -97,8 +101,6 @@
     components: {
       FollowBtn,
       StoreTile,
-      TileShimmer,
-      Spinner,
       LazyImage,
       RatePopup,
       AccountLayout,

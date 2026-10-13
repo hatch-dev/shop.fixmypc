@@ -12,5 +12,12 @@ class VerifyCsrfToken extends Middleware
      * @var array
      */
     protected $except = [
+        /*
+         * RFC 8058 one-click unsubscribe. Gmail and Yahoo POST to the
+         * List-Unsubscribe URL directly from their infrastructure, so there
+         * is no session and no token to send. The request is authenticated
+         * instead by Laravel's signed-URL signature, checked in the route.
+         */
+        'newsletter/unsubscribe',
     ];
 }

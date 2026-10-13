@@ -1,131 +1,198 @@
 <template>
-  <div :key="$route.fullPath">
-    <div class="container-fluid my-5" v-if="category?.child && category?.child.length">
-      <breadcrumb v-if="hasBreadcrumb" class="mb-15 mt-0" :page="resultTitle" :slugs="slugs" />
-      <h4 class="category-title">{{ category?.title }}</h4>
-      <div class="mobile-list">
-        <client-only>
-          <ImageSlider class="sub_cat-gl_slider" :per-view="perView" :gap="20" :responsive="perViewResponsive">
-            <template v-slot:content>
-              <li class="product-listing">
-                <nuxt-link :to="categoryLink(category)" :title="`All ${category?.title}`">
-                  <div class="category-box">
-                    <span class="category-count">
-                      {{ category?.products_count || 0 }}
-                    </span>
-                    <lazy-image
-                      :data-src="getImageURL(category.image)"
-                      :title="`All ${category?.title}`"
-                      :ALT="`All ${category?.title}`"
-                      class="category-icon-image"
-                    />
-                    <p>All {{ category?.title }}</p>
-                  </div>
-                </nuxt-link>
-              </li>
-              <li v-for="(cat, index) in category?.child" :key="index" class="product-listing">
-                <nuxt-link :to="categoryLink(cat)" :title="cat.title">
-                  <div class="category-box">
-                    <span class="category-count">
-                      {{ cat?.products_count || 0 }}
-                    </span>
-                    <lazy-image :data-src="getImageURL(cat.image)" :title="cat.title" :alt="cat.title" class="category-icon-image" />
-                    <p>{{ cat.title }}</p>
-                  </div>
-                </nuxt-link>
-              </li>
-            </template>
-          </ImageSlider>
-        </client-only>
-      </div>
-    </div>
+  <div :key="$route.fullPath" class="category-listing">
+    <div class="container-fluid">
 
-    <div class="detail-menu">
-      <div class="container-fluid">
-        <div class="list-heading flex sided">
-          <p class="hide-sm">
-            {{ pageHeading }}
-            <span v-if="resultTitle">
-              {{ $t('listingLayout.for') }} <span class="bold">"{{ resultTitle }}"</span>
-            </span>
-          </p>
-          <div class="flex gap-3">
-            <span class="hide-sm">{{ $t('listingLayout.sortBy') }}</span>
-            <client-only>
-              <dropdown class="sort-dropdown" :options="sortingOptions" :selected-key="sortby" @clicked="selectedSorting" />
-              <button v-show="isXsDevice" class="filter-btn flex outline-btn plr-20" @click.prevent="openFilter">
-                {{ $t('listingLayout.filter') }}
-                <span v-if="filteredCount">({{ filteredCount }})</span>
-                <i class="icon black" :class="[{ 'arrow-up': filterPopup }, { 'arrow-down': !filterPopup }]" />
-              </button>
-            </client-only>
-          </div>
+      <div class="crumb" v-if="hasBreadcrumb">
+        <breadcrumb :page="resultTitle" :slugs="slugs" />
+      </div>
+
+      <div class="page-head">
+        <div>
+          <h1>{{ resultTitle }}</h1>
+          <p v-if="pageSubtitle">{{ pageSubtitle }}</p>
         </div>
       </div>
-    </div>
 
-    <div class="container-fluid mtb-20 mtb-sm-15">
-      <div class="product-list">
-        
-        <aside v-if="!isXsDevice" class="left-area">
-          <div class="sidebar">
-             <button v-if="backBtn" @click.prevent="goingBack" class="flex start mb-15 clear-btn">
-               <span class="flex"> 
-                 <i class="dimen-16x icon double-arrow-left-icon mr-5 opacity-6"></i>
-                 {{ $t('date.gb') }}
-                </span>
-               </button>
-            <filter-category ref="filterCategory" :categories="categories" @going-next="goingNext" />
-            <filter-price ref="filterPrice" @reset-route="changeRoute" />
-            <filter-rating ref="filterRating" @reset-route="changeRoute" />
-            <filter-brand ref="filterBrand" :brands="brands" @reset-route="changeRoute" />
-            <filter-collection ref="filterCollection" :collections="collections" @reset-route="changeRoute" />
-            <filter-shipping ref="filterShipping" :shipping-rules="shippingRules" @reset-route="changeRoute" />
-          </div>
+      <div class="rail-wrap" v-if="subCategories.length" :class="{ 'has-prev': railPrev, 'has-next': railNext }">
+        <button
+          v-show="railPrev"
+          type="button"
+          class="rail-arrow rail-arrow--prev"
+          aria-label="previous"
+          @click.prevent="scrollRail(-1)"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+            stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+        </button>
+
+        <div class="rail" ref="rail" @scroll.passive="updateRail">
+        <nuxt-link :to="categoryLink(category)" :title="`All ${category.title}`" class="sub-chip on">
+          <span class="ico">
+            <lazy-image
+              :data-src="getImageURL(category.image)"
+              :title="`All ${category.title}`"
+              :alt="`All ${category.title}`"
+            />
+          </span>
+          All {{ (category.title || '').toLowerCase() }}
+          <span class="n">{{ category.products_count || 0 }}</span>
+        </nuxt-link>
+
+        <nuxt-link
+          v-for="(cat, index) in subCategories"
+          :key="index"
+          :to="categoryLink(cat)"
+          :title="cat.title"
+          class="sub-chip"
+        >
+          <span class="ico">
+            <lazy-image :data-src="getImageURL(cat.image)" :title="cat.title" :alt="cat.title" />
+          </span>
+          {{ cat.title }}
+          <span class="n">{{ cat.products_count || 0 }}</span>
+        </nuxt-link>
+        </div>
+
+        <button
+          v-show="railNext"
+          type="button"
+          class="rail-arrow rail-arrow--next"
+          aria-label="next"
+          @click.prevent="scrollRail(1)"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+            stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+        </button>
+      </div>
+
+      <div class="mob-bar">
+        <button type="button" class="btn btn-ghost" @click.prevent="openDrawer('cats')">
+          {{ $t('searchPopup.categories') }}
+        </button>
+        <button type="button" class="btn btn-ghost" @click.prevent="openDrawer('filters')">
+          {{ $t('listingLayout.filter') }}
+          <span v-if="filteredCount">({{ filteredCount }})</span>
+        </button>
+      </div>
+
+      <div class="body">
+
+        <aside class="side" v-if="!isMobileLayout">
+          <filter-category ref="filterCategory" :categories="treeCategories" :back-btn="backBtn" @go-back="goingBack" @going-next="goingNext" />
+          <filter-price ref="filterPrice" @reset-route="changeRoute" />
+          <filter-rating ref="filterRating" @reset-route="changeRoute" />
+          <filter-brand ref="filterBrand" :brands="brands" @reset-route="changeRoute" />
+          <filter-availability ref="filterAvailability" @reset-route="changeRoute" />
+          <filter-collection ref="filterCollection" :collections="collections" @reset-route="changeRoute" />
+          <!-- No "Shipping" filter: products are not assigned a shipping
+               rule any more, delivery comes from the address (2026-09-28). -->
         </aside>
 
-        <div v-if="isXsDevice && filterPopup" class="new-mobile-overlay" @click.self="closeFilter">
-          <div class="new-bottom-sheet">
-            <div class="sheet-header">
-              <button type="button" class="close-icon-btn" @click="closeFilter">
-                {{ $t('listingLayout.close') }}
-              </button>
-            </div>
+        <section>
+          <div class="res-bar">
+            <span class="count">{{ pageHeading }}</span>
 
-            <div class="sheet-body">
-              <div class="sidebar">
-                <button v-if="backBtn" @click.prevent="goingBack" class="flex start mb-15 clear-btn">
-                  <i class="dimen-16x icon double-arrow-left-icon mr-5 opacity-6"></i>
-                  {{ $t('date.gb') }}
+            <div class="res-tools">
+              <client-only>
+                <dropdown class="sort-dropdown" :options="sortingOptions" :selected-key="sortby" @clicked="selectedSorting" />
+              </client-only>
+
+              <div class="view-tog">
+                <button type="button" :class="{ on: view === 'grid' }" aria-label="Grid view" @click.prevent="view = 'grid'">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
+                  </svg>
                 </button>
-                <filter-category :categories="categories" @going-next="goingNext" />
-                <filter-price @reset-route="changeRoute" />
-                <filter-rating @reset-route="changeRoute" />
-                <filter-brand :brands="brands" @reset-route="changeRoute" />
-                <filter-collection :collections="collections" @reset-route="changeRoute" />
-                <filter-shipping :shipping-rules="shippingRules" @reset-route="changeRoute" />
+                <button type="button" :class="{ on: view === 'list' }" aria-label="List view" @click.prevent="view = 'list'">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="main-content">
-          <breadcrumb v-if="hasBreadcrumb" class="mb-15 mt-0" :page="resultTitle" :slugs="slugs" />
-          <div v-if="fetchingProductData" class="tile-container">
-             <tile-shimmer v-for="index in 20" :key="index" />
+          <div class="chips" v-if="activeFilters.length">
+            <button
+              v-for="(chip, index) in activeFilters"
+              :key="index"
+              type="button"
+              class="chip-x"
+              @click.prevent="removeFilter(chip)"
+            >
+              {{ chip.label }}
+              <span class="x" aria-hidden="true">&times;</span>
+            </button>
+            <button v-if="activeFilters.length > 1" type="button" class="chip-clear" @click.prevent="clearAllFilters">
+              {{ $t('listingLayout.clear') }}
+            </button>
           </div>
+
+          <div v-if="fetchingProductData" class="tile-container" :class="`view-${view}`">
+            <skeleton-product v-for="index in 20" :key="`sk-${index}`" />
+          </div>
+
           <div class="pos-rel" v-else>
-            <div class="tile-container" v-if="currentItems.length">
+            <div class="tile-container" :class="`view-${view}`" v-if="currentItems.length">
               <product-tile v-for="(value, index) in currentItems" :key="value.id || index" :product="value" />
             </div>
-            <div v-else class="empty-product">
-              No products found
+
+            <div v-else class="empty">
+              <div class="ico">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+                </svg>
+              </div>
+              <b>{{ $t('listingLayout.noProductFound') }}</b>
+              <p>Widen the price range or clear a filter to see more of the range.</p>
+              <div class="empty-acts" v-if="activeFilters.length">
+                <button type="button" class="btn btn-ink btn-sm" @click.prevent="clearAllFilters">
+                  {{ $t('listingLayout.clear') }}
+                </button>
+              </div>
             </div>
+
             <pagination class="mt-30" ref="productPagination" :total-page="totalPage" @fetching-data="fetchingData" />
           </div>
-        </div>
+        </section>
       </div>
     </div>
+
+    <transition name="scrim-fade">
+      <div v-if="drawerOpen" class="scrim" @click="closeDrawer" />
+    </transition>
+
+    <transition name="drawer-slide">
+      <aside v-if="drawerOpen" class="drawer">
+        <div class="drawer-head">
+          <b>{{ drawerMode === 'cats' ? $t('searchPopup.categories') : $t('listingLayout.filter') }}</b>
+          <button type="button" class="x" :aria-label="$t('listingLayout.close')" @click.prevent="closeDrawer">&times;</button>
+        </div>
+
+        <div class="drawer-body">
+          <div class="side">
+            <filter-category :categories="treeCategories" :back-btn="backBtn" @go-back="goingBack" @going-next="goingNext" />
+            <template v-if="drawerMode !== 'cats'">
+              <filter-price @reset-route="changeRoute" />
+              <filter-rating @reset-route="changeRoute" />
+              <filter-brand :brands="brands" @reset-route="changeRoute" />
+              <filter-availability @reset-route="changeRoute" />
+              <filter-collection :collections="collections" @reset-route="changeRoute" />
+            </template>
+          </div>
+        </div>
+
+        <div class="drawer-foot">
+          <button type="button" class="btn btn-ghost" @click.prevent="clearAllFilters">
+            {{ $t('listingLayout.clear') }}
+          </button>
+          <button type="button" class="btn btn-go" @click.prevent="closeDrawer">
+            {{ $t('checkout.apply') }}
+          </button>
+        </div>
+      </aside>
+    </transition>
   </div>
 </template>
 
@@ -134,24 +201,34 @@ import Pagination from '~/components/Pagination'
 import { mapGetters, mapActions } from 'vuex'
 import util from '~/mixin/util'
 import routeParamHelper from '~/mixin/routeParamHelper'
+import listingParams from '~/mixin/listingParams'
 import Dropdown from '~/components/Dropdown'
+import LazyImage from '~/components/LazyImage'
 import FilterPrice from "./FilterPrice";
 import FilterCategory from "./FilterCategory";
-import TileShimmer from "./TileShimmer";
 import Spinner from "./Spinner";
 import ProductTile from "./ProductTile";
 import FilterRating from "./FilterRating";
 import FilterBrand from "./FilterBrand";
+import FilterAvailability from "./FilterAvailability";
 import FilterCollection from "./FilterCollection";
 import FilterShipping from "./FilterShipping";
 import Breadcrumb from "./Breadcrumb";
+
+// Matches the .body grid breakpoint in assets/styles/category-listing.styl
+const MOBILE_BREAKPOINT = 900
 
 export default {
   name: 'ProductList',
   data() {
     return {
       loaded: false,
-      filterPopup: true,
+      view: 'grid',
+      drawerOpen: false,
+      drawerMode: 'filters',
+      windowWidth: 0,
+      railPrev: false,
+      railNext: false,
       sortingOptions: {
         featured: { title: this.$t('featured.featured') },
         price_low_to_high: { title: this.$t('listingLayout.priceLowToHigh') },
@@ -161,8 +238,13 @@ export default {
       sortby: this.$route.query.sortby || '',
     }
   },
-  mixins: [util, routeParamHelper],
+  mixins: [util, routeParamHelper, listingParams],
   watch: {
+    subCategories: {
+      handler() {
+        this.$nextTick(this.resetRail)
+      },
+    },
     '$route.fullPath': {
       immediate: true,
       handler() {
@@ -183,12 +265,12 @@ export default {
   props: {
     perView: {
       type: Number,
-      default: 6
+      default: 8
     },
     perViewResponsive: {
       type: Array,
       default() {
-        return [6, 3, 3, 3, 3]
+        return [6, 5, 4, 3, 3]
       }
     },
     category: {
@@ -234,21 +316,86 @@ export default {
     FilterShipping,
     FilterCollection,
     FilterBrand,
+    FilterAvailability,
     FilterRating,
     ProductTile,
     Spinner,
-    TileShimmer,
     FilterCategory,
     FilterPrice,
     Pagination,
-    Dropdown
+    Dropdown,
+    LazyImage
   },
   computed: {
+    isMobileLayout() {
+      return this.windowWidth > 0 && this.windowWidth <= MOBILE_BREAKPOINT
+    },
+    // The sidebar tree lists every top level category (same source the header
+    // nav uses). The category being browsed is merged with the listing payload
+    // so that branch keeps its children and product counts.
+    treeCategories() {
+      const nav = this.navCategories
+      const all = (nav && nav.length) ? nav : (this.homeCategories || [])
+      if (!all.length) {
+        return this.categories || []
+      }
+
+      const current = (this.categories || [])[0]
+
+      return all.map((item) => {
+        if (current && item.slug === current.slug) {
+          return { ...item, ...current }
+        }
+        return item
+      })
+    },
+    subCategories() {
+      return this.category?.child || []
+    },
+    pageSubtitle() {
+      if (this.category?.meta_description) {
+        return this.category.meta_description
+      }
+      if (this.products?.total) {
+        return `${this.products.total} lines stocked`
+      }
+      return ''
+    },
+    // Applied filters rendered as removable chips above the results grid.
+    activeFilters() {
+      const query = this.$route.query || {}
+      const chips = []
+
+      if (query.rating) {
+        chips.push({ key: 'rating', label: `${query.rating}★ & ${this.$t('listingLayout.up')}` })
+      }
+
+      if (query.min || query.max) {
+        const min = query.min ? `${this.currencyIcon}${query.min}` : ''
+        const max = query.max ? `${this.currencyIcon}${query.max}` : ''
+        let label = `${min} – ${max}`
+        if (min && !max) {
+          label = `${min}+`
+        } else if (!min && max) {
+          label = `${this.$t('listingLayout.max')} ${max}`
+        }
+        chips.push({ key: 'price', label })
+      }
+
+      if (query.stock === 'true') {
+        chips.push({ key: 'stock', label: this.$t('listingLayout.inStock') })
+      }
+
+      if (query.offer === 'true') {
+        chips.push({ key: 'offer', label: this.$t('listingLayout.onOffer') })
+      }
+
+      return chips
+        .concat(this.chipsFromList('brand', this.brands))
+        .concat(this.chipsFromList('collection', this.collections))
+    },
     filteredCount() {
       let count = 0
-      if (this.shippingFromRoute) {
-        count++
-      }
       if (this.ratingFromRoute) {
         count++
       }
@@ -258,13 +405,13 @@ export default {
       if (this.maxPriceFromRoute) {
         count++
       }
-      return count
-    },
-    isXsDevice() {
-      if (process?.browser) {
-        return window.innerWidth <= 576
+      if (this.stockFromRoute) {
+        count++
       }
-      return false
+      if (this.offerFromRoute) {
+        count++
+      }
+      return count
     },
     pageHeading() {
       if (this.products) {
@@ -288,9 +435,121 @@ export default {
       return this.products?.last_page
     },
     ...mapGetters('common', ['currencyIcon', 'setting']),
+    ...mapGetters('home', { homeCategories: 'categories' }),
+    ...mapGetters('common', ['navCategories']),
     ...mapGetters('listing', ['products', 'brands', 'shippingRules', 'collections']),
   },
   methods: {
+    // Turns a comma separated id list in the route into one chip per id.
+    chipsFromList(key, list) {
+      const raw = this.$route.query?.[key]
+      if (!raw) {
+        return []
+      }
+      return String(raw).split(',').filter(Boolean).map((id) => {
+        const item = (list || []).find(value => `${value.id}` === `${id}`)
+        return { key, value: id, label: item?.title || id }
+      })
+    },
+    removeFilter(chip) {
+      const filtered = Object.assign({}, this.$route.query)
+
+      if (chip.key === 'price') {
+        delete filtered.min
+        delete filtered.max
+      } else if (chip.value !== undefined) {
+        const rest = String(filtered[chip.key] || '').split(',').filter(value => value && value !== `${chip.value}`)
+        if (rest.length) {
+          filtered[chip.key] = rest.join(',')
+        } else {
+          delete filtered[chip.key]
+        }
+      } else {
+        delete filtered[chip.key]
+      }
+
+      this.changeRoute(filtered)
+    },
+    clearAllFilters() {
+      const filtered = {}
+      if (this.$route.query?.sortby) {
+        filtered.sortby = this.$route.query.sortby
+      }
+
+      this.$refs.filterPrice?.clearPrice()
+      this.$refs.filterShipping?.clearShipping()
+      this.$refs.filterRating?.clearRating()
+      this.$refs.filterAvailability?.clearAvailability()
+
+      if (this.drawerOpen) {
+        this.closeDrawer()
+      }
+
+      this.changeRoute(filtered)
+    },
+    // the sub category rail is a swipe carousel; the arrows appear only when
+    // there is something either side to scroll to
+    updateRail() {
+      const track = this.$refs.rail
+      if (!track) {
+        this.railPrev = false
+        this.railNext = false
+        return
+      }
+      const max = track.scrollWidth - track.clientWidth
+      const at = Math.abs(track.scrollLeft)
+      // a few px of tolerance: sub-pixel layout can leave scrollLeft at
+      // something like 0.5 when the track is genuinely at the start
+      this.railPrev = at > 8
+      this.railNext = max > 8 && at < max - 8
+    },
+    resetRail() {
+      const track = this.$refs.rail
+      if (track) {
+        track.scrollLeft = 0
+      }
+      this.updateRail()
+    },
+    isRailRtl(track) {
+      return typeof window !== 'undefined'
+        && window.getComputedStyle(track).direction === 'rtl'
+    },
+    scrollRail(direction) {
+      const track = this.$refs.rail
+      if (!track) {
+        return
+      }
+      // one full page per arrow click, as in the search popup carousel
+      const step = track.clientWidth
+      const offset = (this.isRailRtl(track) ? -direction : direction) * step
+      if (track.scrollBy) {
+        track.scrollBy({ left: offset, behavior: 'smooth' })
+      } else {
+        track.scrollLeft += offset
+      }
+    },
+    onResize() {
+      this.windowWidth = window.innerWidth
+      this.$nextTick(this.updateRail)
+      if (this.windowWidth > MOBILE_BREAKPOINT && this.drawerOpen) {
+        this.closeDrawer()
+      }
+    },
+    openDrawer(mode) {
+      this.drawerMode = mode
+      this.drawerOpen = true
+      if (process.client) {
+        this.scrollY = window.scrollY || window.pageYOffset
+        document.documentElement.style.setProperty('--scroll-y', `-${this.scrollY}px`)
+        document.body.classList.add('no-scroll')
+      }
+    },
+    closeDrawer() {
+      this.drawerOpen = false
+      if (process.client) {
+        document.body.classList.remove('no-scroll')
+      }
+    },
     async goingBack() {
       await this.$router.go(-1)
 
@@ -298,25 +557,6 @@ export default {
         this.fetchingData()
       })
     },
-    // openFilter() {
-    //   this.filterPopup = true
-    //   document.body.classList.add('no-scroll')
-    // },
-      openFilter() {
-        this.filterPopup = true
-        if (process.client) {
-          this.scrollY = window.scrollY || window.pageYOffset
-          document.documentElement.style.setProperty('--scroll-y', `-${this.scrollY}px`)
-          document.body.classList.add('no-scroll')
-        }
-      },
-       closeFilter() {
-        this.filterPopup = false
-        if (process.client) {
-          document.body.classList.remove('no-scroll')
-          window.scrollTo(0, this.scrollY || 0)
-        }
-      },
     selectedSorting(data) {
       if (this.sortby) {
         let filtered = Object.assign({}, this.$route.query)
@@ -336,8 +576,9 @@ export default {
       this.$refs.filterShipping?.clearShipping()
       this.clearSortby()
       this.$refs.filterRating?.clearRating()
-      if (this.isXsDevice) {
-        this.closeFilter()
+      this.$refs.filterAvailability?.clearAvailability()
+      if (this.drawerOpen) {
+        this.closeDrawer()
       }
     },
     changeRoute(evt) {
@@ -362,171 +603,17 @@ export default {
     },
   },
   destroyed() {
-    if (this.isXsDevice && this.filterPopup) {
-      this.closeFilter()
+    if (process.client) {
+      window.removeEventListener('resize', this.onResize)
+      document.body.classList.remove('no-scroll')
     }
   },
   async mounted() {
-    this.$nextTick(function () {
-      if (this.isXsDevice && this.filterPopup) {
-        this.closeFilter()
-      }
-    })
+    this.onResize()
+    window.addEventListener('resize', this.onResize)
+    this.$nextTick(this.resetRail)
+    // the chip icons load late and change the track width
+    setTimeout(this.updateRail, 300)
   }
 }
 </script>
-<style scoped>
-.category-icon-image {
-  width: 80px;
-  height: 80px;
-  border-radius: 100%;
-  overflow: hidden;
-}
-
-.category-title {
-  font-weight: 500;
-  margin-bottom: 30px;
-  font-size: 34px;
-  color: #130E2B;
-}
-
-.category-box {
-  background: #F3F5FC;
-  border-radius: 21px;
-  padding: 30px 10px;
-  text-align: center;
-  font-size: 20px;
-  font-weight: 500;
-  color: #130E2B;
-  transition: 0.3s;
-  border: 1px solid #E3E3EF;
-  width: 100%;
-
-}
-
-.category-box p {
-  margin-top: 10px;
-  color: #130E2B;
-  font-size: 20px;
-  font-weight: 500;
-}
-
-.category-box:hover {
-  border-color: #4a3aff;
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-  background: #fff;
-}
-
-.product-listing a {
-  display: block;
-}
-
-.glide__slides {
-  padding: 20px 0px !important;
-}
-
-.category-box {
-  position: relative;
-}
-
-.category-count {
-    position: absolute;
-    background: red;
-    color: #fff;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 600;
-    z-index: 2;
-    right: -15px;
-    top: -15px;
-}
-
-@media(max-width:768px) {
-  .category-box p {
-      font-size: 12px;
-      white-space: normal;
-      height: 39px;
-      overflow: hidden;
-  }
-
-  .category-box {
-    padding: 15px;
-  }
-}
-.sidebar .star-filter button {
-    display: block !important;
-}
-
-@media (max-width: 576px) {
-  .new-mobile-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999999;
-    display: flex;
-    align-items: flex-end; 
-  }
-  .new-bottom-sheet {
-    width: 100%;
-    height: 60vh;
-    background: #ffffff !important;
-    border-radius: 20px 20px 0 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
-    animation: slideUp 0.3s ease-out;
-  }
-  .sheet-header {
-    padding: 15px;
-    border-bottom: 1px solid #f0f0f0;
-    text-align: right;
-    position: relative;
-    flex-shrink: 0;
-  }
-    .new-bottom-sheet .sheet-header .close-icon-btn {
-      padding: 15px 20px;
-      height: unset;
-      line-height: 0;
-      font-size: 16px;
-      color: #232159;
-      font-weight: 700;
-    }
-  .sheet-body {
-    flex: 1;
-    overflow-y: auto !important; 
-    padding: 15px;
-    -webkit-overflow-scrolling: touch;
-  }
-  .sheet-body .sidebar {
-    display: block !important;
-    background: #fff !important;
-  }
-
-  .close-icon {
-    position: absolute;
-    right: 15px;
-    top: 10px;
-    background: #eee;
-    border: none;
-    border-radius: 50%;
-    width: 35px;
-    height: 35px;
-    cursor: pointer;
-    touch-action: manipulation;
-  }
-  @keyframes slideUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-  }
-}
-</style>

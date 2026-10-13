@@ -2,60 +2,38 @@
 
   <div class="pos-rel">
 
-    <div
-      v-if="fetching"
-      class="h-100 dply-felx j-center abs-centered"
-    >
-      <spinner
-        :radius="60"
-        color="primary"
-        class="mr-15"
+    <div class="card p-15 p-xs-10 dply-felx sided mb-20 mb-sm-15 mb-xs-10">
+      <div class="stat-head">
+        <h5><b>{{ $t('index.orderStat') }}</b></h5>
+        <span v-if="!fetching && appliedRange" class="stat-head__range">
+          {{ appliedLabel }}
+        </span>
+      </div>
+      <date-range-picker
+        :value="range"
+        :applied="appliedRange"
+        :max-date="maxDate"
+        :disabled="fetching"
+        allow-all
+        default-preset="all"
+        @change="rangeChanged"
       />
     </div>
-
-    <div class="card p-15 p-xs-10 dply-felx mb-20 mb-sm-15 mb-xs-10">
-      <h5><b>{{ $t('index.orderStat') }}</b></h5>
-      <dropdown
-        class="right-dropdown"
-        :selected-key="selected"
-        :options="dashboardOptions"
-        @clicked="dropdownSelected"
-      />
-    </div>
-    <div class="order-status-wrapper mb-20 mb-sm-15 mb-xs-10">
-
-      <div class="card p-20">
-        <p>
-          {{ $t('index.orderCan') }}
-        </p>
-        <h3>{{ cancelled }}</h3>
-      </div>
-      <div class="card p-20">
-        <p>
-          {{ $t('index.orderPend') }}
-        </p>
-        <h3>{{ pending }}</h3>
-      </div>
-      <div class="card p-20">
-        <p>
-        <p>
-          {{ $t('index.orderConf') }}
-        </p>
-        <h3>{{ confirmed }}</h3>
-      </div>
-      <div class="card p-20">
-        <p>
-          {{ $t('index.packPick') }}
-        </p>
-        <h3>{{ pickedUp }}</h3>
-      </div>
-      <div class="card p-20">
-        <p>{{ $t('index.onWay') }}</p>
-        <h3>{{ onTheWay }}</h3>
-      </div>
-      <div class="card p-20">
-        <p>{{ $t('index.delivered') }}</p>
-        <h3>{{ delivered }}</h3>
+    <div class="order-status-wrapper status-cards mb-20 mb-sm-15 mb-xs-10">
+      <div
+        v-for="card in statusCards"
+        :key="card.key"
+        class="card p-20 stat-mini"
+      >
+        <div class="stat-top">
+          <p class="stat-label">
+            {{ card.label }}
+          </p>
+          <growth-badge v-if="!fetching" :value="card.growth" />
+          <skeleton-block v-else width="34px" height="12px" />
+        </div>
+        <h3 v-if="!fetching" class="stat-value">{{ card.value }}</h3>
+        <skeleton-block v-else width="46px" height="28px" radius="8px" class="mt-5" />
       </div>
     </div>
 
@@ -64,92 +42,22 @@
         <h5 class="mb-15">
           <b>{{ $t('index.topCat') }}</b>
         </h5>
-        <p
-          v-if="categories && !categories.length"
-          class="mb-10"
-        >
-          {{ $t('index.nf') }}
-        </p>
-        <div v-else class="table-wrapper">
-          <table
-            class="mn-w-400x mb-10 mt-0 tr-border"
-          >
-            <tr class="lite-bold">
-              <th>{{ $t('index.title') }}</th>
-              <th>{{ $t('index.sold') }}</th>
-              <th>{{ $t('index.amount') }}</th>
-            </tr>
-            <tr
-              v-for="(value, index) in categories"
-              :key="index"
-            >
-              <td class="">
-                <nuxt-link
-                  :to="`/categories/${value.id}`"
-                  class="dply-felx j-left link"
-                >
-                  <lazy-image
-                    class="mr-20"
-                    :data-src="getThumbImageURL(value.image)"
-                    :alt="value.title"
-                  />
-                  <h5 class="mx-w-300x">{{ value.title }}</h5>
-                </nuxt-link>
-              <td>
-                {{ value.total }}
-              </td>
-              <td>
-                {{ priceFormatting(value.total_price) }}
-              </td>
-            </tr>
-          </table>
-        </div>
+        <top-table
+          :rows="categories"
+          :loading="fetching"
+          link-prefix="/categories"
+        />
       </div>
 
       <div class="card p-20 p-sm-15">
         <h5 class="mb-15">
           <b>{{$t('index.topBra')}}</b>
         </h5>
-        <p
-          v-if="brands && !brands.length"
-          class="mb-10"
-        >
-          {{ $t('index.nf') }}
-        </p>
-        <div v-else class="table-wrapper">
-          <table
-            class="mn-w-400x mb-10 mt-0 tr-border"
-          >
-            <tr class="lite-bold">
-              <th>{{ $t('index.title') }}</th>
-              <th>{{ $t('index.sold') }}</th>
-              <th>{{ $t('index.amount') }}</th>
-            </tr>
-            <tr v-for="(value, index) in brands"
-                :key="index">
-              <td class="">
-                <nuxt-link
-                  :to="`/brands/${value.id}`"
-                  class="dply-felx j-left link"
-                >
-                  <lazy-image
-                    class="mr-20"
-                    :data-src="getThumbImageURL(value.image)"
-                    :alt="value.title"
-                  />
-                  <h5 class="mx-w-300x">{{ value.title }}</h5>
-                </nuxt-link>
-
-              </td>
-              <td>
-                {{ value.total }}
-              </td>
-              <td>
-                {{ priceFormatting(value.total_price) }}
-              </td>
-            </tr>
-          </table>
-        </div>
+        <top-table
+          :rows="brands"
+          :loading="fetching"
+          link-prefix="/brands"
+        />
       </div>
     </div>
 
@@ -157,56 +65,23 @@
       <h5 class="mb-10">
         <b>{{ $t('index.topPro') }}</b>
       </h5>
-      <p
-        v-if="products && !products.length"
-        class="mb-10"
-      >
-        {{ $t('index.nf') }}
-      </p>
-      <div v-else class="table-wrapper">
-        <table
-          class="mn-w-800x mb-10 mt-0 tr-border"
-        >
-          <tr class="lite-bold">
-            <th>{{ $t('index.title') }}</th>
-            <th>{{ $t('index.sold') }}</th>
-            <th>{{ $t('index.amount') }}</th>
-          </tr>
-          <tr v-for="(value, index) in products"
-              :key="index">
-            <td>
-              <nuxt-link
-                class="dply-felx j-left link"
-                :to="`/products/${value.id}`"
-              >
-                <lazy-image
-                  class="mr-20"
-                  :data-src="getThumbImageURL(value.image)"
-                  :alt="value.title"
-                />
-                <h5 class="mx-w-800x">{{ value.title }}</h5>
-              </nuxt-link>
-            </td>
-            <td>
-              {{ value.total }}
-            </td>
-            <td>
-              {{ priceFormatting(value.total_price) }}
-            </td>
-          </tr>
-        </table>
-      </div>
-
+      <top-table
+        :rows="products"
+        :loading="fetching"
+        link-prefix="/products"
+        wide
+      />
     </div>
   </div>
 </template>
 
 <script>
   import util from '~/mixin/util'
-  import Dropdown from '~/components/Dropdown'
+  import DateRangePicker from '~/components/DateRangePicker'
   import {mapGetters, mapActions} from 'vuex'
-  import Spinner from '~/components/Spinner'
-  import LazyImage from "../LazyImage";
+  import GrowthBadge from "../GrowthBadge"
+  import SkeletonBlock from "../SkeletonBlock"
+  import TopTable from "./TopTable"
 
   export default {
     name: 'OrderStatistic',
@@ -214,15 +89,8 @@
       return {
         orderStatistic: null,
         fetching: true,
-        time: null,
-        selected: '9999',
-        dashboardOptions: {
-          '9999': {title: this.$t('index.all') },
-          '1': {title: this.$t('index.today')},
-          '7': {title: this.$t('index.lw')},
-          '30': {title: this.$t('index.lm')},
-          '365': {title: this.$t('index.ly')}
-        }
+        // Same shape as the Sales Overview control, resolved server-side.
+        range: { preset: 'all', start: null, end: null }
       }
     },
     watch: {
@@ -232,9 +100,10 @@
     },
     mixins: [util],
     components: {
-      LazyImage,
-      Dropdown,
-      Spinner
+      GrowthBadge,
+      SkeletonBlock,
+      TopTable,
+      DateRangePicker
     },
     props: {
       orderType: {
@@ -249,8 +118,39 @@
       currencyIcon(){
         return this.setting?.currency_icon || '$'
       },
+      appliedRange() {
+        return this.orderStatistic?.range || null
+      },
+      appliedLabel() {
+        const r = this.appliedRange
+        if (!r) return ''
+        const fmt = iso => {
+          const d = new Date(iso + 'T00:00:00')
+          if (isNaN(d)) return iso
+          const day = String(d.getDate()).padStart(2, '0')
+          const month = d.toLocaleString(this.$i18n?.locale || 'en', { month: 'short' })
+          return `${day} ${month} ${d.getFullYear()}`
+        }
+        return r.start === r.end ? fmt(r.start) : `${fmt(r.start)} – ${fmt(r.end)}`
+      },
+      bounds() {
+        return this.orderStatistic?.data_bounds || {}
+      },
+      maxDate() {
+        return this.bounds.today || null
+      },
+      statusCards() {
+        return [
+          { key: 'cancelled', label: this.$t('index.orderCan'), value: this.cancelled, growth: this.growth.cancelled },
+          { key: 'pending', label: this.$t('index.orderPend'), value: this.pending, growth: this.growth[this.orderStatusIn.PENDING] },
+          { key: 'confirmed', label: this.$t('index.orderConf'), value: this.confirmed, growth: this.growth[this.orderStatusIn.CONFIRMED] },
+          { key: 'picked', label: this.$t('index.packPick'), value: this.pickedUp, growth: this.growth[this.orderStatusIn.PICKED_UP] },
+          { key: 'onway', label: this.$t('index.onWay'), value: this.onTheWay, growth: this.growth[this.orderStatusIn.ON_THE_WAY] },
+          { key: 'delivered', label: this.$t('index.delivered'), value: this.delivered, growth: this.growth[this.orderStatusIn.DELIVERED] }
+        ]
+      },
       cancelled() {
-        return this.orderStatistic?.cancelled
+        return this.orderStatistic?.cancelled || 0
       },
       pending() {
         return this.statistics[this.orderStatusIn.PENDING] || 0
@@ -274,6 +174,9 @@
         })
         return stat
       },
+      growth() {
+        return this.orderStatistic?.growth || {}
+      },
       categories() {
         return this.orderStatistic?.categories
       },
@@ -286,15 +189,8 @@
       ...mapGetters('setting', ['setting']),
     },
     methods: {
-      calcDate(days) {
-        if (days < 9999) {
-          var d = new Date(new Date().setHours(0, 0, 0, 0))
-          return new Date(d.getTime() - ((days - 1) * 24 * 60 * 60 * 1000))
-        }
-        return null
-      },
-      dropdownSelected(evt) {
-        this.time = this.time = this.calcDate(parseInt(evt.key))
+      rangeChanged(payload) {
+        this.range = payload
         this.fetchingData()
       },
 
@@ -302,16 +198,19 @@
         this.fetching = true
 
         try {
-
+          // The preset key is resolved server-side by the same resolver the
+          // Sales Overview uses, so both blocks agree on what a window means.
           const data = await this.getRequest({
             params: {
               order_type: this.orderType,
-              time: this.time,
               time_zone: this.timeZone,
+              range_preset: this.range.preset,
+              ...(this.range.preset === 'custom'
+                ? { range_start: this.range.start, range_end: this.range.end }
+                : {})
             },
             api: 'orderStatistic'
           })
-
 
           this.orderStatistic = data
 
@@ -322,14 +221,8 @@
       },
       ...mapActions('common', ['getRequest'])
     },
-    destroyed() {
-
-    },
     mounted() {
       this.fetchingData()
     }
   }
 </script>
-
-<style lang="stylus">
-</style>

@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Cancellation;
 use App\Models\Cart;
+use App\Models\Helper\BundleDiscount;
 use App\Models\Helper\ControllerHelper;
+use App\Models\Helper\Pricing;
 use App\Models\Helper\Response;
 use App\Models\Helper\Utils;
 use App\Models\Helper\Validation;
 use App\Models\Order;
+use App\Models\OrderedBundleDiscount;
 use App\Models\OrderedProduct;
 use App\Models\PosOrder;
 use App\Models\Setting;
@@ -156,6 +159,7 @@ class PosOrdersController extends ControllerHelper
             if ($request->voucher) {
                 $voucher = Voucher::where('code', $request->voucher)
                     ->where('status', Config::get('constants.status.PUBLIC'))
+                    ->whereNull('gift_value')
                     ->get()->first();
 
                 if (is_null($voucher)) {
@@ -281,15 +285,16 @@ class PosOrdersController extends ControllerHelper
                     'offline_payment_method' => $request->offline_payment_method,
                 ]);
 
-                Order::where('id', $order->id)->update([
-                    'pos_order_id' => $posOrder->id,
-                    'payment_done' => true
-                ]);
+                Order::where('id', $order->id)->update(array_merge(
+                    Order::paymentStamp(true),
+                    ['pos_order_id' => $posOrder->id]
+                ));
 
                 $orderedProducts = [];
                 $totalPrice = 0;
 
-                $shippingId = [];
+                // Delivery is charged once per order (Helper\Shipping).
+                $shippingCharged = false;
 
                 foreach ($existingCart as $key => $cart) {
 
@@ -323,24 +328,20 @@ class PosOrdersController extends ControllerHelper
 
                         $shippingPrice = 0;
 
-                        if($cart->shipping_place_id){
-                            $currentShippingId = $cart->shipping_place->shipping_rule->id;
-                            $cart->shipping_place_id &&
+                        /*
+                         * The row was decided by CartsController::updateShipping
+                         * from the customer's address; it is charged once, on
+                         * the first line that carries it.
+                         */
+                        if ($cart->shipping_place_id && $cart->shipping_place && !$shippingCharged) {
 
-                            $shippingIdExists = key_exists($currentShippingId, $shippingId) &&
-                                (int)$shippingId[$currentShippingId] === (int)$cart->shipping_type;
-
-                            if(!$cart->shipping_place->shipping_rule->single_price ||
-                                ($cart->shipping_place->shipping_rule->single_price && !$shippingIdExists)) {
-
-                                if ((int)$cart->shipping_type === Config::get('constants.shippingTypeIn.LOCATION')) {
-                                    $shippingPrice = $cart->shipping_place->price;
-                                } else if ((int)$cart->shipping_type === Config::get('constants.shippingTypeIn.PICKUP')) {
-                                    $shippingPrice = $cart->shipping_place->pickup_price;
-                                }
-
-                                $shippingId[$currentShippingId] = $cart->shipping_type;
+                            if ((int)$cart->shipping_type === Config::get('constants.shippingTypeIn.LOCATION')) {
+                                $shippingPrice = $cart->shipping_place->price;
+                            } else if ((int)$cart->shipping_type === Config::get('constants.shippingTypeIn.PICKUP')) {
+                                $shippingPrice = $cart->shipping_place->pickup_price;
                             }
+
+                            $shippingCharged = true;
                         }
 
                         // Bundle calculation
@@ -369,6 +370,18 @@ class PosOrdersController extends ControllerHelper
                         $totalTax = (float)($taxQtyOffer * (int)$cart->quantity);
                         $priceWithoutBundle = (float)($currentPrice * ((int)$cart->quantity - (int)$bundleQtyOffer));
                         $total = (float)($shippingPrice + $totalTax + $priceWithoutBundle);
+
+                        /*
+                         * What this line is actually being charged, for
+                         * Helper\BundleDiscount below.
+                         *
+                         * POS works its own price out here and never writes it
+                         * back to the row, exactly as OrdersController does, so
+                         * the discount must be measured against this figure and
+                         * not against the stored carts.price -- which is
+                         * whatever the catalogue last said.
+                         */
+                        $cart->charged_unit_price = $currentPrice;
 
                         $totalPrice += $total;
 
@@ -401,6 +414,30 @@ class PosOrdersController extends ControllerHelper
 
                 $totalPrice = number_format($totalPrice, 2, '.', '');
 
+                /*
+                 * The Essentials Bundle discount, on the counter as well as
+                 * on the website.
+                 *
+                 * A POS basket is `carts` rows scoped by `admin_id`, and
+                 * CartsController::ownerScope scopes to exactly that whenever
+                 * an administrator is signed in and no guest token is sent --
+                 * so `POST api/v1/cart/bundle` writes bundle-marked lines
+                 * into a POS basket today. This screen simply never looked at
+                 * the marker: the set was quoted at a discount, added, and
+                 * then charged in full.
+                 *
+                 * Re-derived from the lines being sold, with the same call
+                 * the storefront basket and checkout make, so all three agree
+                 * by construction. Taken off after the voucher, matching the
+                 * order OrdersController applies them in.
+                 */
+                $bundleBreakdown = BundleDiscount::forRows($existingCart);
+
+                $bundleDiscountAmount = Pricing::round(max(0, min(
+                    $bundleBreakdown['total'],
+                    max(0, Pricing::round((float)$totalPrice - (float)$offeredVoucher))
+                )));
+
                 $result = OrderedProduct::insert($orderedProducts);
 
                 if ($result) {
@@ -410,14 +447,54 @@ class PosOrdersController extends ControllerHelper
                         ->delete();
 
 
+                    /*
+                     * Record what each bundle actually took off.
+                     *
+                     * Mandatory, not bookkeeping: OrderSummary re-derives
+                     * every order total from the order's OWN rows and
+                     * subtracts `ordered_bundle_discount`. A POS order that
+                     * charged the discount but recorded it nowhere would have
+                     * its receipt, its invoice and the admin order detail all
+                     * add up to MORE than was taken at the counter.
+                     *
+                     * Written in proportion so the rows sum to exactly the
+                     * figure taken off even when the cap above bit, with the
+                     * last row carrying the rounding. Same as OrdersController.
+                     */
+                    if ($bundleDiscountAmount > 0 && $bundleBreakdown['total'] > 0) {
+
+                        $scale = $bundleDiscountAmount / $bundleBreakdown['total'];
+                        $written = 0.0;
+                        $last = count($bundleBreakdown['bundles']) - 1;
+
+                        foreach ($bundleBreakdown['bundles'] as $index => $granted) {
+
+                            $amount = $index === $last
+                                ? Pricing::round($bundleDiscountAmount - $written)
+                                : Pricing::round($granted['discount'] * $scale);
+
+                            $written += $amount;
+
+                            OrderedBundleDiscount::create([
+                                'order_id' => $order->id,
+                                'bundle_deal_id' => $granted['id'],
+                                'title' => $granted['title'],
+                                'discount' => $amount,
+                            ]);
+                        }
+                    }
+
+                    $payable = Pricing::round(max(0,
+                        (float)$totalPrice - (float)$offeredVoucher - $bundleDiscountAmount));
+
                     $re['currency'] = $setting->currency;
-                    $re['amount'] = number_format((float)$totalPrice - $offeredVoucher, 2, '.', '');
+                    $re['amount'] = number_format($payable, 2, '.', '');
                     $re['id'] = $order->id;
 
                     $re['order'] = $order->order;
 
                     Order::where('id', $order->id)->update([
-                        'total_amount' => $totalPrice - $offeredVoucher,
+                        'total_amount' => $payable,
                     ]);
 
                     $query = Order::query();

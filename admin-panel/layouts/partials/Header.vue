@@ -10,15 +10,31 @@
         >
         <span>FIXMYPC</span>
       </nuxt-link>
-      <button
-        @click.prevent="leftMenuToggle"
-        class="dply-felx j-center toggle-menu-btn"
-        :aria-label="$t('util.menu') || 'Toggle navigation'"
-      >
-        <i
-          class="ignore-click icon menu-icon mr-0"
-        />
-      </button>
+      <div class="header-actions">
+        <button
+            class="expand-btn"
+            :class="{ active: sectionsExpanded }"
+            @click="toggleAllSections"
+            :title="sectionsExpanded ? 'Collapse all' : 'Expand all'"
+        >
+            <i
+              class="fa-solid"
+              :class="sectionsExpanded ? 'fa-down-left-and-up-right-to-center' : 'fa-up-right-and-down-left-from-center'"
+            ></i>
+        </button>
+        <button
+            class="toggle-menu-btn"
+            :class="{ active: sidebarOpen }"
+            :title="sidebarOpen ? 'Collapse menu' : 'Expand menu'"
+            @click.prevent="leftMenuToggle"
+        >
+            <i
+              class="fa-solid"
+              :class="sidebarOpen ? 'fa-bars-staggered' : 'fa-bars'"
+            ></i>
+        </button>
+      </div>
+
     </div>
 
     <div class="dply-felx grow right-wrap">
@@ -50,23 +66,27 @@
           id="right-menu"
           v-outside-click="closeRightMenu"
         >
-          <!-- <button
+          <button
             v-if="$can('profile', 'view')"
+            class="profile-btn"
+            :title="$t('error.pro')"
             @click.prevent="goProfile"
           >
             <i
               class="icon profile"
             />
             {{ $t('error.pro') }}
-          </button> -->
-          <!-- <button
+          </button>
+          <button
+            class="logout-btn"
+            :title="$t('error.log')"
             @click.prevent="loggingOut"
           >
             <i
               class="icon logout"
             />
             {{ $t('error.log') }}
-          </button> -->
+          </button>
         </div>
 
 
@@ -90,7 +110,8 @@
     name: 'Header',
     data() {
       return {
-        dotsOpen: false
+        dotsOpen: false,
+        sectionsExpanded: false
       }
     },
     mixins: [util],
@@ -102,6 +123,7 @@
       ...mapGetters('site-setting', ['siteSetting']),
       ...mapGetters('setting', ['setting', 'storeData']),
       ...mapGetters('language', ['languages', 'currentLanguage']),
+      ...mapGetters('ui', ['sidebarOpen']),
     },
     directives: {outsideClick},
     methods: {
@@ -121,6 +143,10 @@
       },
       leftMenuToggle() {
         this.toggleSidebar()
+      },
+      toggleAllSections() {
+        this.sectionsExpanded = !this.sectionsExpanded
+        this.$root.$emit('toggle-all-sidebar-sections', this.sectionsExpanded)
       },
       rightMenuToggle() {
         this.hideSidebar()

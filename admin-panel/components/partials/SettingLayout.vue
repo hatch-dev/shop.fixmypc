@@ -86,6 +86,10 @@
             tabId: 'plugins',
           },
           {
+            title: this.$t('setting.sidebarIcons'),
+            tabId: 'sidebar-icons',
+          },
+          {
             title: this.$t('setting.cClear'),
             tabId: 'clear-cache',
           }

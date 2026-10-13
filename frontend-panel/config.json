@@ -2,6 +2,7 @@
   "api": {
     "url": "api/v1/",
     "common": "common",
+    "flashDiscount": "flash-discount",
     "home": "home",
     "all": "all",
     "products": "products",
@@ -9,6 +10,7 @@
     "brands": "brands",
     "flashProducts": "flash-sale",
     "flashSales": "flash-sale",
+    "clearance": "clearance",
     "product": "product",
     "page": "page",
     "store": "store",
@@ -18,58 +20,70 @@
     "trackOder": "track-order",
     "suggested_products": "suggested-products",
     "login": "user/signin",
-
+    "sendLoginCode": "user/login-code",
+    "verifyLoginCode": "user/login-code/verify",
+    "twoFactorChallenge": "user/two-factor/challenge",
+    "twoFactorStatus": "user/two-factor/status",
+    "twoFactorSetup": "user/two-factor/setup",
+    "twoFactorConfirm": "user/two-factor/confirm",
+    "twoFactorSendSms": "user/two-factor/sms/send",
+    "twoFactorConfirmSms": "user/two-factor/sms/confirm",
+    "twoFactorDisable": "user/two-factor/disable",
+    "phoneSendCode": "user/phone/send-code",
+    "phoneVerify": "user/phone/verify",
     "register": "user/signup",
     "sellerRegister": "seller/signup",
-
-
     "logout": "user/logout",
     "profile": "user/profile",
     "userAddressAll": "user/address/all",
     "userAddressAction": "user/address/action",
     "userAddressDelete": "user/address/delete",
-
     "localization": "localization",
     "countriesPhones": "countries-phones",
-
+    "towns": "towns",
+    "saveForLaterAll": "user/save-for-later/all",
+    "saveForLaterDelete": "user/save-for-later/delete",
     "userWishlistAll": "user/wishlist/all",
     "userWishlistAction": "user/wishlist/action",
-
     "userRecentlyViewed": "user/recently-viewed",
     "clearRecentlyViewed": "user/recently-viewed/clear",
     "deleteRecentlyViewed": "user/recently-viewed",
-
     "compareListAll": "user/compare-list/all",
     "compareListAction": "user/compare-list/action",
-
     "followStore": "user/store/follow",
     "followingListAll": "user/store/following-list",
-
     "deleteAccount": "user/delete",
-
     "paymentGateway": "payment-gateway",
     "userVouchers": "user/user-vouchers",
     "updateProfile": "user/update-profile",
-
+    "accountUpgrade": "user/account-upgrade",
+    "accountUpgradeWithdraw": "user/account-upgrade/withdraw",
     "updateUserPassword": "user/update-user-password",
     "verify": "user/verify",
     "sellerVerify": "seller/verify",
-
     "forgotPassword": "user/forgot-password",
+    "checkResetToken": "user/reset-password/check",
+    "resetPassword": "user/reset-password",
     "updatePassword": "user/update-password",
     "socialLogin": "user/social-login/redirect",
+    "guestToken": "guest/token",
+    "guestVerifyEmail": "guest/verify-email",
+    "guestVerifyEmailCheck": "guest/verify-email/check",
     "cartByUser": "cart/by-user",
     "cartAction": "cart/action",
     "buyNow": "cart/buy-now",
+    "cancelBuyNow": "cart/buy-now/cancel",
+    "basketNoticesDismiss": "cart/notices/dismiss",
+    "basketNoticeRestore": "cart/notices/restore",
+    "checkoutCheck": "cart/checkout-check",
     "cartDelete": "cart/delete",
     "cartChanged": "cart/change",
+    "cartMerge": "cart/merge",
     "updateCartShipping": "cart/update-shipping",
+    "cartShippingQuote": "cart/shipping-quote",
     "orderAction": "order/action",
     "paymentDone": "order/payment-done",
     "setTransaction": "order/transaction",
-
-
-
     "cancelOrder": "cancellation/cancel-order",
     "cancellationFind": "cancellation/find",
     "orderByUser": "order/by-user",
@@ -77,9 +91,18 @@
     "ratingReviewAction": "rating-review/action",
     "ratingReviewFind": "rating-review/find",
     "sendOrderEmail": "order/send-order-email",
+    "supplierRequest": "order",
+    "supplierBid": "order/bid",
     "emailSubscription": "email-subscription",
     "configured": "install/configured",
     "setDatabase": "install/set-database",
-    "setPermission": "install/set-permission"
+    "setPermission": "install/set-permission",
+    "category-insights": "category-insights",
+    "price-ranges": "price-ranges",
+    "cartSwitchVariant": "cart/switch-variant",
+    "crossSellsForProduct": "product",
+    "crossSellsForCart": "cart/cross-sells",
+    "bundleDiscount": "cart/bundle-discount",
+    "addCrossSell": "cart/cross-sell"
   }
 }

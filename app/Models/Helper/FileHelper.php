@@ -12,6 +12,39 @@ use Intervention\Image\Facades\Image;
 
 class FileHelper
 {
+    /**
+     * A collision-free stored filename with a server-decided extension.
+     *
+     * QA audit SEC-06. Names used to be "prefix-<unix seconds>-<1..9>.<ext>",
+     * which collides one time in nine for two uploads in the same second — one
+     * product's image silently overwriting another's — and took the extension
+     * straight from the client. The extension now comes from the detected MIME
+     * type, falling back to a sanitised client extension only for types PHP
+     * cannot guess.
+     */
+    public static function safeFilename($file, $prefix)
+    {
+        $guessed = null;
+
+        try {
+            $guessed = $file->guessExtension();
+        } catch (\Exception $ex) {
+            $guessed = null;
+        }
+
+        if (!$guessed) {
+            $guessed = strtolower((string)$file->getClientOriginalExtension());
+        }
+
+        // Whitelist, so nothing that PHP would execute can ever be written.
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'mp4', 'webm', 'ogg', 'zip', 'pdf'];
+
+        if (!in_array($guessed, $allowed, true)) {
+            $guessed = 'bin';
+        }
+
+        return $prefix . '-' . \Illuminate\Support\Str::uuid()->toString() . '.' . $guessed;
+    }
 
 
     public static function getUploadPath(){
@@ -261,8 +294,7 @@ class FileHelper
 
             $image_path = $file->getRealPath();
 
-            $extension = $file->getClientOriginalExtension();
-            $filename = $prefix . '-' . time() . '-' . mt_rand(1, 9) . '.' . $extension;
+            $filename = self::safeFilename($file, $prefix);
 
             $fileSource = fopen($image_path, 'r');
             $googleCloudStoragePath = config('googlecloud.path_prefix') . $filename;
@@ -308,8 +340,7 @@ class FileHelper
     {
 
         try{
-            $extension = $file->getClientOriginalExtension();
-            $filename = $prefix . '-' . time() . '-' . mt_rand(1, 9) . '.' . $extension;
+            $filename = self::safeFilename($file, $prefix);
 
             if ($thumb) {
                 self::generateThumbLocal($file, $filename);
@@ -340,6 +371,41 @@ class FileHelper
             throw $ex;
         }
 
+    }
+
+
+    /**
+     * Sanitise raw SVG markup before it is stored and later rendered inline
+     * (the admin sidebar renders these via v-html). This is an admin-only
+     * feature, but we still strip the obvious script / event-handler vectors
+     * as defence in depth. Returns '' when the input is not usable SVG.
+     */
+    public static function sanitizeSvg($svg)
+    {
+        if (!is_string($svg) || trim($svg) === '') {
+            return '';
+        }
+
+        // Drop the XML prolog and any DOCTYPE declaration.
+        $svg = preg_replace('/<\?xml.*?\?>/is', '', $svg);
+        $svg = preg_replace('/<!DOCTYPE.*?>/is', '', $svg);
+
+        // Remove <script> and <foreignObject> blocks entirely.
+        $svg = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $svg);
+        $svg = preg_replace('/<foreignObject\b[^>]*>.*?<\/foreignObject>/is', '', $svg);
+
+        // Strip inline event handlers (onload, onclick, ...).
+        $svg = preg_replace('/\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/is', '', $svg);
+
+        // Neutralise javascript: URIs inside href / xlink:href attributes.
+        $svg = preg_replace('/((?:xlink:)?href)\s*=\s*("|\')\s*javascript:[^"\']*\2/is', '$1=$2#$2', $svg);
+
+        // Must still contain an <svg> root, otherwise treat as empty.
+        if (stripos($svg, '<svg') === false) {
+            return '';
+        }
+
+        return trim($svg);
     }
 
 }

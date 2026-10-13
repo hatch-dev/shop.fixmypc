@@ -13,9 +13,26 @@ class SumupPaymentController extends Controller
     {
         try{
             $request->validate([
-                'amount'   => 'required',
+                'amount'   => 'required|numeric|min:0.01',
                 "currency" => 'required',
             ]);
+
+            /*
+             * A top-up or a gift card belongs to an account, so only a
+             * signed-in customer may start one. An order payment stays open:
+             * guests check out through this same endpoint.
+             */
+            if ((!empty($request->is_topup) || !empty($request->is_gift_voucher)) && !$request->user('user')) {
+                return response()->json(['message' => 'Please sign in to continue.'], 401);
+            }
+
+            // Savers Club / dashboard top-ups: whole cents, between 1 and 1000 euro
+            if (!empty($request->is_topup)) {
+                $amount = (float)$request->amount;
+                if ($amount < 1 || $amount > 1000 || round($amount, 2) != $amount) {
+                    return response()->json(['message' => 'Top-ups must be between €1 and €1,000.'], 422);
+                }
+            }
 
 
             if(isset($request->is_topup) && $request->is_topup){

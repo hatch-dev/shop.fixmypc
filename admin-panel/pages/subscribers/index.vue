@@ -32,11 +32,12 @@
       </table-top>
     </template>
 
-    <template v-slot:table="{list}">
+    <template v-slot:table="{list, from}">
       <tr class="lite-bold">
         <th>
           <input type="checkbox" @change="checkAll">
         </th>
+        <th class="w-50x mx-w-50x">#</th>
         <th>{{ $t('fSale.email') }}</th>
         <th>{{ $t('category.created') }}</th>
         <th />
@@ -46,6 +47,7 @@
         <td>
           <input type="checkbox" :value="value.id" v-model="cbList">
         </td>
+        <td class="w-50x mx-w-50x">{{ from + index }}</td>
         <td><span class="mx-w-300x">{{ value.email }}</span></td>
         <td>{{ value.created }}</td>
         <td>

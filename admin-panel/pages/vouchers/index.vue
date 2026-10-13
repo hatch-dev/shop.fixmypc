@@ -10,11 +10,12 @@
     @list="itemList = $event"
     gate="voucher"
   >
-    <template v-slot:table="{list}">
+    <template v-slot:table="{list, from}">
         <tr class="lite-bold">
           <th>
             <input type="checkbox" @change="checkAll">
           </th>
+          <th class="w-50x mx-w-50x">#</th>
           <th>{{ $t('index.title') }}</th>
           <th>{{ $t('prod.code') }}</th>
           <th>Voucher Type</th>
@@ -32,6 +33,7 @@
           <td>
             <input type="checkbox" :value="item.id" v-model="cbList">
           </td>
+          <td class="w-50x mx-w-50x">{{ from + index }}</td>
           <td><h5 class="mx-w-300x">{{ item.title }}</h5></td>
           <td>{{ item.code }}</td>
           <td>

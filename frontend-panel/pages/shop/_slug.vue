@@ -61,12 +61,10 @@
           v-if="fetchingProductData"
           class="tile-container"
         >
-          <div class="shimmer-wrapper">
-            <tile-shimmer
-              v-for="index in 20"
-              :key="index"
-            />
-          </div>
+          <skeleton-product
+            v-for="index in 20"
+            :key="`sk-${index}`"
+          />
         </div>
         <div class="pos-rel" v-else>
 
@@ -109,7 +107,6 @@
   import metaHelper from '~/mixin/metaHelper'
   import Pagination from "~/components/Pagination";
   import Breadcrumb from "~/components/Breadcrumb";
-  import TileShimmer from "~/components/TileShimmer";
   import AjaxButton from "~/components/AjaxButton";
   import listingParams from "~/mixin/listingParams";
   import moment from "moment";
@@ -131,7 +128,6 @@
       ProductTile,
       SortBy,
       AjaxButton,
-      TileShimmer,
       Breadcrumb,
       Pagination
     },

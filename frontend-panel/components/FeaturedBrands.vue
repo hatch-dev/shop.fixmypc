@@ -3,7 +3,7 @@
     <template v-if="brands && brands.length">
 
       <div class="flex sided title">
-        <h4>{{ $t('filter.featured', {title: title}) }}</h4>
+        <h4 class="slider-collection-heading">{{ $t('filter.featured', {title: title}) }}</h4>
         <nuxt-link
           class="link"
           to="/brands"
@@ -17,6 +17,7 @@
             :per-view="sliderOptions.perView"
             :gap="15"
             :responsive="sliderOptions.responsive"
+            @glide="onGlide"
           >
             <template v-slot:content>
               <li
@@ -34,6 +35,22 @@
           </image-slider>
 
       </div>
+
+      <div
+        v-if="pageCount > 1"
+        class="m-dots"
+      >
+        <button
+          v-for="i in pageCount"
+          :key="i"
+          type="button"
+          class="m-dot"
+          :class="{on: i - 1 === activePage}"
+          :aria-label="String(i)"
+          :aria-current="i - 1 === activePage ? 'true' : 'false'"
+          @click="goToPage(i - 1)"
+        />
+      </div>
     </template>
   </div>
 </template>
@@ -44,6 +61,7 @@
   import LazyImage from '~/components/LazyImage'
   import CategoryTile from '~/components/CategoryTile'
   import BrandTile from "./BrandTile";
+  import glideDots from '~/mixin/glideDots'
     export default {
         name: 'FeaturedBrands',
         data() {
@@ -94,23 +112,29 @@
           },
           isBrand(){
             return this.type === 'brand'
+          },
+          // one slide per pair of brands, not per brand
+          glideItemCount(){
+            return this.brands.length
           }
         },
-        mixins: [util],
+        mixins: [util, glideDots],
         methods: {
         },
         created() {
         },
         mounted() {
-          let items = []
-          for(let i in this.itemList){
-            items.push(this.itemList[i])
-            if(i % 2 === 0){
-              items = []
-            } else {
-              this.brands.push(items)
-            }
+          // Two brands to a slide. The previous loop reset its accumulator on
+          // index 0 - before that first brand had been paired with anything -
+          // so the first brand was silently dropped and every pair was off by
+          // one. That also cost a whole slide, which is why the rail often had
+          // nothing left to page through.
+          const list = this.itemList || []
+          const pairs = []
+          for (let i = 0; i < list.length; i += 2) {
+            pairs.push(list.slice(i, i + 2))
           }
+          this.brands = pairs
         }
     }
 </script>

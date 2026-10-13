@@ -6,11 +6,19 @@
   >
     <template v-slot:rightArea>
 
-      <transition name="fade" mode="out-in">
-        <div class="spinner-wrapper flex" v-if="fetchingRecentlyViewedData">
-          <spinner :radius="100" />
-        </div>
-      </transition>
+      <!--
+        Replaces the content rather than sitting above it. The spinner used to
+        render in its own block with the heading, the panel and the "nothing
+        here" message all visible underneath while the list was still loading.
+      -->
+      <account-skeleton
+        v-if="fetchingRecentlyViewedData"
+        :tiles="6"
+        heading
+        label="Loading recently viewed products"
+      />
+
+      <div v-else>
 
       <div class="card-box p-4 mb-4 d-flex justify-content-between align-items-center flex-wrap my-orders-box">
           <div>
@@ -66,6 +74,8 @@
         @fetching-data="fetchingData"
       />
 
+      </div>
+
     </template>
   </account-layout>
 </template>
@@ -82,7 +92,7 @@
   import Pagination from '~/components/Pagination'
   import productHelper from '~/mixin/productHelper'
   import Spinner from "~/components/Spinner";
-  import TileShimmer from "~/components/TileShimmer";
+  import AccountSkeleton from '~/components/AccountSkeleton'
   import global from '~/mixin/global'
 import ProductViewList from '../../components/ProductViewList.vue'
 
@@ -98,13 +108,14 @@ import ProductViewList from '../../components/ProductViewList.vue'
     data() {
       return {
         allRecentlyViewed: null,
-        fetchingRecentlyViewedData: false,
+        // True from the start: the first render precedes the fetch.
+        fetchingRecentlyViewedData: true,
         selectedRange: '30_days'
       }
     },
     watch: {},
     components: {
-      TileShimmer,
+      AccountSkeleton,
       Spinner,
       LazyImage,
       RatePopup,
@@ -196,21 +207,35 @@ import ProductViewList from '../../components/ProductViewList.vue'
 .Frequently-card-box {
     background-color: #fff;
     border: 1px solid #E3E3EF;
-    border-radius: 14px;
+    border-radius: 16px;
+    overflow: hidden;
 }
 
 .my-orders-box {
     background-color: #fff;
     border: 1px solid #E3E3EF;
-    border-radius: 14px;
+    border-radius: 16px;
+}
+
+.my-orders-box h5 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #130E2B;
 }
 
 a.share-whishlist {
     font-size: 14px;
-    font-weight: 400;
+    font-weight: 500;
     color: #6B7280;
     text-decoration: none;
-}   
+}
+
+@media (max-width: 767px) {
+    .my-orders-box { padding: 18px !important; }
+    .my-orders-box h5 { font-size: 22px; }
+    .my-orders-box .d-flex.gap-3 { width: 100%; }
+    .section-header { font-size: 15px; padding: 12px 16px; }
+}
 .date-filter-wrapper {
   padding: 6px 12px;
   border-radius: 10px;

@@ -1,12 +1,12 @@
 <template>
   <div class="detail-image shimmer-wrapper">
-
-      <template v-if="key">
+ <template v-if="key">
         <client-only>
           <div
             class="hide-md mx-h-100"
             @mouseleave="showSliderMessage = false"
             @mouseover="showSliderMessage = true"
+            @mouseenter="sizeZoomPane"
             @click.prevent="imagePopupOpen"
           >
             <ProductZoomer
@@ -43,33 +43,7 @@
               {{ $t('productImage.extendedView') }}
             </span>
           </p>
-
-
-          <!-- <template
-             slot="placeholder"
-           >
-             <img
-               class="preload-img"
-               :src="getThumbImageURL(this.mainImage)"
-               :alt="title"
-             >
-           </template>
-
-
-           <template
-             v-if="!key"
-           >
-             <div class="pleceholder-zoomer-base-container shimmer">
-             </div>
-             <div class="pleceholder-thumb-list">
-               <div class="responsive-image shimmer hide-sm"/>
-               <div class="responsive-image shimmer hide-sm"/>
-               <div class="responsive-image shimmer hide-sm"/>
-               <div class="responsive-image shimmer hide-sm"/>
-               <div class="responsive-image shimmer hide-sm"/>
-             </div>
-           </template>-->
-        </client-only>
+     </client-only>
       </template>
 
 
@@ -121,7 +95,10 @@
           large_size: []
         },
         zoomerOptions: {
-          zoomFactor: 2.5, // scale for zoomer
+          // 3 rather than 2.5: the lens is the pane divided by this, and with
+          // the pane now as wide as the info column, 2.5 made a lens that
+          // covered most of the photo.
+          zoomFactor: 3, // scale for zoomer
           pane: 'pane', // three type of pane ['pane', 'container-round', 'container']
           hoverDelay: 300, // how long after the zoomer take effect
           namespace: 'zoomer', // add a namespace for zoomer component, useful when on page have mutiple zoomer
@@ -170,6 +147,34 @@
       }
     },
     methods: {
+      /*
+       * Size the zoom preview to the space it opens over.
+       *
+       * The pane was a fixed 500 x 500 (detail-images.styl) laid over a
+       * product-info column that is wider and much taller, so the text beside
+       * and under it showed through and the preview looked broken. It now
+       * spans the whole column, from the image to the column's far edge,
+       * measured on each hover so a resized window is followed. Drift sizes
+       * the lens from the pane when the zoom opens, so it follows too.
+       * Mirrored for right-to-left (Arabic).
+       */
+      sizeZoomPane() {
+        const pane = this.$el && this.$el.querySelector('.pane-container')
+        const column = this.$el && this.$el.closest('.product-main')
+
+        if (!pane || !column) return
+
+        const gap = 15
+        const image = this.$el.getBoundingClientRect()
+        const row = column.getBoundingClientRect()
+        const rtl = document.body.classList.contains('rtl')
+        const room = Math.floor(rtl ? image.left - row.left - gap : row.right - image.right - gap)
+
+        // Too narrow to be worth it: keep the stylesheet's default square.
+        if (room < 300) return
+
+        pane.style.setProperty('width', room + 'px', 'important')
+      },
       zoomActiveChange(index) {
         if(this.zoomImageList?.thumbs && this.zoomImageList.thumbs[index]){
           this.$refs?.imagePopup?.clickOnThumb(index)
@@ -333,5 +338,17 @@
 .drift-zoom-pane {
     background: #fff !important;
 }
+
+/*
+ * The lens over the photo: a light tint with an edge, not a dark block.
+ * Drift appends it to <body>, not inside the zoomer, so it cannot be
+ * reached through .zoomer-base-container; and its own colour is set in
+ * Drift's injected styles, hence !important.
+ */
+.drift-bounding-box {
+    background: rgba(51, 49, 154, 0.1) !important;
+    border: 1px solid rgba(51, 49, 154, 0.45) !important;
+}
+
 </style>
 

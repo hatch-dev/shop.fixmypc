@@ -11,10 +11,22 @@ class Category extends Model
     use HasFactory;
 
 
+    /**
+     * `featured` and `in_frontend` were missing, and both are edited on the
+     * admin form — so the two toggles could be switched in the UI, saved
+     * without complaint, and were then silently dropped by mass assignment.
+     * Every other column the form owns was already here.
+     *
+     * `admin_id` stays fillable because the product importer creates
+     * categories with it; no request body reaches this array any more, since
+     * CategoriesController names the fields it will write rather than passing
+     * the request through.
+     */
     protected $fillable = [
         'title', 'image', 'status', 'admin_id', 'slug', 'meta_title', 'meta_description', 'meta_keywords',
-        'parent', 'in_footer', 'short_description', 'description', 'banner', 'gallery', 'canonical_url', 'searchable', 'publish_at', 'display_order', 'products_per_page', 'show_in_nav',
-        'enable_filters', 'show_homepage', 'allow_promotions'
+        'parent', 'featured', 'in_footer', 'in_frontend', 'short_description', 'description', 'banner',
+        'gallery', 'canonical_url', 'searchable', 'publish_at', 'display_order', 'products_per_page',
+        'show_in_nav', 'enable_filters', 'show_homepage', 'allow_promotions'
     ];
 
     protected $hidden = [

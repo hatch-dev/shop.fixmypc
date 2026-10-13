@@ -1,94 +1,133 @@
 <template>
-  <div class="page-container">
+  <div class="bid-page">
 
-    <!-- Order Number Heading -->
-    <div class="order-header">
-      <h2>Order Number : #{{ orderId }}</h2>
+    <header class="bid-head">
+      <h1 v-if="orderNumber">Order #{{ orderNumber }}</h1>
+      <!--
+        Names who is asking. The supplier arrives from a message with no
+        account and no branding around the form, so "give us your price" does
+        not say who "us" is.
+      -->
+      <p v-if="!loading && !loadError && bidItems.length">
+        <strong v-if="store">{{ store }}</strong><span v-else>We</span>
+        would like your price for the {{ bidItems.length }}
+        item{{ bidItems.length === 1 ? '' : 's' }} below.
+      </p>
+    </header>
+
+    <div v-if="loading" class="bid-state">Loading your request…</div>
+
+    <div v-else-if="loadError" class="bid-state bid-state--error">{{ loadError }}</div>
+
+    <div v-else-if="!bidItems.length" class="bid-state">
+      There is nothing to quote on in this request.
     </div>
 
-    <div class="wholesale-wrapper">
-      <div
-        class="wholesale-card"
-        v-for="(item, index) in bidItems"
-        :key="item.id"
-      >
-        <div class="wholesale-inner">
+    <ul v-else class="bid-list">
+      <li class="bid-card" v-for="item in bidItems" :key="item.id">
 
-          <!-- Left Image -->
-          <div class="wholesale-image">
-            <img
-              :src="getProductImage(item)"
-              alt="Product"
-            />
-          </div>
+        <div class="bid-media">
+          <img
+            v-if="!imgErrors[item.id]"
+            :src="getProductImage(item)"
+            :alt="productTitle(item)"
+            loading="lazy"
+            @error="imageFailed(item.id)"
+          >
+          <span v-else class="bid-media__fallback" aria-hidden="true">No image</span>
+        </div>
 
-          <!-- Right Content -->
-          <div class="wholesale-content">
+        <div class="bid-body">
+          <h2 class="bid-title">{{ productTitle(item) }}</h2>
 
-            <h3 class="wholesale-title">
-              {{ item.product.title }}
-            </h3>
+          <!--
+            Not `badge`: Bootstrap 5 is loaded site-wide and its .badge sets
+            white text, which on a light chip is invisible. Prefixed names
+            throughout for the same reason.
+          -->
+          <ul class="bid-attrs" v-if="attributesFor(item).length">
+            <li v-for="attr in attributesFor(item)" :key="attr.id">
+              <span class="bid-attrs__key">{{ attr.label }}</span>
+              <span class="bid-attrs__val">{{ attr.value }}</span>
+            </li>
+          </ul>
 
-            <!-- Dynamic Attributes -->
-            <div class="attr-badges">
-              <span
-                class="badge"
-                v-for="attr in item.inventory.inventory_attributes"
-                :key="attr.attribute_value.id"
-              >
-                {{ attr.attribute_value.attribute.title }} :
-                {{ attr.attribute_value.title }}
-              </span>
-            </div>
+          <p class="bid-qty">
+            Quantity needed: <strong>{{ item.quantity }}</strong>
+            <span v-if="item.ordered_price != null">
+              · ordered at <strong>{{ vatNote(item) }}</strong>
+            </span>
+          </p>
 
-            <p class="quantity-text">
-              Quantity : {{ item.quantity }} pcs
-            </p>
-
-            <div class="wholesale-actions" v-if="item.inventory.quantity > 0">
-
-              <div class="price-input">
-                <span class="currency">€</span>
+          <!--
+            Deliberately not gated on our stock. This page exists because the
+            item has been sold and has to be sourced, and the order has
+            already taken the stock down.
+          -->
+          <div class="bid-form">
+            <label class="bid-field bid-field--price">
+              <span class="bid-label">Your price</span>
+              <span class="bid-price">
+                <span class="bid-price__cur">€</span>
                 <input
                   type="number"
+                  inputmode="decimal"
+                  min="0.01"
+                  step="0.01"
                   v-model="item.price"
-                  placeholder="Enter wholesale price"
-                />
-              </div>
+                  placeholder="0.00"
+                  :disabled="item.saving"
+                >
+              </span>
+            </label>
 
-              <select v-model="item.grade" class="grade-select">
-                <option disabled value="">--GRADE--</option>
-                <option>Brand New</option>
-                <option>Like New</option>
-                <option>Grade A</option>
-                <option>Grade B</option>
-                <option>Grade C</option>
+            <label class="bid-field">
+              <span class="bid-label">Condition</span>
+              <select v-model="item.grade" :disabled="item.saving">
+                <option disabled value="">Select…</option>
+                <option v-for="grade in grades" :key="grade" :value="grade">
+                  {{ grade }}
+                </option>
               </select>
+            </label>
 
-              <button
-                class="submit-btn ajax-btn primary-btn mlr-5 mtb-sm-5"
-                @click="submitBid(item)"
-              >
-                Submit
-              </button>
-
-            </div>
+            <button
+              type="button"
+              class="bid-submit"
+              :disabled="item.saving"
+              @click="submitBid(item)"
+            >
+              {{ item.saving ? 'Sending…' : (item.submitted ? 'Update' : 'Submit') }}
+            </button>
           </div>
-        </div>
 
-        <!-- No Stock -->
-        <div class="no-stock" v-if="item.inventory.quantity <= 0">
-          Sorry, no stock remaining
-        </div>
+          <p v-if="item.error" class="bid-msg bid-msg--error">{{ item.error }}</p>
 
-      </div>
-    </div>
+          <!--
+            Two different moments, two different sentences. "Price sent" is a
+            confirmation of something just done; on a page the supplier has
+            only opened, the same words claim an action nobody took. A quote
+            already on file is reported as a standing fact, with when it was
+            given.
+          -->
+          <p v-else-if="item.justSaved" class="bid-msg bid-msg--ok">
+            Price sent{{ store ? ' to ' + store : '' }}:
+            €{{ money(item.submitted.price) }} · {{ item.submitted.grade }}
+          </p>
+
+          <p v-else-if="item.submitted" class="bid-msg bid-msg--note">
+            Your current quote: <strong>€{{ money(item.submitted.price) }}</strong>
+            · {{ item.submitted.grade }}<span v-if="quotedAt(item)"> · sent {{ quotedAt(item) }}</span>.
+            Change it above and press Update.
+          </p>
+        </div>
+      </li>
+    </ul>
 
   </div>
 </template>
-
 <script>
-import axios from "axios"
+import Service from '~/services/service'
 
 export default {
   layout: 'blank',
@@ -96,248 +135,650 @@ export default {
   data() {
     return {
       token: '',
-      orderId: '',
+      orderNumber: '',
       supplierId: '',
+      grades: [],
+      // Who the price goes to, for the page to say so out loud.
+      store: '',
       bidItems: [],
-      loading: false
+      loading: true,
+      loadError: '',
+      // Product ids whose image could not be loaded.
+      imgErrors: {}
     }
   },
 
   mounted() {
     this.token = this.$route.params.token
+
     if (!this.token) {
-      console.error("Token missing in URL")
+      this.loading = false
+      this.loadError = 'This link is no longer valid.'
       return
     }
+
     this.fetchOrder()
   },
 
   methods: {
 
+
     async fetchOrder() {
+      this.loading = true
+      this.loadError = ''
 
       try {
-        this.loading = true
+        /*
+         * Through the shared service, which resolves the API host the same
+         * way every other page does: API_BASE when it is set, and the page's
+         * own origin when it is empty (the storefront served by Laravel).
+         * Building the URL here sent the call to whatever host the page was
+         * on -- the dev server on :3000, which has no API behind it.
+         */
+        const { data } = await Service.supplierRequest(this.token)
 
-        const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/'
-        const response = await this.$axios.get(`${baseUrl}api/v1/order/${this.token}`);
-        this.orderId = response.data.order_number
-        this.bidItems = response.data.data.map(item => ({
+        this.orderNumber = data.order_number
+        this.supplierId = data.supplier_id
+        this.grades = data.grades || []
+        this.store = data.store || ''
+
+        this.bidItems = (data.data || []).map(item => ({
           ...item,
-          price: '',
-          grade: ''
+          /*
+           * A bid already given wins -- a supplier who reopens the link sees
+           * what they quoted. Otherwise the box opens on what the line was
+           * charged at, as a starting point rather than a blank field.
+           */
+          price: item.bid
+            ? item.bid.price
+            : (item.ordered_price !== null && item.ordered_price !== undefined
+                ? String(item.ordered_price)
+                : ''),
+          grade: item.bid ? item.bid.grade : '',
+          submitted: item.bid || null,
+          // Only true for a quote given in this visit, not one loaded with
+          // the page.
+          justSaved: false,
+          saving: false,
+          error: ''
         }))
 
       } catch (error) {
-        console.error("API Error:", error)
+        this.loadError = this.messageFrom(
+          error,
+          'We could not load this request. Please check the link and try again.'
+        )
       } finally {
         this.loading = false
       }
     },
 
-    getProductImage(item) {
-      if (item.product.product_images.length > 0) {
-        return `https://shop.fixmypc.ie/uploads/${item.product.product_images[0].image}`
-      }
-      return `https://shop.fixmypc.ie/uploads/${item.product.image}`
+    /*
+     * Every accessor below tolerates a missing relation. inventory_id is
+     * nullable on supplier_notifications, and a product can be deleted after
+     * the request goes out -- either used to throw during render and leave
+     * the supplier a blank page with nothing in it to explain why.
+     */
+    /*
+     * Which VAT convention this line used. The catalogue runs both and the
+     * order records which one applied, so it is read rather than assumed --
+     * and never re-derived by dividing by a rate.
+     */
+    money(value) {
+      return Number(value || 0).toFixed(2)
     },
 
-    submitBid(item) {
-      if (!item.price || !item.grade) {
-        alert("Please enter price and select grade")
+    /*
+     * When the quote on file was last given. Read off the bid rather than
+     * assumed to be "just now", which is the whole point of the distinction.
+     */
+    quotedAt(item) {
+      const at = item.submitted && item.submitted.updated_at
+
+      if (!at) return ''
+
+      const when = new Date(at)
+
+      if (isNaN(when.getTime())) return ''
+
+      return when.toLocaleString(undefined, {
+        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+      })
+    },
+
+    vatNote(item) {
+      const price = `€${Number(item.ordered_price).toFixed(2)}`
+
+      return item.ordered_price_includes_vat ? `${price} inc. VAT` : `${price} ex. VAT`
+    },
+
+    productTitle(item) {
+      return (item.product && item.product.title) || 'Item no longer listed'
+    },
+
+    attributesFor(item) {
+      const attrs = (item.inventory && item.inventory.inventory_attributes) || []
+
+      return attrs
+        .filter(a => a.attribute_value && a.attribute_value.attribute)
+        .map(a => ({
+          id: a.attribute_value.id,
+          label: a.attribute_value.attribute.title,
+          value: a.attribute_value.title
+        }))
+    },
+
+    /*
+     * Remember the failure in state and let the template swap in a
+     * placeholder. Reaching into the DOM does not survive: Vue owns the
+     * element and re-applies its attributes on the next patch.
+     */
+    imageFailed(id) {
+      this.$set(this.imgErrors, id, true)
+    },
+
+    getProductImage(item) {
+      const product = item.product || {}
+      const images = product.product_images || []
+      const image = images.length ? images[0].image : product.image
+
+      if (!image) {
+        return this.$store.state.defaultImage
+          ? `${this.uploadsBase()}${this.$store.state.defaultImage}`
+          : ''
+      }
+
+      return `${this.uploadsBase()}${image}`
+    },
+
+    uploadsBase() {
+      /*
+       * Set from the common settings call. The fallback is relative to the
+       * page's own origin, which is right wherever the storefront is served
+       * from the same host as its uploads.
+       */
+      return this.$store.state.imgSrcUrl || '/uploads/'
+    },
+
+    async submitBid(item) {
+      item.error = ''
+
+      const price = parseFloat(item.price)
+
+      if (!price || price <= 0) {
+        item.error = 'Please enter a price.'
         return
       }
 
-      console.log("Submitted:", {
-        order_id: this.orderId,
-        supplier_id: this.supplierId,
-        product_id: item.product_id,
-        inventory_id: item.inventory_id,
-        price: item.price,
-        grade: item.grade
-      })
+      if (!item.grade) {
+        item.error = 'Please select a grade.'
+        return
+      }
+
+      item.saving = true
+
+      try {
+        /*
+         * The token goes up with the bid and the server reads the supplier
+         * and order out of it. Nothing here names a supplier_id: this page
+         * held one, never assigned it, and posted an empty string.
+         */
+        const { data } = await Service.submitSupplierBid({
+          token: this.token,
+          product_id: item.product_id,
+          inventory_id: item.inventory_id,
+          price: price,
+          grade: item.grade
+        })
+
+        item.submitted = data.data
+        item.justSaved = true
+
+      } catch (error) {
+        item.error = this.messageFrom(
+          error,
+          'We could not save that price. Please try again.'
+        )
+      } finally {
+        item.saving = false
+      }
+    },
+
+    messageFrom(error, fallback) {
+      const data = error && error.response && error.response.data
+
+      if (data && data.errors) {
+        const first = Object.keys(data.errors)[0]
+        if (first) return data.errors[first][0]
+      }
+
+      return (data && data.message) || fallback
     }
   }
 }
 </script>
-<style>
-/* Page Layout */
-.page-container {
-  max-width: 1100px;
-  margin: 60px auto;   /* top & bottom spacing */
-  padding: 0 20px;     /* left & right spacing */
+
+<style scoped>
+/*
+ * Mobile first: the base rules are the phone layout with the smaller type
+ * scale, and the wider screens are the media queries. A supplier reads this
+ * on a phone, from a message, far more often than at a desk.
+ *
+ * Every class is bid-prefixed and the block is scoped, because Bootstrap 5
+ * is loaded site-wide -- its .badge (white text) is what made the attribute
+ * chips unreadable, and .card, .form-control and .btn would collide just as
+ * quietly.
+ */
+
+.bid-page {
+  --bid-ink: #111827;
+  --bid-muted: #6b7280;
+  --bid-line: #e5e7eb;
+  --bid-surface: #ffffff;
+  --bid-accent: #33319a;
+  --bid-accent-soft: #eef0fb;
+  --bid-ok: #1e7e34;
+  --bid-err: #c0392b;
+
+  /*
+   * One height for every control in the row.
+   *
+   * assets/styles/base.styl sets height:50px and line-height:48px on
+   * every button, textarea and input site-wide. Left to it, the price box
+   * came out 52px, the select 45px and the button 41px -- and the button's
+   * label sat off-centre, laid out on a 48px line inside a shorter box.
+   * Height and line-height therefore have to be set together here; setting
+   * height alone is what produced the misaligned label.
+   */
+  --bid-control-h: 44px;
+
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+  color: var(--bid-ink);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-/* Order Header */
-.order-header {
+.bid-head {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
 }
 
-.order-header h2 {
-  font-size: 24px;
-  font-weight: 600;
+.bid-head h1 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.3;
+  word-break: break-word;
 }
 
-/* Wrapper */
-.wholesale-wrapper {
+.bid-head p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--bid-muted);
+}
+
+.bid-state {
+  border: 1px solid var(--bid-line);
+  border-radius: 12px;
+  background: var(--bid-surface);
+  padding: 28px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--bid-muted);
+}
+
+.bid-state--error {
+  border-color: var(--bid-err);
+  color: var(--bid-err);
+}
+
+.bid-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  /*
+   * minmax(0, 1fr), not 1fr. A grid item's min-width defaults to auto, so a
+   * long unbroken product title sets a min-content floor the track cannot
+   * shrink below -- and the card runs off the side of a phone screen.
+   */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+.bid-card {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  min-width: 0;
+  gap: 14px;
+  border: 1px solid var(--bid-line);
+  border-radius: 12px;
+  background: var(--bid-surface);
+  padding: 14px;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, .06);
 }
 
-/* Card */
-.wholesale-card {
-  border: 2px solid #000;
-  background: #fff;
-  border-radius: 6px;
-  overflow: hidden;
-}
+/* Image -------------------------------------------------------------- */
 
-/* Inner Layout */
-.wholesale-inner {
-  display: flex;
-  padding: 25px;
-  gap: 25px;
-}
-
-/* Image */
-.wholesale-image {
-  width: 180px;
-  height: 180px;
-  border: 2px solid #000;
+.bid-media {
+  flex: none;
+  align-self: center;
+  width: 128px;
+  height: 128px;
+  border: 1px solid var(--bid-line);
+  border-radius: 10px;
+  background: #fafafa;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  overflow: hidden;
 }
 
-.wholesale-image img {
+.bid-media img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
 }
 
-/* Content */
-.wholesale-content {
+/*
+ * A product whose image is missing shows this instead of the browser's
+ * broken-image icon and the alt text sprawling across the box.
+ */
+.bid-media__fallback {
+  font-size: 11px;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  color: var(--bid-muted);
+}
+
+.bid-body {
+  min-width: 0;
   flex: 1;
 }
 
-.wholesale-title {
-  font-size: 20px;
+.bid-title {
+  margin: 0 0 10px;
+  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 15px;
+  line-height: 1.35;
+  /* Product titles carry long unspaced model numbers. */
+  overflow-wrap: anywhere;
 }
 
-.attr-badges {
+/* Attributes --------------------------------------------------------- */
+
+.bid-attrs {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
   display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bid-attrs li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--bid-accent-soft);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.bid-attrs__key {
+  color: var(--bid-muted);
+}
+
+.bid-attrs__val {
+  color: var(--bid-accent);
+  font-weight: 600;
+}
+
+.bid-qty {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--bid-muted);
+}
+
+.bid-qty strong {
+  color: var(--bid-ink);
+}
+
+/* The form ----------------------------------------------------------- */
+
+.bid-form {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
 }
 
-.badge {
-  border: 2px solid #000;
-  padding: 6px 14px;
-  font-size: 14px;
-  background: #f5f5f5;
-  border-radius: 4px;
-}
-
-.quantity-text {
-  font-size: 18px;
-  margin-bottom: 20px;
-}
-
-/* Actions */
-.wholesale-actions {
+.bid-field {
   display: flex;
-  align-items: center;
-  gap: 15px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
-.price-input {
-  display: flex;
-  align-items: center;
-  border: 2px solid #000;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.currency {
-  padding: 10px 12px;
-  background: #f3f3f3;
-  border-right: 2px solid #000;
+.bid-label {
+  font-size: 12px;
   font-weight: 600;
+  color: var(--bid-muted);
 }
 
-.price-input input {
-  border: none;
-  padding: 10px;
-  width: 150px;
+.bid-label em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--bid-muted);
+}
+
+.bid-price {
+  display: flex;
+  align-items: stretch;
+  height: var(--bid-control-h);
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.bid-price:focus-within,
+.bid-field select:focus {
+  border-color: var(--bid-accent);
+  box-shadow: 0 0 0 3px var(--bid-accent-soft);
   outline: none;
 }
 
-.grade-select {
-  border: 2px solid #000;
-  padding: 10px;
-  border-radius: 4px;
-  min-width: 140px;
-}
-
-.submit-btn {
-  padding: 10px 25px;
-  border: 2px solid #000;
-  cursor: pointer;
+.bid-price__cur {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: #f5f6f8;
+  border-right: 1px solid #d1d5db;
   font-weight: 600;
-  border-radius: 4px;
-  transition: 0.2s ease;
+  color: var(--bid-muted);
 }
 
-/* No Stock */
-.no-stock {
-  border-top: 2px solid #000;
-  padding: 15px;
-  text-align: center;
+.bid-price input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  /*
+   * 16px on the control itself: iOS Safari zooms the whole page in when a
+   * focused input is any smaller, and the supplier is left pinched in on a
+   * half-visible form.
+   */
   font-size: 16px;
-  background: #f7f7f7;
+  height: 100%;
+  line-height: normal;
+  padding: 0 12px;
+  background: transparent;
+  color: inherit;
 }
 
-/* ✅ Mobile Responsive */
-@media (max-width: 768px) {
+.bid-field select {
+  width: 100%;
+  height: var(--bid-control-h);
+  line-height: normal;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 16px;
+  background: #fff;
+  color: inherit;
+  box-sizing: border-box;
+}
 
-  .page-container {
-    margin: 30px auto;
+.bid-price input:disabled,
+.bid-field select:disabled {
+  background: #f9fafb;
+  cursor: not-allowed;
+}
+
+.bid-submit {
+  /*
+   * Flex centring rather than relying on line-height, so the label stays
+   * centred whatever the global stylesheet has to say about buttons.
+   */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: var(--bid-control-h);
+  line-height: 1;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 8px;
+  box-sizing: border-box;
+  background: var(--bid-accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, opacity .15s;
+}
+
+.bid-submit:hover:not(:disabled) {
+  background: #29277f;
+}
+
+.bid-submit:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.bid-msg {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.bid-msg--error {
+  color: var(--bid-err);
+}
+
+.bid-msg--ok {
+  color: var(--bid-ok);
+  font-weight: 600;
+}
+
+/* A quote already on file: a fact, not a fresh confirmation. */
+.bid-msg--note {
+  color: var(--bid-muted);
+}
+
+.bid-msg--note strong {
+  color: var(--bid-ink);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Small tablets and up: the image moves beside the detail, and the
+ *  price / condition / button sit on one line.
+ * ------------------------------------------------------------------ */
+
+@media (min-width: 560px) {
+  .bid-page {
+    padding: 28px 20px 56px;
+    font-size: 15px;
   }
 
-  .wholesale-inner {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+  .bid-head h1 {
+    font-size: 24px;
   }
 
-  .wholesale-image {
-    margin-bottom: 20px;
+  .bid-head p {
+    font-size: 14px;
   }
 
-  .wholesale-actions {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
+  .bid-card {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 18px;
+    padding: 18px;
   }
 
-  .price-input input {
-    width: 100%;
+  .bid-media {
+    align-self: flex-start;
+    width: 116px;
+    height: 116px;
   }
 
-  .submit-btn {
-    width: 100%;
+  .bid-title {
+    font-size: 17px;
   }
 
-  .grade-select {
-    width: 100%;
+  .bid-form {
+    flex-direction: row;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .bid-field--price {
+    flex: 1 1 170px;
+  }
+
+  .bid-field {
+    flex: 0 1 165px;
+  }
+
+  .bid-submit {
+    width: auto;
+    flex: none;
+  }
+}
+
+@media (min-width: 860px) {
+  .bid-page {
+    padding: 36px 24px 64px;
+  }
+
+  .bid-head h1 {
+    font-size: 26px;
+  }
+
+  .bid-media {
+    width: 132px;
+    height: 132px;
+  }
+
+  .bid-title {
+    font-size: 18px;
+  }
+}
+
+/*
+ * Respect a reduced-motion preference: the only transitions here are on the
+ * button, but the rule costs nothing and keeps the page honest.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .bid-submit {
+    transition: none;
   }
 }
 </style>
-

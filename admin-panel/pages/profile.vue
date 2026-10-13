@@ -26,6 +26,25 @@
         >
           <error-formatter />
 
+          <div class="input-wrapper mb-15">
+            <label>
+              {{ $t('profile.pImage') }}
+            </label>
+            <image-input
+              v-if="mediaStorageData.URL === mediaStorage"
+              :saving="imageUploading"
+              :image="adminData.image"
+              @image-change="uploadProfileImage(null, $event)"
+            />
+            <file-upload
+              v-else
+              :image="adminData.image"
+              :file-uploading="imageUploading"
+              only-icon="upload-icon"
+              @file-upload="uploadProfileImage"
+            />
+          </div>
+
           <div class="input-wrapper">
             <label>
               {{ $t('user.name') }}
@@ -212,9 +231,12 @@
   import {mapGetters, mapActions} from 'vuex'
   import AjaxButton from '~/components/AjaxButton'
   import validation from '~/mixin/validation'
+  import util from '~/mixin/util'
   import Spinner from '~/components/Spinner'
   import ErrorFormatter from '~/components/ErrorFormatter'
   import PasswordField from '~/components/PasswordField'
+  import FileUpload from '~/components/FileUpload'
+  import ImageInput from '~/components/ImageInput'
 
   export default {
     name: "profile",
@@ -222,6 +244,7 @@
     data() {
       return {
         formSubmitting: false,
+        imageUploading: false,
         hasError: false,
         adminData:{
           id: null,
@@ -249,17 +272,20 @@
         ]
       }
     },
-    mixins: [validation],
+    mixins: [validation, util],
     components: {
       ErrorFormatter,
       AjaxButton,
       Spinner,
-      PasswordField
+      PasswordField,
+      FileUpload,
+      ImageInput
     },
     computed: {
       isInvalidEmail() {
         return (this.adminData.email && !this.isValidEmail(this.adminData.email))
       },
+      ...mapGetters(['mediaStorage']),
       ...mapGetters('admin', ['profile'])
     },
     methods:{
@@ -309,8 +335,28 @@
           this.hasError = true
         }
       },
+      async uploadProfileImage(file, name = null) {
+        this.imageUploading = true
+        try {
+          let params
+          if (file) {
+            params = new FormData()
+            params.append('photo', file)
+          } else {
+            params = { photo: name }
+          }
+
+          const data = await this.updateProfileImage(params)
+          if (data?.status === 200 && data.data) {
+            this.adminData = Object.assign({}, this.adminData, { image: data.data.image })
+          }
+        } catch (e) {
+          return this.$nuxt.error(e)
+        }
+        this.imageUploading = false
+      },
       ...mapActions('ui', ['setErrors']),
-      ...mapActions('admin', ['updateProfile', 'setPassword'])
+      ...mapActions('admin', ['updateProfile', 'updateProfileImage', 'setPassword'])
     },
     mounted() {
       this.activeTab = this.$route.hash ? this.$route.hash.replace('#','') : this.tabs[0].tabId

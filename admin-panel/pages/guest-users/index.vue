@@ -11,11 +11,12 @@
     @delete-bulk="deleteBulk"
     @list="itemList = $event"
   >
-    <template v-slot:table="{list}">
+    <template v-slot:table="{list, from}">
       <tr class="lite-bold">
         <th>
           <input type="checkbox" @change="checkAll">
         </th>
+        <th class="w-50x mx-w-50x">#</th>
         <th>{{ $t('profile.id') }}</th>
         <th>{{ $t('user.name') }}</th>
         <th>{{ $t('fSale.email') }}</th>
@@ -31,6 +32,7 @@
         <td>
           <input type="checkbox" :value="value.id" v-model="cbList">
         </td>
+        <td class="w-50x mx-w-50x">{{ from + index }}</td>
         <td>{{ value.id }}</td>
         <td><span class="mx-w-300x">{{ getDataFromObject(value, 'name', 'n/a') }}</span></td>
         <td><span class="mx-w-300x">{{ getDataFromObject(value, 'email', 'n/a') }}</span></td>

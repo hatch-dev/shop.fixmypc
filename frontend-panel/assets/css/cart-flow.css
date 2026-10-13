@@ -1,0 +1,905 @@
+
+.custom-dropdown{
+  width:250px;
+}
+
+.pop-over .pop-over-inner .pop-over-content{
+  max-height:700px;
+}
+.address-card {
+    border: 1px solid #dcdde1;
+    border-radius: 12px;
+    padding: 18px;
+    position: relative;
+    background: #fff;
+    cursor: pointer;
+    transition: 0.3s;
+    height: 100%;
+  }
+
+  .address-card.active {
+    border: 2px solid #333199;
+    background: #f3f4ff;
+  }
+
+  .badge-custom {
+    background: #333199;
+    color: #fff;
+    font-size: 12px;
+    border-radius: 20px;
+    padding: 3px 10px;
+    margin-left: 8px;
+  }
+
+  .check-icon {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #333199;
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .address-card.active .check-icon {
+    display: flex;
+  }
+
+  /* Add New Card */
+  .add-card {
+    border: 2px dashed #dcdde1;
+    border-radius: 16px;
+    background: #f8f9fc;
+    cursor: pointer;
+    min-height: 180px;
+    transition: 0.3s;
+  }
+
+  .add-card:hover {
+    background: #eef0ff;
+    border-color: #4b4bff;
+  }
+
+  .plus-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid #dcdde1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    color: #333;
+  }
+  .new-address {
+    width: 160px;
+}
+.save-address {
+ width: 330px;
+}
+span.delivery-heading {
+    font-size: 18px;
+    font-weight: 500;
+    color: #130E2B;
+}
+.form-label {
+    margin-bottom: 10px;
+    color: #130E2B;
+    font-size: 14px;
+    font-weight: 500;
+}
+.delivery-filed {
+    padding: 12px 12px !important;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #8C8999;
+}
+span.default-address {
+    font-size: 14px;
+    font-weight: 500;
+    color: #130E2B;
+}
+/* the cart line spaces its own price row now; the 35px forced here pushed
+   the price away from the title at every breakpoint, and the !important meant
+   the component could not correct it. */
+.delivery-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #E3E3EF;
+}
+
+.delivery-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.delivery-left {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.delivery-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #130E2B;
+}
+
+.delivery-sub {
+  font-size: 14px;
+  font-weight: 500;
+  color: #232159;
+}
+
+.delivery-options {
+  display: flex;
+  gap: 20px;
+}
+
+/*
+ * Unchosen is deliberately colourless. Both tiles used to sit in the same
+ * green with only a slight shade between them, so an order could be posted at
+ * full price simply because nobody noticed which one was lit.
+ */
+.delivery-option {
+  position: relative;
+  flex: 1;
+  background: #fff;
+  border: 1.5px solid #dfe3ef;
+  border-radius: 14px;
+  padding: 15px;
+  padding-right: 44px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+
+.delivery-option:hover {
+  border-color: #b9bed3;
+  background: #fafbfe;
+}
+
+.delivery-option:focus-visible {
+  outline: 2px solid #33319A;
+  outline-offset: 2px;
+}
+
+/* the icon disc carries a hard-coded green fill in the markup */
+.delivery-option:not(.active) .shiping-icon-circle svg rect {
+  fill: #c4c8d8;
+}
+
+.delivery-option:not(.active) .delivery-type {
+  color: #4b5262;
+}
+
+/* an empty ring on the unchosen tiles, so it reads as "pick one" */
+.delivery-option::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  border: 2px solid #cdd2e0;
+  border-radius: 50%;
+  background: #fff;
+  transition: border-color .2s, background .2s;
+}
+
+.delivery-option.active {
+  background: #E9F6EE;
+  border-color: #05B942;
+  box-shadow: 0 0 0 1px #05B942;
+}
+
+.delivery-option.active::after {
+  border-color: #05B942;
+  background: #05B942 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
+}
+
+/* the tick beside "Delivery or Collection?" is a status, not decoration */
+.delivery-step-check rect {
+  fill: #c4c8d8;
+  transition: fill .2s;
+}
+
+.delivery-step-check.is-done rect {
+  fill: #05B942;
+}
+
+/* both checkout steps scroll back to this card, and the site header is sticky
+   over the top of it */
+.delivery-box {
+  scroll-margin-top: 150px;
+}
+
+@media (max-width: 768px) {
+  .delivery-box {
+    scroll-margin-top: 90px;
+  }
+}
+
+/* the two tiles are a summary until Edit is pressed */
+.delivery-options.is-locked .delivery-option {
+  cursor: default;
+}
+
+.delivery-options.is-locked .delivery-option:not(.active) {
+  opacity: .65;
+}
+
+.delivery-options.is-locked .delivery-option:not(.active)::after {
+  display: none;
+}
+
+.delivery-options.is-locked .delivery-option:not(.active):hover {
+  background: #fff;
+  border-color: #dfe3ef;
+}
+
+.delivery-edit-hint {
+  margin: -8px 0 14px;
+  font-size: 13px;
+  color: #6b7280;
+}
+.shiping-icon-circle svg {
+    width: 56px;
+    height: 56px;
+}
+
+.delivery-type{
+  font-weight: 600;
+  color: #130E2B;
+  font-size: 20px;
+}
+.delivery-edit-btn {
+    border: 1px solid #33319A;
+    border-radius: 100px;
+    color: #33319A;
+    height: auto;
+    line-height: normal;
+    padding: 6px 18px;
+    font-size: 14px;
+    font-weight: 600;
+}
+@media (max-width:768px) {
+.primary-btn{
+    width: 100%;
+}
+.shiping-icon-circle svg {
+    width: 30px;
+    height: 30px;
+}
+.delivery-title{
+  font-size: 18px;
+}
+.delivery-options {
+    flex-direction: column;
+    gap: 12px;
+}
+
+.delivery-option {
+    padding: 12px 40px 12px 12px;
+    gap: 12px;
+}
+.delivery-type{
+  font-size: 14px;
+}
+}
+/* -----------------------------------------------------------------------
+   Where a collection order is actually collected from. The shipping rule
+   has carried a full pickup address all along (address lines, city, state,
+   zip, country and a phone), and the page showed none of it — "Collection
+   Store (Free)" told the shopper the price and nothing about the place.
+   ----------------------------------------------------------------------- */
+.collection-points {
+  margin-top: 14px;
+}
+
+.collection-point {
+  border: 1px solid #cfead8;
+  border-radius: 14px;
+  background: #f4fbf6;
+  padding: 16px 18px;
+}
+
+.collection-point + .collection-point {
+  margin-top: 10px;
+}
+
+.collection-point-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 8px;
+  color: #05803a;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+
+.collection-point-address {
+  margin: 0;
+  font-style: normal;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #130e2b;
+}
+
+.collection-point-line {
+  display: block;
+}
+
+.collection-point-line:first-child {
+  font-weight: 600;
+}
+
+.collection-point-phone {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  color: #4b5262;
+}
+
+.collection-point-phone a {
+  color: #130e2b;
+  font-weight: 600;
+}
+
+.collection-point-map {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #05803a;
+  text-decoration: underline;
+}
+
+.collection-point-missing {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px dashed #d9dbe6;
+  border-radius: 12px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #4b5262;
+}
+
+@media (max-width: 575px) {
+  .collection-point {
+    padding: 14px;
+  }
+  .collection-point-address {
+    font-size: 14px;
+  }
+}
+
+/* ---------- purchase order ---------- */
+
+/*
+ * Sits inside the same accordion shell as the delivery and payment blocks, so
+ * a business customer reads it as one more step rather than a notice. Only
+ * shown to accounts whose stored profile asks to be invoiced against a PO.
+ */
+.po-body {
+  padding: 0 20px 18px;
+}
+
+.po-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #130E2B;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.po-required {
+  color: #DC2626;
+}
+
+.po-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #130E2B;
+}
+
+.po-input:focus {
+  outline: none;
+  border-color: #130E2B;
+}
+
+.po-input.invalid {
+  border-color: #DC2626;
+}
+
+.po-help {
+  display: block;
+  margin-top: 6px;
+  color: #8C8999;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.po-error {
+  display: block;
+  margin-top: 6px;
+  color: #DC2626;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+@media (max-width: 575px) {
+  .po-body {
+    padding: 0 14px 14px;
+  }
+}
+
+/* ===========================================================================
+   Checkout — voucher block (apply row + available-voucher list)
+
+   The apply row used to be the global `.btn-input` pattern: an input with
+   80px of right padding and the button absolutely positioned over it. That
+   pattern breaks inside the order summary, because `.summary ::v-deep
+   .primary-btn` in CheckoutRight.vue sets `width: 100%` on every primary
+   button in the panel — so the absolutely positioned Apply button stretched
+   the full width of the field and buried the code input underneath it.
+
+   It is a plain flex row now: the input takes the space that is left and the
+   button keeps its own width, so neither can cover the other at any width.
+   The button selector is deliberately two classes deep so it outranks that
+   `::v-deep` rule regardless of stylesheet order.
+
+   Everything below the apply row is scoped to .voucher-list, because
+   components/Vouchers.vue uses the same .voucher-card / .voucher-title names
+   for the voucher page and this file stays in the document after the route
+   changes.
+   =========================================================================== */
+.voucher-apply {
+  margin-top: 12px;
+}
+
+.voucher-form {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.voucher-form .voucher-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 44px;
+  line-height: normal;
+  padding: 0 14px;
+  border: 1px solid #E3E8F0;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  color: #0F2547;
+}
+
+.voucher-form .voucher-input::placeholder {
+  font-size: 14px;
+  letter-spacing: 0;
+  color: #8C9AB0;
+}
+
+.voucher-form .voucher-input:focus,
+.voucher-form .voucher-input:active {
+  border-color: #1A56DB;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, .14);
+}
+
+.voucher-apply.invalid .voucher-input {
+  border-color: #DC2626;
+}
+
+.voucher-apply.invalid .voucher-input:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, .14);
+}
+
+/*
+   width:auto is the whole point of this rule, and it is four selectors deep
+   on purpose.
+
+   The rule it has to beat is `.summary ::v-deep .primary-btn` in
+   CheckoutRight.vue, which Vue compiles to
+   `.summary[data-v-hash] .primary-btn`. An attribute selector scores in the
+   same column as a class, so that is (0,3,0) -- not (0,2,0). A three-class
+   rule here merely TIED it, and a tie goes to source order: the scoped block
+   is emitted after this file, so width:100% won and the Apply button covered
+   the code input a second time.
+*/
+.voucher-apply .voucher-form .voucher-apply-btn.primary-btn {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 96px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.voucher-apply .voucher-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #DC2626;
+}
+
+/* --- available vouchers --------------------------------------------------- */
+.voucher-list-wrapper {
+  margin-top: 10px;
+}
+
+.voucher-list-wrapper .show-voucher-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: auto;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #1A56DB;
+  cursor: pointer;
+}
+
+.voucher-list-wrapper .show-voucher-btn:hover {
+  color: #1544B0;
+  text-decoration: underline;
+}
+
+.voucher-list-wrapper .show-voucher-btn:focus,
+.voucher-list-wrapper .show-voucher-btn:active {
+  background: none;
+  box-shadow: none;
+}
+
+.voucher-list-wrapper .voucher-list {
+  margin-top: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.voucher-list .voucher-loading {
+  padding: 2px 0;
+}
+
+.voucher-list .empty-voucher-state {
+  padding: 18px 14px;
+  border: 1px dashed #D6DEEA;
+  border-radius: 8px;
+  background: #F8FAFC;
+  text-align: center;
+}
+
+.voucher-list .empty-voucher-state i {
+  font-size: 18px;
+  color: #8C9AB0;
+}
+
+.voucher-list .empty-voucher-state h6 {
+  margin: 6px 0 2px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0F2547;
+}
+
+.voucher-list .empty-voucher-state p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #6B7C93;
+}
+
+.voucher-list .voucher-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #E3E8F0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.voucher-list .voucher-card + .voucher-card {
+  margin-top: 8px;
+}
+
+.voucher-list .voucher-left {
+  min-width: 0;
+}
+
+.voucher-list .voucher-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #0F2547;
+}
+
+/* the code and what it is worth, on one line */
+.voucher-list .voucher-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* green, because it is the one figure on the card that is money in the
+   customer's pocket rather than a condition attached to it */
+.voucher-list .voucher-offer {
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #0B7A46;
+}
+
+.voucher-list .voucher-code {
+  display: inline-block;
+  margin: 0;
+  padding: 1px 7px;
+  border: 1px dashed #B9C6DA;
+  border-radius: 4px;
+  background: #F1F5FB;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: #1A56DB;
+}
+
+/* the conditions: min spend, and the ceiling on a percentage voucher.
+   A flat voucher has no ceiling to state - its amount already is one. */
+.voucher-list .voucher-description {
+  display: flex;
+  flex-wrap: wrap;
+  /* column gap only: the two terms sit side by side when they fit and drop to
+     their own lines when they do not. An earlier version put a middot
+     separator on the second term with ::before - which, the moment it wrapped,
+     began the new line with a dangling dot. A gap cannot wrap wrongly. */
+  gap: 0 14px;
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #6B7C93;
+}
+
+/* a term is one phrase: break between them, never inside one */
+.voucher-list .voucher-description span {
+  white-space: nowrap;
+}
+
+.voucher-list .voucher-expiry {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: #8C9AB0;
+}
+
+.voucher-list .apply-voucher-btn {
+  flex: 0 0 auto;
+  width: auto;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid #1A56DB;
+  border-radius: 8px;
+  background: #1A56DB;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.voucher-list .apply-voucher-btn:hover {
+  background: #1544B0;
+  border-color: #1544B0;
+}
+
+.voucher-list .apply-voucher-btn.applied {
+  background: #fff;
+  border-color: #D6DEEA;
+  color: #33486A;
+}
+
+.voucher-list .apply-voucher-btn.applied:hover {
+  background: #fff;
+  border-color: #DC2626;
+  color: #DC2626;
+}
+
+/* On a phone the summary is full width, so the apply row has more room than
+   it does on desktop — it stays a row. Only the paddings come in, so a long
+   placeholder still fits beside the button at 320px. */
+@media (max-width: 575px) {
+  .voucher-form .voucher-input {
+    padding: 0 12px;
+  }
+
+  .voucher-apply .voucher-form .voucher-apply-btn.primary-btn {
+    min-width: 88px;
+    padding: 0 14px;
+  }
+
+  .voucher-list-wrapper .voucher-list {
+    max-height: 280px;
+  }
+
+  .voucher-list .voucher-card {
+    padding: 10px;
+  }
+}
+
+/* =========================================================================
+   /shipping and /checkout, phone.
+
+   Both pages are a stack of white cards - delivery choice, address, payment -
+   and each one was laid out at its desktop size: a 20px box holding a 15px
+   tile holding a 56px icon disc, with a 20px gap under a 20px heading. Three
+   of those and the page was mostly padding, which is what pushed the order
+   summary so far down that the fixed bar (components/CheckoutRight.vue,
+   `mobile-bar`) became necessary in the first place.
+
+   767px, not the 768px the older rules above use, so that "phone" means the
+   same width here as it does for the bar and the cart line.
+   ========================================================================= */
+@media (max-width: 767px) {
+  .delivery-box {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .delivery-header {
+    margin-bottom: 12px;
+  }
+
+  .delivery-left {
+    gap: 10px;
+  }
+
+  /* the step tick is sized by width/height attributes in the markup, so it
+     has to be overridden rather than simply styled */
+  .delivery-step-check {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+  }
+
+  .delivery-title {
+    font-size: 15px;
+  }
+
+  .delivery-title.mb-2 {
+    margin-bottom: 3px !important;
+  }
+
+  .delivery-sub {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .delivery-edit-btn {
+    padding: 4px 12px;
+    font-size: 12px;
+  }
+
+  .delivery-edit-hint {
+    margin: -6px 0 10px;
+    font-size: 12px;
+  }
+
+  .delivery-options {
+    gap: 8px;
+  }
+
+  .delivery-option {
+    padding: 9px 32px 9px 10px;
+    gap: 10px;
+    border-radius: 10px;
+  }
+
+  .shiping-icon-circle svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .delivery-type {
+    font-size: 13px;
+  }
+
+  /* the "picked" ring comes in with the tile, or it sits off-centre in the
+     padding the tile no longer has */
+  .delivery-option::after {
+    right: 11px;
+    width: 17px;
+    height: 17px;
+    margin-top: -8.5px;
+  }
+
+  .delivery-option.active::after {
+    background-size: 10px 10px;
+  }
+
+  /* --- the address tiles ------------------------------------------------ */
+  .address-card {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .add-card {
+    min-height: 116px;
+    border-radius: 12px;
+  }
+
+  .plus-circle {
+    width: 38px;
+    height: 38px;
+    font-size: 20px;
+  }
+
+  span.delivery-heading {
+    font-size: 15px;
+  }
+
+  .form-label {
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+
+  .delivery-filed {
+    padding: 9px 10px !important;
+    font-size: 13px;
+  }
+
+  /* --- where a collection order is collected from ----------------------- */
+  .collection-point {
+    padding: 10px;
+  }
+
+  .collection-point-head {
+    font-size: 13px;
+  }
+
+  .collection-point-address,
+  .collection-point-phone {
+    font-size: 12px;
+  }
+
+  /*
+    The payment section is what the phone bar's button scrolls to, and the
+    site header is fixed over the top of the page - without this the heading
+    it lands on is underneath it. Same figure the delivery card already uses.
+  */
+  #paymentAccordion {
+    scroll-margin-top: 90px;
+  }
+}

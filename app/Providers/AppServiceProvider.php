@@ -35,5 +35,17 @@ class AppServiceProvider extends ServiceProvider
             ClientCommand::class,
             KeysCommand::class,
         ]);
+
+        /*
+         * MailBrand memoises the store's name, logo, colours and contact
+         * details for the life of the process. That is what we want inside
+         * one request — an order email otherwise re-queries the same tables
+         * for its header, body and footer — but a queue worker outlives many
+         * jobs, and would keep sending the branding that was current when it
+         * booted. Clear it at each job boundary.
+         */
+        \Illuminate\Support\Facades\Queue::before(function () {
+            \App\Models\Helper\MailBrand::forget();
+        });
     }
 }

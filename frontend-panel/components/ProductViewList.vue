@@ -1,93 +1,83 @@
 <template>
-  <div class="wishlist-row" :class="{ 'mt-3': index !== 0 }">
+  <!--
+    One saved product: the wishlist and Recently Viewed both render these.
 
-    <!-- LEFT -->
-    <div class="left" :class="{ 'disabled-row': !inStock }">
+    Desktop is one row (item, price, actions). A phone gets a compact card:
+    thumbnail beside the name, the price and stock on one line, and a single
+    action row. It used to stack price, old price, stock, button and a 12px
+    "Remove" on five separate lines per item.
+  -->
+  <article class="pvl" :class="{ 'is-out': !inStock }">
 
-        <nuxt-link
-            :to="productLink(product)"
-            class="product-thumb"
-        >
-            <lazy-image
-                :data-src="thumbImageURL(product)"
-                :alt="product.title"
-            />
-            <span v-if="!inStock" class="stock-out">Out of Stock</span>
-        </nuxt-link>
+    <nuxt-link :to="productLink(product)" class="pvl-thumb">
+      <lazy-image
+        :data-src="thumbImageURL(product)"
+        :alt="product.title"
+      />
+    </nuxt-link>
 
-      <div>
-        <nuxt-link
-            :to="productLink(product)"
-            class="order-product-name"
-            >
-            {{ product.title }}
-        </nuxt-link>
-        <br>
-        <small class="text-muted">
-          SKU: {{ product.sku || 'N/A' }}
-        </small>
+    <div class="pvl-info">
+      <nuxt-link :to="productLink(product)" class="pvl-title" :title="product.title">
+        {{ product.title }}
+      </nuxt-link>
 
-        <div class="rating">
-          {{ stars }}
-          <span>({{ product.review_count || 0 }} reviews)</span>
-        </div>
-      </div>
+      <!-- "SKU: N/A" was printed for every product without one -->
+      <span v-if="product.sku" class="pvl-sku">SKU {{ product.sku }}</span>
+
+      <span class="pvl-rating" :aria-label="`Rated ${Math.floor(product.rating || 0)} out of 5`">
+        <span class="pvl-stars" aria-hidden="true">{{ stars }}</span>
+        <span class="pvl-reviews">({{ product.review_count || 0 }})</span>
+      </span>
+
+      <!-- stockClass existed but was never applied: every badge was grey -->
+      <span class="pvl-stock" :class="stockClass">
+        <span class="pvl-stock-dot" aria-hidden="true"></span>
+        {{ stockText }}
+      </span>
     </div>
 
-    <!-- PRICE -->
-    <div class="price" :class="{ 'disabled-row': !inStock }">
-      {{ currencyIcon }}{{ currentPricing }}<br>
-
-      <small v-if="prevPrice" class="old-price">
+    <div class="pvl-price">
+      <span class="pvl-price-now">
+        <small v-if="isVariablePrice" class="pvl-from">{{ $t('from') }}</small>
+        {{ currencyIcon }}{{ currentPricing }}
+      </span>
+      <span v-if="prevPrice" class="pvl-price-was">
         {{ currencyIcon }}{{ prevPrice }}
-      </small>
+      </span>
     </div>
 
-    <!-- STOCK -->
-    <p class="stockin" :class="{ 'disabled-row': !inStock }">
-      {{ inStock ? 'In Stock' : 'Out of Stock' }}
-    </p>
+    <div class="pvl-actions">
+      <button
+        v-if="inStock"
+        type="button"
+        class="pvl-btn pvl-btn-cart"
+        :disabled="ajaxingCart"
+        @click="addProductToCart"
+      >
+        <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+        Add to cart
+      </button>
+      <span v-else class="pvl-btn pvl-btn-out" aria-disabled="true">
+        Out of stock
+      </span>
 
-    <!-- ACTIONS -->
-    <div class="actions text-end">
-
-      <!-- IN STOCK -->
-      <template v-if="inStock">
-        <button class="track-package-btn" @click="addProductToCart">
-          <i class="fa-solid fa-cart-shopping me-2"></i>
-          Add to Cart
-        </button>
-        <br>
-
-        <a href="#" class="remove" @click.prevent="wishListAction">
-          <i class="fa-solid fa-trash me-2"></i>
-          Remove
-        </a>
-      </template>
-
-      <!-- OUT OF STOCK -->
-      <template v-else>
-        <button class="track-stockout-btn disabled-row">
-          <i class="fa-solid fa-cart-shopping"></i>
-          Add to Cart
-        </button>
-        <br>
-
-        <div class="d-flex gap-2">
-          <a href="#" class="notify">
-            <i class="fa-regular fa-bell me-1"></i>
-            Notify Me
-          </a>
-
-          <a href="#" class="remove" @click.prevent="wishListAction">
-            <i class="fa-solid fa-trash me-1"></i>
-            Remove
-          </a>
-        </div>
-      </template>
-
+      <!--
+        "Notify Me" was a dead href="#": there is no back-in-stock service
+        behind it, so it is not offered.
+      -->
+      <button
+        type="button"
+        class="pvl-btn pvl-btn-remove"
+        :disabled="removing"
+        :aria-label="`Remove ${product.title}`"
+        :title="type === 'wishlist' ? 'Remove from wishlist' : 'Remove'"
+        @click="wishListAction"
+      >
+        <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+        <span class="pvl-remove-label">Remove</span>
+      </button>
     </div>
-  </div>
+  </article>
 </template>
 <script>
 import LazyImage from '~/components/LazyImage'
@@ -116,14 +106,16 @@ export default {
   mixins: [util, productHelper, productPriceHelper, cartHelper],
   data() {
     return {
-      ajaxingCart: false
+      ajaxingCart: false,
+      removing: false
     }
   },
   computed: {
     ...mapGetters('common', ['currencyIcon']),
     productInventory() {
-      let inventories = this.product?.product_inventories || []
-      return inventories.sort((a,b)=>b.quantity-a.quantity)[0]
+      // a copy: sorting the prop in place reordered the parent's data
+      const inventories = [...(this.product?.product_inventories || [])]
+      return inventories.sort((a, b) => b.quantity - a.quantity)[0]
     },
     inStock() {
       return this.productInventory?.quantity > 0
@@ -146,18 +138,25 @@ export default {
 
   methods: {
     async addProductToCart() {
+      if (this.ajaxingCart) return
+      this.ajaxingCart = true
       try {
         await this.addToCart()
       } catch (e) {
         this.setToastError(e.message)
+      } finally {
+        this.ajaxingCart = false
       }
     },
     async wishListAction() {
+      if (this.removing) return
+      this.removing = true
       try {
         const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/'
         if (this.type === 'wishlist') {
           await this.$axios.post(`${baseUrl}api/v1/user/wishlist/action`, {
-            product_id: this.product.id
+            product_id: this.product.id,
+            user_token: this.$auth.loggedIn ? null : await this.getUserToken()
           })
         }else{
           await this.$axios.delete(
@@ -167,6 +166,8 @@ export default {
         this.$emit('removed')
       } catch (e) {
         this.setToastError(e.message)
+      } finally {
+        this.removing = false
       }
     },
     ...mapActions('common', ['setToastError'])
@@ -174,133 +175,257 @@ export default {
 }
 </script>
 <style scoped>
-.wishlist-row {
-    display: grid;
-    grid-template-columns: 5.0fr 1fr 1fr 1.5fr;
-    align-items: center;
-    gap: 15px;
-    padding: 15px;
-    border: 1px solid #F5F5F5;
+/*
+ * Buttons set height and line-height themselves and hover backgrounds are
+ * !important: base.styl's global button rules (50px / 48px, and a hover that
+ * outranks scoped CSS) otherwise win.
+ */
+.pvl {
+  --ink: #130E2B;
+  --muted: #6B7280;
+  --line: #E3E3EF;
+  --brand: #33319A;
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) auto auto;
+  grid-template-areas: "thumb info price actions";
+  align-items: center;
+  gap: 16px 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
 
-.product-thumb {
-    display: block;
-    position: relative;
+.pvl + .pvl { margin-top: 12px; }
+
+.pvl:hover {
+  border-color: #D5D6EA;
+  box-shadow: 0 6px 18px rgba(19, 14, 43, .05);
 }
 
-.product-thumb img {
-    width: 100px;
-    height: 100px;
-    object-fit: contain;
+.pvl-thumb {
+  grid-area: thumb;
+  width: 88px;
+  height: 88px;
+  border: 1px solid #EEF0F5;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
 }
 
-.left {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-p.order-product-name {
-    display: block;
-    margin-bottom: 4px;
-    font-size: 16px;
-    font-weight: 400;
-    color: #130E2B;
-    text-decoration: none;
+.pvl-thumb ::v-deep img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-.order-product-name:hover {
-    text-decoration: underline;
+.pvl.is-out .pvl-thumb { opacity: .55; filter: grayscale(40%); }
+
+.pvl-info {
+  grid-area: info;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
 }
 
-.rating {
-    font-size: 12px;
-    color: #ffc107;
-}
-.rating span {
-    color: #888;
-}
-
-.price {
-    font-weight: 600;
-}
-.old-price {
-    text-decoration: line-through;
-    color: #aaa;
-    font-size: 12px;
+.pvl-title {
+  font-size: clamp(14px, .85rem + .2vw, 16px);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-p.stockin {
-    background-color: #F5F5F5;
-    text-align: center;
-    width: 94px;
-    font-size: 12px;
-    font-weight: 400;
-    color: #262626;
-    padding: 5px 0;
-    border-radius: 15px;
-}
-.stock.in { background:#d4edda; color:#28a745; }
-.stock.low { background:#fff3cd; color:#856404; }
-.stock.out { background:#fdecea; color:#dc3545; }
+.pvl-title:hover { color: var(--brand); text-decoration: underline; }
 
-.actions .remove {
-    font-size: 12px;
-    color: #777;
-    text-decoration: none;
-    display: inline-block;
-    margin-top: 5px;
-}
-.actions .notify {
-    font-size: 12px;
-    color: #130E2B;
-    margin-right: 10px;
-    display: inline-block;
+.pvl-sku { font-size: 12px; color: var(--muted); }
+
+.pvl-rating { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; }
+.pvl-stars { color: #F5A524; letter-spacing: 1px; }
+.pvl-reviews { color: var(--muted); }
+
+.pvl-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #F3F4F6;
+  color: #374151;
 }
 
-button.track-package-btn {
-    background-color: #33319A;
-    border-radius: 8px;
-    color: #fff;
-    font-weight: 400;
-    font-size: 14px;
-    padding: 0px 20px;
-    border: none;
-}
-button.track-package-btn:hover {
-    background-color: #05B942;
-}
-.disabled-row {
-    opacity: 0.5;
-    pointer-events: none;
-    filter: grayscale(40%);
+.pvl-stock-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+.pvl-stock.in  { background: #E6F6EC; color: #1E7E34; }
+.pvl-stock.low { background: #FFF5DB; color: #946200; }
+.pvl-stock.out { background: #FDECEA; color: #C82333; }
+
+.pvl-price {
+  grid-area: price;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 90px;
+  font-variant-numeric: tabular-nums;
 }
 
-a.notify {
-    font-size: 12px;
-    color: #777;
-    text-decoration: none;
-    display: inline-block;
-    margin-top: 7px;
-}
-span.stock-out {
-    position: absolute;
-    margin-top: 37px;
-    margin-left: -95px;
-    font-size: 12px;
-    font-weight: 400;
-    background-color: #6B7280;
-    color: #fff;
-    padding: 5px 10px 5px 10px;
-    border-radius: 8px;
+.pvl-price-now {
+  font-size: clamp(16px, .9rem + .4vw, 19px);
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
 }
 
-button.track-stockout-btn {
-    background-color: #E4E5ED;
-    border-radius: 8px;
-    color: #525A6B;
-    font-weight: 400;
-    font-size: 14px;
-    padding: 0px 20px;
-    border: none;
+.pvl-from {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-right: 2px;
+}
+
+.pvl-price-was {
+  font-size: 13px;
+  color: #9CA3AF;
+  text-decoration: line-through;
+  white-space: nowrap;
+}
+
+.pvl-actions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pvl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  line-height: 1;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.pvl-btn:disabled { opacity: .6; cursor: wait; }
+
+.pvl-btn-cart {
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+
+.pvl-btn-cart:hover:enabled {
+  background: #05B942 !important;
+  border-color: #05B942;
+  color: #fff;
+}
+
+.pvl-btn-out {
+  border: 1px solid var(--line);
+  background: #F3F4F6;
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.pvl-btn-remove {
+  width: 40px;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--muted);
+}
+
+.pvl-btn-remove:hover:enabled {
+  background: #FDECEA !important;
+  border-color: #F3B6B1;
+  color: #C82333;
+}
+
+/* the word is for phones and screen readers; desktop shows the bin alone */
+.pvl-remove-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+/* ---------- tablet: price joins the text column ---------- */
+
+@media (max-width: 991.98px) {
+  .pvl {
+    grid-template-columns: 80px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "thumb info  actions"
+      "thumb price actions";
+    row-gap: 6px;
+  }
+
+  .pvl-thumb { width: 80px; height: 80px; }
+
+  .pvl-price {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+    justify-self: start;
+    min-width: 0;
+  }
+}
+
+/* ---------- phone: a compact card ---------- */
+
+@media (max-width: 767.98px) {
+  .pvl {
+    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-areas:
+      "thumb   info"
+      "thumb   price"
+      "actions actions";
+    gap: 6px 12px;
+    padding: 12px;
+  }
+
+  .pvl-thumb { width: 72px; height: 72px; align-self: start; }
+
+  .pvl-actions {
+    margin-top: 8px;
+  }
+
+  .pvl-actions .pvl-btn-cart,
+  .pvl-actions .pvl-btn-out {
+    flex: 1 1 auto;
+    height: 44px;
+  }
+
+  .pvl-btn-remove {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pvl, .pvl-btn { transition: none; }
 }
 </style>

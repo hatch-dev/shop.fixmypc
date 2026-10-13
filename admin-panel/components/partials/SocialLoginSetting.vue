@@ -14,23 +14,15 @@
       />
     </div>
 
-    <div class="input-wrapper">
-
-      <div class="input-wrapper dply-felx start gap-10">
-        <label
-          for="google-login"
-          class="mb-0 dply-felx start gap-10">
-          <span class="label">{{ $t('title.googleLogin') }}</span>
-          <input
-            type="checkbox"
-            id="google-login"
-            v-model="result.google_login"
-          />
-
-        </label>
-      </div>
-
-
+    <div class="provider-card">
+      <label for="google-login" class="provider-toggle">
+        <span class="provider-toggle__name">{{ $t('title.googleLogin') }}</span>
+        <input
+          type="checkbox"
+          id="google-login"
+          v-model="result.google_login"
+        />
+      </label>
 
       <div class="input-wrapper">
         <label>
@@ -50,7 +42,7 @@
         </span>
       </div>
 
-      <div class="input-wrapper">
+      <div class="input-wrapper mb-0">
         <label>
           {{ $t('dataPage.gcs') }}
         </label>
@@ -67,25 +59,17 @@
           {{ $t('category.req', { type: $t('dataPage.gcs')}) }}
         </span>
       </div>
+    </div>
 
-
-      <div class="input-wrapper dply-felx start gap-10">
-        <label
-          for="facebook-login"
-          class="mb-0 dply-felx start gap-10"
-        >
-          <span class="label">
-            {{ $t('title.facebookLogin') }}
-          </span>
-          <input
-            type="checkbox"
-            id="facebook-login"
-            v-model="result.facebook_login"
-          />
-
-        </label>
-      </div>
-
+    <div class="provider-card">
+      <label for="facebook-login" class="provider-toggle">
+        <span class="provider-toggle__name">{{ $t('title.facebookLogin') }}</span>
+        <input
+          type="checkbox"
+          id="facebook-login"
+          v-model="result.facebook_login"
+        />
+      </label>
 
       <div class="input-wrapper">
         <label>
@@ -105,8 +89,7 @@
         </span>
       </div>
 
-
-      <div class="input-wrapper">
+      <div class="input-wrapper mb-0">
         <label>
           {{ $t('dataPage.fcs') }}
         </label>
@@ -123,8 +106,6 @@
           {{ $t('category.req', { type: $t('dataPage.fcs')}) }}
         </span>
       </div>
-
-
     </div>
 
     <div class="oflow-hidden">
@@ -224,6 +205,32 @@
     }
   }
 </script>
-<style lang="stylus">
+<style lang="stylus" scoped>
+  .provider-card
+    border 1px solid var(--border-color)
+    border-radius var(--radius-md)
+    padding 16px 18px
+    margin-bottom 16px
+    background var(--surface-color)
 
+  .provider-toggle
+    display flex
+    align-items center
+    gap 10px
+    margin 0 0 16px
+    padding-bottom 14px
+    border-bottom 1px solid var(--border-color)
+    cursor pointer
+    user-select none
+
+  .provider-toggle__name
+    font-size 14px
+    font-weight 700
+    color var(--text-strong)
+
+  .provider-toggle input[type="checkbox"]
+    width 18px
+    height 18px
+    accent-color var(--primary-color)
+    cursor pointer
 </style>

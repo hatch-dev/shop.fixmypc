@@ -29,7 +29,6 @@
 
 
   .img-wrapper
-    margin 5px 0
     position relative
 
 
@@ -83,15 +82,23 @@
       width 25%
 
 .tile-container
-  display flex
-  flex-wrap wrap
-  margin 0 -10px
+  display grid
+  grid-template-columns repeat(3, 1fr)
+  gap 24px
 
-  .p-tile
-    width 16.66%
-    min-width 16.66%
-    padding 0 10px
-    margin-bottom 15px
+  @media(max-width:1200px)
+    grid-template-columns repeat(3, 1fr)
+
+  @media(max-width:768px)
+    grid-template-columns repeat(2, 1fr)
+
+  @media(max-width:480px)
+    grid-template-columns 1fr
+
+  //.p-tile
+    //width 16.66%
+   // min-width 16.66%
+  //  margin-bottom 15px
 
 //RESPONSIVE
 @media only screen and (max-width: 1400px)
@@ -141,3 +148,70 @@
       width 50%
       min-width 50%
       margin-bottom 10px
+
+// ==================== VAT LABELS ====================
+// An unlabelled price is ambiguous here: most of this catalogue is quoted
+// inc-VAT and the business-facing lines are quoted ex-VAT with the tax added
+// at checkout. The tile says which, and gives the other figure underneath so
+// nobody has to work it out.
+.price-vat-side
+  margin-left 6px
+  font-size 11px
+  font-weight 600
+  letter-spacing .02em
+  text-transform uppercase
+  color #737987
+  white-space nowrap
+
+.price-vat-alt
+  margin 2px 0 0
+  font-size 12px
+  line-height 1.4
+  color #737987
+  display flex
+  align-items baseline
+  gap 4px
+  flex-wrap wrap
+
+// The quantity stepper is waiting on the server for this line's price. On a
+// quantity band the pending figure is a different number, not a slightly stale
+// one, so the tile says so instead of letting the old price pass as current.
+.price-updating
+  margin 2px 0 0
+  font-size 12px
+  line-height 1.4
+  color #737987
+  font-style italic
+
+// The step was refused. The figures on screen still agree with each other, so
+// this reads as "that did not happen", not "this price is wrong".
+.price-error
+  margin 2px 0 0
+  font-size 12px
+  line-height 1.4
+  color #c0392b
+  display flex
+  align-items baseline
+  gap 6px
+  flex-wrap wrap
+
+.price-retry
+  background none
+  border none
+  padding 0
+  font-size 12px
+  font-weight 600
+  color #2f3542
+  text-decoration underline
+  cursor pointer
+
+  &:disabled
+    opacity .5
+    cursor default
+
+// The bracketed VAT detail after the gross figure: "(VAT 23% €160.77)".
+// Quieter than the figure it qualifies, and kept whole when the line wraps on
+// a narrow tile - the rate and the amount belong together.
+.price-vat-amount
+  white-space nowrap
+  color #9096a5

@@ -15,7 +15,7 @@ export default {
   },
   computed:{
     wishListed() {
-      return this.$auth?.user?.id && this.product?.wishlisted
+      return !!this.product?.wishlisted
     },
     maxQuantity() {
       if (this.productInventory?.is_active == 1) return 9999
@@ -47,19 +47,28 @@ export default {
         const selling = Number(this.product.selling)
         // const finalPrice = !isNaN(offered) && offered > 0 ? offered : selling
         const finalPrice = this.selectedVoucher ? Number(this.discountedPrice) : (offered > 0 ? offered : selling);
-        await this.buyNow({
-          payload: {
-            user_token: await this.getUserToken(),
-            product_id: this.product.id,
-            inventory_id: this.productInventory.id,
-            quantity: this.quantity,
-            price: finalPrice
-          },
-          lang: this.langCode
-        }).then(() => {
+        let data = null
+
+        try {
+          data = await this.buyNow({
+            payload: {
+              user_token: await this.getUserToken(),
+              product_id: this.product.id,
+              inventory_id: this.productInventory.id,
+              quantity: this.quantity,
+              price: finalPrice
+            },
+            lang: this.langCode
+          })
+        } catch (e) {
+          data = null
+        } finally {
           this.buyingNow = false
-          resolve()
-        })
+        }
+
+        // Resolves with whether the Buy Now line was created: a refusal
+        // (sold out, say) comes back as a 201 body, not a thrown error.
+        resolve(data)
       })
     },
     async addToCart(isBuyNow = false) {
@@ -105,14 +114,16 @@ export default {
         return false
       }
       if (isBuyNow) {
-        await this.buyNowProduct()
-          .then(() => {
+        const data = await this.buyNowProduct()
 
-            setTimeout(() => {
-              this.$router.push({path: '/shipping'})
-            }, 300)
+        // Only on to checkout if there is something to check out: a refused
+        // Buy Now used to land on /shipping with nothing (or the basket) in it.
+        if (data?.status !== 200) {
+          this.setToastError(data?.data?.form?.[0] || data?.message || this.$t('detailRight.outOfStock'))
+          return false
+        }
 
-          })
+        this.$router.push({path: '/shipping'})
 
       } else {
         await this.cartAdd()

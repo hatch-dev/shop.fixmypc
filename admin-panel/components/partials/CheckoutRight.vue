@@ -154,25 +154,26 @@
           voucher: 0
         }
 
-        let shippingId = []
+        /*
+         * Delivery is charged once per order, from the row update-shipping
+         * decided for the customer's address (the same on every line) - the
+         * figure PosOrdersController charges. parseFloat: the prices are
+         * decimals, and parseInt showed €4.50 as €4.
+         */
+        const shipped = this.hasShipping
+          ? (this.checkedProduct || []).find(curr => curr?.shipping_place)
+          : null
+
+        if (shipped) {
+          const place = shipped.shipping_place
+
+          cp.shippingPrice = parseFloat(
+            (parseInt(shipped.shipping_type) === 2 ? place.pickup_price : place.price) || 0
+          )
+        }
 
         if(this.checkedProduct?.length) {
           this.checkedProduct?.forEach((curr) => {
-            const currentShippingId = curr?.shipping_place?.shipping_rule?.id;
-            const shippingIdExists = shippingId[currentShippingId]
-
-            if(this.hasShipping) {
-              if (curr?.shipping_option ||
-                (!curr?.shipping_option && !shippingIdExists)) {
-
-                if (parseInt(curr.shipping_type) === 1) {
-                  cp.shippingPrice += parseInt(curr?.shipping_place?.price || 0)
-                } else if (parseInt(curr.shipping_type) === 2 && this.hasShipping) {
-                  cp.shippingPrice += parseInt(curr?.shipping_place?.pickup_price || 0)
-                }
-                shippingId[currentShippingId] = curr.shipping_type
-              }
-            }
 
             const qty = parseInt(curr?.quantity || 0)
             const bundleDeal = curr?.flash_product?.bundle_deal

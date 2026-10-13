@@ -3,10 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "check:categories": "node tests/categories.check.js",
+    "check:business-pricing": "node tests/business-pricing.check.js",
+    "check:vat-display": "node tests/vat-display.check.js",
+    "check:upsell": "node tests/upsell.check.js",
+    "check:trade-upgrades": "node tests/trade-upgrades.check.js",
+    "check:product-upgrades": "node tests/product-upgrades.check.js",
+    "check:cross-sell": "node tests/cross-sell.check.js",
     "dev": "nuxt",
     "build": "nuxt build",
     "start": "nuxt start",
-    "generate": "nuxt generate"
+    "generate": "nuxt generate",
+    "check:flash-discount": "node tests/flash-discount.check.js",
+    "check:bundle-order-rows": "node tests/bundle-order-rows.check.js"
   },
   "dependencies": {
     "@casl/ability": "^5.4.4",

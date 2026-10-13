@@ -8,126 +8,118 @@
     "forgotPassword": "forgot-password",
     "verifyCode": "verify-code",
     "orderStatistic": "order-statistic",
+    "lowStockProducts": "low-stock-products",
     "dashboard": "dashboard",
-
     "localization": "localization",
     "resource": "resource",
     "languages": "languages",
     "activate": "activate",
     "deactivate": "deactivate",
-
     "convertImage": "setting/convert-image",
     "getSetting": "setting/find",
     "setCurrency": "setting/currency",
     "setAddress": "setting/address",
-
     "siteSettingUpload": "site-setting/upload",
     "setSiteSetting": "site-setting/action",
     "getSiteSetting": "site-setting/find",
-
     "socialLoginFind": "setting/social-login-find",
     "smtpFind": "setting/smtp-find",
     "mediaStorageFind": "setting/media-storage-find",
-
     "socialLoginAction": "setting/social-login-action",
     "smtpAction": "setting/smtp-action",
     "mediaStorageAction": "setting/media-storage-action",
-
+    "sidebarIconsFind": "setting/sidebar-icons",
+    "sidebarIconsAction": "setting/sidebar-icons",
+    "sidebarIconsDelete": "setting/sidebar-icons-delete",
     "getPayment": "payment/find",
     "setPayment": "payment/save",
-
     "setProfile": "update",
+    "setProfileImage": "update-profile-image",
     "setPassword": "update-password",
-
     "getAllCategories": "category/all-categories",
     "getCategories": "category/all",
     "deleteCategory": "category/delete",
     "getCategory": "category/find",
     "setCategory": "category/action",
     "setCategoryImage": "category/upload",
-
+    "getCategorySlugAvailable": "category/slug-available",
+    "getCategoryDeleteImpact": "category/delete-impact",
+    "setCategoryStatus": "category/update-status",
+    "setCategoryParent": "category/update-parent",
     "getAllSubCategories": "subcategory/all-subcategories",
     "getSubCategories": "subcategory/all",
     "deleteSubCategory": "subcategory/delete",
     "getSubCategory": "subcategory/find",
     "setSubCategory": "subcategory/action",
     "setSubCategoryImage": "subcategory/upload",
-
     "getAllBrands": "brand/all-brands",
     "getBrands": "brand/all",
     "deleteBrand": "brand/delete",
     "getBrand": "brand/find",
     "setBrand": "brand/action",
     "setBrandImage": "brand/upload",
-
     "bulkExport": "bulk/export",
     "bulkImport": "bulk/import",
-
     "imgAll": "images/all",
     "imgDelete": "images/delete",
     "imgUpload": "images/upload",
-
     "allPlugins": "plugin/all",
     "uploadPlugin": "plugin/upload",
     "activatePlugin": "plugin/activate",
     "deletePlugin": "plugin/delete",
-
     "analytics": "setting/analytics",
     "miscellaneous": "setting/miscellaneous",
-
     "getAllAttributes": "attribute/all-attributes",
     "getAttributes": "attribute/all",
     "deleteAttribute": "attribute/delete",
     "getAttribute": "attribute/find",
     "setAttribute": "attribute/action",
-
     "getAllTaxRules": "tax-rule/all-tax-rules",
     "getTaxRules": "tax-rule/all",
     "deleteTaxRule": "tax-rule/delete",
     "getTaxRule": "tax-rule/find",
     "setTaxRule": "tax-rule/action",
-
-
     "getCustomScripts": "custom-script/all",
     "deleteCustomScript": "custom-script/delete",
     "getCustomScript": "custom-script/find",
     "setCustomScript": "custom-script/action",
-
-
     "getAllShippingRules": "shipping-rule/all-shipping-rules",
     "getShippingRules": "shipping-rule/all",
     "deleteShippingRule": "shipping-rule/delete",
     "getShippingRule": "shipping-rule/find",
+    "getShippingRuleCoverage": "shipping-rule/coverage",
     "setShippingRule": "shipping-rule/action",
-
     "getAllProductCollections": "product-collection/all-product-collections",
     "getProductCollections": "product-collection/all",
     "deleteProductCollection": "product-collection/delete",
     "getProductCollection": "product-collection/find",
     "setProductCollection": "product-collection/action",
-
+    "setProductCollectionImage": "product-collection/upload-image",
     "getAllBundleDeals": "bundle-deal/all-bundle-deals",
     "getBundleDeals": "bundle-deal/all",
     "deleteBundleDeal": "bundle-deal/delete",
     "getBundleDeal": "bundle-deal/find",
     "setBundleDeal": "bundle-deal/action",
-
+    "getClearances": "clearance/all",
+    "deleteClearance": "clearance/delete",
+    "getClearance": "clearance/find",
+    "setClearance": "clearance/action",
     "getVouchers": "voucher/all",
     "deleteVoucher": "voucher/delete",
     "getVoucher": "voucher/find",
     "setVoucher": "voucher/action",
     "voucherValidity": "voucher/validity",
-
     "getGiftVouchers": "gift-voucher/all",
     "deleteGiftVoucher": "gift-voucher/delete",
     "getGiftVoucher": "gift-voucher/find",
     "setGiftVoucher": "gift-voucher/action",
-
+    "getGiftCards": "gift-card/all",
+    "resendGiftCard": "gift-card/resend",
+    "voidGiftCard": "gift-card/void",
     "getLanguages": "language/all",
     "deleteLanguage": "language/delete",
     "getLanguage": "language/find",
     "setLanguage": "language/action",
-
     "getProducts": "product/all",
     "getProductsWithCategories": "product/with-categories",
     "deleteProduct": "product/delete",
@@ -137,41 +129,27 @@
     "setProductImages": "product/upload-images",
     "deleteProductImage": "product/delete-image",
     "setProductVideo": "product/upload-video",
-
+    "setProductFeatureImages": "product/feature-images",
     "setProductImageAttributes": "product-image-attributes/action",
-
     "getDropdownList": "product/dropdown-data",
     "setWysiwygImage": "wysiwyg-image/upload",
     "deleteWysiwygImage": "wysiwyg-image/delete",
-
     "getTags": "tag/all",
     "setTags": "tag/action",
-
     "deleteFlashSale": "flash-sale/delete",
     "getFlashSales": "flash-sale/all",
     "getFlashSale": "flash-sale/find",
     "setFlashSale": "flash-sale/action",
-
-    "deleteUpsell": "upsell/delete",
-    "getUpsells":"upsell/all",
-    "getUpsell":"upsell/find",
-    "setUpsell":"upsell/action",
-
-    "deleteUpdatedUpsell": "updated-upsell/delete",
-    "getUpdatedUpsells":"updated-upsell/all",
-    "getUpdatedUpsell":"updated-upsell/find",
-    "setUpdatedUpsell":"updated-upsell/action",
-
+    "getFlashSaleProductTiers": "flash-sale/product-tiers",
+    "getFlashSaleProductMeta": "flash-sale/product-meta",
     "deleteTemplate": "templates/delete",
-    "getTemplates":"templates/all",
-    "getTemplate":"templates/find",
-    "setTemplate":"templates/action",
-
+    "getTemplates": "templates/all",
+    "getTemplate": "templates/find",
+    "setTemplate": "templates/action",
     "getCart": "cart/by-user",
     "setCart": "cart/action",
     "deleteCart": "cart/delete",
     "updateShipping": "cart/update-shipping",
-
     "deleteOrder": "order/delete",
     "getOrders": "order/all",
     "getVendorOrders": "order/vendor-all",
@@ -182,51 +160,44 @@
     "sendStatusUpdateEmail": "order/send-delivered-email",
     "getOderCancellationMessage": "cancellation/find",
     "setOrderRefund": "cancellation/refund",
-
     "getRatingReviews": "rating-review/all",
     "deleteRatingReview": "rating-review/delete",
-
     "getUsers": "user/all",
+    "getUser": "user/find",
+    "setUserStatus": "user/status",
+    "setUserVerification": "user/verification",
     "deleteUser": "user/delete",
     "getUserAddresses": "user/address/all",
     "setUserAddress": "user/address/action",
     "deleteUserAddress": "user/address/delete",
     "countriesPhones": "countries-phones",
-
     "getGuestUsers": "guest-user/all",
     "deleteGuestUser": "guest-user/delete",
-
     "getSubscribers": "subscriber/all",
     "deleteSubscriber": "subscriber/delete",
     "allSubscribers": "subscriber/all-subscribers",
     "sendSubscriptionEmail": "subscriber/send-subscription-email",
-
     "deleteUserMessage": "user-message/delete",
     "getUserMessages": "user-message/all",
     "getUserMessage": "user-message/find",
     "setUserMessage": "user-message/action",
-
     "setPosOrder": "pos-order/action",
     "getPosOrders": "pos-order/all",
     "deletePosOrders": "pos-order/delete",
-
     "deletePosSetting": "pos-setting/delete",
     "getPosSetting": "pos-setting/find",
     "setPosSetting": "pos-setting/action",
     "setPosSettingImage": "pos-setting/upload",
-
     "deletePage": "page/delete",
     "getAllPages": "page/all-pages",
     "getPages": "page/all",
     "getPage": "page/find",
     "setPage": "page/action",
-
     "deleteSubscriptionEmailFormat": "subscription-email-format/delete",
     "getAllSubscriptionEmailFormats": "subscription-email-format/all-subscription-email-formats",
     "getSubscriptionEmailFormats": "subscription-email-format/all",
     "getSubscriptionEmailFormat": "subscription-email-format/find",
     "setSubscriptionEmailFormat": "subscription-email-format/action",
-
     "setPageWysiwygImage": "page-wysiwyg-image/upload",
     "deletePageWysiwygImage": "page-wysiwyg-image/delete",
     "deleteSliderImage": "home-slider-image/delete",
@@ -234,57 +205,52 @@
     "getSliderImage": "home-slider-image/find",
     "setSliderImage": "home-slider-image/action",
     "uploadSliderImage": "home-slider-image/upload",
-
     "setFeatureWysiwygImage": "feature-wysiwyg-image/upload",
     "deleteFeatureWysiwygImage": "feature-wysiwyg-image/delete",
-
-
     "getBanners": "banner/all",
     "getBanner": "banner/find",
     "setBanner": "banner/action",
     "uploadBanner": "banner/upload",
-
-
-
+    "getTradeApplications": "trade-application/all",
+    "getTradeApplication": "trade-application/find",
+    "setTradeApplication": "trade-application/action",
+    "getTradeUpgrades": "trade-application/upgrades",
+    "setTradeUpgrade": "trade-application/upgrades/action",
+    "getAuthBanners": "auth-banner/all",
+    "getAuthBannerLinks": "auth-banner/links",
+    "getAuthBanner": "auth-banner/find",
+    "setAuthBanner": "auth-banner/action",
+    "uploadAuthBanner": "auth-banner/upload",
+    "reorderAuthBanners": "auth-banner/reorder",
+    "deleteAuthBanner": "auth-banner/delete",
     "getSiteFeatures": "site-feature/all",
     "getSiteFeature": "site-feature/find",
     "setSiteFeature": "site-feature/action",
     "uploadSiteFeatureImage": "site-feature/upload",
     "deleteSiteFeature": "site-feature/delete",
-
-
     "getFooterLinks": "footer-link/all",
     "setFooterLink": "footer-link/service-about-action",
     "deleteFooterImageLink": "footer-image-link/delete",
     "getFooterImageLink": "footer-image-link/find",
     "setFooterImageLink": "footer-image-link/action",
     "setFooterImageLinkImage": "footer-image-link/image",
-
-
     "getHeaderLinks": "header-link/all",
     "setHeaderLink": "header-link/action",
-
-
     "setInventory": "updated-inventory/action",
     "getInventory": "updated-inventory/find",
-
     "getRoles": "role/all",
     "getRole": "role/find",
     "deleteRole": "role/delete",
     "setRole": "role/action",
     "allRoles": "role/all-roles",
-
     "allPermissions": "role/all-permissions",
-
     "getAdmins": "admin-data/all",
     "getAdmin": "admin-data/find",
     "deleteAdmin": "admin-data/delete",
     "setAdmin": "admin-data/action",
-
     "getStore": "store/find",
     "setStore": "store/action",
     "setStoreLogo": "store/upload-logo",
-
     "setWithdrawalAccount": "withdrawal-account/action",
     "getWithdrawalAccount": "withdrawal-account/find",
     "getWithdrawalAccounts": "withdrawal-account/all",
@@ -295,33 +261,52 @@
     "cancelWithdrawalRequest": "withdrawal-request/cancel",
     "approveWithdrawalRequest": "withdrawal-request/approve",
     "deleteWithdrawalRequest": "withdrawal-request/delete",
-
-
     "getSuppliers": "suppliers/all",
-    "getSupplier" : "suppliers/find",
+    "getSupplier": "suppliers/find",
     "setSupplier": "suppliers/action",
     "deleteSupplier": "suppliers/delete",
-
-
+    "getSourcingBoard": "suppliers/sourcing",
+    "decideProcurementQuote": "suppliers/quotes",
+    "payProcurementQuote": "suppliers/quotes",
+    "getSupplierCategories": "suppliers/categories",
     "getLoyaltyGroups": "loyalty-groups/all",
     "getLoyaltyGroup": "loyalty-groups/find",
+    "getLoyaltyGroupRedemptions": "loyalty-groups/redemptions",
     "setLoyaltyGroup": "loyalty-groups/action",
     "deleteLoyaltyGroup": "loyalty-groups/delete",
-
-
     "getBusinessProducts": "business-products/all",
     "getBusinessProduct": "business-products/find",
     "setBusinessProduct": "business-products/action",
     "deleteBusinessProduct": "business-products/delete",
-
     "sumupFind": "setting/sumup",
     "sumupAction": "setting/sumup",
-
     "getFlashDiscounts": "flash-discount/all",
     "deleteFlashDiscount": "flash-discount/delete",
     "getFlashDiscount": "flash-discount/find",
     "setFlashDiscount": "flash-discount/action",
-
-    "getWalletOverview": "wallet-overview/all"
+    "getWalletOverview": "wallet-overview/all",
+    "activity": "activity",
+    "getUpsellCampaigns": "upsell/all",
+    "getUpsellCampaign": "upsell/find",
+    "setUpsellCampaign": "upsell/action",
+    "deleteUpsellCampaign": "upsell/delete",
+    "toggleUpsellCampaign": "upsell/toggle",
+    "duplicateUpsellCampaign": "upsell/duplicate",
+    "searchUpsellProducts": "upsell/products",
+    "getCrossSells": "cross-sell/all",
+    "getCrossSell": "cross-sell/find",
+    "setCrossSell": "cross-sell/action",
+    "toggleCrossSell": "cross-sell/toggle",
+    "deleteCrossSell": "cross-sell/delete",
+    "searchCrossSellProducts": "cross-sell/products",
+    "getCrossSellOptions": "cross-sell/options",
+    "getCrossSellAssignments": "cross-sell/assignments",
+    "assignCrossSell": "cross-sell/assign",
+    "updateCrossSellAssignments": "cross-sell/assignments",
+    "unassignCrossSell": "cross-sell/unassign",
+    "getProductUpgrades": "product-upgrades/find",
+    "setProductUpgrades": "product-upgrades/action",
+    "previewProductUpgrades": "product-upgrades/preview",
+    "setAttributeValueRanks": "product-upgrades/ranks"
   }
 }

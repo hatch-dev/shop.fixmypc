@@ -24,9 +24,34 @@
 
         <dropdown
           :selectedKey="paymentData.default"
-          :options="paymentTypesDrop"
+          :options="defaultMethodDrop"
           @clicked="paymentTypesSelect"
         />
+      </div>
+
+      <!--
+        Checkout shows one "Credit / Debit Card" option; this picks who is
+        behind it. Only the gateways ticked below are offered; the other card
+        gateway is refused at checkout.
+      -->
+      <div class="dply-felx j-left mb-20 mb-sm-15">
+          <span class="mr-15">
+            Card payments handled by
+          </span>
+
+        <dropdown
+          v-if="cardGatewayKey"
+          :key="Object.keys(cardGatewayDrop).join()"
+          :selectedKey="cardGatewayKey"
+          :options="cardGatewayDrop"
+          @clicked="cardGatewaySelect"
+        />
+        <span
+          v-else
+          class="card-gateway-none"
+        >
+          No card payments. Tick SumUp or Stripe below to take cards.
+        </span>
       </div>
     </div>
 
@@ -44,7 +69,7 @@
       </label>
     </div>
 
-    <paypal
+    <sumup
       :payment-data="paymentData"
     />
 
@@ -52,30 +77,45 @@
       :payment-data="paymentData"
     />
 
-    <razorpay
-      :payment-data="paymentData"
-    />
-
-    <flutterwave
-      :payment-data="paymentData"
-    />
-
-    <iyzico-payment
-      :payment-data="paymentData"
-    />
-
     <bank-payment
       :payment-data="paymentData"
     />
 
+    <!--
+      Gateways this store does not use. Checkout has no row for any of them,
+      so a ticked box here did nothing; a disabled fieldset turns off every
+      checkbox and toggle inside it. The server forces them off on save too
+      (PaymentsController::save).
+    -->
+    <fieldset
+      disabled
+      class="gateway-off"
+      aria-describedby="gateway-off-note"
+    >
+      <p id="gateway-off-note" class="gateway-off-note">
+        Not available for this store
+      </p>
 
-    <pay-fast
-      :payment-data="paymentData"
-    />
+      <paypal
+        :payment-data="paymentData"
+      />
 
-    <sumup
-      :payment-data="paymentData"
-    />
+      <razorpay
+        :payment-data="paymentData"
+      />
+
+      <flutterwave
+        :payment-data="paymentData"
+      />
+
+      <iyzico-payment
+        :payment-data="paymentData"
+      />
+
+      <pay-fast
+        :payment-data="paymentData"
+      />
+    </fieldset>
 
     <div class="oflow-hidden">
       <ajax-button
@@ -140,6 +180,8 @@
           branch_name: null,
           account_name: null,
           account_number: null,
+          iban: null,
+          bic_swift: null,
 
           payfast_payment: true,
           payfast_base_url: '',
@@ -151,6 +193,17 @@
           sumup_api_key: null,
           sumup_merchant_email: null,
           sumup_merchant_code: null,
+
+          card_gateway: null,
+        },
+        // Keyed as strings: Dropdown compares keys loosely and never emits
+        // for a falsy one.
+        // What checkout can preselect. Card is one row whichever gateway is
+        // behind it, so it is offered once.
+        defaultMethodDrop: {
+          '2': {title: this.$t('fSale.cod')},
+          '3': {title: 'Credit / Debit Card'},
+          '7': {title: this.$t('title.bt')},
         }
       }
     },
@@ -170,14 +223,46 @@
       Sumup
     },
     computed: {
+      /*
+       * Only the card gateways whose box is ticked. Keyed as strings: Dropdown
+       * compares keys loosely and never emits for a falsy one.
+       */
+      cardGatewayDrop() {
+        const on = v => [1, true, '1'].includes(v)
+        const options = {}
+        if (on(this.paymentData.sumup)) options['9'] = {title: 'SumUp'}
+        if (on(this.paymentData.stripe)) options['3'] = {title: 'Stripe'}
+        return options
+      },
+      /*
+       * The chosen gateway while its box is ticked, else the first ticked one -
+       * the same rule the server applies (Payment::cardGateway). Null when
+       * neither is ticked.
+       */
+      cardGatewayKey() {
+        const chosen = String(parseInt(this.paymentData.card_gateway))
+        if (this.cardGatewayDrop[chosen]) return chosen
+        if (this.cardGatewayDrop['9']) return '9'
+        if (this.cardGatewayDrop['3']) return '3'
+        return null
+      },
       ...mapGetters('payment', ['payment'])
     },
     methods: {
       paymentTypesSelect(data){
         this.paymentData.default = data.key
       },
+      cardGatewaySelect(data){
+        this.paymentData.card_gateway = parseInt(data.key)
+      },
       async updatePayment() {
         this.updatingPayment = true
+        for (const key of ['paypal', 'razorpay', 'flutterwave', 'iyzico_payment', 'payfast_payment']) {
+          this.paymentData[key] = 0
+        }
+        // Save what the dropdown shows: unticking the chosen gateway moves
+        // cards to the one still ticked.
+        this.paymentData.card_gateway = this.cardGatewayKey ? parseInt(this.cardGatewayKey) : null
         try {
           await this.setPayment(this.paymentData)
         } catch (e) {
@@ -203,3 +288,26 @@
     }
   }
 </script>
+
+<style lang="stylus" scoped>
+  .gateway-off
+    border 0
+    margin 20px 0 0
+    padding 12px 0 0
+    min-width 0
+    border-top 1px solid #e5e7eb
+    opacity .5
+    cursor not-allowed
+
+    ::v-deep label, ::v-deep button
+      cursor not-allowed
+
+  .card-gateway-none
+    font-size 13px
+    color #6b7280
+
+  .gateway-off-note
+    font-size 12px
+    margin 0 0 12px
+    color #6b7280
+</style>

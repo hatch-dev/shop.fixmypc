@@ -26,8 +26,8 @@ class IyzicoPaymentController extends Controller
         $requestIyzico = new \Iyzipay\Request\CreateCheckoutFormInitializeRequest();
         $requestIyzico->setLocale(app()->getLocale());
         $requestIyzico->setConversationId(rand());
-        $requestIyzico->setPrice($order->total_amount);
-        $requestIyzico->setPaidPrice($order->total_amount);
+        $requestIyzico->setPrice(\App\Models\Helper\WalletSplit::amountDue($order));
+        $requestIyzico->setPaidPrice(\App\Models\Helper\WalletSplit::amountDue($order));
         $requestIyzico->setCurrency('USD');
         $requestIyzico->setBasketId("B67832");
         $requestIyzico->setPaymentGroup(\Iyzipay\Model\PaymentGroup::PRODUCT);
@@ -67,7 +67,7 @@ class IyzicoPaymentController extends Controller
         $billingAddress->setZipCode("R");
         $requestIyzico->setBillingAddress($billingAddress);
 
-        $totalAmount = $order->total_amount;
+        $totalAmount = \App\Models\Helper\WalletSplit::amountDue($order);
 
        $basketItems = array();
         $products = 0;
@@ -135,9 +135,13 @@ class IyzicoPaymentController extends Controller
         if ($checkoutForm->getPaymentStatus() == 'SUCCESS') {
 
 
-            Order::where('id', $orderId)->update([
-                'payment_done' => true
-            ]);
+            Order::where('id', $orderId)->update(Order::paymentStamp(true));
+
+            // Charged for an order already cancelled: the shop has to act.
+            $paid = Order::find($orderId);
+            if ($paid && $paid->isCancelled()) {
+                \App\Models\Helper\OrderMailer::alertPaidCancelledOrder($paid);
+            }
 
         }
 

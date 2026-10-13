@@ -190,6 +190,16 @@
             title: this.$t('fSale.paypal')
           },
           {
+            key: 'bank_transfer',
+            title: 'Bank transfer'
+          },
+          {
+            // Bank transfer, unpaid, not cancelled: the ones to check the
+            // bank account for. Includes those with a reference in.
+            key: 'awaiting_transfer',
+            title: 'Awaiting transfer'
+          },
+          {
             key: 'paid',
             title: this.$t('fSale.paid')
           },

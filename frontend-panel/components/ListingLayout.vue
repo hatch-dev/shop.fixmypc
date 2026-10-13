@@ -56,8 +56,6 @@
 
           setTimeout(async () => {
             try {
-
-
               const data = await this.getRequest({
                 params: {
                   ...this.productParams,
@@ -70,6 +68,7 @@
                     max: this.maxPriceFromRoute,
                     min: this.minPriceFromRoute,
                     q: this.searchedKeyword,
+                    category: this.$route.query.category,
                     page: this.pageData,
                     all_categories: !this.allCategories,
                     sidebar_data: !this.brands || !this.shippingRules || !this.collections

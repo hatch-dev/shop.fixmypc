@@ -14,6 +14,7 @@ const state = () => ({
   subCategoriesMap: null,
 
   categories: null,
+  navCategories: null,
   customScripts: null,
   topBanner: null,
   popupBanner: null,
@@ -40,6 +41,7 @@ const getters = {
   currencyIcon: ({ setting }) => setting.currency_icon,
   currency: ({ setting }) => setting.currency,
   categories: ({ categories }) => categories,
+  navCategories: ({ navCategories }) => navCategories,
   customScripts: ({ customScripts }) => customScripts,
 
   subCategoriesMap: ({ subCategoriesMap }) => subCategoriesMap,
@@ -104,6 +106,7 @@ const mutations = {
     state.popupBanner = common?.popup_banner
     state.topBanner = common?.top_banner
     state.categories = common?.categories
+    state.navCategories = common?.nav_categories
     state.customScripts = common?.custom_scripts
 
     state.services =  common?.services
@@ -144,9 +147,9 @@ const actions = {
 
   },
 
-  async deleteRequest ({ commit }, {api, requiredToken, lang}) {
+  async deleteRequest ({ commit }, {api, requiredToken, lang, id = null, params = null}) {
     try {
-      const {data} = await Service.deleteRequest(api, requiredToken ? this.$auth.strategy.token.get(): null, lang)
+      const {data} = await Service.deleteRequest(api, requiredToken ? this.$auth.strategy.token.get(): null, lang, id, params)
 
       if(data?.status){
         return data

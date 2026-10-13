@@ -11,15 +11,16 @@
     @delete-bulk="deleteBulk"
     @list="itemList = $event"
   >
-    <template v-slot:table="{list}">
+    <template v-slot:table="{list, from}">
       <tr class="lite-bold">
         <th>
           <input type="checkbox" @change="checkAll">
         </th>
+        <th class="w-50x mx-w-50x">#</th>
         <th>{{ $t('admin.img') }}</th>
-        <th>{{ $t('admin.img') }}</th>
-        <th>{{ $t('admin.img') }}</th>
+        <th>{{ $t('index.title') }}</th>
         <th>{{ $t('category.status') }}</th>
+        <th>{{ $t('category.created') }}</th>
         <th/>
       </tr>
 
@@ -28,10 +29,13 @@
           <input type="checkbox" :value="value.id" v-model="cbList">
         </td>
 
+        <td class="w-50x mx-w-50x">{{ from + index }}</td>
+
         <td>
 
           <nuxt-link
             :to="`/site-features/${value.id}`"
+            class="feature-thumb"
           >
             <lazy-image
               class="mx-w-70x"
@@ -112,5 +116,23 @@
     img
       width 100px
       height auto
+
+  .feature-thumb
+    display inline-flex
+    align-items center
+    justify-content center
+    width 64px
+    height 64px
+    padding 10px
+    border-radius 10px
+    border 1px solid var(--border-strong)
+    background linear-gradient(135deg, #eef1f6, #dfe4ec)
+
+    img
+      max-width 100%
+      max-height 100%
+      width auto
+      height auto
+      object-fit contain
 </style>
 

@@ -18,14 +18,27 @@
       </div>
     </transition>
     <Header
+      ref="siteHeader"
       @going-next="goingNext"
     />
     <main>
+      <!--
+        undefined, not null, until goingNext() sets a key: Nuxt treats any
+        defined key as given and, finding it empty, builds one from
+        $route.matched[0].path - which does not exist for an address no page
+        matches, so a mistyped URL crashed with "reading 'path'" instead of
+        showing the not-found page.
+      -->
       <Nuxt
-        :nuxt-child-key="componentId"
+        :nuxt-child-key="componentId || undefined"
       />
     </main>
     <Footer/>
+
+    <mobile-tab-bar @open-search="openMobileSearch" />
+
+    <!-- What changed the basket without the shopper (BasketNotice). -->
+    <basket-notices />
 
     <transition name="fade" mode="out-in">
       <toast-message
@@ -67,6 +80,7 @@
   import metaHelper from "~/mixin/metaHelper";
   import util from "~/mixin/util";
   import PopOver from "~/components/PopOver";
+  import MobileTabBar from "~/components/MobileTabBar";
 
   export default {
     head() {
@@ -83,6 +97,7 @@
       }
     },
     components: {
+      MobileTabBar,
       PopOver,
       Banner,
       Header,
@@ -114,6 +129,10 @@
         'toastMessage', 'toastError', 'toastMessageStatus']),
     },
     methods: {
+      // the tab bar has no field of its own - it opens the search overlay
+      openMobileSearch() {
+        this.$refs.siteHeader?.openMobileSearch?.()
+      },
       closeCookieBanner(){
         localStorage.setItem('cookieBannerClosed', true)
         this.isCookieBannerClosed = true
@@ -163,7 +182,7 @@
       ...mapActions('cart', ['setCartCount']),
       ...mapActions('common', ['hideToast', 'getRequest']),
       ...mapActions('error', ['emptyError']),
-      ...mapActions('user', ['setProfile', 'getUserToken']),
+      ...mapActions('user', ['setProfile', 'getUserToken', 'logout']),
     },
     async mounted() {
       document.body.classList.add(this.currentLanguage?.direction || 'ltr')
@@ -195,11 +214,42 @@
 
             this.setCartCount(data.data?.cart_count)
             this.setProfile(data)
+
+          } else if (this.$auth.loggedIn) {
+            /*
+             * The profile endpoint refuses anyone it cannot identify, so a
+             * non-200 here while $auth still reports a signed-in shopper
+             * means the token in the browser is one the API no longer
+             * accepts: expired, revoked, or issued before the signing keys
+             * were replaced.
+             *
+             * Leaving it in place is worse than having no token at all.
+             * Every call that carries it is refused, and getUserToken()
+             * declines to mint a guest token because it believes someone is
+             * signed in, so the basket and the address list go out with no
+             * identity whatsoever - which is how pressing the basket ended
+             * on the error screen.
+             *
+             * reset() rather than logout(): the session is already gone, and
+             * logout() redirects to /login, which would throw the shopper off
+             * whatever page they had open. Dropping it here lets them carry
+             * on as a guest and sign in again when they choose to - but it
+             * is said out loud, because a header that quietly stops saying
+             * their name is not an explanation.
+             *
+             * A refusal that comes back as a real 401 is handled earlier, by
+             * the interceptor in plugins/axios-auth.js. This branch is for
+             * the endpoints that answer 200 with a refusal in the envelope,
+             * which that interceptor never sees.
+             */
+            this.$auth.reset()
+            this.$store.dispatch('common/setToastError',
+              'Your session has ended. Please sign in again.')
           }
 
           this.loading = false
         } catch (e) {
-          await this.$auth.logout()
+          await this.logout()
           this.loading = false
           return this.$nuxt.error(e)
         }

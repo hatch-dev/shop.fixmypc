@@ -20,10 +20,45 @@ const mutations = {
   },
   EMPTY_SUGGESTED_PRODUCTS(state){
     state.suggested = null
+  },
+  /*
+   * Fresh stock for the variants already on screen, updated in place: the
+   * page's selected variant is one of these same objects, so the "In Stock
+   * · N units" pill and the quantity limit follow without re-selecting.
+   */
+  SET_INVENTORY_STOCK(state, rows) {
+    const inventory = state.product?.inventory
+
+    if (!inventory || !Array.isArray(rows)) return
+
+    rows.forEach((row) => {
+      const target = inventory.find(item => Number(item.id) === Number(row.id))
+
+      if (target) {
+        target.quantity = Number(row.quantity)
+        target.is_active = row.is_active
+      }
+    })
   }
 }
 
 const actions = {
+  async refreshStock ({ commit, state }) {
+    const id = state.product?.id
+
+    if (!id) return
+
+    try {
+      const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/'
+      const { data } = await this.$axios.get(`${baseUrl}api/v1/product/${id}/stock`)
+
+      if (data?.status === 200) {
+        commit('SET_INVENTORY_STOCK', data.data)
+      }
+    } catch (e) {
+      // A stale pill is not worth an error on a product page.
+    }
+  },
   async fetchProduct ({ commit }, {params, lang}) {
 
     try {
@@ -56,8 +91,8 @@ const actions = {
     }
 
   },
-  async fetchSuggestedProducts ({ commit }, {id, page, lang}) {
-    const {data} = await Service.suggestedProducts(id, page, lang)
+  async fetchSuggestedProducts ({ commit }, {id, page, lang, bearer = null}) {
+    const {data} = await Service.suggestedProducts(id, page, lang, bearer)
 
     if(data?.status === 200){
       commit('SET_SUGGESTED_PRODUCTS', data)

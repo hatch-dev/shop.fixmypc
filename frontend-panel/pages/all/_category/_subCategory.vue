@@ -70,6 +70,8 @@
 
             sortby: route.query.sortby || '',
             shipping: route.query.shipping || '',
+            stock: route.query.stock || '',
+            offer: route.query.offer || '',
             brand: route.query.brand || '',
             collection: route.query.collection || '',
             rating: route.query.rating || 0,
@@ -110,6 +112,8 @@
                   sub_category: this.$route?.params?.subCategory,
                   sortby: this.sortByData,
                   shipping: this.shippingFromRoute,
+                  stock: this.stockFromRoute,
+                  offer: this.offerFromRoute,
                   brand: this.brandFromRoute,
                   collection: this.collectionFromRoute,
                   rating: this.ratingFromRoute,

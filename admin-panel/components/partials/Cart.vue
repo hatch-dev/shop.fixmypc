@@ -172,62 +172,31 @@
         this.generatingSingleShipping()
       },
 
-      currentShipRule(shippingPlaces) {
-        let matched = null
-        if (this.selectedShipping) {
-
-          shippingPlaces?.forEach((obj) => {
-            if (obj.country === this.selectedShipping.country) {
-              if (obj.state === this.selectedShipping.state) {
-                matched = obj
-                return
-              } else if (obj.state === 'ALL') {
-
-                matched = obj
-              }
-            } else if (obj.country === 'ALL') {
-              if (!matched) {
-                matched = obj
-              }
-            }
-          })
-        }
-
-        if(matched && !matched?.shipping_rule){
-          matched = {...matched, ...{shipping_rule: this.product?.shipping_rule}}
-        }
-
-        return matched
-      },
+      /*
+       * Delivery or collection is one choice for the whole basket, charged
+       * once (2026-09-28), so it is offered on the first line only. Which
+       * shipping row applies - and so the price - is decided by the server
+       * from the customer's address and comes back on each line as
+       * shipping_place; products no longer carry a rule to match against.
+       */
       generatingSingleShipping(){
         this.singleShippings = {}
         const cart = []
-        this.cart.forEach(i => {
-          const sr = i.flash_product.shipping_rule
-          let shippingOption = true
-          let shippingPlace = null
+        const first = Object.values(this.cartWithShipping)[0]
+        const type = first?.shipping_type || this.shippingTypeIn.location
 
-          if(this.selectedShipping) {
-            shippingPlace = this.currentShipRule(sr.shipping_places)
-          }
-
-          if(parseInt(sr.single_price) === 1) {
-            if(this.singleShippings[sr.id]){
-              shippingOption = false
-            } else {
-              this.singleShippings[sr.id] = 1
-            }
-          }
+        ;(this.cart || []).forEach((i, index) => {
           this.cartWithShipping = {...this.cartWithShipping, ...{
               [i.id] : {
                 ...this.cartWithShipping[i.id],
-                ...{shipping_option: shippingOption},
-                ...{shipping_place: shippingPlace}
+                cart: i.id,
+                shipping_type: this.cartWithShipping[i.id]?.shipping_type || type,
+                shipping_option: index === 0,
+                shipping_place: this.selectedShipping ? (i.shipping_place || null) : null
               }
             }}
 
-          i = {...i, ...{shipping_option: shippingOption}}
-          cart.push(i)
+          cart.push({...i, ...{shipping_option: index === 0}})
         })
         this.cart = cart
       },
@@ -274,7 +243,10 @@
             api: 'updateShipping'
           })
 
-          this.shippingChanged(data)
+          // A refusal resolves with nothing; ErrorFormatter shows why.
+          if (Array.isArray(data)) {
+            this.shippingChanged(data)
+          }
         }
       },
       async quantityChanged(){
@@ -339,7 +311,6 @@
 
             this.cartWithShipping[item.id] = {
               cart: item.id,
-              shipping_rule: item.flash_product.shipping_rule.id,
               shipping_type: item?.shipping_type ||this.shippingTypeIn.location
             }
 

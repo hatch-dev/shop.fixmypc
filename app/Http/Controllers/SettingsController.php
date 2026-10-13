@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Helper\ControllerHelper;
 use App\Models\Setting;
+use App\Models\SidebarIcon;
 use Illuminate\Http\Request;
 use App\Models\Helper\Response;
 use App\Models\Helper\Utils;
@@ -322,6 +323,8 @@ class SettingsController extends ControllerHelper
             $setting['state'] = request('state');
             $setting['zip'] = request('zip');
             $setting['country'] = request('country');
+            $setting['whatsapp'] = request('whatsapp');
+
 
 
 
@@ -437,6 +440,77 @@ class SettingsController extends ControllerHelper
         }
     }
 
+
+
+    public function sidebarIconsFind(Request $request)
+    {
+        try {
+            if ($can = Utils::userCan($this->user, 'setting.view')) {
+                return $can;
+            }
+
+            $icons = SidebarIcon::pluck('icon', 'menu_key');
+
+            return response()->json(new Response($request->token, $icons));
+
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+
+    public function sidebarIconsAction(Request $request)
+    {
+        try {
+            $lang = $request->header('language');
+
+            if ($can = Utils::userCan($this->user, 'setting.edit')) {
+                return $can;
+            }
+
+            $validate = Validation::sidebarIcon($request);
+            if ($validate) {
+                return response()->json($validate);
+            }
+
+            $svg = FileHelper::sanitizeSvg(file_get_contents($request->file('photo')->getRealPath()));
+
+            if ($svg === '') {
+                return response()->json(Validation::errorTokenLang($request->token, $lang));
+            }
+
+            SidebarIcon::updateOrCreate(
+                ['menu_key' => $request->input('menu_key')],
+                ['icon' => $svg, 'admin_id' => $request->user()->id]
+            );
+
+            $icons = SidebarIcon::pluck('icon', 'menu_key');
+
+            return response()->json(new Response($request->token, $icons));
+
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+
+    public function sidebarIconsDelete(Request $request)
+    {
+        try {
+            if ($can = Utils::userCan($this->user, 'setting.edit')) {
+                return $can;
+            }
+
+            SidebarIcon::where('menu_key', $request->input('menu_key'))->delete();
+
+            $icons = SidebarIcon::pluck('icon', 'menu_key');
+
+            return response()->json(new Response($request->token, $icons));
+
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
 
 
     public function analytics(Request $request)

@@ -12,10 +12,8 @@ export default {
   },
   methods: {
     async wishListAction(){
-      if(!this.$auth?.loggedIn){
-        this.$auth.redirect('login')
-        return
-      }
+      // No sign-in gate: a guest wishlists against its own token, the same way
+      // it fills a basket. The store attaches that token.
       this.ajaxingWishlist = true
 
       const data = await this.userWishlistAction({

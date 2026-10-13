@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shop → Banners — FixMyPC Admin</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{
+  --ink:#16174A;--ink-soft:#3A3C6E;--brand:#2D2DA0;--brand-700:#22227E;--brand-50:#F1F1FC;
+  --go:#00A24A;--go-700:#00873E;--paper:#fff;--wash:#F7F7FD;--line:#E4E5F3;--line-strong:#CFD1E8;
+  --muted:#6B7191;--danger:#C8324B;--amber:#B26A00;--radius:12px;
+  --shadow-md:0 8px 28px rgba(22,23,74,.10);--shadow-lg:0 24px 60px rgba(22,23,74,.18);
+  --sans:"Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--sans);background:var(--wash);color:var(--ink);font-size:14.5px;-webkit-font-smoothing:antialiased}
+a{color:var(--brand);text-decoration:none}
+:focus-visible{outline:3px solid rgba(45,45,160,.35);outline-offset:2px;border-radius:6px}
+.layout{display:grid;grid-template-columns:248px 1fr;min-height:100dvh}
+
+/* sidebar (matches CRM sb-* naming) */
+.sidebar{background:var(--ink);color:#fff;padding:18px 14px;position:sticky;top:0;height:100dvh;overflow:auto}
+.sb-brand{display:flex;align-items:center;gap:11px;padding:6px 8px 20px;font-weight:800}
+.sb-brand span{width:36px;height:36px;border-radius:10px;background:var(--brand);display:grid;place-items:center}
+.sb-group{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8FC0;padding:16px 10px 7px;font-weight:800}
+.sb-child-item{display:flex;width:100%;text-align:left;background:none;border:0;font-family:inherit;cursor:pointer;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;color:#C9CCEA;font-size:13.5px}
+.sb-child-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.sb-child-item.active{background:var(--brand);color:#fff;font-weight:600}
+
+.main{padding:26px 30px 60px;min-width:0}
+.head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:8px}
+h1{font-size:24px;margin:0 0 4px;letter-spacing:-.02em}
+.crumb{font-size:12.5px;color:var(--muted);margin-bottom:16px}
+.lede{color:var(--muted);margin:0 0 22px;max-width:66ch}
+
+.btn{border:0;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
+.btn-go{background:var(--go);color:#fff}.btn-go:hover{background:var(--go-700)}
+.btn-ink{background:var(--brand);color:#fff}.btn-ink:hover{background:var(--brand-700)}
+.btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line-strong)}
+.btn-ghost:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-50)}
+.btn-danger{background:#fff;color:var(--danger);border:1px solid #EFC3CC}
+.btn-danger:hover{background:#FDF2F4}
+.btn-sm{padding:8px 14px;font-size:13px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:30px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.card-thumb{height:132px;position:relative;background:linear-gradient(135deg,#2D2DA0,#6E6EDB);display:grid;place-items:center}
+.card-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.card-thumb .noimg{color:rgba(255,255,255,.9);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  border:1px dashed rgba(255,255,255,.6);padding:8px 12px;border-radius:8px}
+.card-body{padding:15px 16px 16px;flex:1;display:flex;flex-direction:column;gap:6px}
+.card-body h3{margin:0;font-size:15.5px;letter-spacing:-.01em}
+.card-body p{margin:0;font-size:13px;color:var(--muted);line-height:1.45}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag{font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:var(--brand-50);color:var(--brand)}
+.tag.live{background:#EAF9F0;color:#0B6B3A}
+.tag.off{background:#F1F2F7;color:var(--muted)}
+.tag.sched{background:#FFF6E6;color:var(--amber)}
+.card-acts{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line);background:#FCFCFE;flex-wrap:wrap}
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-left:auto;cursor:pointer}
+.switch input{width:0;height:0;opacity:0;position:absolute}
+.track{width:38px;height:21px;border-radius:999px;background:var(--line-strong);position:relative;transition:.18s}
+.track:after{content:"";position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.18s}
+.switch input:checked+.track{background:var(--go)}
+.switch input:checked+.track:after{transform:translateX(17px)}
+
+/* preview */
+.preview-wrap{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:30px}
+.preview-wrap h2{font-size:16px;margin:0 0 4px}
+.preview-wrap p.small{font-size:13px;color:var(--muted);margin:0 0 16px}
+.mock{display:grid;grid-template-columns:1.05fr 1fr;border:1px solid var(--line);border-radius:12px;overflow:hidden;height:330px}
+.mock-stage{position:relative;overflow:hidden;background:#2D2DA0}
+.mock-stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.mock-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,13,45,.08),rgba(12,13,45,.82))}
+.mock-scrim.light{background:linear-gradient(180deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.88))}
+.mock-copy{position:absolute;left:0;right:0;bottom:0;padding:22px;color:#fff}
+.mock-copy.light{color:var(--ink)}
+.mock-eyebrow{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:4px 9px;border-radius:999px;margin-bottom:9px}
+.mock-copy.light .mock-eyebrow{background:rgba(45,45,160,.08);border-color:rgba(45,45,160,.2)}
+.mock-title{font-size:21px;font-weight:800;line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}
+.mock-sub{font-size:12.5px;opacity:.85;margin:0 0 12px;max-width:38ch}
+.mock-cta{display:inline-block;background:#fff;color:var(--ink);font-size:12px;font-weight:700;padding:8px 14px;border-radius:999px}
+.mock-copy.light .mock-cta{background:var(--brand);color:#fff}
+.mock-form{background:#fff;padding:26px;display:flex;flex-direction:column;justify-content:center;gap:11px}
+.mock-form h4{margin:0 0 6px;font-size:17px}
+.mock-input{height:38px;border:1px solid var(--line-strong);border-radius:10px;background:#FCFCFE}
+.mock-btn{height:40px;border-radius:999px;background:var(--go);color:#fff;display:grid;place-items:center;font-size:13.5px;font-weight:700}
+
+/* fullscreen editor */
+.scrim{position:fixed;inset:0;background:rgba(22,23,74,.34);opacity:0;pointer-events:none;transition:opacity .2s;z-index:60}
+.scrim.on{opacity:1;pointer-events:auto}
+.modal{position:fixed;inset:0;background:#fff;z-index:70;display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;transform:scale(.99);transition:opacity .2s ease, transform .2s ease}
+.modal.on{opacity:1;pointer-events:auto;transform:none}
+.modal-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 26px;
+  border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:2}
+.modal-head h2{margin:0;font-size:19px;letter-spacing:-.01em}
+.modal-sub{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.modal-head-acts{display:flex;align-items:center;gap:18px}
+.modal-body{flex:1;overflow:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0}
+.modal-form{padding:22px 26px 40px;max-width:640px;width:100%;justify-self:end;border-right:1px solid var(--line)}
+.fs{padding:0 0 22px;margin-bottom:22px;border-bottom:1px solid var(--line)}
+.fs:last-child{border-bottom:0;margin-bottom:0}
+.fs h3{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;font-weight:800}
+.counter{float:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.modal-preview{padding:22px 26px 40px;background:var(--wash);position:sticky;top:0;align-self:start}
+.mp-bar{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.mp-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.mp-tog{margin-left:auto;display:flex;border:1px solid var(--line-strong);border-radius:999px;overflow:hidden;background:#fff}
+.mp-tog button{border:0;background:none;padding:7px 14px;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
+.mp-tog button.on{background:var(--brand);color:#fff}
+.mp-frame{display:grid;grid-template-columns:1.05fr 1fr;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  background:#fff;box-shadow:var(--shadow-md);height:min(62vh,520px);transition:max-width .2s}
+.mp-frame.mobile{grid-template-columns:1fr;max-width:330px;margin:0 auto;height:min(62vh,560px)}
+.mp-frame.mobile .mp-stage{height:190px}
+.mp-frame.mobile .mp-sub{display:none}
+.mp-stage{position:relative;overflow:hidden;background:#2D2DA0;min-height:0}
+.mp-stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.mp-ph{position:absolute;inset:0;background:linear-gradient(135deg,#2D2DA0,#6E6EDB);display:grid;place-items:center}
+.mp-ph span{border:1px dashed rgba(255,255,255,.55);color:rgba(255,255,255,.9);font-size:10px;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;padding:7px 11px;border-radius:8px;text-align:center}
+.mp-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,13,45,.06),rgba(12,13,45,.84))}
+.mp-scrim.light{background:linear-gradient(180deg,rgba(255,255,255,0) 28%,rgba(255,255,255,.9))}
+.mp-copy{position:absolute;left:0;right:0;bottom:0;padding:22px;color:#fff}
+.mp-copy.light{color:var(--ink)}
+.mp-eyebrow{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:4px 10px;border-radius:999px;margin-bottom:10px}
+.mp-copy.light .mp-eyebrow{background:rgba(45,45,160,.08);border-color:rgba(45,45,160,.2)}
+.mp-title{font-size:22px;font-weight:800;line-height:1.15;letter-spacing:-.02em;margin:0 0 7px}
+.mp-sub{font-size:13px;opacity:.86;margin:0 0 13px;max-width:36ch;line-height:1.45}
+.mp-cta{display:inline-block;background:#fff;color:var(--ink);font-size:12.5px;font-weight:700;padding:9px 16px;border-radius:999px}
+.mp-copy.light .mp-cta{background:var(--brand);color:#fff}
+.mp-form{padding:26px 24px;display:flex;flex-direction:column;justify-content:center;gap:11px}
+.mp-form b{font-size:16px;margin-bottom:4px}
+.mp-input{height:38px;border:1px solid var(--line-strong);border-radius:11px;background:#FCFCFE}
+.mp-btn{height:40px;border-radius:999px;background:var(--go);color:#fff;display:grid;place-items:center;font-size:13.5px;font-weight:700}
+.mp-note{font-size:11px;color:#9AA0BC;text-align:center;margin-top:6px}
+.mp-hint{font-size:12.5px;color:var(--muted);margin:12px 0 0}
+.modal-foot{display:flex;align-items:center;gap:10px;padding:14px 26px;border-top:1px solid var(--line);background:#fff}
+.modal-foot .btn-ghost,.modal-foot .btn-go{min-width:130px}
+.modal-foot-state{margin-left:auto;font-size:12.5px;color:var(--muted);font-weight:600}
+.x{background:none;border:0;cursor:pointer;width:38px;height:38px;border-radius:10px;color:var(--muted);font-size:22px;line-height:1}
+.x:hover{background:var(--brand-50);color:var(--brand)}
+
+.field{margin-bottom:15px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.control{width:100%;padding:11px 13px;border:1px solid var(--line-strong);border-radius:10px;font-size:14px;font-family:inherit;color:var(--ink);background:#fff}
+.control:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(45,45,160,.10);outline:none}
+.control.bad{border-color:var(--danger)}
+textarea.control{min-height:76px;resize:vertical}
+.hint{font-size:12px;color:var(--muted);margin-top:5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.drop{border:1.5px dashed var(--line-strong);border-radius:12px;padding:18px;text-align:center;background:var(--wash);cursor:pointer;transition:.15s}
+.drop:hover,.drop.over{border-color:var(--brand);background:var(--brand-50)}
+.drop b{display:block;font-size:13.5px;margin-bottom:3px}
+.drop span{font-size:12px;color:var(--muted)}
+.drop-shot{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.drop-shot img{width:100%;display:block;max-height:170px;object-fit:cover}
+.drop-shot button{position:absolute;top:8px;right:8px;background:rgba(22,23,74,.82);color:#fff;border:0;border-radius:8px;padding:6px 11px;font-size:12px;cursor:pointer}
+
+.toasts{position:fixed;right:20px;bottom:20px;z-index:90;display:grid;gap:10px;max-width:340px}
+.toast{background:var(--ink);color:#fff;padding:12px 16px;border-radius:11px;font-size:13.5px;box-shadow:var(--shadow-lg)}
+.toast.go{background:#0B6B3A}.toast.bad{background:#8E2035}
+
+.empty{background:#fff;border:1px dashed var(--line-strong);border-radius:16px;padding:44px 24px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:6px}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:static;height:auto;display:flex;gap:8px;overflow-x:auto;padding:12px}
+  .sb-group{display:none}.sb-brand{padding:0 10px 0 4px}
+  .sb-child-item{white-space:nowrap}
+  .main{padding:20px 16px 60px}
+  .mock{grid-template-columns:1fr;height:auto}.mock-stage{height:220px}
+  .modal-body{grid-template-columns:1fr}
+  .modal-form{max-width:none;justify-self:stretch;border-right:0;padding:18px 16px 26px;order:2}
+  .modal-preview{position:static;order:1;padding:16px}
+  .mp-frame{grid-template-columns:1fr;height:auto}
+  .mp-frame .mp-stage{height:200px}
+  .modal-head,.modal-foot{padding:12px 16px}
+  .modal-foot .btn-ghost,.modal-foot .btn-go{min-width:0;flex:1}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sb-brand"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span> FixMyPC</div>
+    <div class="sb-group">Shop</div>
+    <button type="button" class="sb-child-item">Products</button>
+    <button type="button" class="sb-child-item">Orders</button>
+    <button type="button" class="sb-child-item">Categories</button>
+    <button type="button" class="sb-child-item active">Banners</button>
+    <button type="button" class="sb-child-item">Coupons</button>
+    <div class="sb-group">Preview</div>
+    <button type="button" class="sb-child-item" data-note="Open shop/auth/index.html from the ZIP to see the live layout.">Sign-in page</button>
+  </nav>
+
+  <main class="main">
+    <p class="crumb">Shop / Banners</p>
+    <div class="head">
+      <div>
+        <h1>Sign-in banners</h1>
+        <p class="lede">These fill the left side of the shop sign-in, register and guest checkout screens. Live banners rotate every 7 seconds in the order below.</p>
+      </div>
+      <button class="btn btn-go" id="add">+ New banner</button>
+    </div>
+
+    <div class="preview-wrap">
+      <h2>Live preview</h2>
+      <p class="small">What a customer sees at <b>shop.fixmypc.ie/auth</b>. Pick a banner below to preview it.</p>
+      <div class="mock">
+        <div class="mock-stage" id="pv-stage">
+          <div class="mock-scrim" id="pv-scrim"></div>
+          <div class="mock-copy" id="pv-copy">
+            <span class="mock-eyebrow" id="pv-eyebrow">August offer</span>
+            <h3 class="mock-title" id="pv-title">Free diagnostics on every laptop repair</h3>
+            <p class="mock-sub" id="pv-sub">No fix, no fee — you only pay when you approve the quote.</p>
+            <span class="mock-cta" id="pv-cta">See repair prices</span>
+          </div>
+        </div>
+        <div class="mock-form">
+          <h4>Sign in to your account</h4>
+          <div class="mock-input"></div>
+          <div class="mock-input"></div>
+          <div class="mock-btn">Sign in</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" id="export">Export feed JSON</button>
+      <button class="btn btn-ghost btn-sm" id="reset">Reset to sample banners</button>
+    </div>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="modal" id="flyin" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="fly-title">
+  <div class="modal-head">
+    <div>
+      <h2 id="fly-title">New banner</h2>
+      <p class="modal-sub" id="fly-sub">Fills the left side of the shop sign-in screens.</p>
+    </div>
+    <div class="modal-head-acts">
+      <label class="switch" style="margin:0">
+        <input type="checkbox" id="f-active" checked><span class="track"></span>
+        <span style="color:var(--ink);font-weight:600;font-size:13.5px">Live</span>
+      </label>
+      <button class="x" id="fly-x" aria-label="Close editor">×</button>
+    </div>
+  </div>
+
+  <div class="modal-body">
+    <!-- ── left: the form ── -->
+    <div class="modal-form">
+      <section class="fs">
+        <h3>Content</h3>
+        <div class="field">
+          <label for="f-title">Headline <span style="color:var(--danger)">*</span></label>
+          <input class="control" id="f-title" placeholder="Free diagnostics on every laptop repair" maxlength="70">
+          <p class="hint">Under about 60 characters so it holds on two lines. <span id="c-title" class="counter">0/70</span></p>
+        </div>
+        <div class="field">
+          <label for="f-eyebrow">Eyebrow</label>
+          <input class="control" id="f-eyebrow" placeholder="August offer" maxlength="28">
+          <p class="hint">Small label above the headline. <span id="c-eyebrow" class="counter">0/28</span></p>
+        </div>
+        <div class="field">
+          <label for="f-sub">Supporting line</label>
+          <textarea class="control" id="f-sub" maxlength="180" placeholder="No fix, no fee — you only pay when you approve the quote."></textarea>
+          <p class="hint"><span id="c-sub" class="counter">0/180</span></p>
+        </div>
+        <div class="two">
+          <div class="field">
+            <label for="f-cta">Button label</label>
+            <input class="control" id="f-cta" placeholder="See repair prices" maxlength="26">
+          </div>
+          <div class="field">
+            <label for="f-href">Button link</label>
+            <input class="control" id="f-href" placeholder="/shop/repairs">
+            <p class="hint">Path on the shop, or a full https:// address.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="fs">
+        <h3>Image</h3>
+        <div class="field">
+          <div class="drop" id="drop">
+            <b>Drop an image or click to choose</b>
+            <span>1200 × 1600 px portrait, JPG or WebP, under 400 KB</span>
+          </div>
+          <div class="drop-shot" id="shot" hidden>
+            <img id="shot-img" alt="Banner image">
+            <button type="button" id="shot-clear">Replace</button>
+          </div>
+          <input type="file" id="file" accept="image/*" hidden>
+          <p class="hint">Leave empty and customers see the branded indigo placeholder — nothing looks broken.</p>
+        </div>
+        <div class="field">
+          <label for="f-theme">Text colour</label>
+          <select class="control" id="f-theme">
+            <option value="dark">White text — for dark images</option>
+            <option value="light">Navy text — for light images</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="fs">
+        <h3>Where and when</h3>
+        <div class="field">
+          <label for="f-placement">Shows on</label>
+          <select class="control" id="f-placement">
+            <option value="auth">Sign in, register and guest checkout</option>
+            <option value="login">Sign in only</option>
+            <option value="signup">Register only</option>
+          </select>
+        </div>
+        <div class="two">
+          <div class="field">
+            <label for="f-start">Starts</label>
+            <input class="control" id="f-start" type="date">
+          </div>
+          <div class="field">
+            <label for="f-end">Ends</label>
+            <input class="control" id="f-end" type="date">
+          </div>
+        </div>
+        <p class="hint" style="margin-top:-4px">Leave both empty to run indefinitely. Outside these dates the banner is skipped, even when it's set to live.</p>
+        <div class="field" style="margin-top:14px">
+          <label for="f-name">Internal name</label>
+          <input class="control" id="f-name" placeholder="August diagnostics push">
+          <p class="hint">Staff only — how you'll find this banner in the list.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── right: live preview ── -->
+    <aside class="modal-preview">
+      <div class="mp-bar">
+        <span class="mp-label">Live preview</span>
+        <div class="mp-tog">
+          <button type="button" id="mp-desktop" class="on">Desktop</button>
+          <button type="button" id="mp-mobile">Mobile</button>
+        </div>
+      </div>
+      <div class="mp-frame" id="mp-frame">
+        <div class="mp-stage" id="mp-stage">
+          <div class="mp-ph" id="mp-ph"><span>No image · placeholder shown</span></div>
+          <div class="mp-scrim" id="mp-scrim"></div>
+          <div class="mp-copy" id="mp-copy">
+            <span class="mp-eyebrow" id="mp-eyebrow"></span>
+            <h4 class="mp-title" id="mp-title">Headline goes here</h4>
+            <p class="mp-sub" id="mp-sub"></p>
+            <span class="mp-cta" id="mp-cta"></span>
+          </div>
+        </div>
+        <div class="mp-form">
+          <b>Sign in to your account</b>
+          <span class="mp-input"></span><span class="mp-input"></span>
+          <span class="mp-btn">Sign in</span>
+          <span class="mp-note">Powered by excytech</span>
+        </div>
+      </div>
+      <p class="mp-hint" id="mp-hint">Updates as you type. Rotates with any other live banner every 7 seconds.</p>
+    </aside>
+  </div>
+
+  <div class="modal-foot">
+    <button class="btn btn-danger btn-sm" id="fly-delete" hidden>Delete banner</button>
+    <span class="modal-foot-state" id="fly-state"></span>
+    <button class="btn btn-ghost" id="fly-cancel">Cancel</button>
+    <button class="btn btn-go" id="fly-save">Save banner</button>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+  var SAMPLE = [
+    {id:1,name:"August diagnostics push",eyebrow:"August offer",title:"Free diagnostics on every laptop repair",
+     sub:"Drop in to Kilcock or post it to us. No fix, no fee — you only pay when you approve the quote.",
+     cta:"See repair prices",href:"/shop/repairs",theme:"dark",placement:"auth",image:"",active:1,starts:"",ends:"",sort:1},
+    {id:2,name:"SSD upgrade stock",eyebrow:"In stock now",title:"SSD upgrades fitted while you wait",
+     sub:"Crucial and Samsung NVMe drives from €54, with your data cloned across and Windows re-activated.",
+     cta:"Shop drives",href:"/shop/category/storage",theme:"dark",placement:"auth",image:"",active:1,starts:"",ends:"",sort:2},
+    {id:3,name:"Business accounts",eyebrow:"Business accounts",title:"30-day credit, VAT invoices, one contact",
+     sub:"Managed IT and hardware supply for 90+ businesses across Kildare, Dublin and Wicklow.",
+     cta:"Open a business account",href:"/shop/auth#/signup",theme:"dark",placement:"signup",image:"",active:0,starts:"",ends:"",sort:3}
+  ];
+
+  var banners = SAMPLE.map(function(b){ return copy(b); }), editing = null, pendingImage = "";
+  function copy(o){ var n = {}; for (var k in o) n[k] = o[k]; return n; }
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function toast(m, k){
+    var t = document.createElement('div'); t.className = 'toast' + (k ? ' ' + k : ''); t.textContent = m;
+    $('toasts').appendChild(t); setTimeout(function(){ t.remove(); }, 3200);
+  }
+  function today(){ return new Date().toISOString().slice(0, 10); }
+  function state(b){
+    if (!b.active) return {cls:'off', label:'Off'};
+    if (b.starts && b.starts > today()) return {cls:'sched', label:'Starts ' + b.starts};
+    if (b.ends && b.ends < today()) return {cls:'off', label:'Ended ' + b.ends};
+    return {cls:'live', label:'Live'};
+  }
+  var PLACE = {auth:'Sign in, register, guest', login:'Sign in only', signup:'Register only'};
+
+  /* ── list ── */
+  function render(){
+    var g = $('grid');
+    if (!banners.length){
+      g.innerHTML = '<div class="empty" style="grid-column:1/-1"><b>No banners yet</b>' +
+        'Customers see the branded indigo placeholder until you add one.</div>';
+      return;
+    }
+    banners.sort(function(a, b){ return a.sort - b.sort; });
+    g.innerHTML = banners.map(function(b, i){
+      var st = state(b);
+      return '<article class="card" data-id="' + b.id + '">' +
+        '<div class="card-thumb">' +
+          (b.image ? '<img src="' + b.image + '" alt="">' : '<span class="noimg">No image · placeholder shown</span>') +
+        '</div>' +
+        '<div class="card-body">' +
+          '<h3>' + esc(b.title || b.name || 'Untitled banner') + '</h3>' +
+          '<p>' + esc(b.sub || '') + '</p>' +
+          '<div class="meta">' +
+            '<span class="tag ' + st.cls + '">' + esc(st.label) + '</span>' +
+            '<span class="tag">' + esc(PLACE[b.placement] || b.placement) + '</span>' +
+            '<span class="tag">Position ' + (i + 1) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card-acts">' +
+          '<button class="btn btn-ghost btn-sm" data-act="edit">Edit</button>' +
+          '<button class="btn btn-ghost btn-sm" data-act="preview">Preview</button>' +
+          '<button class="btn btn-ghost btn-sm" data-act="up" ' + (i === 0 ? 'disabled' : '') + ' aria-label="Move up">↑</button>' +
+          '<button class="btn btn-ghost btn-sm" data-act="down" ' + (i === banners.length - 1 ? 'disabled' : '') + ' aria-label="Move down">↓</button>' +
+          '<button class="btn btn-danger btn-sm" data-act="del">Delete</button>' +
+          '<label class="switch"><input type="checkbox" data-act="toggle"' + (b.active ? ' checked' : '') + '><span class="track"></span></label>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  $('grid').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-act]'); if (!btn) return;
+    var id = +btn.closest('.card').getAttribute('data-id');
+    var i = idx(id), b = banners[i];
+    var act = btn.getAttribute('data-act');
+    if (act === 'edit') openFly(b);
+    else if (act === 'preview'){ preview(b); toast('Previewing "' + (b.name || b.title) + '"'); document.querySelector('.preview-wrap').scrollIntoView({behavior:'smooth', block:'center'}); }
+    else if (act === 'up' && i > 0){ swap(i, i - 1); render(); toast('Moved up'); }
+    else if (act === 'down' && i < banners.length - 1){ swap(i, i + 1); render(); toast('Moved down'); }
+    else if (act === 'del'){
+      if (confirm('Delete "' + (b.name || b.title) + '"? Customers stop seeing it straight away.')){
+        banners.splice(i, 1); render(); toast('Banner deleted', 'bad');
+      }
+    }
+  });
+  $('grid').addEventListener('change', function(e){
+    if (e.target.getAttribute('data-act') !== 'toggle') return;
+    var id = +e.target.closest('.card').getAttribute('data-id'), b = banners[idx(id)];
+    b.active = e.target.checked ? 1 : 0;
+    render(); toast(b.active ? 'Banner is live' : 'Banner turned off', b.active ? 'go' : '');
+  });
+  function idx(id){ for (var i = 0; i < banners.length; i++) if (banners[i].id === id) return i; return -1; }
+  function swap(a, b){ var s = banners[a].sort; banners[a].sort = banners[b].sort; banners[b].sort = s; }
+
+  /* ── preview ── */
+  function preview(b){
+    var stage = $('pv-stage'), old = stage.querySelector('img');
+    if (old) old.remove();
+    if (b.image){
+      var img = document.createElement('img'); img.src = b.image; img.alt = '';
+      stage.insertBefore(img, stage.firstChild);
+    }
+    $('pv-scrim').className = 'mock-scrim' + (b.theme === 'light' ? ' light' : '');
+    $('pv-copy').className = 'mock-copy' + (b.theme === 'light' ? ' light' : '');
+    $('pv-eyebrow').textContent = b.eyebrow || '';
+    $('pv-eyebrow').style.display = b.eyebrow ? '' : 'none';
+    $('pv-title').textContent = b.title || 'Headline goes here';
+    $('pv-sub').textContent = b.sub || '';
+    $('pv-cta').textContent = b.cta || '';
+    $('pv-cta').style.display = b.cta ? '' : 'none';
+  }
+
+  /* ── fullscreen editor ── */
+  function openFly(b){
+    editing = b || null;
+    pendingImage = b ? (b.image || '') : '';
+    $('fly-title').textContent = b ? 'Edit banner' : 'New banner';
+    $('fly-sub').textContent = b ? (b.name || 'Untitled banner') : 'Fills the left side of the shop sign-in screens.';
+    $('f-name').value = b ? (b.name || '') : '';
+    $('f-eyebrow').value = b ? (b.eyebrow || '') : '';
+    $('f-title').value = b ? (b.title || '') : '';
+    $('f-sub').value = b ? (b.sub || '') : '';
+    $('f-cta').value = b ? (b.cta || '') : '';
+    $('f-href').value = b ? (b.href || '') : '';
+    $('f-theme').value = b ? b.theme : 'dark';
+    $('f-placement').value = b ? b.placement : 'auth';
+    $('f-start').value = b ? (b.starts || '') : '';
+    $('f-end').value = b ? (b.ends || '') : '';
+    $('f-active').checked = b ? !!b.active : true;
+    $('fly-delete').hidden = !b;
+    paintShot(); syncPreview();
+    $('flyin').classList.add('on'); $('scrim').classList.add('on');
+    $('flyin').setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    setTimeout(function(){ $('f-title').focus(); }, 180);
+  }
+  function closeFly(){
+    $('flyin').classList.remove('on'); $('scrim').classList.remove('on');
+    $('flyin').setAttribute('aria-hidden', 'true'); editing = null;
+    document.body.style.overflow = '';
+  }
+  $('add').onclick = function(){ openFly(null); };
+  $('fly-x').onclick = closeFly; $('fly-cancel').onclick = closeFly;
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && $('flyin').classList.contains('on')) closeFly();
+  });
+
+  $('fly-delete').onclick = function(){
+    if (!editing) return;
+    if (!confirm('Delete "' + (editing.name || editing.title) + '"? Customers stop seeing it straight away.')) return;
+    banners.splice(idx(editing.id), 1);
+    closeFly(); render(); toast('Banner deleted', 'bad');
+  };
+
+  /* live preview inside the editor */
+  function syncPreview(){
+    var theme = $('f-theme').value,
+        eyebrow = $('f-eyebrow').value.trim(),
+        title = $('f-title').value.trim(),
+        subline = $('f-sub').value.trim(),
+        cta = $('f-cta').value.trim();
+
+    var stage = $('mp-stage'), old = stage.querySelector('img');
+    if (old) old.remove();
+    if (pendingImage){
+      var img = document.createElement('img'); img.src = pendingImage; img.alt = '';
+      stage.insertBefore(img, stage.firstChild);
+    }
+    $('mp-ph').hidden = !!pendingImage;
+    $('mp-scrim').className = 'mp-scrim' + (theme === 'light' ? ' light' : '');
+    $('mp-copy').className = 'mp-copy' + (theme === 'light' ? ' light' : '');
+    $('mp-eyebrow').textContent = eyebrow;  $('mp-eyebrow').hidden = !eyebrow;
+    $('mp-title').textContent = title || 'Headline goes here';
+    $('mp-title').style.opacity = title ? 1 : .55;
+    $('mp-sub').textContent = subline;      $('mp-sub').hidden = !subline;
+    $('mp-cta').textContent = cta;          $('mp-cta').hidden = !cta;
+
+    $('c-title').textContent = $('f-title').value.length + '/70';
+    $('c-eyebrow').textContent = $('f-eyebrow').value.length + '/28';
+    $('c-sub').textContent = $('f-sub').value.length + '/180';
+
+    var s = $('f-start').value, e = $('f-end').value, t = today(), st;
+    if (!$('f-active').checked) st = 'Saved as off — customers won\'t see it';
+    else if (s && s > t) st = 'Scheduled to start ' + s;
+    else if (e && e < t) st = 'End date has passed — it won\'t show';
+    else st = 'Live as soon as you save';
+    $('fly-state').textContent = st;
+  }
+  ['f-eyebrow','f-title','f-sub','f-cta','f-href','f-theme','f-placement','f-start','f-end','f-active'].forEach(function(id){
+    $(id).addEventListener('input', syncPreview);
+    $(id).addEventListener('change', syncPreview);
+  });
+  $('mp-desktop').onclick = function(){
+    $('mp-frame').classList.remove('mobile'); this.classList.add('on'); $('mp-mobile').classList.remove('on');
+  };
+  $('mp-mobile').onclick = function(){
+    $('mp-frame').classList.add('mobile'); this.classList.add('on'); $('mp-desktop').classList.remove('on');
+  };
+
+  /* ── image drop ── */
+  function paintShot(){
+    if (pendingImage){
+      $('shot').hidden = false; $('shot-img').src = pendingImage; $('drop').hidden = true;
+    } else { $('shot').hidden = true; $('drop').hidden = false; }
+    if ($('flyin').classList.contains('on')) syncPreview();
+  }
+  $('drop').onclick = function(){ $('file').click(); };
+  $('shot-clear').onclick = function(){ pendingImage = ''; $('file').value = ''; paintShot(); };
+  $('file').onchange = function(){ if (this.files && this.files[0]) readImg(this.files[0]); };
+  ['dragover','dragleave','drop'].forEach(function(ev){
+    $('drop').addEventListener(ev, function(e){
+      e.preventDefault();
+      $('drop').classList.toggle('over', ev === 'dragover');
+      if (ev === 'drop' && e.dataTransfer.files[0]) readImg(e.dataTransfer.files[0]);
+    });
+  });
+  function readImg(f){
+    if (!/^image\//.test(f.type)){ toast('That file isn\'t an image.', 'bad'); return; }
+    if (f.size > 2 * 1024 * 1024){ toast('Image is over 2 MB — compress it first.', 'bad'); return; }
+    var r = new FileReader();
+    r.onload = function(){ pendingImage = r.result; paintShot(); toast('Image ready. Save to apply.', 'go'); };
+    r.readAsDataURL(f);
+  }
+
+  /* ── export / reset ── */
+  $('export').onclick = function(){
+    var live = banners.filter(function(b){ return state(b).cls === 'live'; }).map(function(b){
+      return {eyebrow:b.eyebrow, title:b.title, sub:b.sub, cta:b.cta, href:b.href, theme:b.theme, image:b.image ? '(uploaded)' : ''};
+    });
+    var json = JSON.stringify(live, null, 2);
+    if (navigator.clipboard) navigator.clipboard.writeText(json);
+    toast('Live feed JSON copied — ' + live.length + ' banner(s).', 'go');
+    console.log(json);
+  };
+  $('reset').onclick = function(){
+    if (!confirm('Reset to the three sample banners? Anything you added here is lost.')) return;
+    banners = SAMPLE.map(function(b){ return copy(b); });
+    document.addEventListener('click', function(e){
+    var n = e.target.closest('[data-note]');
+    if (n) toast(n.getAttribute('data-note'));
+  });
+
+  render(); preview(banners[0]); toast('Sample banners restored');
+  };
+
+  document.addEventListener('click', function(e){
+    var n = e.target.closest('[data-note]');
+    if (n) toast(n.getAttribute('data-note'));
+  });
+
+  render(); preview(banners[0]);
+})();
+</script>
+</body>
+</html>

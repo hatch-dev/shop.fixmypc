@@ -18,9 +18,11 @@ class GiftVoucher extends Model
         'amounts',
         'min_quantity',
         'max_quantity',
+        'is_active',
     ];
 
     protected $casts = [
         'amounts' => 'array',
+        'is_active' => 'boolean',
     ];
 }

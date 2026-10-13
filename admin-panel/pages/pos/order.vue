@@ -48,11 +48,12 @@
 
       </template>
 
-      <template v-slot:table="{list}">
+      <template v-slot:table="{list, from}">
         <tr class="lite-bold">
           <th>
             <input type="checkbox" @change="checkAll">
           </th>
+          <th class="w-50x mx-w-50x">#</th>
           <th>{{ $t('fSale.orderUp') }}</th>
           <th>{{ $t('fSale.voucher') }}</th>
           <th>{{ $t('ship.cs') }}</th>
@@ -69,6 +70,7 @@
           <td>
             <input type="checkbox" :value="item.order.id" v-model="cbList">
           </td>
+          <td class="w-50x mx-w-50x">{{ from + index }}</td>
           <td>
             <nuxt-link
               class="dply-felx j-left link"

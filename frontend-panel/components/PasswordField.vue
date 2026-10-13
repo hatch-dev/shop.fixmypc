@@ -2,6 +2,7 @@
   <div class="input-group custom-input">
     <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
     <input
+      :id="inputId"
       :type="passwordFieldType"
       class="form-control pe-5 position-relative"
       :placeholder="$t('contact.your', { type: $t('login.password') })"
@@ -16,23 +17,7 @@
       @click="passwordFieldToggle"
     />
   </div>
-  <!-- <div class="icon-input right-icon">
-    <i
-      class="icon lock-icon"
-    />
-    <input
-      :type="passwordFieldType"
-      :placeholder="$t('contact.your', { type: $t('login.password') })"
-      v-model.trim="password"
-      :class="{invalid: !!!password || isInvalid}"
-      @change="$emit('change', password)"
-    >
-    <i
-      class="icon"
-      :class="!isPasswordTypePassword ? 'eye-icon' : 'eye-close-icon'"
-      @click="passwordFieldToggle"
-    />
-  </div> -->
+
 </template>
 
 <script>
@@ -51,6 +36,16 @@
       },
       value: {
         type: String
+      },
+      /*
+       * Put on the input rather than the wrapper, so a <label for> points at
+       * something focusable. Without it the id fell through to the outer div
+       * and the label did nothing — clicking it moved no cursor, and a screen
+       * reader announced the field unlabelled.
+       */
+      inputId: {
+        type: String,
+        default: null
       }
     },
     mixins: [],

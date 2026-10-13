@@ -1,0 +1,646 @@
+/*
+ *  Promotions -> Product Recommendations -> Upsell.
+ *
+ *  Built from the tokens, radii and spacing the rest of the admin already
+ *  uses, so these screens read as part of the panel rather than as a second
+ *  design system dropped into it.
+ */
+
+// ---- list ---------------------------------------------------------------
+
+.ups-intro
+  padding 18px 20px
+  margin 0 15px 4px
+
+  h4
+    margin 0 0 4px
+
+.ups-hint
+  margin 0
+  font-size 12.5px
+  line-height 1.55
+  color var(--text-muted, #6B7280)
+
+.ups-filters
+  display flex
+  flex-wrap wrap
+  align-items center
+  gap 8px
+
+  select
+    height 34px
+    padding 0 10px
+    font-size 12.5px
+    border 1px solid var(--border-color, #E9E9F4)
+    border-radius var(--radius-sm, 6px)
+    background var(--card-bg, #fff)
+    color inherit
+
+.ups-bulk
+  display inline-flex
+  align-items center
+  flex-wrap wrap
+  gap 6px
+  padding-left 8px
+  border-left 1px solid var(--border-color, #E9E9F4)
+
+  em
+    font-style normal
+    font-size 12px
+    white-space nowrap
+    color var(--text-muted, #6B7280)
+
+.ups-chip
+  display inline-block
+  min-width 22px
+  padding 2px 8px
+  font-size 12px
+  font-weight 700
+  text-align center
+  border-radius 20px
+  background rgba(51, 49, 153, .08)
+  color #333199
+
+.ups-small
+  font-size 12px
+  line-height 1.5
+  color var(--text-muted, #6B7280)
+
+.ups-desc
+  display block
+  max-width 300px
+  font-size 12px
+  color var(--text-muted, #6B7280)
+  overflow hidden
+  text-overflow ellipsis
+  white-space nowrap
+
+.ups-badge
+  display inline-block
+  padding 2px 9px
+  font-size 11.5px
+  font-weight 600
+  border-radius 20px
+  background #EEF0F5
+  color #57607A
+
+  &.live
+    background #E7F7EE
+    color #157347
+
+  &.scheduled
+    background #FFF4E5
+    color #A66300
+
+  &.expired
+    background #FDEDED
+    color #C23B3B
+
+tr.muted td
+  opacity .68
+
+// ---- row menu -----------------------------------------------------------
+
+.ups-actions
+  position relative
+
+.ups-menu
+  position relative
+
+.ups-menu-btn
+  width 30px
+  height 30px
+  font-size 17px
+  line-height 1
+  border 1px solid var(--border-color, #E9E9F4)
+  border-radius 7px
+  background var(--card-bg, #fff)
+  cursor pointer
+
+.ups-menu-list
+  position absolute
+  right 0
+  z-index 30
+  min-width 160px
+  padding 6px
+  border 1px solid var(--border-color, #E9E9F4)
+  border-radius var(--radius-md, 10px)
+  background var(--card-bg, #fff)
+  box-shadow 0 12px 30px rgba(12, 10, 45, .14)
+
+  button
+    display block
+    width 100%
+    padding 7px 10px
+    font-size 13px
+    text-align left
+    border 0
+    border-radius 6px
+    background transparent
+    color inherit
+    cursor pointer
+
+    &:hover
+      background rgba(51, 49, 153, .06)
+
+    &.danger
+      color #C23B3B
+
+  hr
+    margin 5px 0
+    border 0
+    border-top 1px solid var(--border-color, #E9E9F4)
+
+// ---- modals -------------------------------------------------------------
+
+.ups-modal-back
+  position fixed
+  inset 0
+  z-index 1200
+  display flex
+  align-items center
+  justify-content center
+  padding 16px
+  background rgba(12, 10, 45, .55)
+
+.ups-modal
+  width 100%
+  max-width 460px
+  padding 22px
+  border-radius var(--radius-lg, 14px)
+  background var(--card-bg, #fff)
+
+  h5
+    margin 0 0 8px
+
+  p
+    margin 0 0 14px
+    font-size 13px
+    line-height 1.55
+    color var(--text-muted, #6B7280)
+
+.ups-modal-actions
+  display flex
+  justify-content flex-end
+  gap 8px
+  margin-top 18px
+
+.ups-note
+  padding 10px 12px
+  margin-bottom 10px
+  font-size 12.5px
+  border-radius 8px
+  background #FFF4E5
+
+  h6
+    margin 0 0 4px
+
+  ul
+    margin 0
+    padding-left 18px
+
+  &.warn
+    background #FDEDED
+
+// ---- wizard -------------------------------------------------------------
+
+.ups-form
+  display flex
+  flex-direction column
+  gap 14px
+  padding-bottom 24px
+
+.ups-section
+  margin 0 15px
+  padding 20px
+
+.ups-section-title
+  margin 0 0 4px
+  font-weight 700
+
+.ups-section-hint
+  margin 0 0 14px
+  font-size 12.5px
+  line-height 1.55
+  color var(--text-muted, #6B7280)
+
+.req
+  color #D64545
+
+/*
+ *  The progress indicator.
+ *
+ *  A step is one of three things and each looks different: done, where you
+ *  are, and not yet. A single highlight colour for "current" leaves an admin
+ *  unable to tell how much of the wizard is behind them.
+ */
+.ups-steps
+  display flex
+  flex-wrap wrap
+  gap 8px
+  padding 16px 20px
+  margin 0 15px
+
+.ups-step
+  display flex
+  align-items center
+  gap 9px
+  flex 1 1 150px
+  padding 10px 12px
+  border 1px solid var(--border-color, #E9E9F4)
+  border-radius var(--radius-md, 10px)
+  background transparent
+  color inherit
+  text-align left
+  cursor default
+
+  &.is-clickable
+    cursor pointer
+
+  &.is-current
+    border-color #333199
+    background rgba(51, 49, 153, .06)
+
+  &.is-done .ups-step-no
+    background #157347
+    color #fff
+
+  &.is-current .ups-step-no
+    background #333199
+    color #fff
+
+.ups-step-no
+  display inline-flex
+  align-items center
+  justify-content center
+  flex 0 0 24px
+  width 24px
+  height 24px
+  font-size 12px
+  font-weight 700
+  border-radius 50%
+  background #EEF0F5
+  color #57607A
+
+.ups-step-label
+  font-size 12.5px
+  font-weight 600
+  line-height 1.3
+
+.ups-step-count
+  padding 0 20px 4px
+  margin 0 15px
+  font-size 12px
+  color var(--text-muted, #6B7280)
+
+.ups-wizard-foot
+  display flex
+  justify-content space-between
+  align-items center
+  flex-wrap wrap
+  gap 10px
+  padding 16px 20px
+  margin 0 15px
+
+.ups-wizard-foot-right
+  display flex
+  align-items center
+  gap 8px
+
+// ---- fields -------------------------------------------------------------
+
+.ups-radios
+  display flex
+  flex-wrap wrap
+  gap 10px
+
+  label
+    display flex
+    flex 1 1 240px
+    align-items flex-start
+    gap 10px
+    padding 12px
+    border 1px solid var(--border-color, #E9E9F4)
+    border-radius var(--radius-md, 8px)
+    cursor pointer
+
+    &.on
+      border-color #333199
+      background rgba(51, 49, 153, .05)
+
+  span
+    display flex
+    flex-direction column
+    gap 2px
+
+  em
+    font-size 12px
+    font-style normal
+    line-height 1.45
+    color var(--text-muted, #6B7280)
+
+.ups-checks
+  display flex
+  flex-wrap wrap
+  gap 16px
+
+  label
+    display inline-flex
+    align-items center
+    gap 6px
+    white-space nowrap
+
+.ups-grid
+  display grid
+  grid-template-columns repeat(auto-fit, minmax(220px, 1fr))
+  gap 14px
+
+.ups-error
+  margin 8px 0 0
+  font-size 12.5px
+  color #C23B3B
+
+// ---- product picker -----------------------------------------------------
+
+.ups-picker
+  display flex
+  flex-direction column
+  gap 12px
+
+.ups-picker-bar
+  display flex
+  flex-wrap wrap
+  gap 8px
+
+  input[type="text"]
+    flex 1 1 240px
+    height 36px
+    padding 0 12px
+    font-size 13px
+    border 1px solid var(--border-color, #E9E9F4)
+    border-radius var(--radius-sm, 6px)
+    background var(--card-bg, #fff)
+    color inherit
+
+  select
+    height 36px
+    padding 0 10px
+    font-size 12.5px
+    border 1px solid var(--border-color, #E9E9F4)
+    border-radius var(--radius-sm, 6px)
+    background var(--card-bg, #fff)
+    color inherit
+
+.ups-picker-table
+  overflow-x auto
+  border 1px solid var(--border-color, #E9E9F4)
+  border-radius var(--radius-md, 10px)
+
+  table
+    width 100%
+    min-width 720px
+    border-collapse collapse
+
+  th, td
+    padding 10px 12px
+    font-size 12.5px
+    text-align left
+    vertical-align middle
+    border-bottom 1px solid var(--border-color, #E9E9F4)
+
+  th
+    font-weight 700
+    white-space nowrap
+
+  tr:last-child td
+    border-bottom 0
+
+  tr.is-picked
+    background rgba(51, 49, 153, .05)
+
+.ups-picker-thumb
+  width 42px
+  height 42px
+  object-fit cover
+  border-radius 7px
+  background #F2F4F8
+
+.ups-picker-name
+  display flex
+  flex-direction column
+  gap 2px
+  min-width 180px
+
+  strong
+    font-size 13px
+    line-height 1.35
+
+  small
+    font-size 11.5px
+    color var(--text-muted, #6B7280)
+
+.ups-picker-variant
+  max-width 190px
+  height 30px
+  padding 0 8px
+  font-size 12px
+  border 1px solid var(--border-color, #E9E9F4)
+  border-radius 6px
+  background var(--card-bg, #fff)
+  color inherit
+
+.ups-picker-empty
+  padding 26px
+  font-size 13px
+  text-align center
+  color var(--text-muted, #6B7280)
+
+.ups-picker-more
+  display flex
+  justify-content center
+  padding 4px 0
+
+// ---- the selection ------------------------------------------------------
+
+.ups-selected
+  display flex
+  flex-direction column
+  gap 8px
+  padding-top 4px
+
+.ups-selected-title
+  margin 0
+  font-size 13px
+  font-weight 700
+
+.ups-selected-list
+  display flex
+  flex-wrap wrap
+  gap 8px
+
+.ups-pill
+  display inline-flex
+  align-items center
+  gap 8px
+  padding 6px 8px 6px 6px
+  font-size 12.5px
+  border 1px solid var(--border-color, #E9E9F4)
+  border-radius 22px
+  background var(--card-bg, #fff)
+
+  img
+    width 24px
+    height 24px
+    object-fit cover
+    border-radius 50%
+    background #F2F4F8
+
+  b
+    font-weight 600
+
+  small
+    color var(--text-muted, #6B7280)
+
+  button
+    display inline-flex
+    align-items center
+    justify-content center
+    width 18px
+    height 18px
+    padding 0
+    font-size 13px
+    line-height 1
+    border 0
+    border-radius 50%
+    background #EEF0F5
+    color #57607A
+    cursor pointer
+
+    &:hover
+      background #FDEDED
+      color #C23B3B
+
+// ---- ordered upgrade options -------------------------------------------
+
+.ups-order-list
+  display flex
+  flex-direction column
+  gap 8px
+
+.ups-order-row
+  display flex
+  align-items center
+  gap 10px
+  padding 8px 10px
+  border 1px solid var(--border-color, #E9E9F4)
+  border-radius var(--radius-md, 9px)
+
+  img
+    width 34px
+    height 34px
+    object-fit cover
+    border-radius 7px
+    background #F2F4F8
+
+.ups-order-body
+  display flex
+  flex-direction column
+  gap 1px
+  flex 1
+
+  strong
+    font-size 13px
+
+  small
+    font-size 11.5px
+    color var(--text-muted, #6B7280)
+
+.ups-order-btns
+  display flex
+  gap 4px
+
+  button
+    width 26px
+    height 26px
+    font-size 12px
+    line-height 1
+    border 1px solid var(--border-color, #E9E9F4)
+    border-radius 6px
+    background var(--card-bg, #fff)
+    color inherit
+    cursor pointer
+
+    &:disabled
+      opacity .4
+      cursor default
+
+// ---- review -------------------------------------------------------------
+
+.ups-review-path
+  display flex
+  flex-wrap wrap
+  align-items center
+  gap 12px
+  padding 14px
+  border 1px dashed var(--border-color, #E9E9F4)
+  border-radius var(--radius-md, 10px)
+
+.ups-review-col
+  display flex
+  flex-direction column
+  gap 6px
+  min-width 190px
+
+  h6
+    margin 0
+    font-size 12px
+    text-transform uppercase
+    letter-spacing .04em
+    color var(--text-muted, #6B7280)
+
+.ups-review-arrow
+  font-size 20px
+  color #333199
+
+.ups-review-summary
+  display grid
+  grid-template-columns repeat(auto-fit, minmax(180px, 1fr))
+  gap 12px
+  margin-top 14px
+
+  div
+    display flex
+    flex-direction column
+    gap 2px
+
+  dt
+    margin 0
+    font-size 11.5px
+    text-transform uppercase
+    letter-spacing .04em
+    color var(--text-muted, #6B7280)
+
+  dd
+    margin 0
+    font-size 13px
+
+@media only screen and (max-width: 600px)
+  .ups-steps
+    gap 6px
+
+  .ups-step
+    flex 1 1 100%
+
+  .ups-bulk
+    width 100%
+    padding-left 0
+    padding-top 8px
+    border-left 0
+    border-top 1px solid var(--border-color, #E9E9F4)
+
+/*
+ *  A paragraph inside the note keeps its own margins by default, which pushes
+ *  its last line against the box and clips the descenders.
+ */
+.ups-note p
+  margin 0

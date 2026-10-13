@@ -43,6 +43,8 @@ class Kernel extends HttpKernel
         'api' => [
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            // basket reservations: reminder / expiry sweep, at most once a minute
+            'cart.hold:sweep',
         ],
     ];
 
@@ -67,6 +69,11 @@ class Kernel extends HttpKernel
         'social' => \App\Http\Middleware\SocialMiddleware::class,
         'clear.cache' => \App\Http\Middleware\ClearCacheAfterWrite::class,
         'optionalAuth' => \App\Http\Middleware\OptionalAuth::class,
+        'session.activity' => \App\Http\Middleware\UpdateSessionActivity::class,
+        'installer' => \App\Http\Middleware\InstallerOnly::class,
+        'guest.token' => \App\Http\Middleware\ValidateGuestToken::class,
+        'account.active' => \App\Http\Middleware\EnsureAccountIsActive::class,
+        'cart.hold' => \App\Http\Middleware\ReconcileCartHold::class,
     ];
 
     protected $middlewarePriority = [
