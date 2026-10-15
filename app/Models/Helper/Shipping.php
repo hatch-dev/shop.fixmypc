@@ -2,6 +2,7 @@
 
 namespace App\Models\Helper;
 
+use App\Models\Product;
 use App\Models\ShippingPlace;
 use Illuminate\Support\Facades\Config;
 
@@ -247,8 +248,12 @@ class Shipping
      *   price       the delivery charge for the whole order
      *   country     the country the sale is made in
      *   restricted  [product_id => "Title cannot be shipped to Country."]
+     *   weight      what the order weighs (kg), as given
+     *
+     * $weight is the order's weight in kg (linesWeight). It prices a
+     * delivery row that has weight bands; collection is not weighed.
      */
-    public static function quote($type, $country, $state, $pickupId, $products)
+    public static function quote($type, $country, $state, $pickupId, $products, $weight = 0.0)
     {
         $result = [
             'ok' => false,
@@ -258,6 +263,8 @@ class Shipping
             'price' => 0.0,
             'country' => null,
             'restricted' => [],
+            'weight' => round(max(0.0, (float)$weight), 3),
+            'too_heavy' => false,
         ];
 
         if (!self::isValidType($type)) {
@@ -299,9 +306,24 @@ class Shipping
 
         $result['place'] = $place;
         $result['country'] = $country;
-        $result['price'] = Pricing::round($collection ? $place->pickup_price : $place->price);
 
         $countryName = self::countryName($country);
+
+        if ($collection) {
+            $result['price'] = Pricing::round($place->pickup_price);
+        } else {
+            $price = self::deliveryPrice($place, $result['weight']);
+
+            if (is_null($price)) {
+                $result['too_heavy'] = true;
+                $result['message'] = 'Sorry, at ' . self::formatWeight($result['weight'])
+                    . ' this order is too heavy for delivery to ' . $countryName
+                    . '. Please choose collection, or contact us to arrange delivery.';
+                return $result;
+            }
+
+            $result['price'] = $price;
+        }
 
         foreach ($products as $product) {
             if ($product && !self::canSellTo($product, $country)) {
@@ -321,6 +343,195 @@ class Shipping
         return $result;
     }
 
+    /*
+     * Weight-based delivery, after WooCommerce's Table Rate Shipping. An
+     * order weighs what its lines weigh - each product's weight times its
+     * quantity, a product with no weight counting as 0 as WooCommerce counts
+     * it - and a delivery row with weight bands charges the band that weight
+     * falls in, once for the order. A row without bands keeps its flat price.
+     *
+     * Bands are flat prices ("up to 10 kg: €24"). One charge per extra kg on
+     * the row (weight_extra_per_kg) prices an order heavier than the last
+     * band: that band's cost plus the rate for every kg over its limit. With
+     * no such charge, a heavier order is not delivered there.
+     */
+
+    /** The unit products.weight and the bands are kept in. */
+    const WEIGHT_UNIT = 'kg';
+
+    /**
+     * The total weight of basket lines, in kg. $lines are anything with
+     * product_id and quantity. Weights are read here in one query rather than
+     * off each line's product relation, whose select need not carry them.
+     */
+    public static function linesWeight($lines)
+    {
+        $quantities = [];
+
+        foreach ($lines as $line) {
+            $id = (int)data_get($line, 'product_id');
+
+            if ($id) {
+                $quantities[$id] = ($quantities[$id] ?? 0) + max(0, (int)data_get($line, 'quantity'));
+            }
+        }
+
+        if (!$quantities) {
+            return 0.0;
+        }
+
+        $weights = Product::whereIn('id', array_keys($quantities))->pluck('weight', 'id');
+        $total = 0.0;
+
+        foreach ($quantities as $id => $quantity) {
+            $total += max(0.0, (float)($weights[$id] ?? 0)) * $quantity;
+        }
+
+        return round($total, 3);
+    }
+
+    /**
+     * A row's bands as they are used: lightest first, numbers cleaned. A band
+     * without a limit is dropped - heavier orders are what the row's charge
+     * per extra kg is for. Anything that is not a list is no bands.
+     */
+    public static function weightRates($rates)
+    {
+        if (is_string($rates)) {
+            $rates = json_decode($rates, true);
+        }
+
+        if (!is_array($rates)) {
+            return [];
+        }
+
+        $clean = [];
+
+        foreach ($rates as $rate) {
+            $max = is_array($rate) ? ($rate['max'] ?? null) : null;
+
+            if (is_null($max) || trim((string)$max) === '' || (float)$max <= 0) {
+                continue;
+            }
+
+            $clean[] = [
+                'max' => round((float)$max, 3),
+                'cost' => Pricing::round((float)($rate['cost'] ?? 0)),
+            ];
+        }
+
+        usort($clean, function ($a, $b) {
+            return $a['max'] <=> $b['max'];
+        });
+
+        return $clean;
+    }
+
+    /** The row's charge per kg over its last band, or null when it has none. */
+    public static function extraPerKg($value)
+    {
+        return is_null($value) || trim((string)$value) === '' ? null : Pricing::round((float)$value);
+    }
+
+    /**
+     * The first problem with a row's bands or its charge per extra kg, in the
+     * admin's words, or null. Checked on the raw input, before weightRates()
+     * tidies it.
+     */
+    public static function weightRatesError($rates, $extraPerKg = null)
+    {
+        if (!is_null($extraPerKg) && trim((string)$extraPerKg) !== ''
+            && (!is_numeric($extraPerKg) || (float)$extraPerKg < 0)) {
+            return 'The cost per extra kg must be 0 or more, or empty.';
+        }
+
+        if (is_null($rates) || $rates === '' || $rates === []) {
+            return null;
+        }
+
+        if (!is_array($rates)) {
+            return 'The weight bands could not be read.';
+        }
+
+        $maxes = [];
+
+        foreach (array_values($rates) as $index => $rate) {
+            $band = 'Weight band ' . ($index + 1);
+
+            if (!is_array($rate)) {
+                return $band . ' could not be read.';
+            }
+
+            $max = $rate['max'] ?? null;
+
+            if (is_null($max) || trim((string)$max) === '') {
+                return $band . ': enter the weight it goes up to.';
+            }
+
+            if (!is_numeric($max) || (float)$max <= 0) {
+                return $band . ': "up to" must be a weight above 0 kg.';
+            }
+
+            $maxes[] = round((float)$max, 3);
+
+            $cost = $rate['cost'] ?? null;
+
+            if (is_null($cost) || trim((string)$cost) === '') {
+                return $band . ': enter a cost (0 for free).';
+            }
+
+            if (!is_numeric($cost) || (float)$cost < 0) {
+                return $band . ': the cost must be 0 or more.';
+            }
+        }
+
+        if (count($maxes) !== count(array_unique($maxes))) {
+            return 'Two weight bands end at the same weight.';
+        }
+
+        return null;
+    }
+
+    /**
+     * What delivery on this row costs for an order of $weight kg: the cost of
+     * the band it falls in, or - heavier than the last band - that band's
+     * cost plus the row's charge per extra kg over its limit. Null when the
+     * order is heavier than the last band and the row has no such charge:
+     * delivery is not offered then, as in WooCommerce. A row without bands
+     * charges its flat price whatever the order weighs.
+     */
+    public static function deliveryPrice($place, $weight)
+    {
+        $rates = self::weightRates(data_get($place, 'weight_rates'));
+
+        if (!$rates) {
+            return Pricing::round((float)data_get($place, 'price'));
+        }
+
+        $weight = round(max(0.0, (float)$weight), 3);
+
+        foreach ($rates as $rate) {
+            if ($weight <= $rate['max']) {
+                return $rate['cost'];
+            }
+        }
+
+        $last = end($rates);
+        $extra = self::extraPerKg(data_get($place, 'weight_extra_per_kg'));
+
+        if (is_null($extra)) {
+            return null;
+        }
+
+        return Pricing::round($last['cost'] + $extra * ($weight - $last['max']));
+    }
+
+    /** "1.75 kg", "12 kg" */
+    public static function formatWeight($weight)
+    {
+        return rtrim(rtrim(number_format((float)$weight, 3, '.', ''), '0'), '.') . ' ' . self::WEIGHT_UNIT;
+    }
+
     /** What the storefront is shown of a shipping row: no admin fields. */
     public static function publicPlace($place)
     {
@@ -333,6 +544,8 @@ class Shipping
             'country' => $place->country,
             'state' => $place->state,
             'price' => Pricing::round($place->price),
+            'weight_rates' => self::weightRates($place->weight_rates),
+            'weight_extra_per_kg' => self::extraPerKg($place->weight_extra_per_kg),
             'day_needed' => (int)$place->day_needed,
             'pickup_point' => (int)$place->pickup_point,
             'pickup_price' => Pricing::round($place->pickup_price),
@@ -358,6 +571,9 @@ class Shipping
             'type' => $quote['type'],
             'price' => $quote['price'],
             'country' => $quote['country'],
+            'weight' => $quote['weight'] ?? 0.0,
+            'weight_unit' => self::WEIGHT_UNIT,
+            'too_heavy' => $quote['too_heavy'] ?? false,
             'country_name' => $quote['country'] ? self::countryName($quote['country']) : null,
             'day_needed' => $quote['place'] ? (int)$quote['place']->day_needed : null,
             'place' => self::publicPlace($quote['place']),

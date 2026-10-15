@@ -185,6 +185,35 @@ class CartReservationTest extends IsolatedTestCase
         $this->assertSame(8, $this->stock());
     }
 
+    /**
+     * Only adding restarts the clock. Every basket request used to count as
+     * activity, so a shopper who kept opening the cart (or the profile page,
+     * which loads it) held the stock indefinitely - 2026-10-14.
+     */
+    public function test_viewing_the_basket_does_not_restart_the_clock()
+    {
+        $this->assertApiOk($this->add(1));
+        $this->ageBasket(19);
+
+        $this->asCustomer($this->customer->id)->getJson('/api/v1/cart/by-user');
+        $this->ageBasket(21);
+        $this->asCustomer($this->customer->id)->getJson('/api/v1/cart/by-user');
+
+        $this->assertNull($this->line(), 'emptied on the first request after 20 minutes');
+        $this->assertSame(10, $this->stock());
+    }
+
+    public function test_the_clock_is_not_restarted_by_viewing_it_before_it_lapses()
+    {
+        $this->assertApiOk($this->add(1));
+        $this->ageBasket(19);
+        $before = DB::table('cart_holds')->value('last_activity_at');
+
+        $this->asCustomer($this->customer->id)->getJson('/api/v1/cart/by-user');
+
+        $this->assertSame($before, DB::table('cart_holds')->value('last_activity_at'));
+    }
+
     public function test_twenty_minutes_idle_empties_the_basket_and_returns_the_stock()
     {
         $this->assertApiOk($this->add(3));

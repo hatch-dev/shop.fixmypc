@@ -43,6 +43,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | API Error Detail
+    |--------------------------------------------------------------------------
+    |
+    | When true, an API error the customer would see as "Something went
+    | wrong" shows the real error instead, with its SQL removed (the SQL
+    | carries customers' session tokens). For tracking down a failure on live;
+    | switch it off again afterwards. See Validation::suppress().
+    |
+    */
+
+    'error_detail' => (bool) env('API_ERROR_DETAIL', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------
     |

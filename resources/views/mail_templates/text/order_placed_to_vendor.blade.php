@@ -7,13 +7,9 @@
     $brand = isset($brand) ? $brand : MailBrand::make(isset($setting->receiver) ? $setting->receiver : null, $lang);
     $placedOn = isset($order->created) && $order->created ? $order->created : Utils::formatDate($order->created_at);
 
-    $vendorGoods = 0; $vendorShipping = 0;
-    foreach ($order->ordered_products as $op) {
-        $vendorGoods += (float) $op->selling * (int) $op->quantity;
-        if ($op->shipping_place) {
-            $vendorShipping += (float) MailHelper::shippingPrice($op->shipping_place, $op->shipping_type);
-        }
-    }
+    // worked out by OrderMailer::vendorCopies; null = the whole order is theirs
+    $share = isset($order->vendor_totals) ? $order->vendor_totals : null;
+    $money = function ($v) use ($brand) { return $brand->currency_icon . number_format((float) $v, 2); };
 @endphp
 {!! __('lang.hello', [], $lang) !!}@if($brand->receiver_first) {!! $brand->receiver_first !!}@endif,
 
@@ -32,10 +28,18 @@
 
 {!! __('lang.mail_items_ordered', [], $lang) !!}:
 @include('mail_templates.text._order_lines', ['order' => $order, 'brand' => $brand, 'lang' => $lang])
-{!! __('lang.subtotal', [], $lang) !!}: {!! $brand->currency_icon !!}{!! number_format($vendorGoods, 2) !!}
-@if ($vendorShipping > 0)
-{!! __('lang.delivery_fee', [], $lang) !!}: {!! $brand->currency_icon !!}{!! number_format($vendorShipping, 2) !!}
+@if (is_null($share))
+@include('mail_templates.text._order_totals', ['order' => $order, 'brand' => $brand, 'lang' => $lang])
+@else
+{!! __('lang.subtotal', [], $lang) !!}: {!! $money($share['goods']) !!}
+@if ($share['tax'] > 0)
+{!! __('lang.vat', [], $lang) !!}: {!! $money($share['tax']) !!}
 @endif
-{!! __('lang.total', [], $lang) !!}: {!! $brand->currency_icon !!}{!! number_format($vendorGoods + $vendorShipping, 2) !!}
+@if ($share['shipping'] > 0)
+{!! __('lang.delivery_fee', [], $lang) !!}: {!! $money($share['shipping']) !!}
+@endif
+{!! __('lang.total', [], $lang) !!}: {!! $money($share['total']) !!}
+(Your items on this order only. Discounts applied to the whole order are not included.)
+@endif
 
 @include('mail_templates.text._footer', ['brand' => $brand, 'lang' => $lang])

@@ -359,6 +359,71 @@ class AdminOrderDetailTest extends TestCase
         $this->assertLessThanOrEqual((float)$c['inc_vat'], (float)$c['vat']);
     }
 
+    /**
+     * The same goods stated net, for a business summary:
+     *
+     *   Products (Ex-VAT) - Discount = Net Products (Ex-VAT)
+     *   Net Products (Ex-VAT) + VAT  = Net Products (Inc-VAT)
+     *
+     * A business reads the order this way; the total it reaches has to be
+     * the one everyone else is charged.
+     */
+    public function test_the_net_summary_reconciles()
+    {
+        $order = $this->placeOrder($this->collectingCustomer(), 3);
+
+        $c = $this->adminDetail($order->id)['calculations'];
+
+        $this->assertEqualsWithDelta(
+            (float)$c['subtotal_ex_vat'] - (float)$c['discount_ex_vat'],
+            (float)$c['ex_vat'],
+            0.005,
+            'Products (Ex-VAT) - Discount must equal Net Products (Ex-VAT)'
+        );
+
+        $this->assertEqualsWithDelta(
+            (float)$c['ex_vat'] + (float)$c['vat'],
+            (float)$c['inc_vat'],
+            0.005,
+            'the net goods plus their VAT must be the gross goods'
+        );
+    }
+
+    /**
+     * Each item row can be read in either basis and reconciles in both.
+     *
+     * The order page printed an ex-VAT product's own net figures - Discount
+     * -€100 - above a gross summary saying Discount -€123 for the same
+     * discount. The line now carries both, and the customer's endpoint
+     * sends them.
+     */
+    public function test_each_line_reconciles_in_both_bases()
+    {
+        $order = $this->placeOrder($this->collectingCustomer(), 3);
+
+        Passport::actingAs($order->user, ['user'], 'user');
+
+        $line = $this->postJson('/api/v1/order/by-user', [
+            'order_id' => $order->id,
+            'time_zone' => 'Europe/Dublin',
+        ])->json('data.ordered_products.0');
+
+        foreach (['unit_list_ex_vat', 'unit_list_inc_vat', 'list_ex_vat', 'list_inc_vat',
+                     'discount_ex_vat', 'discount_inc_vat'] as $key) {
+            $this->assertArrayHasKey($key, $line);
+        }
+
+        $this->assertEqualsWithDelta((float)$line['list_ex_vat'] - (float)$line['discount_ex_vat'],
+            (float)$line['ex_vat'], 0.005, 'net: list - discount = charged');
+
+        $this->assertEqualsWithDelta((float)$line['list_inc_vat'] - (float)$line['discount_inc_vat'],
+            (float)$line['inc_vat'], 0.005, 'gross: list - discount = charged');
+
+        $this->assertEqualsWithDelta(75.0,
+            $line['vat_inclusive'] ? (float)$line['discount_inc_vat'] : (float)$line['discount_ex_vat'],
+            0.01, 'in the product\'s own convention the band discount is 3 x 25, as before');
+    }
+
     public function test_the_summary_rows_add_up_to_the_charged_total()
     {
         $order = $this->placeOrder($this->collectingCustomer(), 3);

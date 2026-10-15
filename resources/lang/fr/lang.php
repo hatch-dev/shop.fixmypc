@@ -277,6 +277,7 @@ return [
     "mail_reset_eyebrow" => "Password reset",
     "mail_reset_code_title" => "Reset your password",
     "mail_reset_code_sub" => "Use the code below to choose a new password.",
+    "mail_reset_link_sub" => "Choose a new password using the secure link in this email.",
     "mail_reset_code_body" => "Enter this code on the password reset screen to set a new password.",
     "mail_ignore_reset" => "Didn't ask to reset your password? Ignore this email — your password will not change.",
 

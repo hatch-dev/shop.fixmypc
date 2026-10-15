@@ -27,10 +27,12 @@ class ReconcileCartHold
      *   - first empty the basket if its 20 minutes have lapsed, so a lapsed
      *     basket is never priced, shipped or paid for - whether or not the
      *     sweep has reached it yet;
-     *   - then count the request as activity, restarting the 20 minutes: a
-     *     shopper working through checkout is not idle;
      *   - and, after a request that changed something, make the reserved
      *     stock match the basket.
+     *
+     * Viewing the basket or working through checkout does not restart the
+     * clock: the user's rule is that only adding to the basket does
+     * (CartHold::reconcile). Payment has its own grace (markPaying).
      *
      * sweep (the whole api group) only runs the once-a-minute sweep below.
      */
@@ -41,7 +43,6 @@ class ReconcileCartHold
         if ($owner) {
             try {
                 CartHold::expireIfLapsed($owner[0], $owner[1]);
-                CartHold::touch($owner[0], $owner[1]);
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error('Basket activity check failed', ['message' => $e->getMessage()]);
             }

@@ -395,6 +395,21 @@ class OrderMailer
             $byAdmin[$email][] = $line;
         }
 
+        /*
+         * What each vendor's lines were charged, from the order's own rows
+         * (OrderSummary). The template used to add these up itself: each
+         * line's shipping row at today's price, so a two-line order showed
+         * delivery twice when it is charged once; no VAT; and no discount -
+         * a total the customer was never asked for.
+         */
+        $summaryLines = [];
+
+        foreach (OrderSummary::for($mailDataLang['order'])['lines'] as $summaryLine) {
+            $summaryLines[$summaryLine['product_id'] . ':' . $summaryLine['inventory_id']] = $summaryLine;
+        }
+
+        $orderLineCount = count($mailDataLang['order']['ordered_products'] ?? []);
+
         $base = clone $mailDataLang['order'];
         unset($base['ordered_products']);
         unset($base['setting']);
@@ -403,8 +418,37 @@ class OrderMailer
 
             $adminName = $vendorLines[0]->product_with_admin->admin->name;
 
-            $orderCopy = $base;
+            // a copy each: the same object went to every vendor
+            $orderCopy = clone $base;
             $orderCopy['ordered_products'] = $vendorLines;
+
+            /*
+             * The whole order is this vendor's: they get the customer's own
+             * totals (vendor_totals null). Part of it: what their lines were
+             * charged - goods, the VAT added to them and any delivery charged
+             * on them. Order-wide discounts belong to no one line and are
+             * left out, which the email says.
+             */
+            $orderCopy['vendor_totals'] = null;
+
+            if (count($vendorLines) < $orderLineCount) {
+                $share = ['goods' => 0.0, 'tax' => 0.0, 'shipping' => 0.0];
+
+                foreach ($vendorLines as $vendorLine) {
+                    $line = $summaryLines[$vendorLine->product_id . ':' . $vendorLine->inventory_id] ?? null;
+
+                    if ($line) {
+                        $share['goods'] += $line['line_total'] - $line['bundle_offer_value'];
+                        $share['tax'] += $line['tax_total'];
+                        $share['shipping'] += $line['shipping_price'];
+                    }
+                }
+
+                $share = array_map([Pricing::class, 'round'], $share);
+                $share['total'] = Pricing::round($share['goods'] + $share['tax'] + $share['shipping']);
+
+                $orderCopy['vendor_totals'] = $share;
+            }
 
             $payload = [];
             $payload['setting'] = clone $mailDataLang['setting'];

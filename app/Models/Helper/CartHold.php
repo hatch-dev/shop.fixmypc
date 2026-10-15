@@ -300,35 +300,11 @@ class CartHold
 
 
     /**
-     * The shopper did something with their basket or checkout: the 20 idle
-     * minutes start again.
-     *
-     * Only adding to the basket used to restart them, so a shopper filling in
-     * an address, waiting for the guest email code or choosing delivery was
-     * "idle" - reminded at 5 minutes and emptied at 20 while still checking
-     * out. The reminder is not re-armed: one email per basket is plenty.
-     */
-    public static function touch($userId, $userToken)
-    {
-        $key = self::ownerKey($userId, $userToken);
-
-        if (!$key) {
-            return;
-        }
-
-        DB::table('cart_holds')->where('owner_key', $key)->update([
-            'last_activity_at' => self::now(),
-            'updated_at' => self::now(),
-        ]);
-    }
-
-
-    /**
      * Empty this basket now if its 20 minutes have lapsed. Returns whether it did.
      *
      * The sweep does this every minute - but only when the scheduler or some
      * other request runs it, and only after that request has been answered.
-     * Asked first by every request that touches the basket or checkout
+     * Asked first by every request on the basket or checkout
      * (middleware cart.hold), so a lapsed basket can never be priced, shipped
      * or bought, whether or not the sweep has got to it yet. A basket that has
      * started paying keeps its grace, as in the sweep.

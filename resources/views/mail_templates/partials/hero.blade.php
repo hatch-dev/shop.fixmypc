@@ -23,7 +23,7 @@
 
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
-        <td class="px" align="center" style="padding:34px 34px 4px 34px;">
+        <td class="px" align="center" style="padding:34px 34px 18px 34px;">
 
             @if ($art)
                 <img src="{{ $art }}" class="hero-img" width="200" height="140"

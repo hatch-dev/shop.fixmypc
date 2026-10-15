@@ -1243,27 +1243,57 @@ class Validation
         foreach ($signatures as $needle) {
             if (stripos($message, $needle) !== false) {
 
-                \Illuminate\Support\Facades\Log::error('Suppressed internal error detail', [
-                    'message' => $message
-                ]);
-
-                return __('lang.went_wrong', [], $lang);
+                return self::suppress($message, $lang);
             }
         }
 
         // A filesystem path is never something a customer should be shown.
         if (preg_match('/(^|\s)([A-Za-z]:\\\\|\/(var|home|usr|srv)\/)/', $message)) {
 
-            \Illuminate\Support\Facades\Log::error('Suppressed internal error detail', [
-                'message' => $message
-            ]);
-
-            return __('lang.went_wrong', [], $lang);
+            return self::suppress($message, $lang);
         }
 
         return $message;
     }
 
+
+    /**
+     * The generic message in place of internal detail, with a reference.
+     *
+     * The detail is logged under a short code that the customer sees too,
+     * "Something went wrong (ref 7F3A9C21)", so a screenshot of the failure is
+     * enough to find it: grep the code in storage/logs. The detail itself stays
+     * out of the response - it is SQL with customers' session tokens in it.
+     *
+     * On a developer's own machine (APP_ENV=local with APP_DEBUG on) the real
+     * message is returned instead. Never on live, never under the tests.
+     */
+    private static function suppress($message, $lang = null)
+    {
+        $ref = strtoupper(bin2hex(random_bytes(4)));
+
+        \Illuminate\Support\Facades\Log::error('Suppressed internal error detail', [
+            'ref' => $ref,
+            'message' => $message,
+        ]);
+
+        if (app()->environment('local') && config('app.debug')) {
+            return $message . ' (ref ' . $ref . ')';
+        }
+
+        /*
+         * API_ERROR_DETAIL, for finding a failure on live: the error itself,
+         * without the "(SQL: ...)" that follows it - the statement and its
+         * bound values, session tokens among them.
+         */
+        if (config('app.error_detail')) {
+            $detail = trim(preg_replace('/\s*\(SQL: .*$/s', '', $message));
+
+            return mb_strimwidth($detail, 0, 300, '...') . ' (ref ' . $ref . ')';
+        }
+
+        return __('lang.went_wrong', [], $lang) . ' (ref ' . $ref . ')';
+    }
 
     public static function nothingFoundLang($lang = null, $status = 200)
     {

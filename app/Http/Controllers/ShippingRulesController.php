@@ -211,6 +211,13 @@ class ShippingRulesController extends ControllerHelper
                     : Validation::error($request->token, $error));
             }
 
+            // weight bands, under their own field
+            foreach ($active as $place) {
+                if ($error = Shipping::weightRatesError($place['weight_rates'] ?? null, $place['weight_extra_per_kg'] ?? null)) {
+                    return response()->json(Validation::fieldError($request->token, 'weight_rates', $error, $lang));
+                }
+            }
+
             $placeId = function ($place) {
                 return isset($place['id']) && trim((string)$place['id']) !== '' ? (int)$place['id'] : null;
             };
@@ -275,9 +282,13 @@ class ShippingRulesController extends ControllerHelper
                     $columns = $this->placeColumns($place);
 
                     if ($placeId($place)) {
+                        // a query-builder update skips the model's array cast
                         ShippingPlace::where('id', $placeId($place))
                             ->where('shipping_rule_id', $id)
-                            ->update($columns);
+                            ->update(array_merge($columns, [
+                                'weight_rates' => is_null($columns['weight_rates'])
+                                    ? null : json_encode($columns['weight_rates']),
+                            ]));
                     } else {
                         ShippingPlace::create(array_merge($columns, [
                             'shipping_rule_id' => $id,
@@ -501,6 +512,12 @@ class ShippingRulesController extends ControllerHelper
             'country' => $country,
             'state' => $country === 'ALL' ? '' : $text('state'),
             'price' => (float)($place['price'] ?? 0),
+            // lightest first; none keeps the flat price above
+            'weight_rates' => Shipping::weightRates($place['weight_rates'] ?? null) ?: null,
+            // only means anything above a last band
+            'weight_extra_per_kg' => Shipping::weightRates($place['weight_rates'] ?? null)
+                ? Shipping::extraPerKg($place['weight_extra_per_kg'] ?? null)
+                : null,
             'pickup_price' => (float)($place['pickup_price'] ?? 0),
             'day_needed' => (int)($place['day_needed'] ?? 0),
             'pickup_point' => (int)($place['pickup_point'] ?? 0) === 1 ? 1 : 0,

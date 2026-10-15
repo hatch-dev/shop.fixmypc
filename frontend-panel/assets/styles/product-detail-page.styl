@@ -97,6 +97,23 @@
   height 358px
   padding 26px
 
+/* The photo the zoom reads, sized to the photo itself rather than to the
+   square around it. Drift (inside vue-product-zoomer) knows nothing of
+   padding or object-fit: it drew the zoomed copy at the <img> box's
+   proportions, so a 1219 x 1500 phone was stretched into a square, and the
+   lens could sit over the white margin while the pane showed the phone.
+   The 26px frame is now margin, and ProductImages.fitPreview() adds the
+   top/bottom gap that keeps a wide photo centred in the same 358px. */
+.pd-page .detail-image .zoomer-base-container > img
+  display block
+  width auto
+  height auto
+  max-width calc(100% - 52px)
+  max-height 306px
+  padding 0
+  margin calc(26px + var(--fit-gap, 0px)) auto
+  object-fit fill
+
 /* The roll-over-to-zoom caption under the thumbnail strip. Its top margin is
    the only thing separating it from the thumbs - .thumb-list below drops the
    bottom margin detail-images.styl gives it - so the gap lives here.

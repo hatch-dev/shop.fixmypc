@@ -25,8 +25,15 @@
     $msoWidth = max(190, min(360, (int) (mb_strlen($label) * 9.5) + 68));
 @endphp
 
+{{-- A full-width row with the button inside it, aligned by the cell. The
+     button table used to carry align="left" itself, and an aligned table
+     floats: whatever came next - "This link expires in 60 minutes" - wrapped
+     up beside the button instead of sitting under it. --}}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0;">
+    <tr>
+        <td align="{{ $align }}">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-       class="btn" style="margin:0;" align="{{ $align }}">
+       class="btn" style="margin:0{{ $align === 'center' ? ' auto' : '' }};">
     <tr>
         <td align="{{ $align }}">
             <!--[if mso]>
@@ -49,6 +56,9 @@
                       padding:15px 34px; border:1px solid {{ $border }}; border-radius:999px;
                       mso-hide:all;">{{ $label }}</a>
             <!--<![endif]-->
+        </td>
+    </tr>
+</table>
         </td>
     </tr>
 </table>

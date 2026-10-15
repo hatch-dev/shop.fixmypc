@@ -134,8 +134,12 @@ class OrderSummary
          * conventions at once.
          */
         $subtotalIncVat = 0.0;
+        // The same list price stated net, for a summary read ex-VAT.
+        $subtotalExVat = 0.0;
 
         foreach ($lines as $line) {
+            $subtotalExVat += $line['list_ex_vat'];
+
             $subtotal += $line['list_total'];
             $charged += $line['line_total'];
 
@@ -275,6 +279,14 @@ class OrderSummary
             'ex_vat' => Pricing::round($exVat - $bundleOffer),
             'vat' => Pricing::round($vat),
             'inc_vat' => $incVat,
+
+            /*
+             * The net statement, for a business summary:
+             *   subtotal_ex_vat - discount_ex_vat = ex_vat
+             * Derived like its gross twin, so the identity holds exactly.
+             */
+            'subtotal_ex_vat' => Pricing::round($subtotalExVat),
+            'discount_ex_vat' => Pricing::round(Pricing::round($subtotalExVat) - Pricing::round($exVat - $bundleOffer)),
 
             /*
              * The gross statement of the same goods, for a summary that leads
@@ -419,6 +431,19 @@ class OrderSummary
                 $lineVat = Pricing::round($unitTax * $payableQty);
             }
 
+            /*
+             * The list price through the same split as the charge. An order
+             * from before the treatment was recorded reports the list price
+             * as it stands, as subtotal_inc_vat does for the whole order.
+             */
+            $listTotal = Pricing::round($listPrice * $quantity);
+            $lineList = $knownTreatment
+                ? Pricing::vatBreakdown($listTotal, $rate, $inclusive)
+                : ['ex' => $listTotal, 'inc' => $listTotal];
+            $unitList = $knownTreatment
+                ? Pricing::vatBreakdown(Pricing::round($listPrice), $rate, $inclusive)
+                : ['ex' => Pricing::round($listPrice), 'inc' => Pricing::round($listPrice)];
+
             $lines[] = [
                 'product_id' => (int)$product->product_id,
                 'inventory_id' => (int)$product->inventory_id,
@@ -464,6 +489,23 @@ class OrderSummary
                 'unit_inc_vat' => $knownTreatment && $inclusive
                     ? Pricing::round($charged)
                     : Pricing::round($charged + $unitTax),
+
+                /*
+                 * The list price and the discount off it, stated both ways,
+                 * so an item row can be read in the same basis as the summary
+                 * under it. Printing the product's own convention there - net
+                 * for an ex-VAT product - put "Discount -€100" above a summary
+                 * saying "Discount -€123" for the same discount.
+                 *
+                 * The discounts are derived, list minus charged, so each basis
+                 * reconciles to the cent:  list - discount = ex_vat / inc_vat.
+                 */
+                'unit_list_ex_vat' => $unitList['ex'],
+                'unit_list_inc_vat' => $unitList['inc'],
+                'list_ex_vat' => $lineList['ex'],
+                'list_inc_vat' => $lineList['inc'],
+                'discount_ex_vat' => Pricing::round($lineList['ex'] - $lineEx),
+                'discount_inc_vat' => Pricing::round($lineList['inc'] - ($lineEx + $lineVat)),
 
                 'voucher_discount' => $stored
                     ? Pricing::round($stored->product_voucher_discount_applied)
@@ -517,6 +559,12 @@ class OrderSummary
             $product['inc_vat'] = $line['inc_vat'];
             $product['unit_ex_vat'] = $line['unit_ex_vat'];
             $product['unit_inc_vat'] = $line['unit_inc_vat'];
+            $product['unit_list_ex_vat'] = $line['unit_list_ex_vat'];
+            $product['unit_list_inc_vat'] = $line['unit_list_inc_vat'];
+            $product['list_ex_vat'] = $line['list_ex_vat'];
+            $product['list_inc_vat'] = $line['list_inc_vat'];
+            $product['discount_ex_vat'] = $line['discount_ex_vat'];
+            $product['discount_inc_vat'] = $line['discount_inc_vat'];
             $product['payable_quantity'] = $line['payable_quantity'];
             $product['product_voucher_discount_applied'] = $line['voucher_discount'];
         }

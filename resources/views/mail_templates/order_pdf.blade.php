@@ -227,7 +227,7 @@
                 </tr>
                 <tr>
                     <td>{{__('lang.order_amount', [], $lang)}}</td>
-                    <td>{{ $setting->currency_icon }}{{ $order->calculated_price['total_price'] }}</td>
+                    <td>{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['total_price'], 2) }}</td>
                 </tr>
                 {{--
                     A business customer's accounts department matches the
@@ -315,7 +315,6 @@
 <table class="border-tr table-c main-table">
     <tr>
         <th>{{__('lang.title', [], $lang)}}</th>
-        <th>{{__('lang.delivery_fee', [], $lang)}}</th>
         <th>{{__('lang.quantity', [], $lang)}}</th>
         <th>{{__('lang.price', [], $lang)}}</th>
         <th>{{__('lang.total', [], $lang)}}</th>
@@ -329,14 +328,15 @@
                     {{ \App\Models\Helper\MailHelper::generatingAttribute($op) }}
                 </span>
             </td>
-            <td>
-                {{ $setting->currency_icon }}
-                {{ \App\Models\Helper\MailHelper::shippingPrice($op->shipping_place, $op->shipping_type) }}
-            </td>
+            {{--
+                No delivery column: delivery is charged once per order and is
+                in the totals below. Each line printed its shipping row at
+                today's price, so a two-line order listed it twice.
+            --}}
             <td>{{ $op->quantity }}</td>
 
-            <td>{{ $setting->currency_icon }}{{ $op->selling }}</td>
-            <td>{{ $setting->currency_icon }}{{ $op->selling * $op->quantity }}</td>
+            <td>{{ $setting->currency_icon }}{{ number_format((float) $op->selling, 2) }}</td>
+            <td>{{ $setting->currency_icon }}{{ number_format((float) $op->selling * (int) $op->quantity, 2) }}</td>
         </tr>
 
     @endforeach
@@ -379,7 +379,7 @@
         @else
             <tr>
                 <td style="min-width: 110px">{{__('lang.subtotal', [], $lang)}}</td>
-                <td style="min-width: 40px">{{ $setting->currency_icon }}{{ $lineDiscount > 0 ? $order->calculated_price['original_subtotal'] : $order->calculated_price['subtotal'] }}</td>
+                <td style="min-width: 40px">{{ $setting->currency_icon }}{{ number_format((float) ($order->calculated_price['original_subtotal'] ?? $order->calculated_price['subtotal']), 2) }}</td>
             </tr>
 
             @if ($lineDiscount > 0)
@@ -394,7 +394,7 @@
             <td>{{__('lang.shipping_cost', [], $lang)}}</td>
 
             @if((float) $order->calculated_price['shipping_price'] > 0)
-                <td>{{ $setting->currency_icon }}{{ $order->calculated_price['shipping_price'] }}</td>
+                <td>{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['shipping_price'], 2) }}</td>
             @else
                 <td>{{__('lang.fre', [], $lang)}}</td>
             @endif
@@ -402,17 +402,22 @@
 
         </tr>
 
-        @if ((int) $order->calculated_price['bundle_offer'] > 0)
+        {{--
+            Only beside the list subtotal: the gross "Discount" above already
+            contains the bundle offer (discount_inc_vat runs to inc_vat), so
+            a row for it there took it off twice.
+        --}}
+        @if (is_null($grossSubtotal) && (float) $order->calculated_price['bundle_offer'] > 0)
             <tr>
                 <td>{{__('lang.bundle_offer', [], $lang)}}</td>
-                <td>{{ $setting->currency_icon }}{{ $order->calculated_price['bundle_offer'] }}</td>
+                <td>-{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['bundle_offer'], 2) }}</td>
             </tr>
         @endif
 
-        @if ((int) $order->calculated_price['voucher_price'] > 0)
+        @if ((float) $order->calculated_price['voucher_price'] > 0)
             <tr>
                 <td>{{__('lang.voucher', [], $lang)}}</td>
-                <td>{{ $setting->currency_icon }}{{ $order->calculated_price['voucher_price'] }}</td>
+                <td>-{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['voucher_price'], 2) }}</td>
             </tr>
         @endif
 
@@ -469,16 +474,16 @@
                 <td>{{__('lang.vat_included', [], $lang)}}</td>
                 <td>{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['vat'], 2) }}</td>
             </tr>
-        @elseif ((int) $order->calculated_price['tax'] > 0)
+        @elseif ((float) $order->calculated_price['tax'] > 0)
             <tr>
                 <td>{{__('lang.tax', [], $lang)}}</td>
-                <td>{{ $setting->currency_icon }}{{ $order->calculated_price['tax'] }}</td>
+                <td>{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['tax'], 2) }}</td>
             </tr>
         @endif
 
         <tr>
             <td>{{__('lang.total_inc_vat', [], $lang)}}</td>
-            <td>{{ $setting->currency_icon }}{{ $order->calculated_price['total_price'] }}</td>
+            <td>{{ $setting->currency_icon }}{{ number_format((float) $order->calculated_price['total_price'], 2) }}</td>
         </tr>
 
         {{-- A split payment: how the total was paid. A payment, not a discount. --}}

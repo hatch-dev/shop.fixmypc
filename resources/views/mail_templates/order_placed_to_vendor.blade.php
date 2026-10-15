@@ -16,22 +16,12 @@
         : Utils::formatDate($order->created_at);
 
     /*
-     * A vendor only ever receives the lines that belong to them, so the
-     * order-wide calculated_price would overstate what they are owed. Sum
-     * their own lines instead.
+     * What the vendor's lines were charged, worked out by OrderMailer from
+     * the order's own rows: null when every line is theirs (the totals are
+     * then the customer's), else goods / tax / shipping / total for their
+     * share. Never added up here - see OrderMailer::vendorCopies.
      */
-    $vendorGoods = 0;
-    $vendorShipping = 0;
-    $vendorUnits = 0;
-
-    foreach ($order->ordered_products as $op) {
-        $vendorGoods += (float) $op->selling * (int) $op->quantity;
-        $vendorUnits += (int) $op->quantity;
-
-        if ($op->shipping_place) {
-            $vendorShipping += (float) MailHelper::shippingPrice($op->shipping_place, $op->shipping_type);
-        }
-    }
+    $share = isset($order->vendor_totals) ? $order->vendor_totals : null;
 
     $customerName = $order->address && $order->address->name
         ? $order->address->name
@@ -135,26 +125,37 @@
 
     @include('mail_templates.partials.spacer', ['brand' => $brand, 'h' => 18])
 
-    @component('mail_templates.partials.panel', ['brand' => $brand, 'tone' => 'soft'])
-        @include('mail_templates.partials.kv', [
-            'brand' => $brand,
-            'rows'  => array_values(array_filter([
-                [
-                    'label' => __('lang.subtotal', [], $lang),
-                    'value' => e($money($vendorGoods)),
-                ],
-                $vendorShipping > 0 ? [
-                    'label' => __('lang.delivery_fee', [], $lang),
-                    'value' => e($money($vendorShipping)),
-                ] : null,
-                [
-                    'label'  => __('lang.total', [], $lang),
-                    'value'  => e($money($vendorGoods + $vendorShipping)),
-                    'strong' => true,
-                ],
-            ])),
-        ])
-    @endcomponent
+    @if (is_null($share))
+        @include('mail_templates.partials.totals', ['brand' => $brand, 'order' => $order, 'lang' => $lang])
+    @else
+        @component('mail_templates.partials.panel', ['brand' => $brand, 'tone' => 'soft'])
+            @include('mail_templates.partials.kv', [
+                'brand' => $brand,
+                'rows'  => array_values(array_filter([
+                    [
+                        'label' => __('lang.subtotal', [], $lang),
+                        'value' => e($money($share['goods'])),
+                    ],
+                    $share['tax'] > 0 ? [
+                        'label' => __('lang.vat', [], $lang),
+                        'value' => e($money($share['tax'])),
+                    ] : null,
+                    $share['shipping'] > 0 ? [
+                        'label' => __('lang.delivery_fee', [], $lang),
+                        'value' => e($money($share['shipping'])),
+                    ] : null,
+                    [
+                        'label'  => __('lang.total', [], $lang),
+                        'value'  => e($money($share['total'])),
+                        'strong' => true,
+                    ],
+                ])),
+            ])
+            <p class="muted" style="margin:10px 0 0 0; font-size:12px; line-height:18px; color:{{ $brand->muted }};">
+                Your items on this order only. Discounts applied to the whole order are not included.
+            </p>
+        @endcomponent
+    @endif
 
     @include('mail_templates.partials.spacer', ['brand' => $brand, 'h' => 26])
 

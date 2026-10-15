@@ -164,6 +164,90 @@
                 </p>
               </section>
 
+              <section class="sr-card" data-field="weight_rates" :class="{ 'sr-invalid': fieldErrors.weight_rates }">
+                <div class="sr-card-head sr-card-head-row">
+                  <div>
+                    <h5 class="sr-card-title">Price by weight <span class="sr-optional">optional</span></h5>
+                    <p class="sr-help">
+                      Charge by what the whole order weighs (each product&rsquo;s weight &times; its quantity) instead of
+                      the delivery price above. Leave this empty to charge the delivery price whatever the order weighs.
+                    </p>
+                  </div>
+                  <button type="button" class="lite-btn sr-head-btn" @click.prevent="addWeightBand(index)">
+                    Add weight band
+                  </button>
+                </div>
+
+                <div v-if="weightBands(item).length" class="sr-bands">
+                  <div class="sr-band sr-band-head" aria-hidden="true">
+                    <span>From</span>
+                    <span>Up to</span>
+                    <span>Cost</span>
+                    <span></span>
+                  </div>
+                  <div v-for="(band, b) in weightBands(item)" :key="b" class="sr-band">
+                    <div class="sr-static">{{ formatKg(bandFrom(item, band)) }}</div>
+                    <div class="sr-affix has-post sr-affix-kg">
+                      <input
+                        type="number"
+                        step="0.001"
+                        min="0"
+                        placeholder="e.g. 10"
+                        :aria-label="`Weight band ${b + 1}: up to (kg)`"
+                        v-model="band.max"
+                      >
+                      <span class="sr-affix-post">kg</span>
+                    </div>
+                    <div class="sr-affix has-pre">
+                      <span class="sr-affix-pre">{{ currencyIcon }}</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        :aria-label="`Weight band ${b + 1}: cost`"
+                        v-model="band.cost"
+                      >
+                    </div>
+                    <button
+                      type="button"
+                      class="lite-btn sr-band-remove"
+                      :aria-label="`Remove weight band ${b + 1}`"
+                      @click.prevent="removeWeightBand(index, b)"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+                <p v-else class="sr-muted">
+                  No weight bands: every order to this destination pays the delivery price above.
+                </p>
+
+                <div v-if="weightBands(item).length" class="input-wrapper sr-field sr-extra">
+                  <label :for="`sr-extra-${index}`">
+                    Heavier than {{ formatKg(heaviestBand(item)) }}
+                    <span class="sr-optional">optional</span>
+                  </label>
+                  <div class="sr-affix has-pre has-post">
+                    <span class="sr-affix-pre">{{ currencyIcon }}</span>
+                    <input
+                      :id="`sr-extra-${index}`"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      v-model="item.weight_extra_per_kg"
+                    >
+                    <span class="sr-affix-post">per extra kg</span>
+                  </div>
+                </div>
+                <field-error :messages="fieldErrors.weight_rates" />
+
+                <p v-if="weightBands(item).length" class="sr-summary">
+                  {{ heavierSummary(item) }}
+                </p>
+              </section>
+
               <section class="sr-card">
                 <div class="sr-card-head sr-card-head-row">
                   <div>
@@ -285,6 +369,7 @@
               <li>At checkout the rule covering the customer&rsquo;s address is used, and delivery is charged <strong>once per order</strong>.</li>
               <li>An exact county beats &ldquo;All states&rdquo;, which beats &ldquo;All countries&rdquo;. For a cheaper Dublin price, add a rule for Ireland &rsaquo; Dublin.</li>
               <li>Places already covered by another rule are not offered.</li>
+              <li><strong>Price by weight</strong> charges the band the whole order&rsquo;s weight falls in. Orders heavier than the last band pay its cost plus the cost per extra kg, or cannot be delivered when that is empty. Products with no weight count as 0 kg, so set weights on products first.</li>
               <li>Products are not linked to rules. To stop a product being sold somewhere, use <em>Where this product can be sold</em> on the product.</li>
             </ul>
           </div>
@@ -326,6 +411,8 @@
             pickup_point: 0,
             pickup_price: 0,
             price: 0,
+            weight_rates: [],
+            weight_extra_per_kg: '',
             shipping_rule_id: '',
             deleted: false,
             state: '',
@@ -402,6 +489,74 @@
 
         return code && all[code]?.name ? all[code].name : ''
       },
+      /*
+       * Weight bands (Helper\Shipping::deliveryPrice) are flat prices. Each
+       * covers the weight above the next lighter band's "up to", so "From" is
+       * worked out rather than typed. An order heavier than the last band pays
+       * that band's cost plus the destination's one charge per extra kg.
+       */
+      weightBands(place) {
+        return Array.isArray(place?.weight_rates) ? place.weight_rates : []
+      },
+      bandMax(band) {
+        const max = parseFloat(band?.max)
+
+        return band?.max === '' || band?.max === null || band?.max === undefined || isNaN(max) ? null : max
+      },
+      bandFrom(place, band) {
+        const max = this.bandMax(band)
+        const lighter = this.weightBands(place)
+          .map(other => this.bandMax(other))
+          .filter(other => other !== null && (max === null || other < max))
+
+        return lighter.length ? Math.max(...lighter) : 0
+      },
+      // "A 25 kg order would cost €50.00 (€40.00 + 5 kg × €2.00)."
+      heavierSummary(place) {
+        const heaviest = this.heaviestBand(place)
+        const extra = place.weight_extra_per_kg
+
+        if (!heaviest) return ''
+
+        if (extra === '' || extra === null || extra === undefined || isNaN(parseFloat(extra))) {
+          return 'Orders heavier than ' + this.formatKg(heaviest) + ' cannot be delivered here. ' +
+            'Enter a cost per extra kg to deliver them.'
+        }
+
+        const last = this.weightBands(place).find(band => this.bandMax(band) === heaviest)
+        const cost = parseFloat(last?.cost || 0)
+        const rate = parseFloat(extra)
+        const over = 5
+        const money = value => this.currencyIcon + value.toFixed(2)
+
+        return 'Heavier orders pay the last band plus the cost per extra kg: a ' +
+          this.formatKg(heaviest + over) + ' order costs ' + money(cost + rate * over) +
+          ' (' + money(cost) + ' + ' + over + ' kg × ' + money(rate) + ').'
+      },
+      heaviestBand(place) {
+        const maxes = this.weightBands(place).map(band => this.bandMax(band)).filter(max => max !== null)
+
+        return maxes.length ? Math.max(...maxes) : 0
+      },
+      formatKg(value) {
+        return parseFloat(Number(value || 0).toFixed(3)) + ' kg'
+      },
+      addWeightBand(index) {
+        const place = this.result.shipping_places[index]
+        const bands = this.weightBands(place)
+
+        // The first band starts at what the flat price charged, so adding
+        // one does not change a price until the admin means it to.
+        this.$set(place, 'weight_rates', [...bands, {
+          max: '',
+          cost: bands.length ? '' : (place.price || 0)
+        }])
+      },
+      removeWeightBand(index, band) {
+        const place = this.result.shipping_places[index]
+
+        this.$set(place, 'weight_rates', this.weightBands(place).filter((_, b) => b !== band))
+      },
       // "Republic of Ireland (whole country): €24.00, usually 5 working days."
       destinationSummary(place) {
         const all = place.country === 'ALL'
@@ -412,7 +567,10 @@
           ? (this.countries?.[place.country]?.states?.[place.state]?.name || place.state)
           : null
         const price = parseFloat(place.price || 0)
-        const cost = price > 0 ? this.currencyIcon + price.toFixed(2) : 'free delivery'
+        const bands = this.weightBands(place).length
+        const cost = bands
+          ? 'priced by weight (' + bands + ' ' + (bands === 1 ? 'band' : 'bands') + ')'
+          : (price > 0 ? this.currencyIcon + price.toFixed(2) : 'free delivery')
         const days = parseInt(place.day_needed || 0)
         const where = state ? state + ', ' + country : country + (all ? '' : ' (whole country)')
 
@@ -555,6 +713,8 @@
           pickup_city: '',
           pickup_country: '',
           price: 0,
+          weight_rates: [],
+          weight_extra_per_kg: '',
           shipping_rule_id: '',
           state: ''
         })
@@ -905,6 +1065,41 @@
   .sr-remove
     flex-shrink 0
 
+  // Card-header and band actions keep a one-line label: .lite-btn is a fixed
+  // 34px high, and squeezed by the header row its label wrapped to two 32px
+  // lines that spilled out of the button.
+  .sr-head-btn,
+  .sr-band-remove
+    flex-shrink 0
+    width auto
+    padding 0 14px
+    white-space nowrap
+
+  // Weight bands: From | Up to | Cost | + per extra kg | Remove
+  .sr-bands
+    display grid
+    gap 8px
+
+  .sr-band
+    display grid
+    // fixed last column: each row is its own grid, and an `auto` one is 0px
+    // in the header row but the Remove button's width below it
+    grid-template-columns 90px repeat(2, minmax(0, 1fr)) 90px
+    gap 10px
+    align-items center
+
+  .sr-band-head
+    font-size 12px
+    font-weight 600
+    color var(--text-muted)
+
+  .sr-affix.sr-affix-kg input
+    padding-right 36px
+
+  .sr-card .input-wrapper.sr-field.sr-extra
+    max-width 340px
+    margin-top 16px
+
   .sr-aside
     position sticky
     top 12px
@@ -945,4 +1140,10 @@
 
     .sr-card-head-row
       flex-direction column
+
+    .sr-band
+      grid-template-columns repeat(2, minmax(0, 1fr))
+
+    .sr-band-head
+      display none
 </style>

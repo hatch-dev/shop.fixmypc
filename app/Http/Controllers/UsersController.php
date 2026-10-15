@@ -1961,6 +1961,11 @@ class UsersController extends ControllerHelper
                 $data = $request->all();
                 unset($data['first_name'], $data['last_name'], $data['created'], $data['id'], $data['user']);
 
+                // A query-builder update skips $fillable, so anything else the form
+                // sends (county, the name worked out from state) reached the SQL
+                // and failed with "Unknown column".
+                $data = array_intersect_key($data, array_flip((new UserAddress)->getFillable()));
+
                 $filtered = array_filter($data, function ($value) {
                     return $value !== null && $value !== '';
                 });

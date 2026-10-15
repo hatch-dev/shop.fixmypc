@@ -1504,17 +1504,20 @@ export default {
 
       if (!inventory) return this.product?.in_stock
 
-      return inventory.is_active == 1 || inventory.quantity > 0
+      // Units on the shelf only. A backorder row (is_active == 1) at zero is
+      // still buyable, but it is out of stock: the "Back Order" pill beside
+      // this one says so, rather than an "In Stock" that was not true.
+      return Number(inventory.quantity) > 0
     },
     // Units left on the chosen inventory, for the "In Stock · N units" pill.
-    // is_active == 1 means the seller keeps no stock ceiling (maxQuantity is
-    // 9999 there), so there is no honest number to put on the pill.
+    // Shown for backorder rows too: the count is what is on the shelf, even
+    // though more can be ordered beyond it.
     stockUnits() {
       const inventory = this.optionChange ? this.productInventory : null
 
-      if (!inventory || inventory.is_active == 1) return 0
+      if (!inventory) return 0
 
-      return parseInt(inventory.quantity || 0)
+      return Math.max(0, parseInt(inventory.quantity || 0))
     },
     isBackOrder() {
       const inventory = this.optionChange ? this.productInventory : null;
@@ -2725,18 +2728,27 @@ export default {
     // }
 
     if (this.product?.inventory?.length) {
-      const defaultInventory = [...this.product.inventory].filter(i =>
+      /*
+       * In-stock rows first, then a row that takes backorders. A product with
+       * a single row and no attributes gets that row whatever its stock: there
+       * is nothing for the shopper to choose, and leaving it unselected made
+       * "Add to cart" ask them to "select all required attributes".
+       */
+      const inventories = [...this.product.inventory]
+      const defaultInventory = inventories.filter(i =>
         Number(i.quantity) > 0
       ).sort((a, b) =>
         Number(b.quantity || 0) -
         Number(a.quantity || 0)
-      )[0]
+      )[0] ||
+        inventories.find(i => i.is_active == 1) ||
+        (inventories.length === 1 && !inventories[0].inventory_attributes?.length ? inventories[0] : null)
       if (defaultInventory) {
         this.selectedInventory = defaultInventory
         this.productInventory = defaultInventory
         this.optionChange = true
         const attrMap = {}
-        defaultInventory.inventory_attributes.forEach(attr => {
+        ;(defaultInventory.inventory_attributes || []).forEach(attr => {
 
           const attribute = this.product.attribute.find(a =>
             a.values.some(v =>

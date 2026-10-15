@@ -16,8 +16,8 @@ use Tests\IsolatedTestCase;
 /**
  * Basket activity, expiry at checkout, and telling the shopper (2026-10-13).
  *
- *  - any basket or checkout request restarts the 20 idle minutes, not only
- *    adding to the basket;
+ *  - only adding to the basket restarts the 20 minutes; loading the basket
+ *    or a checkout step does not (changed 2026-10-14);
  *  - a basket whose 20 minutes have lapsed is emptied the moment it is
  *    priced, shipped or paid for - it can never be bought, whether or not
  *    the sweep has run - unless it has started paying;
@@ -103,19 +103,26 @@ class BasketActivityTest extends IsolatedTestCase
 
     // --------------------------------------------------------------- activity
 
-    public function test_checkout_activity_restarts_the_twenty_minutes()
+    /**
+     * Only adding restarts the 20 minutes. This test used to require the
+     * opposite (any basket or checkout request was activity); the user's rule
+     * since 2026-10-14 is that the timer starts on add, and a basket that was
+     * only being looked at is emptied on time.
+     */
+    public function test_loading_the_basket_does_not_restart_the_twenty_minutes()
     {
         $this->assertApiOk($this->add());
         $this->idleFor(15);
+        $before = $this->lastActivity();
 
-        // Loading the basket or a checkout step is activity.
         $this->basketRead();
-        $this->assertLessThan(5, $this->lastActivity()->diffInSeconds(Carbon::parse(date('Y-m-d H:i:s'))));
+        $this->assertTrue($before->eq($this->lastActivity()), 'a read is not activity');
 
-        // 15 minutes before plus 10 after is 25 since the add, but only 10 idle.
-        $this->idleFor(10);
+        // 15 minutes before plus 6 after: past 20 since the add.
+        $this->idleFor(21);
         CartHold::sweep();
-        $this->assertSame(1, Cart::where('user_id', $this->customer->id)->count());
+        $this->assertSame(0, Cart::where('user_id', $this->customer->id)->count());
+        $this->assertSame(10, $this->stock());
     }
 
     // ----------------------------------------------------- expiry at checkout

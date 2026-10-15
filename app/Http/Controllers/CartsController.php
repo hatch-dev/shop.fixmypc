@@ -221,6 +221,7 @@ class CartsController extends ControllerHelper
 		
 		
             $this->repriceForCustomer($request, $data);
+            $this->priceShippingByWeight($data);
 
             /*
              * Whatever changed this basket without the shopper - emptied after
@@ -262,6 +263,55 @@ class CartsController extends ControllerHelper
      * record rather than a fossil of whatever was right when the line was
      * added.
      */
+    /**
+     * The delivery charge on the basket lines, priced for what the order
+     * weighs.
+     *
+     * /checkout and the payment page take the delivery charge from the
+     * line's shipping_place price, and the card is charged from that figure,
+     * so it has to be the one Shipping::quote gives the order: the band for
+     * the weight of the lines being bought, not the row's flat price. A row
+     * without weight bands is left as it is. When the order is too heavy
+     * for the row, deliverable is false and placing the order refuses it.
+     */
+    private function priceShippingByWeight($rows)
+    {
+        $rows = collect($rows);
+
+        if ($rows->isEmpty()) {
+            return;
+        }
+
+        // the same lines Cart::forCheckout picks: a Buy Now line, else the ticked ones
+        $buyNow = $rows->filter(function ($row) { return (int)$row->buy_now === 1; });
+        $buying = $buyNow->isNotEmpty()
+            ? $buyNow
+            : $rows->filter(function ($row) {
+                return (int)$row->buy_now === 0
+                    && (int)$row->selected === (int)Config::get('constants.status.PUBLIC');
+            });
+
+        $weight = Shipping::linesWeight($buying);
+
+        foreach ($rows as $row) {
+            $place = $row->shipping_place;
+
+            if (!$place || (int)$row->shipping_type !== Shipping::deliveryType()
+                || !Shipping::weightRates($place->weight_rates)) {
+                continue;
+            }
+
+            $price = Shipping::deliveryPrice($place, $weight);
+
+            if (!is_null($price)) {
+                $place->price = $price;
+            }
+
+            $place->setAttribute('order_weight', $weight);
+            $place->setAttribute('deliverable', !is_null($price));
+        }
+    }
+
     private function repriceForCustomer(Request $request, $rows)
     {
         if (is_null($rows) || count($rows) === 0) {
@@ -1216,7 +1266,8 @@ class CartsController extends ControllerHelper
                 optional($deliveryAddress)->country,
                 optional($deliveryAddress)->state,
                 $this->requestedPickupPoint($request, $cartArrz),
-                $carts->pluck('product')
+                $carts->pluck('product'),
+                Shipping::linesWeight($carts)
             );
 
             if (!$quote['ok']) {
@@ -1298,6 +1349,7 @@ class CartsController extends ControllerHelper
              * and /checkout without the customer doing anything.
              */
             $this->repriceForCustomer($request, $data);
+            $this->priceShippingByWeight($data);
 
             return response()->json(new Response($request->token, $data));
 
@@ -2168,6 +2220,17 @@ class CartsController extends ControllerHelper
                     $country = $address->country;
                     $state = $address->state;
 
+                } else if ($request->boolean('default_address') && ($address = $this->defaultAddress($request))) {
+                    /*
+                     * The product page asks with only the visitor's country,
+                     * which prices the whole-country row (Ireland, €24) for a
+                     * shopper whose saved address sits under a cheaper county
+                     * row (Dublin, €15) - and checkout then charged the €15.
+                     * Pricing their default address makes the two agree.
+                     */
+                    $country = $address->country;
+                    $state = $address->state;
+
                 } else {
                     $country = $request->input('country');
                     $state = $request->input('state');
@@ -2183,10 +2246,23 @@ class CartsController extends ControllerHelper
                     ->get();
             }
 
+            /*
+             * What is being weighed: the lines being bought, or - from the
+             * product page (product_id) - that one item at the quantity in
+             * its box, which is what the page's "+ shipping" line is about.
+             */
+            $weight = $request->filled('product_id')
+                ? Shipping::linesWeight([[
+                    'product_id' => $request->input('product_id'),
+                    'quantity' => max(1, (int)$request->input('quantity', 1)),
+                ]])
+                : Shipping::linesWeight($carts);
+
             $quote = Shipping::quote(
                 $type, $country, $state,
                 $request->input('pickup_place_id'),
-                $carts->pluck('product')
+                $carts->pluck('product'),
+                $weight
             );
 
             $result = Shipping::publicQuote($quote);
@@ -2279,6 +2355,20 @@ class CartsController extends ControllerHelper
         }
 
         return null;
+    }
+
+    /** The caller's default saved address, or null (guests included). */
+    private function defaultAddress(Request $request)
+    {
+        if ($user = $request->user('user')) {
+            $query = UserAddress::where('user_id', $user->id);
+        } else if ($request->user_token) {
+            $query = UserAddress::where('user_token', $request->user_token);
+        } else {
+            return null;
+        }
+
+        return $query->where('default', 1)->latest('id')->first();
     }
 
     /** [cart id => message] for the lines a quote refused. */

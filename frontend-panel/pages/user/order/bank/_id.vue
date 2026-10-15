@@ -109,8 +109,8 @@
                                 <div class="col-12 amount-field">
                                     <div class="bank-tittle">Payment Amount</div>
                                     <div class="input-box position-relative">
-                                        <input type="text" class="form-control form-account-deatils pe-5" :value="order?.calculated?.total_price ? '\u20ac' + order.calculated.total_price : ''" readonly>
-                                        <i class="fa-regular fa-copy copy-icon" @click="copyToClipboard(order?.calculated?.total_price, 'total_price')"></i>
+                                        <input type="text" class="form-control form-account-deatils pe-5" :value="transferAmount ? '\u20ac' + amount(transferAmount) : ''" readonly>
+                                        <i class="fa-regular fa-copy copy-icon" @click="copyToClipboard(transferAmount, 'total_price')"></i>
                                         <span class="copy-msg" :style="{ opacity: copyState['total_price'] ? 1 : 0 }">Copied!</span>
                                     </div>
                                 </div>
@@ -166,7 +166,7 @@
                             <div class="step-number">4</div>
                             <div class="step-login-tittle">
                                 <h5>Enter the payment amount</h5>
-                                <span class="step-login-subtittle">Transfer exactly &euro;{{ order?.calculated?.total_price }} to ensure proper processing</span>
+                                <span class="step-login-subtittle">Transfer exactly &euro;{{ amount(transferAmount) }} to ensure proper processing</span>
                             </div>
                         </div>
                         <div class="step featured-step">
@@ -311,6 +311,15 @@
                     <div class="summary-box">
                         <h6>Order Summary</h6>
 
+                        <!--
+                            Stated the way the account that placed the order is
+                            billed. Business and trade: net of VAT, with the VAT
+                            added on its own row. Personal: the price paid, VAT
+                            inside it - a consumer is never shown a net figure
+                            they cannot pay. The total is the same either way.
+                            Every figure comes from the order's own summary;
+                            nothing here works VAT out.
+                        -->
                         <div
                             v-for="item in order?.ordered_products"
                             :key="item.id"
@@ -323,38 +332,67 @@
                                 <span class="text-muted-small">
                                     {{ item?.updated_inventory?.inventory_attributes?.map(i => i.attribute_value.title).join(' / ') }}
                                 </span>
-                                <span class="price">&euro;{{ item.selling }}</span>
+                                <span v-if="Number(item.quantity) > 1" class="text-muted-small">Qty {{ item.quantity }}</span>
+                                <span class="price">
+                                    &euro;{{ amount(lineAmount(item)) }}
+                                    <span v-if="orderIsNet && Number(item.vat) > 0" class="price-basis">Ex-VAT</span>
+                                </span>
                             </div>
                         </div>
 
                         <div class="divider"></div>
 
-                        <div class="discount-box">
-                            <input type="text" class="form-control" placeholder="Discount code">
-                            <button type="button">Apply</button>
+                        <template v-if="orderIsNet">
+                            <div class="summary-line">
+                                <span>Net (Ex-VAT)</span>
+                                <h6 class="subtotal-price">&euro;{{ amount(orderCalc.ex_vat) }}</h6>
+                            </div>
+                            <div v-for="row in orderVatRows" :key="row.label" class="summary-line">
+                                <span>VAT ({{ row.label }})</span>
+                                <h6 class="subtotal-price">&euro;{{ amount(row.vat) }}</h6>
+                            </div>
+                        </template>
+                        <div v-else class="summary-line">
+                            <span>Subtotal</span>
+                            <h6 class="subtotal-price">&euro;{{ amount(orderCalc.inc_vat) }}</h6>
                         </div>
 
-                        <div class="summary-line">
-                            <span>Subtotal</span>
-                            <h6 class="subtotal-price">&euro;{{ order?.calculated?.subtotal }}</h6>
+                        <div v-for="row in discountRows" :key="row.key" class="summary-line">
+                            <span>{{ row.label }}</span>
+                            <h6 class="subtotal-price text-success">-&euro;{{ amount(row.amount) }}</h6>
                         </div>
+
+                        <!-- Stated even when free: a missing row and free shipping look the same. -->
                         <div class="summary-line">
                             <span>Shipping</span>
-                            <h6 class="subtotal-price">&euro;{{ order?.calculated?.shipping_price }}</h6>
-                        </div>
-                        <div class="summary-line">
-                            <span>Tax (Excl. VAT)</span>
-                            <h6 class="subtotal-price">&euro;{{ order?.calculated?.tax }}</h6>
+                            <h6 v-if="Number(orderCalc.shipping) > 0" class="subtotal-price">&euro;{{ amount(orderCalc.shipping) }}</h6>
+                            <h6 v-else class="subtotal-price text-success">FREE</h6>
                         </div>
 
                         <div class="divider"></div>
 
+                        <!--
+                            No VAT note at all when the order carries none: a
+                            margin-scheme item is not "0 in taxes", and the
+                            payload cannot tell it from an untaxed one.
+                        -->
                         <div class="summary-total">
                             <div>
-                                <div class="total-label">Total</div>
-                                <small>Including &euro;{{ order?.calculated?.tax }} in taxes</small>
+                                <div class="total-label">{{ orderIsNet ? 'Total (Inc-VAT)' : 'Total' }}</div>
+                                <small v-if="!orderIsNet && orderHasVat">Includes &euro;{{ amount(orderCalc.vat) }} VAT</small>
                             </div>
-                            <div class="total-text">&euro;{{ order?.calculated?.total_price }}</div>
+                            <div class="total-text">&euro;{{ amount(orderCalc.total) }}</div>
+                        </div>
+
+                        <div v-if="Number(orderCalc.wallet_paid) > 0" class="wallet-split">
+                            <div class="summary-line">
+                                <span>Paid from wallet</span>
+                                <h6 class="subtotal-price text-success">-&euro;{{ amount(orderCalc.wallet_paid) }}</h6>
+                            </div>
+                            <div class="summary-line">
+                                <span>Left to transfer</span>
+                                <h6 class="subtotal-price">&euro;{{ amount(transferAmount) }}</h6>
+                            </div>
                         </div>
 
                         <div class="order-info">
@@ -380,6 +418,7 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import util from '~/mixin/util'
+import orderVatView from '~/mixin/orderVatView'
 import BankPopup from '~/components/BankPopup'
 
  export default {
@@ -395,7 +434,7 @@ import BankPopup from '~/components/BankPopup'
       }
     },
     components: { BankPopup },
-    mixins: [util],
+    mixins: [util, orderVatView],
     computed: {
         orderId() {
             return parseInt(this.$route.params.id)
@@ -411,6 +450,30 @@ import BankPopup from '~/components/BankPopup'
         ...mapGetters('common', ['setting']),
         holdHours() {
             return parseInt(this.payment?.bank_transfer_hours) || 24
+        },
+        // The order the shared VAT statement (mixin/orderVatView) reads.
+        vatOrder() {
+            return this.order
+        },
+        // Only the discounts the order had, in the confirmation page's order.
+        discountRows() {
+            return [
+                ['flash_discount', 'Flash Discount'],
+                ['bundle_discount', 'Bundle Saving'],
+                ['voucher', 'Voucher Discount'],
+                ['loyalty_discount', this.orderCalc.loyalty_label || 'Loyalty Discount'],
+                ['points_discount', 'Cherry Points']
+            ]
+                .filter(([key]) => Number(this.orderCalc[key]) > 0)
+                .map(([key, label]) => ({ key, label, amount: this.orderCalc[key] }))
+        },
+        /*
+         * What the customer still has to send. A wallet split takes its part
+         * when the order is placed, for bank transfer as for any method, so
+         * asking for the whole total here made them overpay by that part.
+         */
+        transferAmount() {
+            return this.orderCalc.amount_due ?? this.orderCalc.total
         },
         paymentState() {
             if (parseInt(this.order?.payment_done) === 1) return 'paid'
@@ -437,6 +500,15 @@ import BankPopup from '~/components/BankPopup'
         await this.fetchOrder()
     },
     methods: {
+        amount(value) {
+            return Number(value || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        },
+        // The line in the same basis as the rows under it.
+        lineAmount(item) {
+            const value = this.orderIsNet ? item?.ex_vat : item?.inc_vat
+
+            return value ?? Number(item?.selling || 0) * Number(item?.quantity || 1)
+        },
         compact(value) {
             return String(value || '').replace(/\s+/g, '').toUpperCase()
         },
@@ -760,7 +832,6 @@ input.form-account-deatils {
 }
 
 input.form-account-deatils:focus,
-.discount-box input:focus,
 input.form-control:focus {
     border-color: #e1e3f0;
     box-shadow: none !important;
@@ -971,33 +1042,18 @@ input.form-control:focus {
     margin: 19px 0;
 }
 
-.discount-box {
-    display: flex;
-    height: 41px;
-    margin-bottom: 20px;
+.price-basis {
+    color: #74798a;
+    font-size: 11px;
+    margin-left: 4px;
 }
 
-.discount-box input {
-    border: 1px solid #e6e6ed;
-    border-radius: 8px 0 0 8px;
-    color: #15142f;
-    font-size: 12px;
-    height: 100%;
-    padding: 0 10px;
+.wallet-split {
+    margin-top: 17px;
 }
 
-.discount-box input::placeholder {
-    color: #71717a;
-}
-
-.discount-box button {
-    background: #9998d1;
-    border: 0;
-    border-radius: 0 8px 8px 0;
-    color: #fff;
-    flex: 0 0 65px;
-    font-size: 13px;
-    font-weight: 600;
+.wallet-split .summary-line:last-child {
+    margin-bottom: 0;
 }
 
 .summary-line,

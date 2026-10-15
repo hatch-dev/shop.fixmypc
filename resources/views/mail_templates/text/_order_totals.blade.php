@@ -15,8 +15,9 @@
     // Subtotal at list price then the product discount, matching the HTML part.
     $discount = (float) ($p['discount'] ?? 0);
 
+    // The list subtotal, as the HTML part: the bundle offer is a row of its own.
     $rows[] = __('lang.subtotal', [], $lang) . ': '
-        . $money($discount > 0 ? $p['original_subtotal'] : $p['subtotal']);
+        . $money($p['original_subtotal'] ?? $p['subtotal']);
 
     if ($discount > 0) {
         $rows[] = __('lang.product_discount', [], $lang) . ': -' . $money($discount);

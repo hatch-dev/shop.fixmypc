@@ -18,7 +18,7 @@
         'art'      => 'hero-lock.png',
         'eyebrow'  => __('lang.mail_reset_eyebrow', [], $lang),
         'title'    => __('lang.mail_reset_code_title', [], $lang),
-        'subtitle' => __('lang.mail_reset_code_sub', [], $lang),
+        'subtitle' => __('lang.mail_reset_link_sub', [], $lang),
     ])
 @endsection
 

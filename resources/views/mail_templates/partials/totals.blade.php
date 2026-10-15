@@ -32,9 +32,15 @@
      */
     $discount = (float) ($p['discount'] ?? 0);
 
+    /*
+     * Always the list subtotal: the rows below take the discount and the
+     * bundle offer off it. `subtotal` already has the bundle offer taken
+     * off, so printing it when there was no line discount subtracted the
+     * bundle offer twice and the rows came to less than the total.
+     */
     $rows[] = [
         'label' => __('lang.subtotal', [], $lang),
-        'value' => $money($discount > 0 ? $p['original_subtotal'] : $p['subtotal']),
+        'value' => $money($p['original_subtotal'] ?? $p['subtotal']),
     ];
 
     if ($discount > 0) {

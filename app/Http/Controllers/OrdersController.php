@@ -855,6 +855,9 @@ class OrdersController extends ControllerHelper
                  */
                 'subtotal_inc_vat' => number_format($summary['subtotal_inc_vat'], 2, '.', ''),
                 'discount_inc_vat' => number_format($summary['discount_inc_vat'], 2, '.', ''),
+                // The same goods stated net: subtotal_ex_vat - discount_ex_vat = ex_vat
+                'subtotal_ex_vat' => number_format($summary['subtotal_ex_vat'], 2, '.', ''),
+                'discount_ex_vat' => number_format($summary['discount_ex_vat'], 2, '.', ''),
                 'order_wide_discount' => number_format($summary['order_wide_discount'], 2, '.', ''),
                 // One row per rate actually charged; an invoice has to state them.
                 'vat_breakdown' => $summary['vat_breakdown'],
@@ -1684,6 +1687,9 @@ class OrdersController extends ControllerHelper
                      */
                     'subtotal_inc_vat' => number_format($summary['subtotal_inc_vat'], 2, '.', ''),
                     'discount_inc_vat' => number_format($summary['discount_inc_vat'], 2, '.', ''),
+                    // The same goods stated net: subtotal_ex_vat - discount_ex_vat = ex_vat
+                    'subtotal_ex_vat' => number_format($summary['subtotal_ex_vat'], 2, '.', ''),
+                    'discount_ex_vat' => number_format($summary['discount_ex_vat'], 2, '.', ''),
                     'order_wide_discount' => number_format($summary['order_wide_discount'], 2, '.', ''),
                     // One row per rate actually charged; an invoice has to state them.
                     'vat_breakdown' => $summary['vat_breakdown'],
@@ -3548,7 +3554,8 @@ class OrdersController extends ControllerHelper
                     optional($deliveryAddress)->country,
                     optional($deliveryAddress)->state,
                     $isCollection ? $existingCart->pluck('shipping_place_id')->filter()->first() : null,
-                    $existingCart->pluck('product_inner')
+                    $existingCart->pluck('product_inner'),
+                    Shipping::linesWeight($existingCart)
                 );
 
                 if (!$shippingQuote['ok']) {

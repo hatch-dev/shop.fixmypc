@@ -6,7 +6,8 @@
             class="hide-md mx-h-100"
             @mouseleave="showSliderMessage = false"
             @mouseover="showSliderMessage = true"
-            @mouseenter="sizeZoomPane"
+            @mouseenter="sizeZoomPane(); fitPreview()"
+            @load.capture="fitPreview"
             @click.prevent="imagePopupOpen"
           >
             <ProductZoomer
@@ -174,6 +175,28 @@
         if (room < 300) return
 
         pane.style.setProperty('width', room + 'px', 'important')
+      },
+      /*
+       * Centre the zoom photo vertically in its 358px frame.
+       *
+       * The <img> is now exactly the photo (see product-detail-page.styl),
+       * so a landscape photo is shorter than the frame and would pull the
+       * thumbnails up. Read from the stylesheet's max-height so the two
+       * cannot disagree. Runs on every load - a thumbnail click swaps the
+       * src - and on hover, in case the first load beat the listener.
+       */
+      fitPreview(evt) {
+        const img = evt && evt.target && evt.target.classList
+          ? evt.target
+          : this.$el && this.$el.querySelector('.zoomer-base-container > img')
+
+        if (!img || !img.classList.contains('preview-box')) return
+
+        const room = parseFloat(getComputedStyle(img).maxHeight)
+
+        if (!room || !img.offsetHeight) return
+
+        img.style.setProperty('--fit-gap', Math.max(0, (room - img.offsetHeight) / 2) + 'px')
       },
       zoomActiveChange(index) {
         if(this.zoomImageList?.thumbs && this.zoomImageList.thumbs[index]){

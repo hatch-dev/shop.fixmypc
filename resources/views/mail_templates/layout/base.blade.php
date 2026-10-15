@@ -145,6 +145,7 @@
                            font-size: 22px !important; line-height: 50px !important; }
             .digit-gap   { width: 6px !important; }
 
+            .btn         { width: 100% !important; }
             .btn a       { display: block !important; width: auto !important; text-align: center !important; }
             .hide-sm     { display: none !important; max-height: 0 !important; overflow: hidden !important; }
 

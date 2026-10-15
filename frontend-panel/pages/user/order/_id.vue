@@ -317,8 +317,8 @@
                 <div class="col-md-6 text-end small-text">
                 <div class="d-flex justify-content-end gap-2">
                     <h6 class="mt-1">Payment Status: </h6><span class="status-badge"  :style="{
-                        background: ordered?.payment_done === 1 ? '#05B942' : '#dc3545'
-                    }">{{ paymentStatusLabel }}</span><br>
+                        background: paymentBadge.color
+                    }">{{ paymentBadge.label }}</span><br>
                 </div>
                     <div class="mt-3">
                     <h6> Payment Transaction ID: </h6><strong class="payment-id"> {{ ordered?.trans_id || 'N/A' }}</strong><br>
@@ -444,17 +444,22 @@
                 </div>
               </div>
 
-              <div class="mt-2 product-thanks-prices">
-
+              <div
+                v-for="line in [lineView(item)]"
+                :key="`prices-${item.id || index}`"
+                class="mt-2 product-thanks-prices"
+              >
+                <!--
+                  In the order's basis, the same as the summary below: net with the
+                  VAT on its own row for a business, the price paid for everyone
+                  else. Shipping is the order's, stated once in the summary.
+                -->
                 <div class="d-flex justify-content-end price-box-thanku">
                   <p>
                     Unit Price:
                     <span class="fw-bold">
-                      {{ money(item.price) }}
-                      <s
-                        v-if="Number(item.line_discount || 0) > 0"
-                        class="unit-was"
-                      >{{ money(item.actual_price) }}</s>
+                      {{ money(line.unit) }}<small v-if="line.exTag" class="fw-normal"> Ex-VAT</small>
+                      <s v-if="line.discount > 0" class="unit-was">{{ money(line.unitList) }}</s>
                     </span>
                   </p>
                 </div>
@@ -462,57 +467,30 @@
                 <div class="d-flex justify-content-end price-box-thanku">
                   <p>
                     Original Price:
-                    <span class="fw-bold">
-                      {{ money(Number(item.actual_price || 0) * Number(item.quantity || 0)) }}
-                    </span>
+                    <span class="fw-bold">{{ money(line.list) }}</span>
                   </p>
                 </div>
 
-                <div
-                  v-if="Number(item.line_discount || 0) > 0"
-                  class="d-flex justify-content-end price-box-thanku"
-                >
+                <div v-if="line.discount > 0" class="d-flex justify-content-end price-box-thanku">
                   <p>
                     Product Discount:
-                    <span class="fw-bold text-success">
-                      - {{ money(item.line_discount) }}
-                    </span>
+                    <span class="fw-bold text-success">- {{ money(line.discount) }}</span>
                   </p>
                 </div>
 
-                <div
-                  v-if="Number(item.shipping_price || 0) > 0"
-                  class="d-flex justify-content-end price-box-thanku"
-                >
+                <div v-if="line.vat > 0" class="d-flex justify-content-end price-box-thanku">
                   <p>
-                    Shipping:
-                    <span class="fw-bold">
-                      + {{ money(item.shipping_price) }}
-                    </span>
-                  </p>
-                </div>
-
-                <div
-                  v-if="Number(item.tax_total || 0) > 0"
-                  class="d-flex justify-content-end price-box-thanku"
-                >
-                  <p>
-                    Tax:
-                    <span class="fw-bold">
-                      + {{ money(item.tax_total) }}
-                    </span>
+                    {{ line.vatLabel }}:
+                    <span class="fw-bold">+ {{ money(line.vat) }}</span>
                   </p>
                 </div>
 
                 <div class="d-flex justify-content-end price-box-thanku line-subtotal">
                   <p>
-                    Subtotal:
-                    <span class="fw-bold">
-                      {{ money(item.line_total) }}
-                    </span>
+                    Subtotal{{ line.totalTag }}:
+                    <span class="fw-bold">{{ money(line.total) }}</span>
                   </p>
                 </div>
-
               </div>
             </div>
 
@@ -532,44 +510,47 @@
             <div class="order-summary-box mt-4">
 
               <!--
-                The goods, gross, and what they net down to:
+                The goods and what they net down to, in the order's basis:
 
-                  Products (Inc-VAT) - Discount = Net Products (Inc-VAT)
+                  Products - Discount = Net Products
 
-                Both ends come from OrderSummary, split from what this order
-                recorded. The discount is the whole saving against the list
-                price, so what used to be a separate Bundle Offer row is
-                inside it rather than counted twice.
+                Ex-VAT for a business, with the VAT added on its own row; gross for
+                everyone else, with the VAT inside it. The discount is the whole
+                saving against the list price, so a buy-X-get-Y-free bundle's value
+                is inside it rather than counted twice.
               -->
               <div class="summary-row">
-                <span>Products (Inc-VAT)</span>
-                <span>{{ money(ordered?.calculations?.subtotal_inc_vat) }}</span>
+                <span>Products{{ orderGoods.tag }}</span>
+                <span>{{ money(orderGoods.list) }}</span>
               </div>
 
-              <div v-if="Number(ordered?.calculations?.discount_inc_vat) > 0" class="summary-row">
+              <div v-if="Number(orderGoods.discount) > 0" class="summary-row">
                 <span>Discount</span>
-                <span class="text-success">
-                  -{{ money(ordered?.calculations?.discount_inc_vat) }}
-                </span>
+                <span class="text-success">-{{ money(orderGoods.discount) }}</span>
               </div>
 
               <div class="summary-rule"></div>
 
               <div class="summary-row">
-                <span>Net Products (Inc-VAT)</span>
-                <span>{{ money(ordered?.calculations?.inc_vat) }}</span>
+                <span>Net Products{{ orderGoods.tag }}</span>
+                <span>{{ money(orderGoods.net) }}</span>
               </div>
 
               <!--
-                Already inside the figure above, not added to it. Named against
-                the products because any order-wide discount below came off the
-                gross after VAT was charged.
+                Business: added on top, one row per rate. Everyone else: already
+                inside the figure above, and not mentioned at all when there is none.
               -->
-              <div class="summary-row summary-row-sub">
+              <template v-if="orderIsNet">
+                <div v-for="row in orderVatRows" :key="row.label" class="summary-row">
+                  <span>VAT ({{ row.label }})</span>
+                  <span>+ {{ money(row.vat) }}</span>
+                </div>
+              </template>
+              <div v-else-if="orderHasVat" class="summary-row summary-row-sub">
                 <span>
-                  VAT included in products<template v-if="vatRateLabel"> ({{ vatRateLabel }})</template>
+                  VAT included in products<template v-if="orderVatRows.length === 1"> ({{ orderVatRows[0].label }})</template>
                 </span>
-                <span>{{ money(ordered?.calculations?.vat) }}</span>
+                <span>{{ money(orderCalc.vat) }}</span>
               </div>
 
               <div v-if="showRow('Flash Discount')" class="summary-row">
@@ -623,7 +604,7 @@
               </div>
 
               <div class="summary-row total-row">
-                <span>Total (Inc-VAT)</span>
+                <span>Total{{ orderGrossTag }}</span>
                 <span>{{ money(ordered?.calculations?.total) }}</span>
               </div>
 
@@ -670,6 +651,7 @@
 
   import {mapGetters, mapActions} from 'vuex'
   import util from '~/mixin/util'
+  import orderVatView from '~/mixin/orderVatView'
   import metaHelper from '~/mixin/metaHelper'
   import LazyImage from '~/components/LazyImage'
   import RatePopup from '~/components/RatePopup'
@@ -711,15 +693,11 @@
       RatePopup,
       AccountLayout
     },
-    mixins: [util, metaHelper, global],
+    mixins: [util, metaHelper, global, orderVatView],
     computed: {
-      paymentStatusLabel() {
-        if (parseInt(this.ordered?.order_method) === 7) {
-            return this.ordered?.payment_done === 1
-            ? 'Paid'
-            : 'Processing'
-        }
-        return this.ordered?.payment_done === 1 ? 'Paid' : 'Not Paid'
+      // The order the shared VAT statement (mixin/orderVatView) reads.
+      vatOrder() {
+        return this.ordered
       },
       paymentMethodIcon() {
         const map = {
@@ -751,6 +729,18 @@
         return parseInt(this.$route.params.id)
       },
       /*
+       * The bar between the steps. The template bound it here and nothing
+       * defined it, so the line never filled past step 1.
+       */
+      progressStyle() {
+        // three gaps between four steps
+        const progress = (this.orderStatusStep - 1) * (100 / 3)
+
+        return {
+          '--progress-width': `${Math.max(0, Math.min(progress, 100))}%`
+        }
+      },
+      /*
        * orders.status is an integer (constants.orderStatus: 1 Pending,
        * 2 Confirmed, 3 Picked up, 4 On the way, 5 Delivered, 6 Cancelled,
        * 7 Returned, 8 Refunded). This was keyed on strings - 'placed',
@@ -780,29 +770,6 @@
        * placed the order is what the receipt is about; the account reading it
        * may since have been downgraded, suspended or renamed.
        */
-      /*
-       * The rate this order's VAT was charged at, for the summary label.
-       *
-       * Read from the rates the server split off the order's own lines, and
-       * suppressed when they disagree — one percentage across a mixed-rate
-       * order would be a fiction. Never computed from today's tax rules.
-       */
-      vatRateLabel() {
-          const rates = (this.order?.calculations?.vat_breakdown || [])
-              .map(row => Number(row.rate))
-              .filter(rate => rate > 0)
-
-          if (rates.length !== 1) {
-              return null
-          }
-
-          return String(rates[0].toFixed(2)).replace(/\.?0+$/, '') + '%'
-      },
-      isBusinessOrder() {
-        const type = this.ordered?.account_type
-
-        return !!type && type !== 'personal'
-      },
       accountTypeLabel() {
         return {
           business: 'Business',

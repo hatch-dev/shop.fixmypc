@@ -149,7 +149,16 @@
 
           <!-- No shipping row covers the visitor's country (or it is not
                known yet): the cost is worked out from the address at checkout. -->
-          <div v-if="!shippingPlace" class="bb-deliv-row">
+          <div v-if="tooHeavy" class="bb-deliv-row bb-deliv-warn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+              <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/>
+              <circle cx="7" cy="18" r="1.7"/>
+              <circle cx="17.5" cy="18" r="1.7"/>
+            </svg>
+            <span>{{ deliveryQuote.message }}</span>
+          </div>
+
+          <div v-else-if="!shippingPlace" class="bb-deliv-row">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
               <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/>
               <circle cx="7" cy="18" r="1.7"/>
@@ -546,8 +555,21 @@
       isFreeShipping() {
         return !(parseFloat(this.shippingPrice) > 0)
       },
+      /*
+       * The quote's price: the band for this item's weight at the quantity in
+       * the box, when the row prices by weight (Helper\Shipping). The row's
+       * flat price only when the quote was refused for some other reason -
+       * a basket line that cannot go to this country - as it always was.
+       */
       shippingPrice() {
+        if (this.deliveryQuote?.ok) {
+          return this.deliveryQuote.price || 0
+        }
+
         return this.shippingPlace?.price || 0
+      },
+      tooHeavy() {
+        return !!this.deliveryQuote?.too_heavy
       },
       // The store's collection point, when a shipping row offers one.
       pickupPlace() {
@@ -594,12 +616,15 @@
         }
       },
       /*
-       * What delivery costs to the visitor's country. Only the price and the
-       * collection point are read here; whether this basket can go there is
-       * checked on the shipping page, against the real address.
+       * What delivery costs to the shopper's default saved address, or to
+       * the visitor's country when there is none (default_address). Asking
+       * by country alone priced the whole-country row for a Dublin shopper
+       * that checkout then charged the cheaper Dublin row for. Only the price
+       * and the collection point are read here; whether this basket can go
+       * there is checked on the shipping page, against the real address.
        */
       async loadDeliveryQuote() {
-        if (!this.visitorCountry) {
+        if (!this.visitorCountry && !this.$auth?.loggedIn) {
           this.deliveryQuote = null
           return
         }
@@ -608,6 +633,10 @@
           const data = await this.$store.dispatch('cart/shippingQuote', {
             shipping_type: 1,
             country: this.visitorCountry,
+            default_address: 1,
+            // weighed as this item at the quantity chosen, not the basket
+            product_id: this.product?.id,
+            quantity: Math.max(1, parseInt(this.quantity) || 1),
             user_token: await this.$store.dispatch('user/getUserToken')
           })
 
@@ -616,6 +645,9 @@
           this.deliveryQuote = null
         }
       },
+    },
+    beforeDestroy() {
+      clearTimeout(this.quoteTimer)
     },
     mounted() {
       this.loadDeliveryQuote()
@@ -639,8 +671,13 @@
        */
       quantity: {
         immediate: true,
-        handler(value) {
+        handler(value, previous) {
           this.$emit('quantity-change', value)
+
+          if (previous === undefined || value === previous) return
+
+          clearTimeout(this.quoteTimer)
+          this.quoteTimer = setTimeout(() => this.loadDeliveryQuote(), 350)
         }
       },
       finalUnitPrice: {

@@ -72,6 +72,29 @@ class CheckMailDeliverability extends Command
 
         $this->good('order queue: ' . OrderEmailDispatcher::queueName()
             . ' (a worker must be running against this name)');
+
+        /*
+         * Whether a worker is actually draining it. The tables existing says
+         * nothing about that: with no cron running `schedule:run`, every order
+         * email sits as "queued" for ever and this check used to report all is
+         * well (found 2026-10-14 - three weeks of receipts never sent locally).
+         * The worker runs every minute, so ten minutes is already a stall.
+         */
+        if (Schema::hasTable('order_email_log')) {
+            $stuck = \DB::table('order_email_log')
+                ->where('status', 'queued')
+                ->where('created_at', '<', now()->subMinutes(10));
+            $count = (clone $stuck)->count();
+
+            if ($count > 0) {
+                $this->bad("{$count} order email(s) queued for over 10 minutes, oldest "
+                    . (clone $stuck)->min('created_at'),
+                    'no worker is draining the queue: add the cron entry '
+                    . '"* * * * * php ' . base_path('artisan') . ' schedule:run >> /dev/null 2>&1"');
+            } else {
+                $this->good('no order email waiting longer than 10 minutes');
+            }
+        }
     }
 
     // ------------------------------------------------------------ the sender
