@@ -175,6 +175,15 @@
       inline: {type: Boolean, default: false},
       // ISO code the card form's country list starts on.
       country: {type: String, default: 'IE'},
+      /*
+       * Anything else that takes a card (membership): it is handed the
+       * PaymentMethod and a runAction(clientSecret) that shows the bank's
+       * challenge over the page. Resolves {ok: true, ...} or {ok: false,
+       * message}; the form shows the message and stays open.
+       */
+      submitPaymentMethod: {type: Function, default: null},
+      // 'payment' (a charge now), 'subscription', or 'setup' (save a card, no charge)
+      elementsMode: {type: String, default: 'payment'},
     },
     data() {
       return {
@@ -221,8 +230,9 @@
       mountElement() {
         this.stripe = window.Stripe(this.stripeKey)
         this.elements = this.stripe.elements({
-          mode: 'payment',
-          amount: Math.max(1, Math.round(this.amount * 100)),
+          mode: this.elementsMode,
+          // a setup takes no money, so it has no amount
+          ...(this.elementsMode === 'setup' ? {} : {amount: Math.max(1, Math.round(this.amount * 100))}),
           currency: this.currencyCode,
           paymentMethodCreation: 'manual',
           paymentMethodTypes: ['card'],
@@ -298,6 +308,20 @@
           })
           if (error) {
             this.errorText = error.message
+            return
+          }
+
+          if (this.submitPaymentMethod) {
+            const result = await this.submitPaymentMethod(paymentMethod.id, async (clientSecret) => {
+              const action = await this.stripe.handleNextAction({clientSecret})
+              if (action.error) throw new Error(action.error.message)
+              return action
+            })
+            if (result && result.ok === false) {
+              this.errorText = result.message || 'Your card could not be used. Please try another card.'
+              return
+            }
+            this.$emit('success', result)
             return
           }
 
@@ -393,6 +417,7 @@
     watch: {
       // A voucher or the wallet tick changes the total while the form is open.
       amount(value) {
+        if (this.elementsMode === 'setup') return
         this.elements?.update({amount: Math.max(1, Math.round(value * 100))})
       }
     },

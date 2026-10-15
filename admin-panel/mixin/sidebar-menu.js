@@ -21,6 +21,10 @@ export function buildSidebarMenu(t) {
     { section: 'LOYALTY' },
     { path: 'loyalty-groups', title: 'Loyalty Groups', icon: 'fa-solid fa-award', gate: 'loyalty_group' },
 
+    { section: 'MEMBERSHIP' },
+    { path: 'membership-plans', title: 'Membership Plans', icon: 'fa-solid fa-crown', gate: 'membership' },
+    { path: 'memberships', title: 'Members', icon: 'fa-solid fa-id-card', gate: 'membership' },
+
     { section: 'WALLET' },
     { path: 'wallet-overview', title: 'Wallet Overview', icon: 'fa-solid fa-wallet', gate: 'wallet_log' },
 

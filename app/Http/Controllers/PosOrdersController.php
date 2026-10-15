@@ -272,7 +272,7 @@ class PosOrdersController extends ControllerHelper
                     'created_at' => $now,
                     'user_address_id' => $request->user_address_id,
                     'user_id' => $request->user_id,
-                    'order' => Utils::generateTrackingId(["user_id" => rand(2, 50)]),
+                    'order' => Utils::generateOrderNumber(),
                 ];
 
                 $order = Order::create($orderArr);

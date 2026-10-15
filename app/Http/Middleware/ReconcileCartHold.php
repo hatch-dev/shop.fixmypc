@@ -24,7 +24,7 @@ class ReconcileCartHold
      * Modes: reconcile (the basket routes) and checkout (placing an order,
      * authorising a card, the guest email-code steps) both
      *
-     *   - first empty the basket if its 20 minutes have lapsed, so a lapsed
+     *   - first empty the basket if its reservation time has lapsed, so a lapsed
      *     basket is never priced, shipped or paid for - whether or not the
      *     sweep has reached it yet;
      *   - and, after a request that changed something, make the reserved
@@ -61,7 +61,7 @@ class ReconcileCartHold
     {
         try {
             if (Cache::add('cart-hold-sweep', 1, 60)) {
-                // Reservations (remind at 5, empty at 20) and abandoned Buy Now lines.
+                // Reservations (on the admin timings) and abandoned Buy Now lines.
                 BasketUpkeep::sweep();
             }
         } catch (\Throwable $e) {

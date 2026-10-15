@@ -60,7 +60,7 @@
             <input
               type="text"
               v-model="transId"
-              placeholder="eg. 20230704N2H5X2"
+              placeholder="eg. ORD1578945"
             >
           </div>
 

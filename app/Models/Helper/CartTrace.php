@@ -173,7 +173,7 @@ class CartTrace
                     'reserved' => true,
                     'last_activity_at' => $active->toDateTimeString(),
                     'idle' => self::age($active),
-                    'expires_at' => $active->copy()->addMinutes(CartHold::EXPIRE_AFTER_MINUTES)->toDateTimeString(),
+                    'expires_at' => $active->copy()->addMinutes(CartHold::expireAfterMinutes())->toDateTimeString(),
                 ];
             }
 

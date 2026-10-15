@@ -60,7 +60,11 @@
                   reports (profile.account), worded as the dashboard words it.
                   When paid membership arrives, its plan name belongs here.
                 -->
-                <div v-if="account" class="permium-member-btn mb-2">
+                <div v-if="isMember" class="permium-member-btn mb-2">
+                  <i class="fa-solid fa-crown me-1" aria-hidden="true"></i>
+                  {{ membership.plan ? membership.plan.name : '' }} member
+                </div>
+                <div v-else-if="account" class="permium-member-btn mb-2">
                   <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i>
                   {{ accountTypeLabel }} account
                 </div>
@@ -80,13 +84,13 @@
           <div>
               <small>Total Saved</small>
               <!-- was transactions?.totalSaved: a field an array never has, so always 0 -->
-              <h6 class="mb-1 cherry-points-total">{{ totalSaved === null ? '—' : currencyIcon + totalSaved }}</h6>
+              <h6 class="mb-1 cherry-points-total">{{ lifetimeSaved === null ? '—' : currencyIcon + lifetimeSaved }}</h6>
               <small class="opacity-75">Lifetime savings</small>
           </div>
           <div>
               <small>Free Shipping</small>
-              <h6 class="mb-1 cherry-points-total">∞</h6>
-              <small class="opacity-75">With membership</small>
+              <h6 class="mb-1 cherry-points-total">{{ hasFreeShipping ? 'Included' : '—' }}</h6>
+              <small class="opacity-75">{{ freeShippingNote }}</small>
           </div>
         </div>
       </div>
@@ -191,55 +195,230 @@
               </div>
           </div>
       </div>
-      <div class="card-box-club p-0 mb-4 mt-3">
+      <!--
+        Paid membership (2026-10-15). The plans, prices and benefits come from
+        the admin panel (Membership Plans) through GET user/membership; joining
+        and the card are on Stripe. Hidden until a plan is on sale, or for a
+        customer who never had one.
+      -->
+      <div v-if="showMembershipBox" ref="membershipSection" class="card-box-club p-0 mb-4 mt-3">
         <div class="section-header p-4">
-            <h6 class="mb-1 wallet-money">Premium Membership</h6>
-            <small class="wallet-topup ">
-                Unlock exclusive benefits and special discounts
+            <h6 class="mb-1 wallet-money">{{ shownPlan ? shownPlan.name + ' Membership' : 'Membership' }}</h6>
+            <small class="wallet-topup">
+                {{ shownPlan && shownPlan.tagline ? shownPlan.tagline : 'Unlock exclusive benefits and special discounts' }}
             </small>
         </div>
         <div class="p-4 premium-member-box">
-            <div class="feature-grid text-center mb-4">
-                <div>
-                    <div class="feature-icon"><i class="fa-solid fa-truck"
-                            style="color: rgb(19, 14, 43);"></i></div>
-                    <h6 class="mt-2">Free Shipping</h6>
-                    <small class="text-muted">On all orders, no minimum</small>
-                </div>
-                <div>
-                    <div class="feature-icon">%</div>
-                    <h6 class="mt-2">Exclusive Discounts</h6>
-                    <small class="text-muted">Up to 25% off member prices</small>
-                </div>
-                <div>
-                    <div class="feature-icon">⭐</div>
-                    <h6 class="mt-2">Early Access</h6>
-                    <small class="text-muted">To sales and new products</small>
+            <div v-if="tiles.length" class="feature-grid text-center mb-4" :style="{gridTemplateColumns: `repeat(${Math.min(tiles.length, 3)}, minmax(0, 1fr))`}">
+                <div v-for="(tile, i) in tiles" :key="i">
+                    <div class="feature-icon">
+                      <i v-if="isFaIcon(tile.icon)" :class="faClass(tile.icon)" style="color: rgb(19, 14, 43);" aria-hidden="true"></i>
+                      <span v-else>{{ tile.icon || '★' }}</span>
+                    </div>
+                    <h6 class="mt-2">{{ tile.title }}</h6>
+                    <small class="text-muted">{{ tile.subtitle }}</small>
                 </div>
             </div>
-            <div class="plan-box">
+
+            <!-- a member -->
+            <div v-if="showMemberView" class="plan-box">
                 <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
                     <div>
-                        <strong>Current Plan: Free</strong>
-                        <span class="badge-active ms-2">ACTIVE</span><br>
-                        <small class="text-muted">
-                            Your membership renews on March 15, 2025
+                        <strong>Current Plan: {{ membership.plan ? membership.plan.name : '' }}</strong>
+                        <span class="badge-active ms-2" :class="badgeTone">{{ membership.status_label.toUpperCase() }}</span><br>
+                        <small class="text-muted">{{ membershipDateLine }}</small>
+                        <small v-if="['past_due', 'unpaid'].includes(membership.status)" class="plan-alert">
+                          Your last payment did not go through. Update your card under Manage Subscription to keep your membership.
                         </small>
                     </div>
                     <div class="text-end">
-                        <h5 class="mb-0">€0.00</h5>
-                        <small class="text-muted">per month</small>
+                        <h5 class="mb-0">{{ membership.source === 'admin' ? 'Free' : currencyIcon + money(membership.price) }}</h5>
+                        <small class="text-muted">{{ membership.source === 'admin' ? 'complimentary' : membership.interval_label }}</small>
                     </div>
                 </div>
-                <div class="plan-actions mt-3">
-                    <button type="button" class="btn-Manage-Subscription">
-                        Manage Subscription
+
+                <div v-if="confirmingCancel" class="plan-confirm mt-3">
+                    <p class="mb-2">
+                      Cancel your membership? Your benefits continue until
+                      {{ formatDate(membership.current_period_end) }} and you will not be charged again.
+                    </p>
+                    <div class="plan-actions">
+                        <button type="button" class="btn-plan-cancel" :disabled="membershipBusy" @click="confirmingCancel = false">Keep membership</button>
+                        <button type="button" class="btn-plan-danger" :disabled="membershipBusy" @click="cancelMembership">
+                          {{ membershipBusy ? 'Cancelling…' : 'Yes, cancel' }}
+                        </button>
+                    </div>
+                </div>
+                <div v-else-if="membership.can_manage_billing || membership.can_resume || membership.can_cancel" class="plan-actions mt-3">
+                    <button v-if="membership.can_resume" type="button" class="btn-Manage-Subscription" :disabled="membershipBusy" @click="resumeMembership">
+                        Keep my membership
                     </button>
-                    <button type="button" class="btn-plan-cancel">
-                        Cancel
+                    <button v-else-if="membership.can_manage_billing" type="button" class="btn-Manage-Subscription" :disabled="membershipBusy" @click="toggleManage">
+                        {{ managing ? 'Close' : 'Manage Subscription' }}
+                    </button>
+                    <button v-if="membership.can_cancel" type="button" class="btn-plan-cancel" :disabled="membershipBusy" @click="confirmingCancel = true; managing = false">
+                        Cancel membership
+                    </button>
+                </div>
+
+                <!-- Manage: the card on file and past payments, all on this page -->
+                <div v-if="managing && !confirmingCancel" class="manage-panel mt-3">
+                    <div class="manage-row">
+                        <div>
+                            <strong>Payment card</strong>
+                            <small class="d-block text-muted">
+                                <template v-if="billingLoading && !billingInfo">Loading…</template>
+                                <template v-else-if="billingInfo && billingInfo.card">{{ cardLabel(billingInfo.card) }}</template>
+                                <template v-else>No card on file</template>
+                            </small>
+                        </div>
+                        <button v-if="!changingCard" type="button" class="btn-plan-cancel" @click="changingCard = true">Change card</button>
+                    </div>
+                    <div v-if="changingCard" class="manage-card-form mt-3">
+                        <stripe-payment
+                            ref="cardForm"
+                            inline
+                            elements-mode="setup"
+                            :stripe-key="membershipData.stripe_key"
+                            :amount="0"
+                            :submit-payment-method="submitCard"
+                            @success="onCardSaved"
+                        />
+                        <div class="plan-actions mt-3">
+                            <button type="button" class="btn-Manage-Subscription" :disabled="cardSaving" @click="saveCard">
+                                {{ cardSaving ? 'Saving…' : 'Save card' }}
+                            </button>
+                            <button type="button" class="btn-plan-cancel" :disabled="cardSaving" @click="changingCard = false">Cancel</button>
+                        </div>
+                    </div>
+                    <div class="manage-history">
+                        <div class="history-head-row">
+                            <strong>Payment history</strong>
+                            <small v-if="billingInfo && billingInfo.pagination && billingInfo.pagination.total" class="text-muted">
+                                {{ billingInfo.pagination.from }}–{{ billingInfo.pagination.to }} of {{ billingInfo.pagination.total }}
+                            </small>
+                        </div>
+                        <p v-if="billingInfo && !billingInfo.invoices.length" class="text-muted small mb-0 mt-1">No payments yet.</p>
+                        <!-- scrolls inside the panel; the header row stays put -->
+                        <div v-else-if="billingInfo" ref="historyScroll" class="history-scroll" :class="{ 'is-loading': historyLoading }">
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th class="col-period">Period</th>
+                                        <th class="text-end">Amount</th>
+                                        <th class="text-end">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(inv, i) in billingInfo.invoices" :key="i">
+                                        <td>{{ formatDate(inv.paid_at || inv.period_start) }}</td>
+                                        <td class="text-muted col-period">{{ formatDate(inv.period_start) }} – {{ formatDate(inv.period_end) }}</td>
+                                        <td class="text-end">{{ currencyIcon }}{{ money(inv.amount) }}</td>
+                                        <td class="text-end"><span class="inv-status" :class="inv.status">{{ invoiceLabel(inv.status) }}</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div v-if="billingInfo && billingInfo.pagination && billingInfo.pagination.last_page > 1" class="history-pager">
+                            <button type="button" class="pager-btn" :disabled="historyLoading || billingInfo.pagination.current_page <= 1"
+                                    @click="loadHistoryPage(billingInfo.pagination.current_page - 1)">
+                                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Previous
+                            </button>
+                            <span class="pager-text">Page {{ billingInfo.pagination.current_page }} of {{ billingInfo.pagination.last_page }}</span>
+                            <button type="button" class="pager-btn" :disabled="historyLoading || billingInfo.pagination.current_page >= billingInfo.pagination.last_page"
+                                    @click="loadHistoryPage(billingInfo.pagination.current_page + 1)">
+                                Next <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- early access: the daily email of new products -->
+                <div v-if="membershipData.digest && membershipData.digest.available && !confirmingCancel" class="digest-row mt-3">
+                    <div>
+                        <strong>New product emails</strong>
+                        <small class="d-block text-muted">An email whenever new products arrive, so you hear first.</small>
+                    </div>
+                    <button type="button" class="digest-switch" role="switch"
+                            :aria-checked="membershipData.digest.enabled ? 'true' : 'false'"
+                            aria-label="New product emails" :disabled="membershipBusy" @click="toggleDigest">
+                        <span></span>
+                    </button>
+                </div>
+
+                <!-- the same plan's other billing period -->
+                <div v-if="membership.switch_to && !confirmingCancel" class="plan-change mt-3">
+                    <button type="button" class="plan-switch" :disabled="membershipBusy" @click="changeBilling">
+                        Switch to {{ membership.switch_to.interval === 'year' ? 'yearly' : 'monthly' }}
+                        · {{ currencyIcon }}{{ money(membership.switch_to.price) }} {{ membership.switch_to.interval_label }}
+                        <span v-if="membership.switch_to.saving" class="billing-save">Save {{ membership.switch_to.saving }}%</span>
+                    </button>
+                </div>
+                <div v-if="membership.can_change_plan && otherPlans.length && !confirmingCancel" class="plan-change mt-3">
+                    <small class="text-muted">Switch plan:</small>
+                    <button v-for="plan in otherPlans" :key="plan.id" type="button" class="plan-switch" :disabled="membershipBusy" @click="changePlan(plan)">
+                        {{ plan.name }} · {{ currencyIcon }}{{ money(plan.price) }} {{ plan.interval_label }}
                     </button>
                 </div>
             </div>
+
+            <!-- not a member: the plans on sale -->
+            <template v-else>
+                <p v-if="membershipEndedLine" class="text-muted small mb-3">{{ membershipEndedLine }}</p>
+                <div v-for="plan in plans" :key="plan.id" class="plan-box mb-3">
+                    <!-- monthly or yearly, when the plan offers both -->
+                    <div v-if="plan.prices && plan.prices.length > 1" class="billing-toggle mb-3" role="radiogroup" aria-label="Billing">
+                        <button v-for="p in plan.prices" :key="p.interval" type="button" role="radio"
+                                :aria-checked="priceOption(plan).interval === p.interval ? 'true' : 'false'"
+                                @click="billing = p.interval">
+                            {{ p.interval === 'year' ? 'Yearly' : 'Monthly' }}
+                            <span v-if="p.interval === 'year' && plan.yearly_saving" class="billing-save">Save {{ plan.yearly_saving }}%</span>
+                        </button>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
+                        <div>
+                            <strong>{{ plan.name }}</strong><br>
+                            <small class="text-muted">{{ billedText(plan, priceOption(plan)) }}</small>
+                        </div>
+                        <div class="text-end">
+                            <h5 class="mb-0">{{ currencyIcon }}{{ money(priceOption(plan).price) }}</h5>
+                            <small class="text-muted">{{ priceOption(plan).interval_label }}</small>
+                            <small v-if="priceOption(plan).interval === 'year'" class="d-block text-muted per-month">
+                              {{ currencyIcon }}{{ money(priceOption(plan).per_month) }} a month
+                            </small>
+                        </div>
+                    </div>
+                    <div v-if="joiningPlanId !== plan.id" class="plan-actions mt-3">
+                        <button type="button" class="btn-Manage-Subscription" :disabled="membershipBusy || !membershipData.available" @click="startJoin(plan)">
+                            {{ plan.trial_days > 0 ? 'Start free trial' : 'Join ' + plan.name + (priceOption(plan).interval === 'year' ? ' yearly' : '') }}
+                        </button>
+                    </div>
+                    <!-- joining here, on Stripe's card form: the page never changes -->
+                    <div v-else class="join-form mt-3">
+                        <p class="join-summary">
+                            <strong>{{ currencyIcon }}{{ money(priceOption(plan).price) }} today</strong>,
+                            then every {{ priceOption(plan).interval === 'year' ? 'year' : 'month' }} until you cancel.
+                        </p>
+                        <stripe-payment
+                            ref="joinCard"
+                            inline
+                            elements-mode="subscription"
+                            :stripe-key="membershipData.stripe_key"
+                            :amount="Number(priceOption(plan).price)"
+                            :submit-payment-method="submitJoin"
+                            @success="onJoined"
+                        />
+                        <div class="plan-actions mt-3">
+                            <button type="button" class="btn-Manage-Subscription" :disabled="joinBusy" @click="payJoin">
+                                {{ joinBusy ? 'Processing…' : 'Pay ' + currencyIcon + money(priceOption(plan).price) + ' & join' }}
+                            </button>
+                            <button type="button" class="btn-plan-cancel" :disabled="joinBusy" @click="joiningPlanId = null">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                <p v-if="!membershipData.available" class="text-muted small mb-0">Membership sign-up is not available right now.</p>
+            </template>
         </div>
       </div>
       <div ref="transactionsSection" class="card-box-club p-0  mt-4 ">
@@ -529,31 +708,13 @@
         </div>
         <div class="col-md-6">
           <div class="card-box-club p-4 h-100">
-              <h6 class="mb-4 wallet-money">Membership Benefits</h6>
-              <div class="benefit-item">
+              <!-- the plan's own benefits (admin: Membership Plans); this list used to be fixed copy -->
+              <h6 class="mb-4 wallet-money">{{ shownPlan ? shownPlan.name + ' Benefits' : 'Membership Benefits' }}</h6>
+              <div v-for="(b, i) in benefitList" :key="i" class="benefit-item">
                   <span class="check-icon"><i class="fa-solid fa-check" style="color: #Fff;"></i></span>
-                  Unlimited free standard shipping
+                  <span>{{ b.title }}<small v-if="b.subtitle" class="d-block text-muted">{{ b.subtitle }}</small></span>
               </div>
-              <div class="benefit-item">
-                  <span class="check-icon"><i class="fa-solid fa-check" style="color: #Fff;"></i></span>
-                  Exclusive member-only discounts up to 25%
-              </div>
-              <div class="benefit-item">
-                  <span class="check-icon"><i class="fa-solid fa-check" style="color: #Fff;"></i></span>
-                  Early access to flash sales and new arrivals
-              </div>
-              <div class="benefit-item">
-                  <span class="check-icon"><i class="fa-solid fa-check" style="color: #Fff;"></i></span>
-                  Bonus points on qualifying purchases
-              </div>
-              <div class="benefit-item">
-                  <span class="check-icon"><i class="fa-solid fa-check" style="color: #Fff;"></i></span>
-                  Priority customer support
-              </div>
-              <div class="benefit-item">
-                  <span class="check-icon"><i class="fa-solid fa-check" style="color: #Fff;"></i></span>
-                  Birthday special vouchers
-              </div>
+              <p v-if="!benefitList.length" class="text-muted small mb-0">Membership benefits will be listed here when a plan is available.</p>
           </div>
         </div>
       </div>
@@ -577,7 +738,7 @@
                 No. Cherry Points do not expire. Points earned on an order that is later cancelled or refunded are taken back.
             </p>
         </div>
-        <div class="faq-item border-0">
+        <div v-if="showMembershipBox" class="faq-item border-0">
             <strong>Can I cancel my membership anytime?</strong>
             <p>
                 Yes, you can cancel your membership at any time. You’ll continue to have access until the end of your current billing period.
@@ -601,6 +762,7 @@
   import AccountLayout from '~/components/AccountLayout'
   import Pagination from '~/components/Pagination'
   import AccountSkeleton from '~/components/AccountSkeleton'
+  import StripePayment from '~/components/StripePayment'
   import global from '~/mixin/global'
 
   export default {
@@ -652,7 +814,23 @@
         downloadingStatement: false,
         // brief ring round the top-up card after Add Money
         topupHighlight: false,
-        topupHighlightTimer: null
+        topupHighlightTimer: null,
+        // GET user/membership: {available, plans, membership, saved}
+        membershipData: null,
+        membershipBusy: false,
+        // the plan whose card form is open (joining on this page)
+        joiningPlanId: null,
+        joinBusy: false,
+        // the Manage panel: card on file and payments
+        managing: false,
+        billingInfo: null,
+        billingLoading: false,
+        historyLoading: false,
+        changingCard: false,
+        cardSaving: false,
+        confirmingCancel: false,
+        // the billing period a non-member is looking at: 'month' or 'year'
+        billing: 'month'
       }
     },
     watch: {
@@ -668,7 +846,8 @@
       RatePopup,
       AccountLayout,
       AccountSkeleton,
-      Pagination
+      Pagination,
+      StripePayment
     },
     mixins: [util, global],
     computed: {
@@ -733,6 +912,82 @@
         return out
       },
       ...mapGetters('common', ['currencyIcon', 'setting']),
+      membership() {
+        return this.membershipData?.membership || null
+      },
+      plans() {
+        return this.membershipData?.plans || []
+      },
+      // benefits apply now (a past_due card is still being retried by Stripe)
+      isMember() {
+        return !!(this.membership && this.membership.entitled)
+      },
+      // a membership to manage, including one stopped by a failed payment
+      showMemberView() {
+        return !!this.membership && (this.membership.entitled || ['unpaid', 'paused'].includes(this.membership.status))
+      },
+      showMembershipBox() {
+        return !!this.membershipData && (this.plans.length > 0 || this.showMemberView)
+      },
+      shownPlan() {
+        return this.showMemberView ? this.membership.plan : (this.plans[0] || this.membership?.plan || null)
+      },
+      tiles() {
+        return (this.shownPlan?.benefits || []).filter(b => b.highlight).slice(0, 6)
+      },
+      benefitList() {
+        return this.shownPlan?.benefits || []
+      },
+      otherPlans() {
+        return this.plans.filter(p => p.id !== this.membership?.plan?.id)
+      },
+      hasFreeShipping() {
+        return this.isMember && (this.membership.plan?.benefits || []).some(b => b.type === 'free_shipping')
+      },
+      freeShippingNote() {
+        if (this.hasFreeShipping) {
+          const rule = this.membership.plan.benefits.find(b => b.type === 'free_shipping')
+          return Number(rule?.min_order) > 0
+            ? `On deliveries over ${this.currencyIcon}${this.money(rule.min_order)}`
+            : 'On every delivery'
+        }
+        return this.plans.some(p => (p.benefits || []).some(b => b.type === 'free_shipping'))
+          ? 'With membership'
+          : 'Not included'
+      },
+      badgeTone() {
+        const m = this.membership
+        if (!m) return ''
+        if (['past_due', 'unpaid'].includes(m.status)) return 'badge-alert'
+        if (m.cancel_at_period_end) return 'badge-ending'
+        return ''
+      },
+      membershipDateLine() {
+        const m = this.membership
+        if (!m) return ''
+        const end = this.formatDate(m.current_period_end)
+        if (m.source === 'admin') {
+          return m.current_period_end ? `Your membership runs until ${end}` : 'Your membership has no end date'
+        }
+        if (m.status === 'trialing' && !m.cancel_at_period_end) {
+          return `Free trial until ${this.formatDate(m.trial_ends_at || m.current_period_end)}, then ${this.currencyIcon}${this.money(m.price)} ${m.interval_label}`
+        }
+        if (m.cancel_at_period_end) return `Your membership ends on ${end}`
+        if (m.status === 'unpaid') return 'Your membership is on hold until the payment is made'
+        return `Your membership renews on ${end}`
+      },
+      membershipEndedLine() {
+        const m = this.membership
+        if (!m || this.showMemberView || !m.plan) return ''
+        return m.ended_at ? `Your ${m.plan.name} membership ended on ${this.formatDate(m.ended_at)}.` : ''
+      },
+      // voucher savings (user/savings) plus member discounts on orders that stand
+      lifetimeSaved() {
+        const voucher = this.totalSaved === null || this.totalSaved === undefined ? null : Number(this.totalSaved)
+        const member = Number(this.membershipData?.saved || 0)
+        if (voucher === null && !member) return null
+        return ((voucher || 0) + member).toFixed(2)
+      },
       ...mapGetters('user', ['profile']),
       account() {
         return this.profile?.account || null
@@ -1058,6 +1313,211 @@
           this.pointsLoading = false
         }
       },
+      // ---- membership: GET/POST api/v1/user/membership (MembershipController)
+      membershipUrl(path = '') {
+        // as mixin/util.js resolves it: API_BASE when set, else this origin
+        const configured = (process.env.apiBase || '').trim()
+        const base = configured || (typeof window !== 'undefined' ? window.location.origin + '/' : '/')
+        return `${base.replace(/\/?$/, '/')}api/v1/user/membership${path ? '/' + path : ''}`
+      },
+      async fetchMembership() {
+        try {
+          const { data } = await this.$axios.get(this.membershipUrl(), { headers: this.authHeaders() })
+          this.membershipData = data?.status === 200 ? data.data : null
+        } catch (e) {
+          this.membershipData = null
+        }
+      },
+      async membershipPost(path, body = {}) {
+        const { data } = await this.$axios.post(this.membershipUrl(path), body, { headers: this.authHeaders() })
+        if (data?.status !== 200) {
+          throw new Error(data?.message || 'Something went wrong. Please try again.')
+        }
+        return data.data
+      },
+      async membershipGet(path) {
+        const { data } = await this.$axios.get(this.membershipUrl(path), { headers: this.authHeaders() })
+        if (data?.status !== 200) {
+          throw new Error(data?.message || 'Something went wrong. Please try again.')
+        }
+        return data.data
+      },
+      // ---- joining on this page: Stripe's card form, no redirect
+      startJoin(plan) {
+        if (!this.membershipData?.stripe_key) {
+          this.setToastError('Card payments are not available right now. Please try again later.')
+          return
+        }
+        this.joiningPlanId = plan.id
+      },
+      joinForm() {
+        const ref = this.$refs.joinCard
+        return Array.isArray(ref) ? ref[0] : ref
+      },
+      async payJoin() {
+        if (this.joinBusy || !this.joinForm()) return
+        this.joinBusy = true
+        try {
+          await this.joinForm().pay()
+        } finally {
+          this.joinBusy = false
+        }
+      },
+      // the card form hands over the card; the bank's challenge, if any, shows over the page
+      async submitJoin(paymentMethod, runAction) {
+        const plan = this.plans.find(p => p.id === this.joiningPlanId)
+        if (!plan) return { ok: false, message: 'This plan is not available.' }
+        try {
+          let result = await this.membershipPost('subscribe', {
+            plan_id: plan.id,
+            interval: this.priceOption(plan).interval,
+            payment_method: paymentMethod
+          })
+          if (result.requires_action) {
+            await runAction(result.client_secret)
+            result = await this.membershipPost('subscribe/finish', { subscription: result.subscription })
+          }
+          return { ok: true, payload: result }
+        } catch (e) {
+          return { ok: false, message: e.message }
+        }
+      },
+      onJoined(result) {
+        const payload = result?.payload
+        if (payload) this.membershipData = payload
+        this.joiningPlanId = null
+        if (payload?.processing) {
+          this.setToastMessage('Payment received. Your membership will show here in a moment.')
+          setTimeout(() => this.fetchMembership(), 4000)
+        } else {
+          this.setToastMessage(`Welcome to ${this.membership?.plan?.name || 'your membership'}!`)
+        }
+      },
+      // ---- managing on this page: the card and the payments
+      toggleManage() {
+        this.managing = !this.managing
+        this.changingCard = false
+        if (this.managing) this.loadBilling()
+      },
+      async loadBilling() {
+        this.billingLoading = true
+        try {
+          this.billingInfo = await this.membershipGet('billing')
+        } catch (e) {
+          this.billingInfo = { card: null, invoices: [] }
+          this.setToastError(e.message)
+        } finally {
+          this.billingLoading = false
+        }
+      },
+      // another page of payments; the card above stays as it is
+      async loadHistoryPage(page) {
+        if (this.historyLoading) return
+        this.historyLoading = true
+        try {
+          const data = await this.membershipGet(`billing?page=${page}`)
+          this.billingInfo = { ...this.billingInfo, invoices: data.invoices, pagination: data.pagination }
+          this.$nextTick(() => { if (this.$refs.historyScroll) this.$refs.historyScroll.scrollTop = 0 })
+        } catch (e) {
+          this.setToastError(e.message)
+        } finally {
+          this.historyLoading = false
+        }
+      },
+      async saveCard() {
+        const ref = this.$refs.cardForm
+        if (this.cardSaving || !ref) return
+        this.cardSaving = true
+        try {
+          await ref.pay()
+        } finally {
+          this.cardSaving = false
+        }
+      },
+      async submitCard(paymentMethod, runAction) {
+        try {
+          let result = await this.membershipPost('card', { payment_method: paymentMethod })
+          if (result.requires_action) {
+            await runAction(result.client_secret)
+            result = await this.membershipPost('card/finish', { setup_intent: result.setup_intent })
+          }
+          return { ok: true, payload: result }
+        } catch (e) {
+          return { ok: false, message: e.message }
+        }
+      },
+      onCardSaved(result) {
+        if (result?.payload) this.membershipData = result.payload
+        this.changingCard = false
+        this.setToastMessage('Your new card will be used from your next payment.')
+        this.loadBilling()
+      },
+      cardLabel(card) {
+        const brand = card.brand ? card.brand.charAt(0).toUpperCase() + card.brand.slice(1) : 'Card'
+        return `${brand} •••• ${card.last4}, expires ${String(card.exp_month).padStart(2, '0')}/${String(card.exp_year).slice(-2)}`
+      },
+      invoiceLabel(status) {
+        return { paid: 'Paid', open: 'Due', uncollectible: 'Failed' }[status] || status
+      },
+      async membershipAction(path, body, success) {
+        if (this.membershipBusy) return
+        this.membershipBusy = true
+        try {
+          this.membershipData = await this.membershipPost(path, body)
+          this.confirmingCancel = false
+          this.setToastMessage(typeof success === 'function' ? success() : success)
+        } catch (e) {
+          this.setToastError(e.message)
+        } finally {
+          this.membershipBusy = false
+        }
+      },
+      cancelMembership() {
+        return this.membershipAction('cancel', {}, () => `Cancelled. Your benefits continue until ${this.formatDate(this.membership?.current_period_end)}.`)
+      },
+      resumeMembership() {
+        return this.membershipAction('resume', {}, 'Your membership will continue.')
+      },
+      changePlan(plan) {
+        const ok = window.confirm(`Switch to ${plan.name} at ${this.currencyIcon}${this.money(plan.price)} ${plan.interval_label}? ` +
+          'The change is immediate; unused time on your current plan is credited on your next bill.')
+        if (!ok) return
+        return this.membershipAction('change', { plan_id: plan.id }, `You are now on ${plan.name}.`)
+      },
+      // the price shown for a plan: the chosen period when offered, else its first
+      priceOption(plan) {
+        const prices = plan.prices || []
+        return prices.find(p => p.interval === this.billing) || prices[0] ||
+          { interval: plan.interval, price: plan.price, interval_label: plan.interval_label, per_month: plan.price }
+      },
+      toggleDigest() {
+        const enabled = !this.membershipData?.digest?.enabled
+        return this.membershipAction('digest', { enabled },
+          enabled ? 'We will email you when new products arrive.' : 'New product emails turned off.')
+      },
+      changeBilling() {
+        const to = this.membership?.switch_to
+        if (!to) return
+        const price = `${this.currencyIcon}${this.money(to.price)} ${to.interval_label}`
+        const ok = window.confirm(to.interval === 'year'
+          ? `Switch to yearly billing at ${price}? You are charged today, less the unused part of this month.`
+          : `Switch to monthly billing at ${price}? The unused part of your year is credited against your bills.`)
+        if (!ok) return
+        return this.membershipAction('change', { interval: to.interval },
+          `You are now billed ${to.interval === 'year' ? 'yearly' : 'monthly'}.`)
+      },
+      billedText(plan, option = null) {
+        const every = (option ? option.interval_label : plan.interval_label).replace(/^per /, 'every ')
+        const trial = Number(plan.trial_days) > 0 ? `${plan.trial_days}-day free trial, then billed ${every}` : `Billed ${every}`
+        return `${trial}. Cancel anytime.`
+      },
+      isFaIcon(icon) {
+        return /^fa[-\s]/.test(String(icon || '').trim())
+      },
+      faClass(icon) {
+        const value = String(icon).trim()
+        return /\bfa-(solid|regular|brands)\b/.test(value) ? value : `fa-solid ${value}`
+      },
       async fetchSavings() {
         const token = this.$auth?.strategy?.token?.get()
         const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/'
@@ -1107,6 +1567,7 @@
           this.fetchTransactions(1),
           this.fetchQualifyingProducts(1),
           this.fetchSavings(),
+          this.fetchMembership(),
           this.fetchPointsHistory(1)
         ])
       } catch (e) {
@@ -2010,4 +2471,208 @@ button.points-activity-link:hover { text-decoration: underline; color: #33319A !
 @media (max-width: 359.98px) {
   .wallet-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* membership box states (2026-10-15) */
+.plan-alert {
+  display: block;
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: #B42318;
+}
+.badge-active.badge-alert { background: #B42318; }
+.badge-active.badge-ending { background: #B54708; }
+.plan-confirm {
+  background: #fff;
+  border: 1px solid #E3E3EF;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 14px;
+}
+.btn-plan-danger {
+  height: 42px;
+  line-height: 1;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  background: #B42318;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-plan-danger:hover { background: #912018 !important; }
+.plan-change {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.plan-switch {
+  height: 34px;
+  line-height: 1;
+  padding: 0 14px;
+  border: 1px solid #E3E3EF;
+  border-radius: 999px;
+  background: #fff;
+  color: #33319A;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.plan-switch:hover { background: #F5F5FF !important; }
+.btn-Manage-Subscription:disabled,
+.btn-plan-cancel:disabled,
+.plan-switch:disabled { opacity: .6; cursor: default; }
+.benefit-item small { font-size: 12px; }
+
+/* joining on the page */
+.join-form {
+  padding: 16px;
+  border: 1px solid #E3E3EF;
+  border-radius: 12px;
+  background: #fff;
+}
+.join-summary { margin: 0 0 12px; font-size: 14px; color: #475467; }
+.join-summary strong { color: #130E2B; }
+
+/* manage panel: card and payments */
+.manage-panel {
+  padding: 16px;
+  border: 1px solid #E3E3EF;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 14px;
+}
+.manage-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.manage-card-form { padding-top: 4px; }
+.manage-history { margin-top: 16px; padding-top: 14px; border-top: 1px solid #F0F0F5; }
+.history-head-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.history-scroll {
+  max-height: 232px;
+  overflow-y: auto;
+  margin-top: 8px;
+  border: 1px solid #F0F0F5;
+  border-radius: 10px;
+  transition: opacity .15s ease;
+}
+.history-scroll.is-loading { opacity: .5; }
+.history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.history-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 8px 12px;
+  background: #F7F8FC;
+  color: #6B7280;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  text-align: left;
+}
+.history-table th.text-end { text-align: right; }
+.history-table td { padding: 9px 12px; border-bottom: 1px solid #F3F3F8; }
+.history-table tbody tr:last-child td { border-bottom: 0; }
+.history-pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px; }
+.pager-text { font-size: 12.5px; color: #6B7280; }
+.pager-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  line-height: 1;
+  padding: 0 12px;
+  border: 1px solid #E3E3EF;
+  border-radius: 8px;
+  background: #fff !important;
+  color: #33319A;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pager-btn:hover:enabled { background: #F5F5FF !important; }
+.pager-btn:disabled { opacity: .45; cursor: default; }
+.plan-actions .btn-plan-cancel { white-space: nowrap; flex-shrink: 0; }
+.inv-status { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; background: #F2F4F7; color: #475467; }
+.inv-status.paid { background: #ECFDF3; color: #027A48; }
+.inv-status.open, .inv-status.uncollectible { background: #FEF3F2; color: #B42318; }
+@media (max-width: 575.98px) {
+  .history-table .col-period { display: none; }
+  .manage-row { flex-wrap: wrap; }
+}
+
+/* new product emails */
+.digest-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid #E3E3EF;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+}
+.digest-switch {
+  position: relative;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 24px;
+  line-height: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #D1D5DB !important;
+  cursor: pointer;
+}
+.digest-switch[aria-checked='true'] { background: #05B942 !important; }
+.digest-switch span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+  transition: transform .2s ease;
+}
+.digest-switch[aria-checked='true'] span { transform: translateX(20px); }
+
+/* monthly / yearly choice */
+.billing-toggle {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 10px;
+  background: #EEF0F6;
+}
+.billing-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  line-height: 1;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #6B7280;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.billing-toggle button[aria-checked='true'] {
+  background: #fff !important;
+  color: #130E2B;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .12);
+}
+.billing-save {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #ECFDF3;
+  color: #027A48;
+  font-size: 11px;
+  font-weight: 700;
+}
+.per-month { font-size: 12px; }
 </style>

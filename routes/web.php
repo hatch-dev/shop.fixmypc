@@ -35,6 +35,11 @@ Route::match(['get', 'post'], 'newsletter/unsubscribe',
     [\App\Http\Controllers\NewsletterSubscriptionController::class, 'unsubscribe'])
     ->name('newsletter.unsubscribe');
 
+// Members' new-products email: same one-click rules, its own opt-out.
+Route::match(['get', 'post'], 'membership/digest/unsubscribe',
+    [\App\Http\Controllers\MembershipController::class, 'digestUnsubscribe'])
+    ->name('membership.digest.unsubscribe');
+
 /*
  * Browser previews for the email templates. Registered outside production
  * only: the pages render sample customer data and need no authentication.

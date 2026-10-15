@@ -860,6 +860,65 @@ class MailHelper
     }
 
 
+    /**
+     * Members hear about new products first (Helper\NewProductAlerts).
+     * $products are rows with title, image, url and price. Returns whether
+     * the message was accepted.
+     */
+    public static function newProductAlert($user, array $products, $planName, $moreCount = 0, $lang = null)
+    {
+        if (!$user || !filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+
+        $brand = MailBrand::make($user->name, $lang);
+        $unsubscribe = null;
+
+        try {
+            $unsubscribe = \Illuminate\Support\Facades\URL::signedRoute('membership.digest.unsubscribe', ['user' => $user->id]);
+        } catch (\Throwable $e) {
+            // without the link the email still goes; the header is left off
+        }
+
+        $data = new \stdClass();
+        $data->receiver = $user->name;
+        $data->products = $products;
+        $data->plan = $planName;
+        $data->more = (int)$moreCount;
+        $data->shop_url = rtrim($brand->site_url, '/');
+        $data->club_url = rtrim($brand->site_url, '/') . '/user/savers-club';
+        $data->unsubscribe_url = $unsubscribe;
+
+        $count = count($products) + (int)$moreCount;
+        $subject = MailDeliverability::subject(
+            $count === 1 ? 'Just arrived: ' . $products[0]->title : $count . ' new products just arrived'
+        );
+
+        try {
+            Mail::send(
+                [
+                    'html' => 'mail_templates.member_new_products',
+                    'text' => 'mail_templates.text.member_new_products',
+                ],
+                ['data' => $data, 'brand' => $brand, 'lang' => $lang],
+                function ($message) use ($user, $subject, $brand, $unsubscribe) {
+                    $message->to($user->email, $user->name)->subject($subject);
+
+                    MailDeliverability::memberDigest($message, $brand, $unsubscribe);
+                }
+            );
+        } catch (\Exception $ex) {
+            \Illuminate\Support\Facades\Log::error('Member new-products email failed', [
+                'user' => $user->id,
+                'message' => $ex->getMessage(),
+            ]);
+
+            return false;
+        }
+
+        return true;
+    }
+
     public static function supplierProcurementRequest($supplier, $order, array $items, $link, $expiresInDays, $lang = null)
     {
         if (!$supplier || !filter_var($supplier->email, FILTER_VALIDATE_EMAIL)) {

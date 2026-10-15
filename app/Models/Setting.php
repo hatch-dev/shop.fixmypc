@@ -19,7 +19,9 @@ class Setting extends Model
         'enable_ga' => 'integer',
         'enable_pixel' => 'integer',
         'vendor_registration' => 'integer',
-        'cookie_banner' => 'integer'
+        'cookie_banner' => 'integer',
+        'cart_remind_minutes' => 'integer',
+        'cart_expire_minutes' => 'integer'
     ];
 
     protected $fillable = [
@@ -29,7 +31,8 @@ class Setting extends Model
         'vendor_registration', 'cookie_banner',
         'enable_pixel', 'pixel_id',
         'default_state', 'default_country',
-        'translate_pdf'
+        'translate_pdf',
+        'cart_remind_minutes', 'cart_expire_minutes'
     ];
 
     protected $hidden = [

@@ -48,7 +48,7 @@
                   <input
                     type="text"
                     v-model="trackingId"
-                    :placeholder="$t('contact.your', { type: $t('addressPopup.order') }) + '. eg. 20230704N2H5X2'"
+                    :placeholder="$t('contact.your', { type: $t('addressPopup.order') }) + '. eg. ORD1578945'"
                   >
                 </div>
 

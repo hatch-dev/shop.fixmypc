@@ -812,6 +812,31 @@ class Validation
         return self::validationMessage($request, $rules);
     }
 
+    /**
+     * Basket reservation timings. Both count from the last add, so the
+     * reminder has to come before the basket is emptied.
+     */
+    public static function cartReservation($request)
+    {
+        $rules = [
+            'cart_remind_minutes' => 'required|integer|min:1|lt:cart_expire_minutes',
+            'cart_expire_minutes' => 'required|integer|min:2|max:' . CartHold::MAX_EXPIRE_MINUTES
+        ];
+
+        $messages = [
+            'cart_remind_minutes.required' => 'Enter when the reminder email should be sent.',
+            'cart_remind_minutes.integer' => 'The reminder time must be a whole number of minutes.',
+            'cart_remind_minutes.min' => 'The reminder must be sent at least 1 minute after the item is added.',
+            'cart_remind_minutes.lt' => 'The reminder must be sent before the basket is emptied.',
+            'cart_expire_minutes.required' => 'Enter when the basket should be emptied.',
+            'cart_expire_minutes.integer' => 'The removal time must be a whole number of minutes.',
+            'cart_expire_minutes.min' => 'The basket must be kept for at least 2 minutes.',
+            'cart_expire_minutes.max' => 'A basket can be reserved for at most ' . CartHold::MAX_EXPIRE_MINUTES . ' minutes (one day).'
+        ];
+
+        return self::validationMessage($request, $rules, 'form', $messages);
+    }
+
     public static function address($request)
     {
         $rules = [

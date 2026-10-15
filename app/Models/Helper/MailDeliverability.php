@@ -142,6 +142,25 @@ class MailDeliverability
     }
 
     /**
+     * The members' new-product email. Bulk in shape, so it carries
+     * List-Unsubscribe, but the link turns off this email only
+     * (users.member_digest_opt_out) - not the newsletter, not receipts.
+     */
+    public static function memberDigest(Message $message, $brand, $unsubscribeUrl)
+    {
+        static::identity($message, $brand);
+        static::reference($message, 'member-digest');
+
+        if ($unsubscribeUrl) {
+            $headers = $message->getSwiftMessage()->getHeaders();
+            static::set($headers, 'List-Unsubscribe', '<' . $unsubscribeUrl . '>');
+            static::set($headers, 'List-Unsubscribe-Post', 'List-Unsubscribe=One-Click');
+        }
+
+        return $message;
+    }
+
+    /**
      * Signed, per-address unsubscribe URL. Signed so the link cannot be used
      * to unsubscribe somebody else's address by editing the query string.
      */

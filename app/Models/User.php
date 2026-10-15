@@ -97,7 +97,9 @@ class User extends Authenticatable
     protected $hidden = ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes',
         'code', 'code_expires_at', 'code_attempts',
         // The secret in a shared-wishlist link; only WishlistShareController reads it.
-        'wishlist_share_token'];
+        'wishlist_share_token',
+        // billing reference; only Helper\StripeBilling reads it
+        'stripe_customer_id'];
 
     public const ACCOUNT_TYPES = ['personal', 'business', 'trade'];
 

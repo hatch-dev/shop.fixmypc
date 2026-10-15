@@ -16,10 +16,13 @@ use Illuminate\Support\Facades\Log;
  * Adding to the basket takes the units off updated_inventories straight away,
  * so another shopper cannot buy what is sitting in someone's basket. The
  * basket then has:
- *   - REMIND_AFTER minutes before a reminder email (registered customers,
+ *   - remindAfterMinutes() before a reminder email (registered customers,
  *     and guests who have given an email) saying it is held for the rest;
- *   - EXPIRE_AFTER minutes before it is emptied and the units go back.
- * One timer per basket, restarted whenever something is added to it.
+ *   - expireAfterMinutes() before it is emptied and the units go back.
+ * Both count from the same moment and are set by the admin under
+ * Settings > Basket reservation (settings.cart_remind_minutes and
+ * cart_expire_minutes). One timer per basket, restarted whenever something
+ * is added to it. A changed setting applies to baskets already held.
  * Placing an order uses the held units instead of taking stock a second time.
  *
  * How it stays right: cart lines are changed and deleted from many places
@@ -35,11 +38,78 @@ use Illuminate\Support\Facades\Log;
  */
 class CartHold
 {
-    const REMIND_AFTER_MINUTES = 5;
-    const EXPIRE_AFTER_MINUTES = 20;
+    /** Used when the settings row has no usable timings. */
+    const DEFAULT_REMIND_MINUTES = 5;
+    const DEFAULT_EXPIRE_MINUTES = 20;
+
+    /** The longest an admin may keep a basket reserved: one day. */
+    const MAX_EXPIRE_MINUTES = 1440;
 
     /** How long a basket that has started paying is kept whatever its age. */
     const PAYING_GRACE_MINUTES = 15;
+
+    private static $timings = null;
+    private static $timingsReadAt = 0;
+
+
+    /** Minutes after the last add before the reminder email goes. */
+    public static function remindAfterMinutes()
+    {
+        return self::timings()['remind'];
+    }
+
+
+    /** Minutes after the last add before the basket is emptied and restocked. */
+    public static function expireAfterMinutes()
+    {
+        return self::timings()['expire'];
+    }
+
+
+    /**
+     * The admin's timings, read at most once a minute per process - every
+     * basket request and the sweep ask. A missing row or column falls back to
+     * the defaults, and a pair the admin form would refuse is clamped so the
+     * reminder always comes before the basket is emptied.
+     */
+    public static function timings()
+    {
+        if (self::$timings && self::$timingsReadAt > time() - 60) {
+            return self::$timings;
+        }
+
+        $remind = self::DEFAULT_REMIND_MINUTES;
+        $expire = self::DEFAULT_EXPIRE_MINUTES;
+
+        try {
+            $row = DB::table('settings')->first();
+
+            if ($row && isset($row->cart_expire_minutes) && (int)$row->cart_expire_minutes > 0) {
+                $expire = (int)$row->cart_expire_minutes;
+            }
+
+            if ($row && isset($row->cart_remind_minutes) && (int)$row->cart_remind_minutes > 0) {
+                $remind = (int)$row->cart_remind_minutes;
+            }
+        } catch (\Exception $ex) {
+            Log::warning('Basket reservation timings unreadable, using defaults', ['message' => $ex->getMessage()]);
+        }
+
+        $expire = min(max($expire, 2), self::MAX_EXPIRE_MINUTES);
+        $remind = min(max($remind, 1), $expire - 1);
+
+        self::$timings = ['remind' => $remind, 'expire' => $expire];
+        self::$timingsReadAt = time();
+
+        return self::$timings;
+    }
+
+
+    /** Read the settings again on the next call (after a save, and in tests). */
+    public static function forgetTimings()
+    {
+        self::$timings = null;
+    }
 
 
     public static function ownerKey($userId, $userToken)
@@ -221,7 +291,7 @@ class CartHold
                         'updated_at' => self::now(),
                     ]);
                 } else if ($added) {
-                    // Something was added: the 5 + 15 minutes start again.
+                    // Something was added: the reminder and expiry timers start again.
                     DB::table('cart_holds')->where('owner_key', $key)->update([
                         'last_activity_at' => self::now(),
                         'reminded_at' => null,
@@ -300,7 +370,7 @@ class CartHold
 
 
     /**
-     * Empty this basket now if its 20 minutes have lapsed. Returns whether it did.
+     * Empty this basket now if its time has lapsed. Returns whether it did.
      *
      * The sweep does this every minute - but only when the scheduler or some
      * other request runs it, and only after that request has been answered.
@@ -324,7 +394,7 @@ class CartHold
             return false;
         }
 
-        if (Carbon::parse($hold->last_activity_at)->diffInSeconds($now, false) < self::EXPIRE_AFTER_MINUTES * 60) {
+        if (Carbon::parse($hold->last_activity_at)->diffInSeconds($now, false) < self::expireAfterMinutes() * 60) {
             return false;
         }
 
@@ -390,13 +460,15 @@ class CartHold
 
 
     /**
-     * Every minute: remind at 5 minutes, empty at 20, and release whatever a
+     * Every minute: remind and empty on the admin's timings, and release whatever a
      * deleted line left held. Returns what it did, for the command's output.
      */
     public static function sweep()
     {
         $done = ['reminded' => 0, 'expired' => 0, 'reconciled' => 0];
         $now = Carbon::parse(self::now());
+        $remindAfter = self::remindAfterMinutes() * 60;
+        $expireAfter = self::expireAfterMinutes() * 60;
 
         foreach (DB::table('cart_holds')->get() as $hold) {
             if ($hold->paying_until && Carbon::parse($hold->paying_until)->gt($now)) {
@@ -405,10 +477,10 @@ class CartHold
 
             $idle = Carbon::parse($hold->last_activity_at)->diffInSeconds($now, false);
 
-            if ($idle >= self::EXPIRE_AFTER_MINUTES * 60) {
+            if ($idle >= $expireAfter) {
                 self::expire($hold);
                 $done['expired']++;
-            } else if ($idle >= self::REMIND_AFTER_MINUTES * 60 && !$hold->reminded_at) {
+            } else if ($idle >= $remindAfter && !$hold->reminded_at) {
                 self::remind($hold);
                 $done['reminded']++;
             }
@@ -438,7 +510,7 @@ class CartHold
 
         if ($lines->isNotEmpty()) {
             BasketNotice::add($hold->user_id, $hold->user_token, BasketNotice::EXPIRED, [
-                'minutes' => self::EXPIRE_AFTER_MINUTES,
+                'minutes' => self::expireAfterMinutes(),
                 'lines' => BasketNotice::describe($lines),
             ]);
         }
@@ -464,6 +536,7 @@ class CartHold
             : GuestUser::where('user_token', $hold->user_token)->first();
 
         if (!$recipient || !$recipient->email) {
+            Log::info('Basket reminder skipped: no email address', ['owner' => $hold->owner_key]);
             return;
         }
 
@@ -482,10 +555,13 @@ class CartHold
             return;
         }
 
-        $expiresAt = Carbon::parse($hold->last_activity_at)->addMinutes(self::EXPIRE_AFTER_MINUTES);
+        $expiresAt = Carbon::parse($hold->last_activity_at)->addMinutes(self::expireAfterMinutes());
         $minutesLeft = max(1, (int)ceil(Carbon::parse(self::now())->diffInSeconds($expiresAt, false) / 60));
 
-        MailHelper::cartHoldReminder($recipient, $lines, $minutesLeft);
+        // A failed send is logged by MailHelper as "Basket reminder email failed".
+        if (MailHelper::cartHoldReminder($recipient, $lines, $minutesLeft)) {
+            Log::info('Basket reminder sent', ['owner' => $hold->owner_key, 'email' => $recipient->email, 'minutes_left' => $minutesLeft]);
+        }
     }
 
 

@@ -6,7 +6,7 @@ use App\Models\Helper\BasketUpkeep;
 use Illuminate\Console\Command;
 
 /**
- * Basket reservations: remind at 5 minutes, empty at 20, release anything a
+ * Basket reservations: remind and empty on the admin timings (Settings > Basket reservation), release anything a
  * deleted line left held (App\Models\Helper\CartHold). Also clears abandoned
  * Buy Now lines and guest lines that never had a reservation
  * (App\Models\Helper\BasketUpkeep).
@@ -23,7 +23,7 @@ class SweepCartHolds extends Command
 
     public function handle()
     {
-        $done = BasketUpkeep::sweep((bool)$this->option('all'));
+        $done = BasketUpkeep::sweep((bool)$this->option('all'), 'scheduler');
 
         $this->info(sprintf('Reminded %d, expired %d, reconciled %d, cleared %d Buy Now line(s) and %d unreserved guest line(s).',
             $done['reminded'], $done['expired'], $done['reconciled'],

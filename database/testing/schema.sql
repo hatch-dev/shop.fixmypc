@@ -1147,6 +1147,97 @@ CREATE TABLE `loyalty_groups` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `membership_events`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `membership_events` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_membership_id` bigint(20) unsigned NOT NULL,
+  `admin_id` int(10) unsigned DEFAULT NULL,
+  `action` varchar(40) NOT NULL,
+  `detail` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `membership_events_user_membership_id_foreign` (`user_membership_id`),
+  CONSTRAINT `membership_events_user_membership_id_foreign` FOREIGN KEY (`user_membership_id`) REFERENCES `user_memberships` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `membership_invoices`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `membership_invoices` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_membership_id` bigint(20) unsigned NOT NULL,
+  `stripe_invoice_id` varchar(255) NOT NULL,
+  `number` varchar(255) DEFAULT NULL,
+  `status` varchar(20) NOT NULL,
+  `amount_due` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `amount_paid` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `currency` varchar(3) NOT NULL DEFAULT 'EUR',
+  `period_start` datetime DEFAULT NULL,
+  `period_end` datetime DEFAULT NULL,
+  `paid_at` datetime DEFAULT NULL,
+  `hosted_invoice_url` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `membership_invoices_stripe_invoice_id_unique` (`stripe_invoice_id`),
+  KEY `membership_invoices_user_membership_id_foreign` (`user_membership_id`),
+  CONSTRAINT `membership_invoices_user_membership_id_foreign` FOREIGN KEY (`user_membership_id`) REFERENCES `user_memberships` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `membership_plan_benefits`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `membership_plan_benefits` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `membership_plan_id` bigint(20) unsigned NOT NULL,
+  `type` varchar(30) NOT NULL DEFAULT 'display',
+  `title` varchar(100) NOT NULL,
+  `subtitle` varchar(255) DEFAULT NULL,
+  `icon` varchar(60) DEFAULT NULL,
+  `highlight` tinyint(1) NOT NULL DEFAULT 0,
+  `percent` decimal(5,2) DEFAULT NULL,
+  `min_order` decimal(10,2) DEFAULT NULL,
+  `max_discount` decimal(10,2) DEFAULT NULL,
+  `include_sale_items` tinyint(1) NOT NULL DEFAULT 0,
+  `include_business_prices` tinyint(1) NOT NULL DEFAULT 0,
+  `sort_order` int(11) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `membership_plan_benefits_membership_plan_id_foreign` (`membership_plan_id`),
+  CONSTRAINT `membership_plan_benefits_membership_plan_id_foreign` FOREIGN KEY (`membership_plan_id`) REFERENCES `membership_plans` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `membership_plans`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `membership_plans` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `slug` varchar(120) NOT NULL,
+  `tagline` varchar(255) DEFAULT NULL,
+  `price` decimal(10,2) DEFAULT NULL,
+  `yearly_price` decimal(10,2) DEFAULT NULL,
+  `currency` varchar(3) NOT NULL DEFAULT 'EUR',
+  `interval` varchar(10) NOT NULL DEFAULT 'month',
+  `interval_count` tinyint(3) unsigned NOT NULL DEFAULT 1,
+  `trial_days` smallint(5) unsigned NOT NULL DEFAULT 0,
+  `status` tinyint(1) NOT NULL DEFAULT 0,
+  `sort_order` int(11) NOT NULL DEFAULT 0,
+  `stripe_product_id` varchar(255) DEFAULT NULL,
+  `stripe_price_id` varchar(255) DEFAULT NULL,
+  `stripe_price_key` varchar(255) DEFAULT NULL,
+  `stripe_yearly_price_id` varchar(255) DEFAULT NULL,
+  `stripe_yearly_price_key` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `membership_plans_slug_unique` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `migrations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -1179,6 +1270,19 @@ CREATE TABLE `model_has_roles` (
   PRIMARY KEY (`role_id`,`model_id`,`model_type`),
   KEY `model_has_roles_model_id_model_type_index` (`model_id`,`model_type`),
   CONSTRAINT `model_has_roles_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `new_product_alerts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `new_product_alerts` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `products_count` int(10) unsigned NOT NULL DEFAULT 0,
+  `recipients_count` int(10) unsigned NOT NULL DEFAULT 0,
+  `product_ids` varchar(1000) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `oauth_access_tokens`;
@@ -1343,15 +1447,17 @@ DROP TABLE IF EXISTS `ordered_loyalty_discount`;
 CREATE TABLE `ordered_loyalty_discount` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `order_id` bigint(20) unsigned NOT NULL,
-  `loyalty_group_id` bigint(20) unsigned NOT NULL,
+  `loyalty_group_id` bigint(20) unsigned DEFAULT NULL,
   `loyalty_group_user_id` bigint(20) unsigned DEFAULT NULL,
   `label` varchar(255) DEFAULT NULL,
   `discount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
+  `user_membership_id` bigint(20) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `ordered_loyalty_discount_order_id_index` (`order_id`),
-  KEY `ordered_loyalty_discount_loyalty_group_id_index` (`loyalty_group_id`)
+  KEY `ordered_loyalty_discount_loyalty_group_id_index` (`loyalty_group_id`),
+  KEY `ordered_loyalty_discount_user_membership_id_index` (`user_membership_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `ordered_products`;
@@ -1466,6 +1572,7 @@ CREATE TABLE `orders` (
   `trans_id` varchar(255) DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `orders_order_unique` (`order`),
   KEY `orders_voucher_id_foreign` (`voucher_id`),
   KEY `orders_user_id_foreign` (`user_id`),
   KEY `orders_user_address_id_foreign` (`user_address_id`),
@@ -1592,6 +1699,7 @@ CREATE TABLE `payments` (
   `sumup_api_key` varchar(255) DEFAULT NULL,
   `sumup_merchant_email` varchar(255) DEFAULT NULL,
   `sumup_merchant_code` varchar(255) DEFAULT NULL,
+  `stripe_webhook_secret` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `payments_admin_id_foreign` (`admin_id`),
   CONSTRAINT `payments_admin_id_foreign` FOREIGN KEY (`admin_id`) REFERENCES `admins` (`id`)
@@ -1967,12 +2075,15 @@ CREATE TABLE `products` (
   `upsell_id` int(11) DEFAULT NULL,
   `procurement` tinyint(4) NOT NULL DEFAULT 0,
   `back_order` tinyint(4) NOT NULL DEFAULT 0,
+  `first_published_at` datetime DEFAULT NULL,
+  `members_notified_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `products_slug_unique` (`slug`),
   KEY `products_tax_rule_id_foreign` (`tax_rule_id`),
   KEY `products_shipping_rule_id_foreign` (`shipping_rule_id`),
   KEY `products_category_id_foreign` (`category_id`),
   KEY `products_admin_id_foreign` (`admin_id`),
+  KEY `products_members_notified_at_index` (`members_notified_at`),
   CONSTRAINT `products_admin_id_foreign` FOREIGN KEY (`admin_id`) REFERENCES `admins` (`id`),
   CONSTRAINT `products_tax_rule_id_foreign` FOREIGN KEY (`tax_rule_id`) REFERENCES `tax_rules` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -2113,6 +2224,8 @@ CREATE TABLE `settings` (
   `default_country` varchar(255) DEFAULT 'AF',
   `default_state` varchar(255) DEFAULT 'BDS',
   `translate_pdf` tinyint(1) NOT NULL DEFAULT 0,
+  `cart_remind_minutes` smallint(5) unsigned NOT NULL DEFAULT 5,
+  `cart_expire_minutes` smallint(5) unsigned NOT NULL DEFAULT 20,
   PRIMARY KEY (`id`),
   KEY `settings_admin_id_foreign` (`admin_id`),
   CONSTRAINT `settings_admin_id_foreign` FOREIGN KEY (`admin_id`) REFERENCES `admins` (`id`)
@@ -2126,6 +2239,8 @@ CREATE TABLE `shipping_places` (
   `country` varchar(255) NOT NULL,
   `state` varchar(255) DEFAULT NULL,
   `price` decimal(8,2) NOT NULL,
+  `weight_rates` text DEFAULT NULL,
+  `weight_extra_per_kg` decimal(10,2) DEFAULT NULL,
   `day_needed` int(11) NOT NULL,
   `pickup_price` decimal(8,2) NOT NULL DEFAULT 0.00,
   `pickup_point` int(11) NOT NULL DEFAULT 0,
@@ -2747,6 +2862,42 @@ CREATE TABLE `user_follow_stores` (
   CONSTRAINT `user_follow_stores_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `user_memberships`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_memberships` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `membership_plan_id` bigint(20) unsigned NOT NULL,
+  `source` varchar(10) NOT NULL DEFAULT 'stripe',
+  `status` varchar(30) NOT NULL,
+  `stripe_subscription_id` varchar(255) DEFAULT NULL,
+  `stripe_customer_id` varchar(255) DEFAULT NULL,
+  `stripe_checkout_session_id` varchar(255) DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `currency` varchar(3) NOT NULL DEFAULT 'EUR',
+  `interval` varchar(10) DEFAULT NULL,
+  `interval_count` tinyint(3) unsigned NOT NULL DEFAULT 1,
+  `current_period_start` datetime DEFAULT NULL,
+  `current_period_end` datetime DEFAULT NULL,
+  `trial_ends_at` datetime DEFAULT NULL,
+  `cancel_at_period_end` tinyint(1) NOT NULL DEFAULT 0,
+  `canceled_at` datetime DEFAULT NULL,
+  `ended_at` datetime DEFAULT NULL,
+  `granted_by_admin_id` int(10) unsigned DEFAULT NULL,
+  `note` varchar(255) DEFAULT NULL,
+  `last_synced_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_memberships_stripe_subscription_id_unique` (`stripe_subscription_id`),
+  UNIQUE KEY `user_memberships_stripe_checkout_session_id_unique` (`stripe_checkout_session_id`),
+  KEY `user_memberships_membership_plan_id_foreign` (`membership_plan_id`),
+  KEY `user_memberships_user_id_status_index` (`user_id`,`status`),
+  CONSTRAINT `user_memberships_membership_plan_id_foreign` FOREIGN KEY (`membership_plan_id`) REFERENCES `membership_plans` (`id`),
+  CONSTRAINT `user_memberships_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `user_sessions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -2828,11 +2979,14 @@ CREATE TABLE `users` (
   `two_factor_recovery_codes` text DEFAULT NULL,
   `two_factor_confirmed_at` timestamp NULL DEFAULT NULL,
   `wishlist_share_token` varchar(40) DEFAULT NULL,
+  `stripe_customer_id` varchar(255) DEFAULT NULL,
+  `member_digest_opt_out` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_email_unique` (`email`),
   UNIQUE KEY `users_wishlist_share_token_unique` (`wishlist_share_token`),
   KEY `users_status_index` (`status`),
-  KEY `users_account_type_index` (`account_type`)
+  KEY `users_account_type_index` (`account_type`),
+  KEY `users_stripe_customer_id_index` (`stripe_customer_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `voucher_langs`;

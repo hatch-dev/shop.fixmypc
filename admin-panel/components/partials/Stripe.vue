@@ -42,6 +42,28 @@
           @input="emitData"
         >
       </div>
+
+      <!--
+        Memberships are billed as Stripe subscriptions, and Stripe reports
+        renewals, failed payments and cancellations to the webhook. Add an
+        endpoint in Stripe (Developers > Webhooks) for the URL below and paste
+        its signing secret here.
+      -->
+      <div class="input-wrapper">
+        <label>Webhook Signing Secret</label>
+        <input
+          type="text"
+          placeholder="whsec_..."
+          v-model="paymentData.stripe_webhook_secret"
+          @input="emitData"
+        >
+        <span class="field-hint">
+          For memberships. Webhook URL: <code>{{ webhookUrl }}</code><br>
+          Events: customer.subscription.created,
+          customer.subscription.updated, customer.subscription.deleted,
+          invoice.paid, invoice.payment_failed
+        </span>
+      </div>
     </div>
   </div>
 
@@ -54,6 +76,13 @@
     data() {
       return {
         showForm: false
+      }
+    },
+    computed: {
+      // the API host, which serves the webhook (not necessarily this panel's)
+      webhookUrl() {
+        const base = (process.env.apiBase || (typeof window !== 'undefined' ? window.location.origin + '/' : '/'))
+        return base.replace(/\/?$/, '/') + 'api/v1/stripe/webhook'
       }
     },
     props: {

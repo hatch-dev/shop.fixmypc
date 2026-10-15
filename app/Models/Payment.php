@@ -31,7 +31,7 @@ class Payment extends Model
         'iban', 'bic_swift', 'default',
         'payfast_payment', 'payfast_base_url', 'payfast_merchant_id', 'payfast_merchant_key',
         'payfast_passphrase', 'sumup', 'sumup_api_key', 'sumup_merchant_email', 'sumup_merchant_code',
-        'card_gateway'
+        'card_gateway', 'stripe_webhook_secret'
 
     ];
 

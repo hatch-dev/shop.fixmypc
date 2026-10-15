@@ -2,7 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Helper\BasketUpkeep;
+use App\Models\Helper\CartHold;
 use App\Models\Helper\OrderEmailDispatcher;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
 
@@ -32,6 +36,7 @@ class CheckMailDeliverability extends Command
     {
         $this->line('');
         $this->checkQueue();
+        $this->checkBasketReminders();
         $this->checkSender();
         $this->checkDns();
         $this->line('');
@@ -95,6 +100,68 @@ class CheckMailDeliverability extends Command
                 $this->good('no order email waiting longer than 10 minutes');
             }
         }
+    }
+
+    // ------------------------------------------------------- basket reminders
+
+    /**
+     * Basket reminder emails are sent by the basket sweep and nothing else.
+     * The scheduler runs it every minute - if cron runs `schedule:run`. Without
+     * cron it only runs when someone happens to use the site, so a shopper who
+     * adds an item and leaves is never reminded, and their basket is emptied
+     * on the next visit instead (found on live 2026-10-15).
+     */
+    private function checkBasketReminders()
+    {
+        $this->line('<comment>Basket reminders</comment>');
+
+        if (!Schema::hasTable('cart_holds')) {
+            $this->bad('table cart_holds is missing', 'run the migrations');
+            return;
+        }
+
+        $remind = CartHold::remindAfterMinutes();
+        $expire = CartHold::expireAfterMinutes();
+        $this->good("timings: reminder after {$remind} min, basket emptied after {$expire} min");
+
+        $cron = 'add the cron entry "* * * * * cd ' . base_path() . ' && php artisan schedule:run >> /dev/null 2>&1"';
+        $now = Carbon::parse(date('Y-m-d H:i:s'));
+
+        $scheduled = Cache::get(BasketUpkeep::LAST_SCHEDULED_SWEEP_KEY);
+        if (!$scheduled) {
+            $this->bad('the scheduler has never run the basket sweep',
+                'reminders only go out while someone is using the site: ' . $cron);
+        } else if (Carbon::parse($scheduled)->diffInMinutes($now) > 3) {
+            $this->bad("the scheduler last ran the basket sweep at {$scheduled}",
+                'cron has stopped: check the entry in cPanel > Cron Jobs (' . $cron . ')');
+        } else {
+            $this->good("scheduler ran the basket sweep at {$scheduled}");
+        }
+
+        $last = Cache::get(BasketUpkeep::LAST_SWEEP_KEY);
+        if ($last) {
+            $this->good("last sweep: {$last['at']} (started by {$last['source']})");
+        }
+
+        // Baskets that should have had their reminder by now and have not.
+        $overdue = \DB::table('cart_holds')
+            ->whereNull('reminded_at')
+            ->where('last_activity_at', '<', $now->copy()->subMinutes($remind + 2)->format('Y-m-d H:i:s'))
+            ->where(function ($query) use ($now) {
+                $query->whereNull('paying_until')->orWhere('paying_until', '<', $now->format('Y-m-d H:i:s'));
+            });
+        $count = (clone $overdue)->count();
+
+        if ($count > 0) {
+            $this->bad("{$count} basket(s) past their reminder time without a reminder, oldest added "
+                . (clone $overdue)->min('last_activity_at'),
+                'the sweep is not running often enough: ' . $cron);
+        } else {
+            $this->good('no basket waiting for an overdue reminder');
+        }
+
+        $this->line('      sent and skipped reminders are logged in storage/logs as '
+            . '"Basket reminder sent" / "Basket reminder skipped" / "Basket reminder email failed"');
     }
 
     // ------------------------------------------------------------ the sender

@@ -17,6 +17,7 @@ use App\Exceptions\StockRanOut;
 use App\Models\Helper\ControllerHelper;
 use App\Models\Helper\FileHelper;
 use App\Models\Helper\Loyalty;
+use App\Models\Helper\Membership;
 use App\Models\Helper\MailBrand;
 use App\Models\Helper\MailDeliverability;
 use App\Models\Helper\MailHelper;
@@ -3481,7 +3482,7 @@ class OrdersController extends ControllerHelper
                      * their own. Both are now server-generated; a real gateway
                      * reference is written by paymentDone() after verification.
                      */
-                    $orderArr['order'] = Utils::generateTrackingId(["user_id" => $request->user('user')->id]);
+                    $orderArr['order'] = Utils::generateOrderNumber();
 
                     if (!$isCollection) {
                         if (!$user->default_address) {
@@ -3528,7 +3529,7 @@ class OrdersController extends ControllerHelper
                     }
 
                     $orderArr['user_token'] = $request->user_token;
-                    $orderArr['order'] = Utils::generateTrackingId(["user_id" => $guestUser->id]);
+                    $orderArr['order'] = Utils::generateOrderNumber();
                 }
 
 
@@ -3574,6 +3575,16 @@ class OrdersController extends ControllerHelper
 
                 $orderShippingPlace = $shippingQuote['place'];
                 $orderShippingPrice = $shippingQuote['price'];
+
+                /*
+                 * A member's delivery is free (Helper\Membership). Collection
+                 * keeps its price. The basket and the shipping quote ask the
+                 * same question, so the figure shown is the figure charged.
+                 */
+                if ((int)$shippingType === Shipping::deliveryType()
+                    && Membership::freeShippingFor($request->user('user'), $totalPriceWithoutShipping)) {
+                    $orderShippingPrice = 0.0;
+                }
                 $shippingCharged = false;
 
                 // Decided above from the stored profile, not from the request.
@@ -3619,6 +3630,9 @@ class OrdersController extends ControllerHelper
                 }*/
 
                 $totalCartPrice = 0;
+
+                // What each line charges, for the member discount below.
+                $memberLines = [];
 
                 foreach ($existingCart as $key => $cart) {
                     if (!is_null($cart->product_inner)) {
@@ -3736,6 +3750,13 @@ class OrdersController extends ControllerHelper
                         // QA audit ORD-03: the flash-discount base is the amount
                         // charged, not the sum of list prices.
                         $totalCartPrice += $priceWithoutBundle;
+
+                        $memberLines[] = [
+                            'product' => $cart->product_inner,
+                            'inventory' => $cart->updated_inventory,
+                            'quantity' => $payableQty,
+                            'unit' => $currentPrice,
+                        ];
 
                         $commission = $cart->product_inner->admin->commission;
 
@@ -3910,9 +3931,14 @@ class OrdersController extends ControllerHelper
 
                 if ($request->user('user')) {
 
-                    $loyaltyBest = Loyalty::bestFor(
-                        $request->user('user')->id,
-                        $totalCartPrice
+                    /*
+                     * The loyalty group or the membership discount, whichever
+                     * is bigger - never both (Helper\Membership).
+                     */
+                    $loyaltyBest = Membership::bestOrderDiscount(
+                        $request->user('user'),
+                        $totalCartPrice,
+                        $memberLines
                     );
 
                     if ($loyaltyBest) {
@@ -4043,7 +4069,7 @@ class OrdersController extends ControllerHelper
                  * order that never existed.
                  */
                 if ($loyaltyDiscountAmount > 0) {
-                    Loyalty::redeem($loyaltyBest, $order->id);
+                    Membership::redeemOrderDiscount($loyaltyBest, $order->id);
                 }
 
                 /*

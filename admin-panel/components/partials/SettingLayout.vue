@@ -82,6 +82,10 @@
             tabId: 'miscellaneous',
           },
           {
+            title: this.$t('setting.cartRes'),
+            tabId: 'cart-reservation',
+          },
+          {
             title: this.$t('ship.pl'),
             tabId: 'plugins',
           },

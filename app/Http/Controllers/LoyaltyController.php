@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Helper\Loyalty;
+use App\Models\Helper\Membership;
 use App\Models\Helper\Pricing;
 use App\Models\Setting;
 use Illuminate\Http\Request;
@@ -34,7 +35,14 @@ class LoyaltyController extends Controller
         $subtotal = (float)($request->subtotal ?? 0);
         $currency = $this->currencyIcon();
 
-        $best = Loyalty::bestFor($user->id, $subtotal);
+        /*
+         * The loyalty group or the membership, whichever pays more - the
+         * same choice the order makes. The membership is priced on the
+         * basket's own lines, because which of them count depends on what
+         * each one is charged at, which the browser's subtotal cannot say.
+         */
+        $checkout = Membership::checkoutLines($user);
+        $best = Membership::bestOrderDiscount($user, $subtotal, $checkout['lines'], $checkout['subtotal']);
         $applied = $best ? Pricing::round($best['discount']) : 0.0;
 
         /*
@@ -49,7 +57,19 @@ class LoyaltyController extends Controller
             'next' => null
         ];
 
-        if ($best) {
+        if ($best && $best['kind'] === 'membership') {
+            $benefit = $best['benefit'];
+
+            $payload = array_merge($payload, [
+                'kind' => 'membership',
+                'label' => $best['label'],
+                'benefit' => rtrim(rtrim(number_format($benefit->percent, 2), '0'), '.') . '% off with your '
+                    . $best['membership']->plan->name . ' membership',
+                'validity' => 'membership',
+                'expires_at' => null,
+                'amount' => $applied
+            ]);
+        } else if ($best) {
             $group = $best['group'];
 
             $payload = array_merge($payload, [

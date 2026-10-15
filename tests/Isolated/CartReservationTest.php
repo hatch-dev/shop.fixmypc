@@ -4,12 +4,15 @@ namespace Tests\Isolated;
 
 use App\Models\Cart;
 use App\Models\GuestUser;
+use App\Models\Helper\BasketUpkeep;
 use App\Models\Helper\CartHold;
 use App\Models\Helper\CartMerge;
 use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\Testing\Fixture;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Tests\IsolatedTestCase;
@@ -24,6 +27,8 @@ use Tests\IsolatedTestCase;
  *  - 5 minutes idle: one reminder email (if there is an address);
  *  - 20 minutes idle: the basket is emptied and the stock goes back,
  *    unless the shopper has started paying.
+ *  - 5 and 20 are the defaults: the admin sets both under Settings >
+ *    Basket reservation (settings.cart_remind_minutes / cart_expire_minutes).
  */
 class CartReservationTest extends IsolatedTestCase
 {
@@ -32,6 +37,7 @@ class CartReservationTest extends IsolatedTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        CartHold::forgetTimings();
 
 
         $this->customer = User::findOrFail(Fixture::USER_PERSONAL_ID);
@@ -305,5 +311,184 @@ class CartReservationTest extends IsolatedTestCase
         $this->assertSame(8, $this->stock(), 'the same two units, now the account\'s');
         $this->assertSame(2, CartHold::heldFor($this->customer->id, null, Fixture::PHONE_128_BLACK_ID));
         $this->assertSame(0, CartHold::heldFor(null, Fixture::GUEST_TOKEN, Fixture::PHONE_128_BLACK_ID));
+    }
+
+    // ------------------------------------------------------ the admin's timings
+
+    private function setTimings($remind, $expire)
+    {
+        DB::table('settings')->update(['cart_remind_minutes' => $remind, 'cart_expire_minutes' => $expire]);
+        CartHold::forgetTimings();
+    }
+
+    private function saveTimings($remind, $expire)
+    {
+        return $this->asAdmin()->postJson('/api/admin/setting/cart-reservation', [
+            'cart_remind_minutes' => $remind,
+            'cart_expire_minutes' => $expire,
+        ]);
+    }
+
+    private function sentSubjects()
+    {
+        return array_map(function ($message) {
+            return $message->getSubject();
+        }, app('mailer')->getSwiftMailer()->getTransport()->messages()->all());
+    }
+
+    public function test_the_reminder_goes_when_the_admin_says()
+    {
+        $this->setTimings(2, 10);
+        $this->assertApiOk($this->add(1));
+
+        $this->ageBasket(1);
+        CartHold::sweep();
+        $this->assertSame(0, $this->sentMail(), 'not yet: 1 of 2 minutes');
+
+        $this->ageBasket(3);
+        CartHold::sweep();
+        $this->assertSame(1, $this->sentMail());
+        $this->assertStringContainsString('reserved for 7 more minutes', $this->sentSubjects()[0], 'counts down to the admin\'s 10');
+        $this->assertSame(9, $this->stock(), 'still held');
+    }
+
+    public function test_the_basket_is_emptied_when_the_admin_says()
+    {
+        $this->setTimings(5, 15);
+        $this->assertApiOk($this->add(2));
+
+        $this->ageBasket(14);
+        CartHold::sweep();
+        $this->assertNotNull($this->line(), 'kept until 15');
+
+        $this->ageBasket(16);
+        CartHold::sweep();
+        $this->assertNull($this->line(), 'removed from the basket');
+        $this->assertSame(10, $this->stock(), 'the reserved units are back on sale');
+    }
+
+    public function test_a_longer_setting_keeps_the_basket_past_the_old_twenty_minutes()
+    {
+        $this->setTimings(30, 60);
+        $this->assertApiOk($this->add(1));
+        $this->ageBasket(25);
+
+        CartHold::sweep();
+        $this->asCustomer($this->customer->id)->getJson('/api/v1/cart/by-user');
+
+        $this->assertSame(0, $this->sentMail(), 'no reminder before 30');
+        $this->assertNotNull($this->line());
+        $this->assertSame(9, $this->stock());
+    }
+
+    /** A basket request empties a lapsed basket itself, before the sweep has run. */
+    public function test_a_basket_request_uses_the_admin_setting_too()
+    {
+        $this->setTimings(3, 10);
+        $this->assertApiOk($this->add(1));
+        $this->ageBasket(11);
+
+        $this->asCustomer($this->customer->id)->getJson('/api/v1/cart/by-user');
+
+        $this->assertNull($this->line());
+        $this->assertSame(10, $this->stock());
+    }
+
+    public function test_the_admin_saves_the_timings_and_they_apply_at_once()
+    {
+        $this->assertApiOk($this->saveTimings(3, 12));
+
+        $this->assertSame(3, (int)DB::table('settings')->value('cart_remind_minutes'));
+        $this->assertSame(12, (int)DB::table('settings')->value('cart_expire_minutes'));
+        $this->assertSame(['remind' => 3, 'expire' => 12], CartHold::timings());
+    }
+
+    public function test_the_admin_cannot_save_timings_that_make_no_sense()
+    {
+        $this->setTimings(5, 20);
+
+        $this->assertApiRefused($this->saveTimings(20, 20), 201);
+        $this->assertSame('The reminder must be sent before the basket is emptied.', $this->saveTimings(25, 20)->json('data.fields.cart_remind_minutes.0'));
+        $this->assertApiRefused($this->saveTimings(0, 20), 201);
+        $this->assertApiRefused($this->saveTimings(5, 1441), 201);
+        $this->assertApiRefused($this->saveTimings('five', 20), 201);
+        $this->assertApiRefused($this->saveTimings(5, null), 201);
+
+        $this->assertSame(['remind' => 5, 'expire' => 20], CartHold::timings(), 'unchanged');
+    }
+
+    public function test_a_customer_cannot_change_the_timings()
+    {
+        $this->setTimings(5, 20);
+
+        $response = $this->asCustomer($this->customer->id)->postJson('/api/admin/setting/cart-reservation', [
+            'cart_remind_minutes' => 1,
+            'cart_expire_minutes' => 2,
+        ]);
+
+        $this->assertNotSame(200, (int)$response->json('status'));
+        $this->assertSame(20, (int)DB::table('settings')->value('cart_expire_minutes'));
+    }
+
+    /** A row from before the migration, or edited by hand, still gives a working pair. */
+    public function test_unusable_stored_timings_fall_back_safely()
+    {
+        $this->setTimings(0, 0);
+        $this->assertSame(['remind' => 5, 'expire' => 20], CartHold::timings());
+
+        $this->setTimings(30, 10);
+        $this->assertSame(['remind' => 9, 'expire' => 10], CartHold::timings(), 'the reminder still comes first');
+    }
+
+    // ------------------------------------------------------------ diagnostics
+
+    /**
+     * Reminders go out only from the sweep. `mail:check` tells a cron-run
+     * sweep from one started by site traffic using these two cache keys.
+     */
+    public function test_the_scheduled_sweep_leaves_a_heartbeat_that_traffic_does_not()
+    {
+        Cache::forget(BasketUpkeep::LAST_SWEEP_KEY);
+        Cache::forget(BasketUpkeep::LAST_SCHEDULED_SWEEP_KEY);
+
+        BasketUpkeep::sweep();
+        $this->assertSame('traffic', Cache::get(BasketUpkeep::LAST_SWEEP_KEY)['source']);
+        $this->assertNull(Cache::get(BasketUpkeep::LAST_SCHEDULED_SWEEP_KEY), 'site traffic is not cron');
+
+        $this->artisan('cart:sweep-holds')->assertExitCode(0);
+        $this->assertSame('scheduler', Cache::get(BasketUpkeep::LAST_SWEEP_KEY)['source']);
+        $this->assertNotNull(Cache::get(BasketUpkeep::LAST_SCHEDULED_SWEEP_KEY));
+    }
+
+    public function test_a_sent_reminder_is_logged_with_its_address()
+    {
+        Log::spy();
+        $this->assertApiOk($this->add(1));
+        $this->ageBasket(6);
+
+        CartHold::sweep();
+
+        Log::shouldHaveReceived('info')->with('Basket reminder sent', \Mockery::on(function ($context) {
+            return $context['email'] === $this->customer->email;
+        }))->once();
+    }
+
+    public function test_a_reminder_with_nobody_to_send_to_is_logged_as_skipped()
+    {
+        GuestUser::where('user_token', Fixture::GUEST_TOKEN)->update(['email' => null]);
+        Log::spy();
+        $this->asGuest()->postJson('/api/v1/cart/action', [
+            'product_id' => Fixture::PRODUCT_PHONE_ID,
+            'inventory_id' => Fixture::PHONE_128_BLACK_ID,
+            'quantity' => 1,
+            'user_token' => Fixture::GUEST_TOKEN,
+        ]);
+        $this->assertSame(9, $this->stock(), 'the guest basket is reserved');
+        $this->ageBasket(6, null, Fixture::GUEST_TOKEN);
+
+        CartHold::sweep();
+
+        $this->assertSame(0, $this->sentMail());
+        Log::shouldHaveReceived('info')->with('Basket reminder skipped: no email address', \Mockery::any())->once();
     }
 }

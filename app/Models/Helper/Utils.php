@@ -3,6 +3,7 @@
 namespace App\Models\Helper;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class Utils
@@ -441,6 +442,27 @@ class Utils
         return json_decode($decryptToken);
     }
 
+    /**
+     * A new order's public number: ORD and seven random digits, e.g.
+     * ORD1578945. Random rather than sequential, so it says nothing about
+     * how many orders the shop takes. Checked against every order, deleted
+     * ones included (the unique index on orders.order is the backstop).
+     * Orders placed before 2026-10-15 keep their old numbers.
+     */
+    public static function generateOrderNumber()
+    {
+        for ($attempt = 0; $attempt < 20; $attempt++) {
+            $number = 'ORD' . random_int(1000000, 9999999);
+
+            if (!DB::table('orders')->where('order', $number)->exists()) {
+                return $number;
+            }
+        }
+
+        throw new \RuntimeException('No free order number found');
+    }
+
+    /** Payment references (SumUp checkouts). Not order numbers - see generateOrderNumber(). */
     public  static function generateTrackingId($item){
         $now = Carbon::now();
         return Utils::formatDate($now, 'Ydm') . Utils::generateRandomString(5) . $item['user_id'];

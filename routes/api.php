@@ -80,6 +80,10 @@ use App\Http\Controllers\SumupPaymentController;
 use App\Http\Controllers\BidController;
 use App\Http\Controllers\LoyaltyController;
 use App\Http\Controllers\LoyaltyGroupController;
+use App\Http\Controllers\MembershipController;
+use App\Http\Controllers\MembershipMemberController;
+use App\Http\Controllers\MembershipPlanController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\BusinessProductsController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\RecentlyViewedController;
@@ -456,6 +460,7 @@ Route::group([
             Route::post('media-storage-action', [SettingsController::class, 'mediaStorageAction']);
 
             Route::post('miscellaneous', [SettingsController::class, 'miscellaneous']);
+            Route::post('cart-reservation', [SettingsController::class, 'cartReservation']);
             Route::post('analytics', [SettingsController::class, 'analytics']);
 
             Route::get('sidebar-icons', [SettingsController::class, 'sidebarIconsFind']);
@@ -778,6 +783,27 @@ Route::group([
         });
 
         Route::group([
+            'prefix' => 'membership-plans'
+        ], function (){
+            Route::get('all', [MembershipPlanController::class, 'all']);
+            Route::post('action/{id?}', [MembershipPlanController::class, 'action']);
+            Route::get('find/{id}', [MembershipPlanController::class, 'find']);
+            Route::post('sync/{id}', [MembershipPlanController::class, 'sync']);
+            Route::delete('delete/{id}', [MembershipPlanController::class, 'delete']);
+        });
+
+        Route::group([
+            'prefix' => 'memberships'
+        ], function (){
+            Route::get('all', [MembershipMemberController::class, 'all']);
+            Route::get('stats', [MembershipMemberController::class, 'stats']);
+            Route::get('customers', [MembershipMemberController::class, 'customers']);
+            Route::get('find/{id}', [MembershipMemberController::class, 'find']);
+            Route::post('action/{id}', [MembershipMemberController::class, 'action']);
+            Route::post('grant', [MembershipMemberController::class, 'grant']);
+        });
+
+        Route::group([
             'prefix' => 'business-products'
         ], function (){
             Route::get('all', [BusinessProductsController::class, 'all']);
@@ -962,6 +988,12 @@ Route::group([
  * to be able to get a real one (QA audit SEC-02).
  */
 Route::post('v1/guest/token', [GuestUsersController::class, 'issueToken']);
+
+/*
+ * Stripe's webhook for membership subscriptions. No token of ours: the
+ * Stripe-Signature header is checked against the signing secret instead.
+ */
+Route::post('v1/stripe/webhook', [StripeWebhookController::class, 'handle']);
 
 Route::group([
     'prefix' => 'v1',
@@ -1340,6 +1372,18 @@ Route::group([
              * group by passing a user id.
              */
             Route::get('loyalty-discount', [LoyaltyController::class, 'current']);
+
+            // Paid membership (Savers Club). The card is taken on the page by Stripe's card form.
+            Route::get('membership', [MembershipController::class, 'show']);
+            Route::post('membership/subscribe', [MembershipController::class, 'subscribe'])->middleware('throttle:10,1');
+            Route::post('membership/subscribe/finish', [MembershipController::class, 'joinFinish'])->middleware('throttle:10,1');
+            Route::get('membership/billing', [MembershipController::class, 'billing']);
+            Route::post('membership/card', [MembershipController::class, 'card'])->middleware('throttle:10,1');
+            Route::post('membership/card/finish', [MembershipController::class, 'cardFinish'])->middleware('throttle:10,1');
+            Route::post('membership/cancel', [MembershipController::class, 'cancel']);
+            Route::post('membership/resume', [MembershipController::class, 'resume']);
+            Route::post('membership/change', [MembershipController::class, 'change'])->middleware('throttle:10,1');
+            Route::post('membership/digest', [MembershipController::class, 'digest']);
 
 
             Route::get('logout', [UsersController::class, "logout"]);

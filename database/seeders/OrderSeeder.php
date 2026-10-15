@@ -49,7 +49,7 @@ class OrderSeeder extends Seeder
 
         if(!Order::first() && $user && $ua){
             foreach ($items as $i) {
-                $i['order'] = Utils::generateTrackingId($i);
+                $i['order'] = Utils::generateOrderNumber();
                 Order::create($i);
             }
         }

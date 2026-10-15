@@ -19,5 +19,6 @@ class VerifyCsrfToken extends Middleware
          * instead by Laravel's signed-URL signature, checked in the route.
          */
         'newsletter/unsubscribe',
+        'membership/digest/unsubscribe',
     ];
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Helper\CartHold;
 use App\Models\Helper\ControllerHelper;
 use App\Models\Setting;
 use App\Models\SidebarIcon;
@@ -546,6 +547,53 @@ class SettingsController extends ControllerHelper
                 if (Setting::where('id', $data->id)->update($setting)) {
                     return response()->json(new Response($request->token, $setting));
                 }
+            }
+
+            return response()->json(Validation::errorTokenLang($request->token, $lang));
+
+
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+
+    /**
+     * Basket reservation timings: when the reminder email goes and when the
+     * basket is emptied and its stock restored, both counted from the last
+     * add. CartHold reads them; a change applies to baskets already held.
+     */
+    public function cartReservation(Request $request)
+    {
+        try {
+            $lang = $request->header('language');
+
+            if ($can = Utils::userCan($this->user, 'setting.edit')) {
+                return $can;
+            }
+
+            $validate = Validation::cartReservation($request);
+            if ($validate) {
+                return response()->json($validate);
+            }
+
+            $data = Setting::first();
+
+            $setting['cart_remind_minutes'] = (int)request('cart_remind_minutes');
+            $setting['cart_expire_minutes'] = (int)request('cart_expire_minutes');
+
+            if (!$data) {
+                $setting['admin_id'] = $request->user()->id;
+                $saved = (bool)Setting::create($setting);
+            } else {
+                // update() answers 0 when nothing changed, which is still a save.
+                Setting::where('id', $data->id)->update($setting);
+                $saved = true;
+            }
+
+            if ($saved) {
+                CartHold::forgetTimings();
+                return response()->json(new Response($request->token, $setting));
             }
 
             return response()->json(Validation::errorTokenLang($request->token, $lang));

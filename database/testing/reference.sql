@@ -435,7 +435,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `settings` WRITE;
 /*!40000 ALTER TABLE `settings` DISABLE KEYS */;
-INSERT INTO `settings` (`id`, `currency`, `currency_icon`, `email`, `phone`, `whatsapp`, `address_1`, `address_2`, `city`, `state`, `zip`, `country`, `created_at`, `updated_at`, `admin_id`, `currency_position`, `decimal_format`, `google_login`, `facebook_login`, `attach_pdf`, `guest_checkout`, `send_seller_email`, `enable_ga`, `ga_id`, `vendor_registration`, `cookie_banner`, `enable_pixel`, `pixel_id`, `default_country`, `default_state`, `translate_pdf`) VALUES (1,'EUR','€','support@fixmypc.ie','01 504 7000','0874523344','Unit 2, Church Street','Kilcock, Co. Kildare','Co. Kildare','Leinster','W23HW89','Ireland','2024-11-19 05:44:40','2026-05-22 06:45:44',4,'1','en-IE',1,1,1,1,1,0,NULL,0,1,0,NULL,'IE','L',0);
+INSERT INTO `settings` (`id`, `currency`, `currency_icon`, `email`, `phone`, `whatsapp`, `address_1`, `address_2`, `city`, `state`, `zip`, `country`, `created_at`, `updated_at`, `admin_id`, `currency_position`, `decimal_format`, `google_login`, `facebook_login`, `attach_pdf`, `guest_checkout`, `send_seller_email`, `enable_ga`, `ga_id`, `vendor_registration`, `cookie_banner`, `enable_pixel`, `pixel_id`, `default_country`, `default_state`, `translate_pdf`, `cart_remind_minutes`, `cart_expire_minutes`) VALUES (1,'EUR','€','support@fixmypc.ie','01 504 7000','0874523344','Unit 2, Church Street','Kilcock, Co. Kildare','Co. Kildare','Leinster','W23HW89','Ireland','2024-11-19 05:44:40','2026-05-22 06:45:44',4,'1','en-IE',1,1,1,1,1,0,NULL,0,1,0,NULL,'IE','L',0,5,20);
 /*!40000 ALTER TABLE `settings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -858,8 +858,29 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (257,'2026_10_09_00
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (259,'2026_10_09_000300_add_added_price_to_carts',81);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (260,'2026_10_13_000100_cap_customer_sign_in_lifetime',82);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (261,'2026_10_13_000200_create_basket_notices',83);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (262,'2026_10_14_000100_add_weight_rates_to_shipping_places',84);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (263,'2026_10_14_000200_add_weight_extra_per_kg_to_shipping_places',85);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (264,'2026_10_15_000100_add_cart_hold_timings_to_settings',86);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (265,'2026_10_15_000200_add_unique_order_number_to_orders',87);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
+-- membership (2026-10-15)
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (266,'2026_10_15_000300_create_membership_tables',88);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (267,'2026_10_15_000400_add_membership_permissions',89);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (268,'2026_10_15_000500_add_yearly_price_to_membership_plans',90);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (270,'2026_10_15_000600_add_new_product_alerts',91);
+INSERT INTO `permissions` (`id`, `name`, `group_name`, `guard_name`, `created_at`, `updated_at`) VALUES (168,'membership.create','membership','admin','2026-10-15 01:22:05','2026-10-15 01:22:05');
+INSERT INTO `permissions` (`id`, `name`, `group_name`, `guard_name`, `created_at`, `updated_at`) VALUES (170,'membership.delete','membership','admin','2026-10-15 01:22:05','2026-10-15 01:22:05');
+INSERT INTO `permissions` (`id`, `name`, `group_name`, `guard_name`, `created_at`, `updated_at`) VALUES (169,'membership.edit','membership','admin','2026-10-15 01:22:05','2026-10-15 01:22:05');
+INSERT INTO `permissions` (`id`, `name`, `group_name`, `guard_name`, `created_at`, `updated_at`) VALUES (167,'membership.view','membership','admin','2026-10-15 01:22:05','2026-10-15 01:22:05');
+INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES (167,1);
+INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES (167,2);
+INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES (168,1);
+INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES (168,2);
+INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES (169,1);
+INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES (169,2);
+INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES (170,1);
+INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES (170,2);
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

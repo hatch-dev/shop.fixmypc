@@ -15,6 +15,7 @@ use App\Models\Helper\Validation;
 use App\Models\Helper\BundleDiscount;
 use App\Models\Helper\Pricing;
 use App\Models\Helper\Shipping;
+use App\Models\Helper\Membership;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Models\UpdatedInventory;
@@ -222,6 +223,7 @@ class CartsController extends ControllerHelper
 		
             $this->repriceForCustomer($request, $data);
             $this->priceShippingByWeight($data);
+            $this->applyMemberShipping($request, $data);
 
             /*
              * Whatever changed this basket without the shopper - emptied after
@@ -309,6 +311,37 @@ class CartsController extends ControllerHelper
 
             $place->setAttribute('order_weight', $weight);
             $place->setAttribute('deliverable', !is_null($price));
+        }
+    }
+
+    /**
+     * A member's delivery is free (Helper\Membership): the delivery rows on
+     * the basket are priced at 0, which is the figure /checkout reads and the
+     * order charges. Collection keeps its price. Measured on the lines being
+     * bought, priced as the order prices them.
+     */
+    private function applyMemberShipping(Request $request, $rows)
+    {
+        $user = $request->user('user');
+        $rows = collect($rows);
+
+        if (!$user || $rows->isEmpty()) {
+            return;
+        }
+
+        if (!Membership::freeShippingFor($user, Membership::checkoutLines($user)['subtotal'])) {
+            return;
+        }
+
+        foreach ($rows as $row) {
+            $place = $row->shipping_place;
+
+            if (!$place || (int)$row->shipping_type !== Shipping::deliveryType()) {
+                continue;
+            }
+
+            $place->price = 0;
+            $place->setAttribute('member_free_shipping', true);
         }
     }
 
@@ -1350,6 +1383,7 @@ class CartsController extends ControllerHelper
              */
             $this->repriceForCustomer($request, $data);
             $this->priceShippingByWeight($data);
+            $this->applyMemberShipping($request, $data);
 
             return response()->json(new Response($request->token, $data));
 
@@ -2265,7 +2299,21 @@ class CartsController extends ControllerHelper
                 $weight
             );
 
+            /*
+             * Free for a member, as the basket and the order have it. The
+             * product page's single item is weighed alone, but a member's
+             * delivery is free on the basket they will actually check out.
+             */
+            $memberFree = false;
+
+            if ($quote['ok'] && (int)$type === Shipping::deliveryType() && $request->user('user')
+                && Membership::freeShippingFor($request->user('user'), Membership::checkoutLines($request->user('user'))['subtotal'])) {
+                $quote['price'] = 0.0;
+                $memberFree = true;
+            }
+
             $result = Shipping::publicQuote($quote);
+            $result['member_free_shipping'] = $memberFree;
             $result['restricted_carts'] = (object)$this->restrictedByCart($quote, $carts);
 
             return response()->json(new Response($request->token, $result));

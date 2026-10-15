@@ -82,11 +82,27 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping();
 
         /*
-         * Basket reservations: reminder at 5 minutes, empty at 20; plus
+         * Basket reservations: reminder and emptying on the admin timings; plus
          * abandoned Buy Now lines (BasketUpkeep). Also swept from API traffic
          * (middleware cart.hold:sweep) for the no-cron case.
          */
         $schedule->command('cart:sweep-holds')
+            ->everyMinute()
+            ->withoutOverlapping();
+
+        /*
+         * Memberships: re-read open Stripe subscriptions (the net under the
+         * webhook) and close granted ones past their end date.
+         */
+        $schedule->command('membership:sync')
+            ->everySixHours()
+            ->withoutOverlapping();
+
+        /*
+         * Members are emailed when new products go on sale, within a minute;
+         * products published together go in one email.
+         */
+        $schedule->command('membership:new-product-alerts')
             ->everyMinute()
             ->withoutOverlapping();
     }

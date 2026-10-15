@@ -15,6 +15,8 @@ class OrderedLoyaltyDiscount extends Model
         'order_id',
         'loyalty_group_id',
         'loyalty_group_user_id',
+        // set when a membership, not a loyalty group, paid (Helper\Membership)
+        'user_membership_id',
         'label',
         'discount'
     ];
@@ -31,6 +33,11 @@ class OrderedLoyaltyDiscount extends Model
     public function loyaltyGroup()
     {
         return $this->belongsTo(LoyaltyGroup::class, 'loyalty_group_id');
+    }
+
+    public function userMembership()
+    {
+        return $this->belongsTo(UserMembership::class, 'user_membership_id');
     }
 
     public function membership()

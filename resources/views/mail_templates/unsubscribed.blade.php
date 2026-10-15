@@ -36,7 +36,9 @@
 
     @if ($ok)
         <h1>You're unsubscribed</h1>
-        @if ($email)
+        @if (!empty($what))
+            <p>{{ $what }}</p>
+        @elseif ($email)
             <p><span class="email">{{ $email }}</span> has been removed from our mailing list.</p>
         @endif
         <p>You'll still receive order confirmations and other service messages about your account.</p>

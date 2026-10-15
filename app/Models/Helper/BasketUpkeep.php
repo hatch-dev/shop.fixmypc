@@ -36,10 +36,28 @@ class BasketUpkeep
     const GUEST_PASS_EVERY_SECONDS = 3600;
 
     /**
+     * When the sweep last ran, and when the scheduler (cron) last ran it.
+     * Read by `mail:check`: basket reminders only go out from the sweep, so
+     * "never from the scheduler" means they depend on someone using the site.
+     */
+    const LAST_SWEEP_KEY = 'basket-sweep-last';
+    const LAST_SCHEDULED_SWEEP_KEY = 'basket-sweep-last-scheduled';
+
+    /**
      * @return array{reminded:int, expired:int, reconciled:int, buy_now_expired:int, guest_lines_expired:int}
      */
-    public static function sweep($everything = false)
+    public static function sweep($everything = false, $source = 'traffic')
     {
+        try {
+            $now = date('Y-m-d H:i:s');
+            Cache::forever(self::LAST_SWEEP_KEY, ['at' => $now, 'source' => $source]);
+
+            if ($source === 'scheduler') {
+                Cache::forever(self::LAST_SCHEDULED_SWEEP_KEY, $now);
+            }
+        } catch (\Throwable $e) {
+            // Diagnostics only: never stop the sweep for them.
+        }
         $done = CartHold::sweep();
 
         $done['buy_now_expired'] = self::expireBuyNow();
@@ -104,7 +122,7 @@ class BasketUpkeep
                 ->pluck('user_token');
 
             foreach ($tokens->diff($seen) as $token) {
-                // A basket with a reservation is the 20-minute timer's job.
+                // A basket with a reservation is the reservation timer's job.
                 if (\DB::table('cart_holds')->where('owner_key', CartHold::ownerKey(null, $token))->exists()) {
                     continue;
                 }

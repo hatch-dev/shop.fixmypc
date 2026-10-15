@@ -163,6 +163,7 @@
           razorpay_secret: null,
           stripe_key: null,
           stripe_secret: null,
+          stripe_webhook_secret: null,
 
           flutterwave: true,
           fw_public_key: null,
