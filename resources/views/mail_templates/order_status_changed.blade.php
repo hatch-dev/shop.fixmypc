@@ -21,6 +21,17 @@
     }
     $tone = $negative ? 'neutral' : 'accent';
 
+    // "Tracking added" names its own heading; every other event reads the status.
+    $title = !empty($data->title)
+        ? $data->title
+        : __('lang.mail_status_title', ['status' => $data->status_label], $lang);
+    $subtitle = !empty($data->subtitle)
+        ? $data->subtitle
+        : __('lang.mail_status_sub', ['order' => $data->order], $lang);
+
+    // Set on "on the way" / "tracking added" when the order has a shipment.
+    $trackUrl = !empty($data->track_url) ? $data->track_url : null;
+
     /*
      * Rows the event adds to the panel -- the amount and reference on a
      * refund. Optional, because MailHelper::orderStatusChanged() still renders
@@ -41,10 +52,10 @@
     }
 @endphp
 
-@section('title', __('lang.mail_status_title', ['status' => $data->status_label], $lang))
+@section('title', $title)
 
 @section('preheader')
-    {{ __('lang.mail_status_sub', ['order' => $data->order], $lang) }}
+    {{ $subtitle }}
 @endsection
 
 @section('hero')
@@ -53,8 +64,8 @@
         'tone'     => $tone,
         'art'      => 'hero-truck.png',
         'eyebrow'  => __('lang.mail_status_eyebrow', [], $lang),
-        'title'    => __('lang.mail_status_title', ['status' => $data->status_label], $lang),
-        'subtitle' => __('lang.mail_status_sub', ['order' => $data->order], $lang),
+        'title'    => $title,
+        'subtitle' => $subtitle,
     ])
 @endsection
 
@@ -94,12 +105,29 @@
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
         <tr>
             <td align="center">
-                @include('mail_templates.partials.button', [
-                    'brand' => $brand,
-                    'url'   => $orderUrl,
-                    'label' => __('lang.view_order', [], $lang),
-                    'align' => 'center',
-                ])
+                @if(!empty($data->button_url))
+                    {{-- An event with its own call to action: the exchange pay link. --}}
+                    @include('mail_templates.partials.button', [
+                        'brand' => $brand,
+                        'url'   => $data->button_url,
+                        'label' => $data->button_label,
+                        'align' => 'center',
+                    ])
+                @elseif($trackUrl)
+                    @include('mail_templates.partials.button', [
+                        'brand' => $brand,
+                        'url'   => $trackUrl,
+                        'label' => __('lang.mail_track_parcel', [], $lang),
+                        'align' => 'center',
+                    ])
+                @else
+                    @include('mail_templates.partials.button', [
+                        'brand' => $brand,
+                        'url'   => $orderUrl,
+                        'label' => __('lang.view_order', [], $lang),
+                        'align' => 'center',
+                    ])
+                @endif
             </td>
         </tr>
     </table>

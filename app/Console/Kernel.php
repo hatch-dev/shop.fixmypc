@@ -105,6 +105,14 @@ class Kernel extends ConsoleKernel
         $schedule->command('membership:new-product-alerts')
             ->everyMinute()
             ->withoutOverlapping();
+
+        /*
+         * Shipment statuses from AfterShip: the net under its webhook, and
+         * the only update path until the webhook is configured.
+         */
+        $schedule->command('aftership:sync')
+            ->hourly()
+            ->withoutOverlapping();
     }
 
     /**

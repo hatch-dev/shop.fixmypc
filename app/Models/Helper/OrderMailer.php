@@ -43,6 +43,10 @@ class OrderMailer
      */
     public static function send(Order $order, $event, $recipient, $name, $lang = null, array $context = [])
     {
+        if ($return = OrderEmailEvent::parseReturn($event)) {
+            return static::returnUpdate($order, $return[0], $return[1], $event, $recipient, $name, $lang);
+        }
+
         switch ($event) {
 
             case OrderEmailEvent::ORDER_PLACED:
@@ -252,6 +256,71 @@ class OrderMailer
 
         Mail::raw(implode("\n", $lines), function ($message) use ($to, $order) {
             $message->to($to)->subject('Bank transfer to check: order ' . $order->order);
+        });
+
+        return true;
+    }
+
+    /**
+     * Tell the shop a parcel needs a person: no courier scan two days after
+     * the number went in, a failed delivery, a courier exception, or AfterShip
+     * giving up. Plain text to the support address, like the transfer notice.
+     * The caller (ShipmentTracking::alertStaff) makes sure each goes once.
+     *
+     * @return bool whether a message was handed to the mailer
+     */
+    public static function staffShipmentAlert(Order $order, \App\Models\OrderShipment $shipment, $reason)
+    {
+        $brand = MailBrand::make();
+        $to = $brand->support_email;
+
+        if (!$to || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+
+        $titles = [
+            'no_scan' => 'No courier scan yet',
+            'AttemptFail' => 'Delivery attempt failed',
+            'Exception' => 'Delivery problem',
+            'Expired' => 'Tracking expired',
+            'wrong_carrier' => 'Wrong courier for tracking number',
+            'unrecognized_carrier' => 'Courier not recognised',
+            'carrier_not_connected' => 'Courier account not connected in AfterShip',
+        ];
+
+        $latest = collect($shipment->checkpoints ?: [])->first();
+        $adminUrl = rtrim((string)config('env.url.APP_URL'), '/') . '/admin/orders/' . $order->id;
+
+        $lines = [
+            ($titles[$reason] ?? 'Parcel needs attention') . ' on order ' . $order->order . '.',
+            '',
+            \App\Models\OrderShipment::ATTENTION[$reason] ?? '',
+            '',
+            'Courier: ' . $shipment->courier_name,
+            'Tracking number: ' . $shipment->tracking_number,
+            'Courier status: ' . $shipment->tagLabel() . ($shipment->subtag_message ? ' (' . $shipment->subtag_message . ')' : ''),
+        ];
+
+        if ($latest) {
+            $lines[] = 'Latest scan: ' . trim(($latest['message'] ?? '') . ' ' . (!empty($latest['place']) ? '- ' . $latest['place'] : ''))
+                . (!empty($latest['at']) ? ' (' . $latest['at'] . ')' : '');
+        }
+
+        if ($url = $shipment->externalUrl()) {
+            $lines[] = 'Courier tracking: ' . $url;
+        }
+
+        $lines = array_merge($lines, [
+            'Customer: ' . trim(($order->contact_name ?: '') . ' ' . ($order->contact_email ? '<' . $order->contact_email . '>' : '')),
+            '',
+            'Open the order:',
+            $adminUrl,
+        ]);
+
+        $subject = ($titles[$reason] ?? 'Parcel needs attention') . ': order ' . $order->order;
+
+        Mail::raw(implode("\n", $lines), function ($message) use ($to, $subject) {
+            $message->to($to)->subject($subject);
         });
 
         return true;
@@ -545,9 +614,201 @@ class OrderMailer
         $data->store_name = $brand->store_name;
         $data->extra_rows = static::extraRows($event, $context, $setting, $lang);
 
+        /*
+         * The parcel, on the two emails that announce it: "on the way" and
+         * "tracking added". Read at send time, so a queued "on the way" email
+         * carries a shipment saved after it was raised.
+         */
+        $data->track_url = null;
+
+        $shipment = in_array($event, [OrderEmailEvent::ORDER_SHIPPED, OrderEmailEvent::TRACKING_ADDED,
+            OrderEmailEvent::OUT_FOR_DELIVERY, OrderEmailEvent::DELIVERY_ATTEMPT_FAILED,
+            OrderEmailEvent::READY_FOR_PICKUP], true)
+            ? \App\Models\OrderShipment::where('order_id', $order->id)->first()
+            : null;
+
+        if ($shipment) {
+            $data->extra_rows[] = ['label' => __('lang.mail_courier', [], $lang), 'value' => (string)$shipment->courier_name];
+            $data->extra_rows[] = ['label' => __('lang.mail_tracking_number', [], $lang), 'value' => (string)$shipment->tracking_number, 'strong' => true];
+            $data->track_url = ShipmentTracking::trackUrl($order);
+        }
+
         $subject = MailDeliverability::subject(__('lang.order_status_subject', [
             'order' => $order->order,
             'status' => $label,
+        ], $lang));
+
+        // The parcel emails that are not a status change name their own heading.
+        $own = [
+            OrderEmailEvent::TRACKING_ADDED => 'mail_tracking',
+            OrderEmailEvent::OUT_FOR_DELIVERY => 'mail_ofd',
+            OrderEmailEvent::DELIVERY_ATTEMPT_FAILED => 'mail_attempt',
+            OrderEmailEvent::READY_FOR_PICKUP => 'mail_pickup',
+        ];
+
+        if (isset($own[$event])) {
+            $key = $own[$event];
+            $subject = MailDeliverability::subject(__('lang.' . $key . '_subject', ['order' => $order->order], $lang));
+            $data->title = __('lang.' . $key . '_title', [], $lang);
+            $data->subtitle = __('lang.' . $key . '_sub', ['order' => $order->order], $lang);
+        }
+
+        Mail::send(
+            [
+                'html' => 'mail_templates.order_status_changed',
+                'text' => 'mail_templates.text.order_status_changed',
+            ],
+            [
+                'data' => $data,
+                'setting' => $brand,
+                'brand' => $brand,
+                'lang' => $lang,
+            ],
+            function ($message) use ($recipient, $name, $subject, $brand, $event) {
+                $message->to($recipient, $name)->subject($subject);
+
+                MailDeliverability::transactional($message, $brand,
+                    OrderEmailEvent::category($event));
+            });
+
+        return true;
+    }
+
+    /**
+     * A return case opened, refunded or turned down.
+     *
+     * Rendered by the status template with its own heading. Everything is
+     * read from the case at send time, not from the event's context, because
+     * the retry sweep replays an event without its context.
+     */
+    public static function returnUpdate(Order $order, $kind, $returnId, $event, $recipient, $name, $lang = null)
+    {
+        $return = \App\Models\OrderReturn::with('items')->where('order_id', $order->id)->find($returnId);
+
+        if (is_null($return)) {
+            throw new \RuntimeException('Return case ' . $returnId . ' not found for order ' . $order->id);
+        }
+
+        $setting = Setting::first();
+        $brand = MailBrand::make($name, $lang);
+        $icon = $setting ? $setting->currency_icon : '';
+
+        /*
+         * mail_return_opened_label / _title / _sub, and the same for refunded
+         * and rejected; an exchange reads mail_exchange_opened, _rejected and
+         * _done instead.
+         */
+        $key = 'lang.mail_' . $kind;
+
+        if ($return->isExchange()) {
+            $key = 'lang.mail_exchange_' . ($kind === OrderEmailEvent::RETURN_EXCHANGED ? 'done' : str_replace('return_', '', $kind));
+        }
+
+        // The pay link email carries its own button.
+        $button = null;
+        $label = __($key . '_label', [], $lang);
+        $title = __($key . '_title', [], $lang);
+        $subtitle = __($key . '_sub', [], $lang);
+
+        // In the customer's language where the product has a translation.
+        $names = \App\Models\OrderedProduct::whereIn('ordered_products.id', $return->items->pluck('ordered_product_id'))
+            ->join('products', 'products.id', '=', 'ordered_products.product_id')
+            ->leftJoin('product_langs as pl', function ($join) use ($lang) {
+                $join->on('pl.product_id', '=', 'products.id')->where('pl.lang', (string)$lang);
+            })
+            // pluck() cannot take an expression: select it under a name first.
+            ->selectRaw('ordered_products.id as line_id, COALESCE(pl.title, products.title) as line_title')
+            ->pluck('line_title', 'line_id');
+
+        $rows = [
+            ['label' => __('lang.mail_return_number', [], $lang), 'value' => $return->rma_number, 'strong' => true],
+            ['label' => __('lang.mail_return_items', [], $lang), 'value' => $return->items->map(function ($item) use ($names) {
+                $text = $item->quantity . ' x ' . ($names[$item->ordered_product_id] ?? 'Item');
+
+                // "... -> 256GB / Black" on an exchange
+                if ($item->exchange_inventory_id && ($target = \App\Models\UpdatedInventory::find($item->exchange_inventory_id))) {
+                    $text .= ' -> ' . (Variant::label($target, false) ?: '#' . $target->id);
+                }
+
+                return $text;
+            })->implode(', ')],
+        ];
+
+        if ($kind === OrderEmailEvent::RETURN_OPENED && $setting) {
+            $address = collect([$brand->store_name, $setting->address_1, $setting->address_2, $setting->city,
+                $setting->state, $setting->zip, $setting->country])->filter()->implode(', ');
+
+            if ($address !== '') {
+                $rows[] = ['label' => __('lang.mail_return_send_to', [], $lang), 'value' => $address];
+            }
+        }
+
+        if ($kind === OrderEmailEvent::RETURN_PAYMENT) {
+            $link = \App\Models\PayLink::where('order_return_id', $return->id)->where('status', \App\Models\PayLink::PENDING)->latest('id')->first();
+
+            if (!$link) {
+                throw new \RuntimeException('No open pay link for return ' . $return->id);
+            }
+
+            $rows[] = ['label' => __('lang.mail_exchange_amount_due', [], $lang), 'value' => $icon . number_format((float)$link->amount, 2), 'strong' => true];
+            $rows[] = ['label' => __('lang.mail_exchange_link_expires', [], $lang), 'value' => $link->expires_at->format('j M Y')];
+            $button = ['url' => PayLinks::url($link), 'label' => __('lang.mail_exchange_pay_button', [], $lang)];
+        }
+
+        if ($kind === OrderEmailEvent::RETURN_EXCHANGED) {
+            $replacement = $return->replacement_order_id ? Order::find($return->replacement_order_id) : null;
+
+            if ($replacement) {
+                $rows[] = ['label' => __('lang.mail_exchange_new_order', [], $lang), 'value' => '#' . $replacement->order, 'strong' => true];
+            }
+            if ((float)$return->amount_charged > 0) {
+                $rows[] = ['label' => __('lang.mail_exchange_paid', [], $lang), 'value' => $icon . number_format((float)$return->amount_charged, 2)];
+            }
+            if ((float)$return->refund_amount > 0) {
+                $rows[] = ['label' => __('lang.mail_refunded_amount', [], $lang), 'value' => $icon . number_format((float)$return->refund_amount, 2)];
+            }
+        }
+
+        if ($kind === OrderEmailEvent::RETURN_REFUNDED) {
+            if ((float)$return->refund_amount > 0) {
+                $rows[] = ['label' => __('lang.mail_refunded_amount', [], $lang),
+                    'value' => $icon . number_format((float)$return->refund_amount, 2), 'strong' => true];
+            }
+
+            if ((float)$return->gift_card_amount > 0) {
+                $rows[] = ['label' => __('lang.mail_return_gift_card', [], $lang), 'value' => $icon . number_format((float)$return->gift_card_amount, 2)];
+            }
+
+            if ((int)$return->points_returned > 0) {
+                $rows[] = ['label' => __('lang.mail_return_points', [], $lang), 'value' => (string)$return->points_returned];
+            }
+
+            if ($return->refund_method === 'original' && !empty($return->refund_reference)) {
+                $rows[] = ['label' => __('lang.mail_refund_reference', [], $lang), 'value' => (string)$return->refund_reference];
+            }
+        }
+
+        $data = new \stdClass();
+        $data->receiver = $name;
+        $data->name = $name;
+        $data->email = $recipient;
+        $data->order = $order->order;
+        $data->order_id = $order->id;
+        $data->status = (int)$order->status;
+        $data->status_label = $label;
+        $data->total_amount = $order->total_amount;
+        $data->currency = $order->currency;
+        $data->currency_icon = $icon;
+        $data->store_name = $brand->store_name;
+        $data->extra_rows = $rows;
+        $data->track_url = null;
+        $data->title = $title;
+        $data->subtitle = $subtitle;
+        $data->button_url = $button['url'] ?? null;
+        $data->button_label = $button['label'] ?? null;
+
+        $subject = MailDeliverability::subject(__('lang.mail_return_subject', [
+            'label' => $label, 'rma' => $return->rma_number, 'order' => $order->order,
         ], $lang));
 
         Mail::send(
@@ -567,6 +828,60 @@ class OrderMailer
                 MailDeliverability::transactional($message, $brand,
                     OrderEmailEvent::category($event));
             });
+
+        return true;
+    }
+
+    /**
+     * A customer asked for a return or exchange from their order page: tell
+     * the shop, plainly, so someone reviews it.
+     */
+    public static function staffReturnRequest(\App\Models\OrderReturn $return)
+    {
+        if (!config('constants.returns.STAFF_ALERT', true)) {
+            return false;
+        }
+
+        $brand = MailBrand::make();
+        $to = $brand->support_email;
+
+        if (!$to || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+
+        $order = Order::find($return->order_id);
+        $names = OrderedProduct::whereIn('ordered_products.id', $return->items->pluck('ordered_product_id'))
+            ->join('products', 'products.id', '=', 'ordered_products.product_id')
+            ->selectRaw('ordered_products.id as line_id, products.title as line_title')
+            ->pluck('line_title', 'line_id');
+
+        $kind = $return->isExchange() ? 'Exchange' : 'Return';
+        $lines = [
+            $kind . ' requested by the customer on order ' . $order->order . '.',
+            '',
+            'Return number: ' . $return->rma_number,
+            'Reason: ' . $return->reasonLabel(),
+            'Items: ' . $return->items->map(function ($i) use ($names) {
+                return $i->quantity . ' x ' . ($names[$i->ordered_product_id] ?? 'Item');
+            })->implode(', '),
+        ];
+
+        if ($return->customer_note) {
+            $lines[] = 'Customer said: ' . $return->customer_note;
+        }
+
+        $lines = array_merge($lines, [
+            'Customer: ' . trim(($order->contact_name ?: '') . ' ' . ($order->contact_email ? '<' . $order->contact_email . '>' : '')),
+            '',
+            'Review it:',
+            rtrim((string)config('env.url.APP_URL'), '/') . '/admin/returns/' . $return->id,
+        ]);
+
+        $subject = $kind . ' request ' . $return->rma_number . ': order ' . $order->order;
+
+        Mail::raw(implode("\n", $lines), function ($message) use ($to, $subject) {
+            $message->to($to)->subject($subject);
+        });
 
         return true;
     }

@@ -31,6 +31,7 @@ use App\Models\Helper\CartHold;
 use App\Models\Helper\CheckoutStock;
 use App\Models\Helper\Utils;
 use App\Models\Helper\Validation;
+use App\Models\Helper\ShipmentTracking;
 use App\Models\IyzicoPayment;
 use App\Models\Licence;
 use App\Models\Order;
@@ -932,6 +933,17 @@ class OrdersController extends ControllerHelper
             $order['updated'] = $date($order->updated_at);
             $order['paid_on'] = $date($order->paid_at);
 
+            /*
+             * Shipment tracking (AfterShip). Not keyed `shipment`: that is the
+             * relation's name, and toArray() would put the raw row over it.
+             */
+            $shipment = \App\Models\OrderShipment::where('order_id', $order->id)->first();
+            $order['shipment_tracking'] = $shipment ? $shipment->adminView() : null;
+            // Couriers come from AfterShip through shipmentCouriers(), so a slow
+            // AfterShip never holds up opening an order.
+            $order['shipment_allowed'] = in_array((int)$order->status, ShipmentTracking::shippableStatuses(), true)
+                && !ShipmentTracking::isCollection($order);
+
             unset($order['user']);
 
             return response()->json(new Response($request->token, $order));
@@ -1325,65 +1337,7 @@ class OrdersController extends ControllerHelper
                 ));
             }
 
-            $updatedStatus = ['status' => $newStatus];
-
-            /*
-             * Cash is handed over on delivery, so delivering the order is the
-             * moment it is paid — and now the moment it records as paid.
-             */
-            if ((int)Config::get('constants.orderStatus.DELIVERED') === $newStatus &&
-                (int)Config::get('constants.paymentMethod.CASH_ON_DELIVERY') == (int)$order->order_method) {
-                $updatedStatus = array_merge($updatedStatus, Order::paymentStamp(true));
-            }
-
-            /*
-             * QA audit ORD-01. Cancelling or returning an order used to leave
-             * the stock deduction, the loyalty points and the voucher
-             * redemption exactly as they were.
-             */
-            $releasesStock = in_array($newStatus, [
-                (int)Config::get('constants.orderStatus.CANCELLED'),
-                (int)Config::get('constants.orderStatus.RETURNED'),
-                (int)Config::get('constants.orderStatus.REFUNDED'),
-            ], true);
-
-            $delivered = (int)Config::get('constants.orderStatus.DELIVERED') === $newStatus;
-
-            DB::transaction(function () use ($order, $request, $updatedStatus, $releasesStock, $delivered, $oldStatus, $newStatus) {
-
-                Order::where('id', $request->id)->update($updatedStatus);
-
-                if ($releasesStock) {
-                    $order->restoreStockAndRewards();
-                }
-
-                // After the status write above, so a cancellation is
-                // counted as one rather than as a sale.
-                $order->refreshFlashAllowances();
-
-                /*
-                 * Cherry Points are earned on delivery, not on payment.
-                 *
-                 * Inside the transaction, and after the update above, so the
-                 * points and the status are written together and the fresh read
-                 * sees the payment_done that cash-on-delivery just set.
-                 */
-                if ($delivered) {
-                    $this->awardLoyaltyPoints($order->fresh());
-                }
-
-                OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'from_status' => $oldStatus,
-                    'to_status' => $newStatus,
-                    'changed_by' => optional($this->user)->id,
-                    'changed_by_type' => 'admin',
-                    'note' => $request->note
-                ]);
-            });
-
-            // QA audit EML-02: nothing used to tell the customer.
-            $this->notifyStatusChange($order->fresh(), $newStatus, $lang);
+            $this->applyStatusChange($order, $newStatus, optional($this->user)->id, 'admin', $request->note, $lang);
 
             $fresh = $order->fresh();
 
@@ -1395,6 +1349,316 @@ class OrdersController extends ControllerHelper
                     'id' => $request->id
                 ]]));
 
+
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+
+    /**
+     * Move an order to a new status: the write, the stock/points/voucher
+     * side effects, the audit row and the customer email.
+     *
+     * Was the body of updateStatus(); lifted out unchanged so that a shipment
+     * saved from the order screen (On the way) and a courier's delivered scan
+     * from AfterShip (Delivered) move an order exactly as the admin dropdown
+     * does. The caller has already checked Order::canTransition().
+     *
+     * @param  int         $changedBy      admins.id, or null for the system
+     * @param  string      $changedByType  'admin' | 'system' | 'aftership'
+     */
+    public function applyStatusChange(Order $order, $newStatus, $changedBy, $changedByType = 'admin', $note = null, $lang = null)
+    {
+        $newStatus = (int)$newStatus;
+        $oldStatus = (int)$order->status;
+        $updatedStatus = ['status' => $newStatus];
+
+        /*
+         * Cash is handed over on delivery, so delivering the order is the
+         * moment it is paid — and now the moment it records as paid.
+         */
+        if ((int)Config::get('constants.orderStatus.DELIVERED') === $newStatus &&
+            (int)Config::get('constants.paymentMethod.CASH_ON_DELIVERY') == (int)$order->order_method) {
+            $updatedStatus = array_merge($updatedStatus, Order::paymentStamp(true));
+        }
+
+        /*
+         * QA audit ORD-01. Cancelling or returning an order used to leave
+         * the stock deduction, the loyalty points and the voucher
+         * redemption exactly as they were.
+         */
+        $releasesStock = in_array($newStatus, [
+            (int)Config::get('constants.orderStatus.CANCELLED'),
+            (int)Config::get('constants.orderStatus.RETURNED'),
+            (int)Config::get('constants.orderStatus.REFUNDED'),
+        ], true);
+
+        $delivered = (int)Config::get('constants.orderStatus.DELIVERED') === $newStatus;
+
+        DB::transaction(function () use ($order, $updatedStatus, $releasesStock, $delivered, $oldStatus, $newStatus, $changedBy, $changedByType, $note) {
+
+            Order::where('id', $order->id)->update($updatedStatus);
+
+            if ($releasesStock) {
+                $order->restoreStockAndRewards();
+            }
+
+            // After the status write above, so a cancellation is
+            // counted as one rather than as a sale.
+            $order->refreshFlashAllowances();
+
+            /*
+             * Cherry Points are earned on delivery, not on payment.
+             *
+             * Inside the transaction, and after the update above, so the
+             * points and the status are written together and the fresh read
+             * sees the payment_done that cash-on-delivery just set.
+             */
+            if ($delivered) {
+                $this->awardLoyaltyPoints($order->fresh());
+            }
+
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'from_status' => $oldStatus,
+                'to_status' => $newStatus,
+                'changed_by' => $changedBy,
+                'changed_by_type' => $changedByType,
+                'note' => $note
+            ]);
+        });
+
+        // QA audit EML-02: nothing used to tell the customer.
+        $this->notifyStatusChange($order->fresh(), $newStatus, $lang);
+
+        /*
+         * A parcel that never left stops being tracked. After everything
+         * else and guarded: AfterShip being down must never undo or fail a
+         * cancellation that has already been written.
+         */
+        if ($newStatus === (int)Config::get('constants.orderStatus.CANCELLED')) {
+            try {
+                ShipmentTracking::onOrderCancelled($order);
+            } catch (\Throwable $e) {
+                Log::warning('Shipment clean-up after cancellation failed', ['order_id' => $order->id, 'error' => $e->getMessage()]);
+            }
+        }
+    }
+
+
+    /**
+     * Record the courier and tracking number an order went out with, and
+     * register them with AfterShip. See ShipmentTracking.
+     *
+     * Order of events matters: AfterShip is called first and nothing is
+     * written unless it accepts, so a refused number leaves the order exactly
+     * as it was and the admin sees AfterShip's reason. Then the order moves
+     * to On the way (or, already there, a one-off tracking email is raised).
+     * The same courier + number again is answered from the saved row: no API
+     * call, no email.
+     */
+    public function saveShipment(Request $request)
+    {
+        try {
+            $lang = $request->header('language');
+
+            if ($this->isVendor) {
+                return Utils::isDataOwner(null, null);
+            }
+
+            if ($can = Utils::userCan($this->user, 'order.edit')) {
+                return $can;
+            }
+
+            $validate = Validation::validationMessage($request, [
+                'id' => 'required|integer|exists:orders,id',
+                'courier' => ['required', 'string', 'max:64', 'regex:/^[a-z0-9-]+$/'],
+                'tracking_number' => ['required', 'string', 'min:4', 'max:64', 'regex:/^(?=.*[0-9])[A-Za-z0-9]+(?:[ -][A-Za-z0-9]+)*$/'],
+                'fields' => ['nullable', 'array'],
+                'fields.tracking_account_number' => ['nullable', 'string', 'max:512', 'regex:/^[A-Za-z0-9]+$/'],
+                'fields.tracking_key' => ['nullable', 'string', 'max:128', 'regex:/^[A-Za-z0-9._-]+$/'],
+            ], 'form', [
+                'courier.regex' => 'Choose a courier from the list.',
+                'courier.required' => 'Choose a courier from the list.',
+                'tracking_number.regex' => 'Enter the tracking number as printed on the label: letters and digits, at least one digit, single dashes or spaces between groups.',
+                'fields.tracking_account_number.regex' => 'The courier account number is letters and digits only.',
+                'fields.tracking_key.regex' => 'The tracking key is letters, digits, dots, dashes and underscores.',
+            ]);
+
+            if ($validate) {
+                return response()->json($validate);
+            }
+
+            // Only couriers activated in the AfterShip account can be chosen.
+            try {
+                $courier = \App\Models\Helper\CourierDirectory::find((string)$request->courier);
+            } catch (\App\Services\AfterShipException $e) {
+                return response()->json(Validation::fieldError($request->token, 'courier', $e->adminMessage(), $lang));
+            }
+
+            if (is_null($courier)) {
+                return response()->json(Validation::fieldError($request->token, 'courier',
+                    'That courier is not activated in your AfterShip account. Activate it in AfterShip (Settings > Couriers), then refresh the courier list.', $lang));
+            }
+
+            $order = Order::find($request->id);
+
+            if (ShipmentTracking::isCollection($order)) {
+                return response()->json(Validation::fieldError($request->token, 'tracking_number',
+                    'This is a Click & Collect order; there is no parcel to track.', $lang));
+            }
+
+            if (!in_array((int)$order->status, ShipmentTracking::shippableStatuses(), true)) {
+                return response()->json(Validation::fieldError($request->token, 'tracking_number',
+                    'Only a confirmed, picked up or on-the-way order can be given a shipment. Confirm the order first.', $lang));
+            }
+
+            // The extra details this courier needs (AfterShip's required_fields).
+            $fields = ShipmentTracking::trackingFields($order, $courier, (array)$request->input('fields', []));
+
+            if ($fields['missing']) {
+                $field = array_key_first($fields['missing']);
+                return response()->json(Validation::fieldError($request->token, 'fields.' . $field,
+                    $courier['name'] . ' also needs: ' . implode(', ', $fields['missing']) . '.', $lang));
+            }
+
+            // One save per order at a time: a double click must not register twice.
+            if (!ShipmentTracking::lockOrder($order->id)) {
+                return response()->json(Validation::fieldError($request->token, 'tracking_number',
+                    'This shipment is already being saved. Wait a moment, then reload the order.', $lang));
+            }
+
+            try {
+                try {
+                    $saved = ShipmentTracking::save($order, $courier['slug'],
+                        (string)$request->tracking_number, optional($this->user)->id, null,
+                        $fields['payload'], $courier['name']);
+
+                } catch (\App\Services\AfterShipException $e) {
+                    return response()->json(Validation::fieldError($request->token,
+                        $e->isInputError() ? 'tracking_number' : 'courier', $e->adminMessage(), $lang));
+                }
+
+                /*
+                 * Decided by where the order stands now, re-read after the
+                 * AfterShip call: a first shipment ships the order; a retry of
+                 * a save that stored the row but did not move the order finishes
+                 * it; a correction is not announced (the customer's link shows
+                 * the new details); an order cancelled meanwhile sends nothing
+                 * and its unscanned tracking is removed.
+                 */
+                $first = !$saved['unchanged'] && !$saved['corrected'];
+                $outcome = ShipmentTracking::settle($order->fresh(), $saved['shipment'], $first,
+                    optional($this->user)->id, $lang);
+
+                if ($outcome === 'corrected_or_unchanged') {
+                    $outcome = $saved['unchanged'] ? 'unchanged' : 'corrected';
+                }
+
+                // An adopted tracking may already be out for delivery, at a pickup point or delivered.
+                if (!$saved['unchanged'] && $outcome !== 'order_closed') {
+                    ShipmentTracking::react($saved['shipment']->fresh());
+                }
+
+            } finally {
+                ShipmentTracking::unlockOrder($order->id);
+            }
+
+            $fresh = $order->fresh();
+
+            if ($outcome === 'order_closed') {
+                return response()->json(Validation::fieldError($request->token, 'tracking_number',
+                    'The order was closed while the shipment was being saved, so the customer was not told. Reload the order.', $lang));
+            }
+
+            return response()->json(new Response($request->token, [
+                'shipment' => $saved['shipment']->fresh()->adminView(),
+                'status' => (int)$fresh->status,
+                'allowed_transitions' => array_values(Order::allowedTransitions()[(int)$fresh->status] ?? []),
+                'notified' => $outcome,
+            ]));
+
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+
+    /**
+     * Couriers for the shipment form: the ones activated in the AfterShip
+     * account (plus AfterShip's test courier outside production). Each says
+     * which extra details it needs and which of them the order fills in.
+     * ?refresh=1 re-reads the list from AfterShip now.
+     */
+    public function shipmentCouriers(Request $request)
+    {
+        try {
+            $lang = $request->header('language');
+
+            if ($this->isVendor) {
+                return Utils::isDataOwner(null, null);
+            }
+
+            if ($can = Utils::userCan($this->user, 'order.edit')) {
+                return $can;
+            }
+
+            try {
+                $offered = \App\Models\Helper\CourierDirectory::offered((bool)$request->refresh);
+            } catch (\App\Services\AfterShipException $e) {
+                return response()->json(Validation::error($request->token, $e->adminMessage(), 'form', $lang));
+            }
+
+            return response()->json(new Response($request->token, [
+                'active' => array_values(array_map(function ($c) {
+                    return \App\Models\Helper\CourierDirectory::view($c, true);
+                }, $offered)),
+                'total' => count($offered),
+                'fetched_at' => \App\Models\Helper\CourierDirectory::fetchedAt(),
+            ]));
+
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+    /**
+     * Re-read the order's tracking from AfterShip now, for the Refresh
+     * button. The webhook and `aftership:sync` do this unasked.
+     */
+    public function refreshShipment(Request $request, $id)
+    {
+        try {
+            $lang = $request->header('language');
+
+            if ($this->isVendor) {
+                return Utils::isDataOwner(null, null);
+            }
+
+            if ($can = Utils::userCan($this->user, 'order.edit')) {
+                return $can;
+            }
+
+            $shipment = \App\Models\OrderShipment::where('order_id', (int)$id)->first();
+
+            if (is_null($shipment) || !$shipment->aftership_id) {
+                return response()->json(Validation::nothingFoundLang($lang, 201));
+            }
+
+            try {
+                ShipmentTracking::sync($shipment);
+            } catch (\App\Services\AfterShipException $e) {
+                return response()->json(Validation::error($request->token, $e->adminMessage(), 'form', $lang));
+            }
+
+            $order = Order::find((int)$id);
+
+            return response()->json(new Response($request->token, [
+                'shipment' => $shipment->fresh()->adminView(),
+                'status' => (int)$order->status,
+                'allowed_transitions' => array_values(Order::allowedTransitions()[(int)$order->status] ?? []),
+            ]));
 
         } catch (\Exception $ex) {
             return response()->json(Validation::error($request->token, $ex->getMessage()));
@@ -1718,6 +1982,18 @@ class OrdersController extends ControllerHelper
                         CancelUnpaidBankTransfers::deadlineFor($order->getRawOriginal('created_at'))
                     )->toIso8601String();
                 }
+
+                /*
+                 * The parcel, in full: ownership was checked above (account or
+                 * guest token), so this is the same view the signed email link
+                 * gets. Not keyed `shipment`, the relation's name.
+                 */
+                $shipmentRow = \App\Models\OrderShipment::where('order_id', $order->id)->first();
+                $order['parcel'] = $shipmentRow ? $shipmentRow->publicView(true) : null;
+                $order['parcel_track_url'] = $shipmentRow ? ShipmentTracking::trackUrl($order) : null;
+
+                // Return cases, as the customer may see them (ownership checked above).
+                $order['returns'] = \App\Models\Helper\OrderReturns::forCustomer($order, $lang);
 
                 return response()->json(new Response($request->token, $order));
 

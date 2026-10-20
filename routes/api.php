@@ -41,6 +41,7 @@ use App\Http\Controllers\RatingReviewsController;
 use App\Http\Controllers\UserWishlistsController;
 use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\CancellationsController;
+use App\Http\Controllers\OrderReturnsController;
 use App\Http\Controllers\ContactUsController;
 use App\Http\Controllers\PageWysiwygImagesController;
 use App\Http\Controllers\UpdatedInventoriesController;
@@ -927,6 +928,11 @@ Route::group([
             Route::post('payment-method', [OrdersController::class, 'updatePaymentMethod']);
             Route::delete('delete/{id}', [OrdersController::class, 'delete']);
             Route::get('send-delivered-email/{id}', [OrdersController::class, 'sendDeliveredEmail']);
+            // Courier + tracking number, registered with AfterShip.
+            Route::post('shipment', [OrdersController::class, 'saveShipment']);
+            Route::post('shipment-refresh/{id}', [OrdersController::class, 'refreshShipment']);
+            // The couriers activated in the AfterShip account.
+            Route::get('shipment-couriers', [OrdersController::class, 'shipmentCouriers']);
 
         });
 
@@ -944,6 +950,21 @@ Route::group([
             Route::get('find/{orderId}', [CancellationsController::class, 'find']);
             // QA audit RFN-01: refunding moves money, so it is a POST.
             Route::post('refund/{id}', [CancellationsController::class, 'refund']);
+        });
+
+        // Returns, opened by staff against a delivered order (OrderReturnsController).
+        Route::group([
+            'prefix' => 'order-return',
+        ], function (){
+            Route::get('all', [OrderReturnsController::class, 'all']);
+            Route::get('stats', [OrderReturnsController::class, 'stats']);
+            Route::get('find/{id}', [OrderReturnsController::class, 'find']);
+            Route::get('order/{orderId}', [OrderReturnsController::class, 'forOrder']);
+            // GET: a preview, and a POST through the admin store always toasts "Saved".
+            Route::get('quote', [OrderReturnsController::class, 'quote']);
+            Route::post('create', [OrderReturnsController::class, 'create']);
+            // action/{id}: the admin store builds "<api>/<id>".
+            Route::post('action/{id}', [OrderReturnsController::class, 'action']);
         });
 
         Route::group([
@@ -995,11 +1016,37 @@ Route::post('v1/guest/token', [GuestUsersController::class, 'issueToken']);
  */
 Route::post('v1/stripe/webhook', [StripeWebhookController::class, 'handle']);
 
+/*
+ * AfterShip's tracking webhook. No token of ours: the aftership-hmac-sha256
+ * header is checked against AFTERSHIP_WEBHOOK_SECRET instead.
+ */
+Route::post('v1/aftership/webhook', [\App\Http\Controllers\AfterShipWebhookController::class, 'handle']);
+
 Route::group([
     'prefix' => 'v1',
     // QA audit SEC-02: guest tokens must be ones the server issued.
     'middleware' => ['optionalAuth', 'session.activity', 'guest.token']
 ], function (){
+    /*
+     * Returns and exchanges, the customer's side (CustomerReturnsController).
+     * Ownership as the order page: the signed-in owner or the guest token.
+     */
+    Route::group(['prefix' => 'order-return'], function () {
+        Route::post('options', [\App\Http\Controllers\CustomerReturnsController::class, 'options']);
+        Route::post('request', [\App\Http\Controllers\CustomerReturnsController::class, 'request'])->middleware('throttle:10,1');
+        Route::post('cancel', [\App\Http\Controllers\CustomerReturnsController::class, 'cancel'])->middleware('throttle:10,1');
+    });
+
+    /*
+     * An exchange difference paid by link. The 48-character link token is the
+     * only credential; it travels as `link` (`token` is the API's own field).
+     */
+    Route::group(['prefix' => 'pay-link', 'middleware' => 'throttle:30,1'], function () {
+        Route::get('view', [\App\Http\Controllers\CustomerReturnsController::class, 'payLink']);
+        Route::post('start', [\App\Http\Controllers\CustomerReturnsController::class, 'payLinkStart']);
+        Route::post('confirm', [\App\Http\Controllers\CustomerReturnsController::class, 'payLinkConfirm']);
+    });
+
     /*
      * Guest checkout proves the email address before the order can be paid
      * for. Inside the guarded group: the token has to be one the server

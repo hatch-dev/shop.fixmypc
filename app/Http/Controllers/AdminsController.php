@@ -1269,6 +1269,40 @@ class AdminsController extends Controller
             ->where($alias . '.status', '!=', Config::get('constants.orderStatus.CANCELLED'));
     }
 
+    /**
+     * Money a return case paid back on an order, as SQL for one row of
+     * $alias. Counted against the order (its placed date), not the day of the
+     * refund, so a period's buckets still add up to its total.
+     */
+    private function returnRefundSql($alias = 'orders')
+    {
+        return "(SELECT COALESCE(SUM(rr.refund_amount), 0) FROM order_returns rr"
+            // 'exchanged': a cheaper swap paid the difference back.
+            . " WHERE rr.order_id = $alias.id AND rr.status IN ('refunded', 'exchanged'))";
+    }
+
+    /**
+     * An order's value net of return refunds. Only paid orders can be
+     * refunded, so this comes off order value and money received, never off
+     * pending -- gross = received + pending still holds.
+     */
+    private function netOrderSql($alias = 'orders')
+    {
+        return "($alias.total_amount - " . $this->returnRefundSql($alias) . ")";
+    }
+
+    /**
+     * A vendor line's value less the units sent back on refunded returns.
+     * Vendor figures are line-based (selling x quantity), so they net off
+     * units rather than money.
+     */
+    private function netLineSql()
+    {
+        return "ordered_products.selling * (ordered_products.quantity - (SELECT COALESCE(SUM(ri.quantity), 0)"
+            . " FROM order_return_items ri JOIN order_returns rr ON rr.id = ri.order_return_id"
+            . " WHERE ri.ordered_product_id = ordered_products.id AND rr.status = 'refunded'))";
+    }
+
     /** The mirror of excludeCancelled(), for the figure shown as excluded. */
     private function onlyCancelled($query, $alias = 'orders')
     {
@@ -1351,8 +1385,8 @@ class AdminsController extends Controller
                             ->whereNull('ao.deleted_at'),
                         'ao'
                     )
-                        ->selectRaw('COALESCE(SUM(ordered_products.selling * ordered_products.quantity), 0) as gross,
-                                     COALESCE(SUM(CASE WHEN ao.payment_done = 1 THEN ordered_products.selling * ordered_products.quantity ELSE 0 END), 0) as received,
+                        ->selectRaw('COALESCE(SUM(' . $this->netLineSql() . '), 0) as gross,
+                                     COALESCE(SUM(CASE WHEN ao.payment_done = 1 THEN ' . $this->netLineSql() . ' ELSE 0 END), 0) as received,
                                      COALESCE(SUM(CASE WHEN ao.payment_done = 1 THEN 0 ELSE ordered_products.selling * ordered_products.quantity END), 0) as pending')
                         ->first();
 
@@ -1404,8 +1438,8 @@ class AdminsController extends Controller
                      * dashboard can say which is which.
                      */
                     $amounts = $this->excludeCancelled($query_total)
-                        ->selectRaw('COALESCE(SUM(orders.total_amount), 0) as gross,
-                                     COALESCE(SUM(CASE WHEN orders.payment_done = 1 THEN orders.total_amount ELSE 0 END), 0) as received,
+                        ->selectRaw('COALESCE(SUM(' . $this->netOrderSql() . '), 0) as gross,
+                                     COALESCE(SUM(CASE WHEN orders.payment_done = 1 THEN ' . $this->netOrderSql() . ' ELSE 0 END), 0) as received,
                                      COALESCE(SUM(CASE WHEN orders.payment_done = 1 THEN 0 ELSE orders.total_amount END), 0) as pending')
                         ->first();
 
@@ -1463,7 +1497,7 @@ class AdminsController extends Controller
                     $ordersPrev = $inPrevious($vendorOrders(), 'ordered_products.created_at')
                         ->distinct()->count('ordered_products.order_id');
 
-                    $vendorReceived = DB::raw('COALESCE(SUM(CASE WHEN go.payment_done = 1 THEN ordered_products.selling * ordered_products.quantity ELSE 0 END), 0)');
+                    $vendorReceived = DB::raw('COALESCE(SUM(CASE WHEN go.payment_done = 1 THEN ' . $this->netLineSql() . ' ELSE 0 END), 0)');
                     $sellsCur = (float)$inCurrent($vendorOrders(), 'ordered_products.created_at')
                         ->selectRaw("$vendorReceived as v")->value('v');
 
@@ -1492,7 +1526,7 @@ class AdminsController extends Controller
                     // The card reports money received, so its badge measures
                     // money received. Comparing takings against order value
                     // would put a percentage on two different quantities.
-                    $receivedSum = 'COALESCE(SUM(CASE WHEN orders.payment_done = 1 THEN orders.total_amount ELSE 0 END), 0)';
+                    $receivedSum = 'COALESCE(SUM(CASE WHEN orders.payment_done = 1 THEN ' . $this->netOrderSql() . ' ELSE 0 END), 0)';
                     $sellsCur = (float)$orderWindow($inCurrent)->selectRaw("$receivedSum as v")->value('v');
                     $sellsPrev = (float)$orderWindow($inPrevious)->selectRaw("$receivedSum as v")->value('v');
                 }
@@ -1581,7 +1615,7 @@ class AdminsController extends Controller
                     ->select(
                         "id",
                         DB::raw("(count(total_amount)) as total"),
-                        DB::raw("(sum(total_amount)) as value"),
+                        DB::raw("(sum(" . $this->netOrderSql() . ")) as value"),
                         DB::raw($dateStr)
                     )
                     ->orderBy('time')
@@ -1622,7 +1656,7 @@ class AdminsController extends Controller
                         ->where('ordered_products.created_at', '<', $range['end_utc']);
                 };
 
-                $lineValue = 'ordered_products.selling * ordered_products.quantity';
+                $lineValue = $this->netLineSql();
                 $valueExpr = "SUM($lineValue)";
                 $countExpr = 'COUNT(DISTINCT ordered_products.order_id)';
 
@@ -1635,7 +1669,7 @@ class AdminsController extends Controller
                  * like takings.
                  */
                 $receivedExpr = "SUM(CASE WHEN ro.payment_done = 1 THEN $lineValue ELSE 0 END)";
-                $pendingExpr = "SUM(CASE WHEN ro.payment_done = 1 THEN 0 ELSE $lineValue END)";
+                $pendingExpr = "SUM(CASE WHEN ro.payment_done = 1 THEN 0 ELSE ordered_products.selling * ordered_products.quantity END)";
                 $figures = "$valueExpr as value, $receivedExpr as received, $pendingExpr as pending, $countExpr as orders";
 
                 $rows = $this->excludeCancelled($scope(), 'ro')
@@ -1668,10 +1702,11 @@ class AdminsController extends Controller
                     return $q;
                 };
 
-                $valueExpr = 'SUM(orders.total_amount)';
+                // Net of return refunds: see netOrderSql().
+                $valueExpr = 'SUM(' . $this->netOrderSql() . ')';
                 $countExpr = 'COUNT(DISTINCT orders.id)';
                 // See the note in the vendor branch: placed is not collected.
-                $receivedExpr = 'SUM(CASE WHEN orders.payment_done = 1 THEN orders.total_amount ELSE 0 END)';
+                $receivedExpr = 'SUM(CASE WHEN orders.payment_done = 1 THEN ' . $this->netOrderSql() . ' ELSE 0 END)';
                 $pendingExpr = 'SUM(CASE WHEN orders.payment_done = 1 THEN 0 ELSE orders.total_amount END)';
                 $figures = "$valueExpr as value, $receivedExpr as received, $pendingExpr as pending, $countExpr as orders";
 
@@ -1749,8 +1784,8 @@ class AdminsController extends Controller
                             ->where('ordered_products.created_at', '<', $prevTo),
                         'po'
                     )
-                        ->selectRaw('SUM(ordered_products.selling * ordered_products.quantity) as value,
-                                     SUM(CASE WHEN po.payment_done = 1 THEN ordered_products.selling * ordered_products.quantity ELSE 0 END) as received,
+                        ->selectRaw('SUM(' . $this->netLineSql() . ') as value,
+                                     SUM(CASE WHEN po.payment_done = 1 THEN ' . $this->netLineSql() . ' ELSE 0 END) as received,
                                      COUNT(DISTINCT ordered_products.order_id) as orders')
                         ->first();
                 } else {
@@ -1767,8 +1802,8 @@ class AdminsController extends Controller
                     }
 
                     $prevRow = $prevQuery
-                        ->selectRaw('SUM(orders.total_amount) as value,
-                                     SUM(CASE WHEN orders.payment_done = 1 THEN orders.total_amount ELSE 0 END) as received,
+                        ->selectRaw('SUM(' . $this->netOrderSql() . ') as value,
+                                     SUM(CASE WHEN orders.payment_done = 1 THEN ' . $this->netOrderSql() . ' ELSE 0 END) as received,
                                      COUNT(DISTINCT orders.id) as orders')
                         ->first();
                 }
@@ -1841,6 +1876,24 @@ class AdminsController extends Controller
                 ->selectRaw('COALESCE(SUM(rc.refunded_amount), 0) as amount, COUNT(*) as count')
                 ->first();
 
+            /*
+             * Return refunds on this period's orders. Already taken off
+             * `total` and `received` (netOrderSql / netLineSql); stated here
+             * so the screen can say how much, and total + this = what was sold
+             * before anything came back.
+             */
+            if (!$this->isSuperAdmin) {
+                $returnsRow = $this->excludeCancelled($scope(), 'ro')
+                    ->selectRaw('COALESCE(SUM(ordered_products.selling * ordered_products.quantity - ' . $this->netLineSql() . '), 0) as amount,
+                                 COUNT(DISTINCT CASE WHEN ordered_products.selling * ordered_products.quantity > ' . $this->netLineSql() . ' THEN ordered_products.order_id END) as orders')
+                    ->first();
+            } else {
+                $returnsRow = $this->excludeCancelled($scope())
+                    ->selectRaw('COALESCE(SUM(' . $this->returnRefundSql() . '), 0) as amount,
+                                 COALESCE(SUM(CASE WHEN ' . $this->returnRefundSql() . ' > 0 THEN 1 ELSE 0 END), 0) as orders')
+                    ->first();
+            }
+
             $chartData['summary'] = [
                 // `total` is order value - what was sold. Kept under its
                 // original name so nothing reading this API breaks.
@@ -1857,6 +1910,8 @@ class AdminsController extends Controller
                 'balanced' => abs(($periodReceived + $periodPending) - $periodTotal) < 0.01,
                 'refunded_amount' => round((float)($refunds->amount ?? 0), 2),
                 'refunded_orders' => (int)($refunds->count ?? 0),
+                'returns_refunded' => round((float)($returnsRow->amount ?? 0), 2),
+                'returns_orders' => (int)($returnsRow->orders ?? 0),
                 'orders' => $periodOrders,
                 // Average ORDER value: what a customer orders, not what has
                 // been collected from them yet.

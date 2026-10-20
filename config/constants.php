@@ -27,6 +27,16 @@ return [
         'FEATURED_BRANDS' => 15,
         'FEATURED_CATEGORIES' => 12
     ],
+    /*
+     * Returns (App\Models\Helper\OrderReturns). The window is advisory in
+     * phase 1: staff see a warning past it, and can still open the return.
+     */
+    'returns' => [
+        'WINDOW_DAYS' => 30,
+        // Email the shop when a customer asks for a return or exchange.
+        'STAFF_ALERT' => true,
+    ],
+
     'api' => [
         'PAGINATION' => 14
     ],

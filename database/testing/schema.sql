@@ -1391,6 +1391,118 @@ CREATE TABLE `order_email_log` (
   CONSTRAINT `order_email_log_order_id_foreign` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `order_return_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `order_return_history` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `order_return_id` bigint(20) unsigned NOT NULL,
+  `from_status` varchar(20) DEFAULT NULL,
+  `to_status` varchar(20) NOT NULL,
+  `admin_id` int(10) unsigned DEFAULT NULL,
+  `note` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `order_return_history_order_return_id_foreign` (`order_return_id`),
+  CONSTRAINT `order_return_history_order_return_id_foreign` FOREIGN KEY (`order_return_id`) REFERENCES `order_returns` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `order_return_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `order_return_items` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `order_return_id` bigint(20) unsigned NOT NULL,
+  `ordered_product_id` int(10) unsigned NOT NULL,
+  `product_id` bigint(20) unsigned NOT NULL,
+  `inventory_id` int(10) unsigned DEFAULT NULL,
+  `exchange_inventory_id` int(10) unsigned DEFAULT NULL,
+  `exchange_unit_price` decimal(12,2) DEFAULT NULL,
+  `quantity` int(11) NOT NULL,
+  `restock` tinyint(1) DEFAULT NULL,
+  `restocked_qty` int(11) NOT NULL DEFAULT 0,
+  `line_refund` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `gift_card_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `order_return_items_ordered_product_id_index` (`ordered_product_id`),
+  KEY `order_return_items_order_return_id_foreign` (`order_return_id`),
+  CONSTRAINT `order_return_items_order_return_id_foreign` FOREIGN KEY (`order_return_id`) REFERENCES `order_returns` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `order_returns`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `order_returns` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `rma_number` varchar(20) NOT NULL,
+  `type` varchar(10) NOT NULL DEFAULT 'return',
+  `order_id` int(10) unsigned NOT NULL,
+  `replacement_order_id` int(10) unsigned DEFAULT NULL,
+  `user_id` bigint(20) unsigned DEFAULT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'awaiting_return',
+  `reason` varchar(40) NOT NULL,
+  `lang` varchar(8) DEFAULT NULL,
+  `customer_note` text DEFAULT NULL,
+  `staff_note` text DEFAULT NULL,
+  `refund_method` varchar(20) DEFAULT NULL,
+  `refund_amount` decimal(12,2) DEFAULT NULL,
+  `exchange_difference` decimal(12,2) DEFAULT NULL,
+  `amount_charged` decimal(12,2) DEFAULT NULL,
+  `payment_reference` varchar(255) DEFAULT NULL,
+  `shipping_refund` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `gift_card_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `points_returned` int(11) NOT NULL DEFAULT 0,
+  `points_taken` int(11) NOT NULL DEFAULT 0,
+  `refund_reference` varchar(255) DEFAULT NULL,
+  `refund_error` text DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `received_at` timestamp NULL DEFAULT NULL,
+  `refunded_at` timestamp NULL DEFAULT NULL,
+  `closed_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `order_returns_rma_number_unique` (`rma_number`),
+  KEY `order_returns_order_id_status_index` (`order_id`,`status`),
+  KEY `order_returns_status_created_at_index` (`status`,`created_at`),
+  CONSTRAINT `order_returns_order_id_foreign` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `order_shipments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `order_shipments` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `order_id` int(10) unsigned NOT NULL,
+  `courier_slug` varchar(64) NOT NULL,
+  `courier_name` varchar(128) DEFAULT NULL,
+  `tracking_number` varchar(64) NOT NULL,
+  `tracking_set_at` timestamp NULL DEFAULT NULL,
+  `aftership_id` varchar(128) DEFAULT NULL,
+  `aftership_tracking_url` varchar(500) DEFAULT NULL,
+  `courier_tracking_link` varchar(500) DEFAULT NULL,
+  `tag` varchar(32) NOT NULL DEFAULT 'Pending',
+  `subtag` varchar(32) DEFAULT NULL,
+  `subtag_message` varchar(191) DEFAULT NULL,
+  `expected_delivery` varchar(40) DEFAULT NULL,
+  `checkpoints` longtext DEFAULT NULL,
+  `remote_updated_at` timestamp NULL DEFAULT NULL,
+  `last_synced_at` timestamp NULL DEFAULT NULL,
+  `last_error` varchar(500) DEFAULT NULL,
+  `staff_alerts` varchar(255) DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `order_shipments_order_unique` (`order_id`),
+  KEY `order_shipments_aftership_id_index` (`aftership_id`),
+  KEY `order_shipments_tag_last_synced_at_index` (`tag`,`last_synced_at`),
+  CONSTRAINT `order_shipments_order_id_foreign` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `order_status_histories`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -1529,6 +1641,7 @@ CREATE TABLE `ordered_voucher` (
   `order_id` int(10) unsigned NOT NULL,
   `voucher_id` bigint(20) unsigned NOT NULL,
   `discount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `returned_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -1654,6 +1767,34 @@ CREATE TABLE `password_reset_tokens` (
   KEY `password_reset_tokens_token_index` (`token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `pay_links`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pay_links` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `token` varchar(64) NOT NULL,
+  `order_return_id` bigint(20) unsigned DEFAULT NULL,
+  `order_id` int(10) unsigned NOT NULL,
+  `amount` decimal(12,2) NOT NULL,
+  `currency` varchar(8) NOT NULL,
+  `status` varchar(12) NOT NULL DEFAULT 'pending',
+  `gateway` int(10) unsigned NOT NULL,
+  `gateway_session` varchar(255) DEFAULT NULL,
+  `gateway_reference` varchar(255) DEFAULT NULL,
+  `stock_reserved` tinyint(1) NOT NULL DEFAULT 0,
+  `expires_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `paid_at` timestamp NULL DEFAULT NULL,
+  `cancelled_at` timestamp NULL DEFAULT NULL,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `pay_links_token_unique` (`token`),
+  KEY `pay_links_order_return_id_status_index` (`order_return_id`,`status`),
+  KEY `pay_links_order_id_foreign` (`order_id`),
+  CONSTRAINT `pay_links_order_id_foreign` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `payments`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -1744,7 +1885,7 @@ CREATE TABLE `point_transactions` (
   `type` enum('credit','debit') NOT NULL,
   `points` int(11) NOT NULL,
   `value` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `source` enum('order','topup','referral','admin','order_reversal','gift_voucher') NOT NULL,
+  `source` enum('order','topup','referral','admin','order_reversal','gift_voucher','order_return') NOT NULL,
   `reference_id` varchar(255) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,

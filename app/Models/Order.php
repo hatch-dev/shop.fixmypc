@@ -179,10 +179,41 @@ class Order extends Model
             return;
         }
 
+        /*
+         * Less the units a return case already dealt with. A finished case
+         * decided every unit it holds -- back on the shelf, or written off as
+         * damaged -- and one still open may have restocked some already.
+         * Crediting the whole line again would count those twice, or put a
+         * damaged unit back on sale.
+         */
+        $done = "'" . implode("','", OrderReturn::DONE) . "'";
+        $restocked = OrderReturnItem::join('order_returns as r', 'r.id', '=', 'order_return_items.order_return_id')
+            ->where('r.order_id', $this->id)
+            ->groupBy('order_return_items.ordered_product_id')
+            ->selectRaw("order_return_items.ordered_product_id, SUM(CASE WHEN r.status IN ($done)"
+                . " THEN order_return_items.quantity ELSE order_return_items.restocked_qty END) as qty")
+            ->pluck('qty', 'ordered_product_id');
+
         foreach (OrderedProduct::where('order_id', $this->id)->get() as $line) {
-            UpdatedInventory::where('id', $line->inventory_id)
-                ->increment('quantity', $line->quantity);
+            $quantity = (int)$line->quantity - (int)($restocked[$line->id] ?? 0);
+
+            if ($quantity > 0) {
+                UpdatedInventory::where('id', $line->inventory_id)
+                    ->increment('quantity', $quantity);
+            }
         }
+
+        /*
+         * Points a partial return already moved: earned points it took back
+         * (a debit) and spent points it gave back (a credit). Netted off the
+         * reversal below so nothing moves twice.
+         */
+        $returnMoves = PointTransaction::where('reference_id', $this->id)
+            ->where('source', 'order_return')->get();
+        $alreadyMoved = [
+            'credit' => (int)$returnMoves->where('type', 'debit')->sum('points'),
+            'debit' => (int)$returnMoves->where('type', 'credit')->sum('points'),
+        ];
 
         /*
          * Reverse the loyalty movement rather than deleting it, so the
@@ -197,6 +228,10 @@ class Order extends Model
 
         foreach ($movements as $movement) {
             $points = (int)$movement->points;
+
+            $netted = min($points, $alreadyMoved[$movement->type] ?? 0);
+            $alreadyMoved[$movement->type] = ($alreadyMoved[$movement->type] ?? 0) - $netted;
+            $points -= $netted;
 
             /*
              * Earned points are taken back only as far as the customer still
@@ -414,6 +449,18 @@ class Order extends Model
     public function cancellation()
     {
         return $this->hasOne(Cancellation::class, 'order_id', 'id');
+    }
+
+    /** The parcel and its AfterShip tracking; see ShipmentTracking. */
+    /** Return cases opened against this order. */
+    public function returns()
+    {
+        return $this->hasMany(OrderReturn::class, 'order_id', 'id');
+    }
+
+    public function shipment()
+    {
+        return $this->hasOne(OrderShipment::class, 'order_id', 'id');
     }
 
     /**

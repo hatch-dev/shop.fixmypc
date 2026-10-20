@@ -45,6 +45,66 @@ class OrderEmailEvent
     const ORDER_REFUNDED = 'order_refunded';
 
     /**
+     * Courier and tracking number added to an order that was already on its
+     * way, so the "on the way" email went out without them. Sent once per
+     * order; a corrected number shows on the tracking page behind the same
+     * link instead of emailing again.
+     */
+    const TRACKING_ADDED = 'tracking_added';
+
+    /**
+     * The courier's own scans, via AfterShip. Each once per order: a second
+     * failed attempt or a second day out for delivery does not email again
+     * (the tracking page shows it).
+     */
+    const OUT_FOR_DELIVERY = 'out_for_delivery';
+    const DELIVERY_ATTEMPT_FAILED = 'delivery_attempt_failed';
+
+    /** The parcel waits at a pickup point or post office for the customer. */
+    const READY_FOR_PICKUP = 'ready_for_pickup';
+
+    /**
+     * Return cases. An order can have more than one, and the log allows one
+     * row per (order, event), so these are stored with the case id after a
+     * colon -- "return_opened:12" -- via forReturn(). The id is also how the
+     * mailer finds the case again when the retry sweep replays the event
+     * without its context.
+     */
+    const RETURN_OPENED = 'return_opened';
+    const RETURN_REFUNDED = 'return_refunded';
+    const RETURN_REJECTED = 'return_rejected';
+    // An exchange completed: the replacement order exists.
+    const RETURN_EXCHANGED = 'return_exchanged';
+
+    // The customer asked from their order page: "we have your request".
+    const RETURN_REQUESTED = 'return_requested';
+    // A dearer exchange: the pay link for the difference.
+    const RETURN_PAYMENT = 'return_payment';
+
+    const RETURN_EVENTS = [self::RETURN_OPENED, self::RETURN_REFUNDED, self::RETURN_REJECTED, self::RETURN_EXCHANGED,
+        self::RETURN_REQUESTED, self::RETURN_PAYMENT];
+
+    public static function forReturn($event, $returnId)
+    {
+        return $event . ':' . (int)$returnId;
+    }
+
+    /**
+     * [event, return id] for a return event, null for anything else.
+     *
+     * @return array|null
+     */
+    public static function parseReturn($event)
+    {
+        if (!preg_match('/^([a-z_]+):(\d+)$/', (string)$event, $m)
+            || !in_array($m[1], self::RETURN_EVENTS, true)) {
+            return null;
+        }
+
+        return [$m[1], (int)$m[2]];
+    }
+
+    /**
      * Which email an order status corresponds to.
      *
      * PENDING is deliberately absent. It is the status an order is created
@@ -88,6 +148,10 @@ class OrderEmailEvent
             self::ORDER_CANCELLED,
             self::ORDER_RETURNED,
             self::ORDER_REFUNDED,
+            self::TRACKING_ADDED,
+            self::OUT_FOR_DELIVERY,
+            self::DELIVERY_ATTEMPT_FAILED,
+            self::READY_FOR_PICKUP,
         ];
     }
 
@@ -114,7 +178,7 @@ class OrderEmailEvent
 
     public static function isKnown($event)
     {
-        return in_array($event, self::all(), true);
+        return in_array($event, self::all(), true) || !is_null(self::parseReturn($event));
     }
 
     /**
@@ -124,6 +188,9 @@ class OrderEmailEvent
      */
     public static function category($event)
     {
-        return str_replace('_', '-', $event);
+        // One category for every case, not one per return id.
+        $return = self::parseReturn($event);
+
+        return str_replace('_', '-', $return ? $return[0] : $event);
     }
 }

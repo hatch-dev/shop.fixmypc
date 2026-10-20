@@ -1109,3 +1109,381 @@
 @media only screen and (max-width: 576px)
   .order-row
     grid-template-columns 1fr
+
+// ---- Shipment tracking (AfterShip), inside the Fulfilment card ----
+// Every rule is under .shipment-block so nothing here reaches another form.
+.shipment-block
+  .fact-grid
+    margin-top 4px
+
+  .shipment-form
+    display flex
+    flex-wrap wrap
+    align-items center
+    gap 10px
+    margin-top 14px
+
+  .shipment-input
+    flex 1 1 180px
+    min-width 0
+    height btn-height
+    line-height normal
+    padding 0 12px
+    font-size 14px
+    color var(--text-strong)
+    background surface-color
+    border 1px solid border-color
+    border-radius var(--radius-md, 8px)
+
+    &:focus
+      outline none
+      border-color primary-color
+      box-shadow 0 0 0 3px var(--primary-soft)
+
+  .shipment-hint
+    margin 8px 0 0
+    font-size 12px
+    color var(--text-soft)
+
+  .shipment-notice
+    margin 10px 0 0
+    font-size 13px
+    font-weight 500
+    color success-foreground
+
+  .shipment-error
+    margin 10px 0 0
+    padding 8px 10px
+    font-size 13px
+    color danger-foreground
+    background danger-bg-color
+    border-radius var(--radius-md, 8px)
+
+  // Searchable courier picker (AfterShip's list).
+  .courier-picker
+    position relative
+    flex 1 1 220px
+    min-width 0
+
+    .shipment-input
+      width 100%
+
+  .courier-list
+    position absolute
+    z-index 30
+    top calc(100% + 4px)
+    left 0
+    right 0
+    max-height 280px
+    overflow-y auto
+    margin 0
+    padding 4px 0
+    list-style none
+    background surface-color
+    border 1px solid border-color
+    border-radius var(--radius-md, 8px)
+    box-shadow 0 8px 24px rgba(15, 23, 42, .12)
+
+  .courier-group
+    padding 6px 12px 4px
+    font-size 11px
+    font-weight 600
+    letter-spacing .04em
+    text-transform uppercase
+    color var(--text-soft)
+
+  .courier-option
+    display flex
+    flex-direction column
+    gap 1px
+    padding 7px 12px
+    cursor pointer
+
+    &:hover, &.is-selected
+      background var(--primary-soft)
+
+  .courier-name
+    font-size 14px
+    font-weight 600
+    color var(--text-strong)
+
+  .courier-meta
+    font-size 12px
+    color var(--text-soft)
+
+  .courier-note
+    padding 8px 12px
+    font-size 13px
+    color var(--text-soft)
+
+    &.is-error
+      color danger-foreground
+
+  .courier-fields
+    display grid
+    grid-template-columns repeat(auto-fit, minmax(200px, 1fr))
+    gap 10px 16px
+    margin-top 12px
+
+  .courier-field
+    display flex
+    flex-direction column
+    gap 4px
+    font-size 12px
+    color var(--text-soft)
+
+  .courier-source a
+    color primary-color
+    font-weight 600
+
+  .shipment-attention
+    display flex
+    gap 8px
+    align-items flex-start
+    margin 12px 0 0
+    padding 10px 12px
+    font-size 13px
+    line-height 1.45
+    color warning-foreground
+    background warning-bg-color
+    border-radius var(--radius-md, 8px)
+
+  .shipment-tag-Delivered
+    color success-foreground
+
+  .shipment-tag-Exception, .shipment-tag-AttemptFail, .shipment-tag-Expired
+    color danger-foreground
+
+@media (max-width: 575px)
+  .shipment-block .shipment-form > *
+    flex 1 1 100%
+
+// ---- Shipment tracking, 2026-10-19 layout: summary card + form on demand ----
+.shipment-block
+  margin-top 18px
+  padding-top 16px
+  border-top 1px solid border-color
+
+  .ship-head
+    display flex
+    align-items center
+    justify-content space-between
+    gap 10px
+    margin-bottom 10px
+
+    .addr-heading
+      margin 0
+
+  .ship-pill
+    flex-shrink 0
+    padding 3px 10px
+    border-radius 999px
+    font-size 12px
+    font-weight 600
+    white-space nowrap
+
+  .ship-pill-info
+    color primary-color
+    background var(--primary-soft)
+
+  .ship-pill-good
+    color success-foreground
+    background success-bg-color
+
+  .ship-pill-warn
+    color warning-foreground
+    background warning-bg-color
+
+  .ship-pill-bad
+    color danger-foreground
+    background danger-bg-color
+
+  .ship-pill-muted
+    color var(--text-soft)
+    background var(--hover-color, #f1f2f6)
+
+  .ship-card
+    padding 14px
+    border 1px solid border-color
+    border-radius var(--radius-md, 8px)
+    background var(--surface-soft, rgba(0, 0, 0, .015))
+
+  .ship-card-top
+    display flex
+    align-items flex-start
+    justify-content space-between
+    gap 10px
+
+  .ship-ident
+    display flex
+    flex-direction column
+    gap 2px
+    min-width 0
+
+  .ship-courier
+    font-size 13px
+    color var(--text-soft)
+
+  .ship-number
+    display inline-flex
+    align-items center
+    gap 6px
+    font-size 16px
+    font-weight 700
+    letter-spacing .02em
+    color var(--text-strong)
+    font-variant-numeric tabular-nums
+    overflow-wrap anywhere
+
+  button.ship-icon-btn
+    display inline-flex
+    align-items center
+    justify-content center
+    width 26px
+    height 26px !important
+    line-height 26px !important
+    padding 0
+    font-size 13px
+    color var(--text-soft)
+    background transparent !important
+    border 0
+    border-radius 6px
+    cursor pointer
+
+    &:hover
+      color primary-color
+      background var(--primary-soft) !important
+
+  .ship-track-link
+    flex-shrink 0
+    font-size 13px
+    font-weight 600
+    color primary-color
+    white-space nowrap
+
+    i
+      font-size 11px
+      margin-left 3px
+
+  .ship-detail
+    margin 8px 0 0
+    font-size 13px
+    color var(--text-strong)
+
+  .ship-meta
+    display flex
+    flex-wrap wrap
+    gap 4px 16px
+    margin 10px 0 0
+    padding 0
+    list-style none
+    font-size 12px
+    color var(--text-soft)
+
+    i
+      margin-right 4px
+
+    b
+      color var(--text-strong)
+      font-weight 600
+
+  .ship-card-actions
+    display flex
+    flex-wrap wrap
+    gap 8px
+    margin-top 12px
+
+    .outline-btn
+      padding 0 12px
+
+  .ship-form
+    display flex
+    flex-direction column
+    gap 12px
+
+  .ship-field
+    display flex
+    flex-direction column
+    gap 5px
+    min-width 0
+
+  .ship-label
+    font-size 12px
+    font-weight 600
+    color var(--text-soft)
+
+  .courier-picker
+    flex none
+    width 100%
+
+    .shipment-input
+      padding-left 34px
+
+    .shipment-input.has-value::placeholder
+      color var(--text-strong)
+      opacity 1
+      font-weight 600
+
+  .courier-picker-icon
+    position absolute
+    left 12px
+    top 50%
+    transform translateY(-50%)
+    font-size 13px
+    color var(--text-soft)
+    pointer-events none
+
+  .courier-foot
+    margin-top 4px
+    padding 8px 12px 6px
+    font-size 12px
+    color var(--text-soft)
+    border-top 1px solid border-color
+
+    a
+      color primary-color
+      font-weight 600
+
+  .courier-fields
+    margin-top 0
+
+  .ship-form-actions
+    display flex
+    flex-wrap wrap
+    gap 8px
+
+    .primary-btn, .outline-btn
+      padding 0 18px
+
+  .shipment-notice
+    display flex
+    gap 8px
+    align-items flex-start
+
+  .shipment-attention span, .shipment-notice span
+    flex 1
+
+// One height and type size for every control in the form row: the inputs are
+// 40px, and the global outline/ajax button rules otherwise land these at 34px.
+.shipment-block .ship-form-actions .outline-btn,
+.shipment-block .ship-form-actions .primary-btn
+  height 40px !important
+  line-height 38px !important
+  font-size 14px !important
+  font-weight 600 !important
+
+.shipment-block .ship-form-actions .primary-btn
+  line-height 40px !important
+
+.shipment-block .ship-card-actions .outline-btn
+  font-size 13px !important
+  font-weight 600 !important
+
+// Inputs stacked under a label (tracking number, courier extra fields) keep
+// the normal control height. The base rule above gives .shipment-input
+// `flex 1 1 180px` for sitting in a row; inside a column that same basis
+// becomes 180px of HEIGHT, which made the tracking number box ~180px tall.
+.shipment-block .ship-field > .shipment-input
+  flex none
+  width 100%
+  height btn-height

@@ -33,7 +33,18 @@ class Refunder
     }
 
 
-    public static function refund($order, $amount)
+    /**
+     * @param  array  $options  'key'      Stripe idempotency key. One per order
+     *                                     by default, which is right for the one
+     *                                     full refund a cancellation makes and
+     *                                     wrong for a second partial refund
+     *                                     (Stripe would replay the first).
+     *                          'refunded' money already refunded on this order
+     *                                     by earlier partial refunds, so a split
+     *                                     payment does not send the card back
+     *                                     more than the card paid.
+     */
+    public static function refund($order, $amount, array $options = [])
     {
         /*
          * A split payment (part wallet, part the order's own method) is
@@ -46,22 +57,32 @@ class Refunder
 
         if ($walletPaid > 0
             && (int)$order->order_method !== (int)Config::get('constants.paymentMethod.WALLET')) {
-            return self::refundSplit($order, $amount);
+            return self::refundSplit($order, $amount, $options);
         }
 
-        return self::refundByMethod($order, $amount);
+        return self::refundByMethod($order, $amount, $options);
     }
 
 
-    private static function refundSplit($order, $amount)
+    private static function refundSplit($order, $amount, array $options = [])
     {
         $amount = Pricing::round($amount);
-        $methodPart = Pricing::round(min($amount, WalletSplit::amountDue($order)));
+
+        /*
+         * Earlier partial refunds went card first too, so what the card has
+         * already had back is everything refunded less what went to the wallet.
+         */
+        $walletBack = (float)\App\Models\WalletTransaction::where('reference_id', $order->id)
+            ->where('source', 'refund')->where('type', 'credit')->sum('amount');
+        $methodBack = max(0, (float)($options['refunded'] ?? 0) - $walletBack);
+        $methodLeft = max(0, WalletSplit::amountDue($order) - $methodBack);
+
+        $methodPart = Pricing::round(min($amount, $methodLeft));
         $walletPart = Pricing::round($amount - $methodPart);
         $references = [];
 
         if ($methodPart > 0) {
-            $method = self::refundByMethod($order, $methodPart);
+            $method = self::refundByMethod($order, $methodPart, $options);
 
             // The wallet is not touched unless the card refund went through.
             if (!$method['ok']) {
@@ -90,7 +111,7 @@ class Refunder
     }
 
 
-    private static function refundByMethod($order, $amount)
+    private static function refundByMethod($order, $amount, array $options = [])
     {
         $payment = Payment::first();
 
@@ -107,7 +128,7 @@ class Refunder
 
         switch ($method) {
             case $methods['STRIPE']:
-                return self::refundStripe($payment, $order, $amount);
+                return self::refundStripe($payment, $order, $amount, $options['key'] ?? null);
 
             case $methods['RAZORPAY']:
                 return self::refundRazorpay($payment, $order, $amount);
@@ -180,7 +201,7 @@ class Refunder
     }
 
 
-    private static function refundStripe($payment, $order, $amount)
+    private static function refundStripe($payment, $order, $amount, $key = null)
     {
         try {
             \Stripe\Stripe::setApiKey($payment->stripe_secret);
@@ -200,7 +221,7 @@ class Refunder
             }
 
             $refund = \Stripe\Refund::create($params, [
-                'idempotency_key' => 'refund-order-' . $order->id
+                'idempotency_key' => $key ?: 'refund-order-' . $order->id
             ]);
 
             if (!in_array($refund->status, ['succeeded', 'pending'], true)) {

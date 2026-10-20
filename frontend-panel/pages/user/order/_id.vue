@@ -369,6 +369,127 @@
                 </div>
             </div>
 
+            <!--
+              The parcel, as the courier last reported it through AfterShip.
+              Full detail: OrdersController::byUser has already checked this
+              order belongs to the viewer.
+            -->
+            <div v-if="parcel" class="parcel-box mb-4">
+                <div class="parcel-head">
+                    <h3 class="parcel-title">Your parcel</h3>
+                    <span class="parcel-pill" :class="`parcel-pill-${parcelTone}`">{{ parcel.status }}</span>
+                </div>
+
+                <dl class="parcel-facts">
+                    <div>
+                        <dt>Courier</dt>
+                        <dd>{{ parcel.courier }}</dd>
+                    </div>
+                    <div>
+                        <dt>Tracking number</dt>
+                        <dd class="parcel-number">{{ parcel.tracking_number }}</dd>
+                    </div>
+                    <div v-if="parcel.detail && parcel.detail !== parcel.status">
+                        <dt>Latest</dt>
+                        <dd>{{ parcel.detail }}</dd>
+                    </div>
+                    <div v-if="parcel.expected_delivery">
+                        <dt>Courier estimate</dt>
+                        <dd>{{ parcelDate(parcel.expected_delivery) }}</dd>
+                    </div>
+                </dl>
+
+                <p v-if="lastScan" class="parcel-scan">
+                    {{ lastScan.message || lastScan.status }}<span v-if="lastScan.place"> &middot; {{ lastScan.place }}</span><span v-if="lastScan.at"> &middot; {{ parcelDate(lastScan.at, true) }}</span>
+                </p>
+
+                <div class="parcel-actions">
+                    <a v-if="ordered.parcel_track_url" :href="ordered.parcel_track_url" class="parcel-btn parcel-btn-primary">
+                        Track parcel
+                    </a>
+                    <a v-if="parcel.url" :href="parcel.url" target="_blank" rel="noopener noreferrer" class="parcel-btn">
+                        {{ parcel.courier }} website
+                    </a>
+                </div>
+            </div>
+
+            <!-- Ask for a return or an exchange (CustomerReturnsController). -->
+            <div v-if="canRequestReturn && !showReturnForm" class="return-ask mb-4">
+                <div>
+                    <strong>{{ $t('returnForm.askTitle') }}</strong>
+                    <span>{{ $t('returnForm.askSub') }}</span>
+                </div>
+                <button type="button" class="parcel-btn" @click="showReturnForm = true">
+                    <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>&nbsp;{{ $t('returnForm.askButton') }}
+                </button>
+            </div>
+            <div v-if="showReturnForm" class="parcel-box mb-4">
+                <return-request-form :order-id="orderId" @close="showReturnForm = false" @submitted="returnSubmitted" />
+            </div>
+
+            <!--
+              Return cases on this order, as staff recorded them. Money is
+              shown only once it has gone back (OrderReturns::forCustomer).
+            -->
+            <div v-if="returns.length" class="parcel-box returns-box mb-4">
+                <div class="parcel-head">
+                    <h3 class="parcel-title">{{ $t('order.returnsTitle') }}</h3>
+                </div>
+                <div v-for="ret in returns" :key="ret.rma_number" class="return-row">
+                    <div class="return-row-head">
+                        <span class="parcel-number return-rma">{{ ret.rma_number }}</span>
+                        <span v-if="ret.type === 'exchange'" class="return-type">{{ ret.type_label }}</span>
+                        <span class="parcel-pill" :class="`parcel-pill-${returnTone(ret.status)}`">{{ ret.status_label }}</span>
+                    </div>
+                    <dl class="parcel-facts">
+                        <div>
+                            <dt>{{ $t('order.returnOpened') }}</dt>
+                            <dd>{{ returnDate(ret.created_at) }}</dd>
+                        </div>
+                        <div>
+                            <dt>{{ $t('order.returnReason') }}</dt>
+                            <dd>{{ ret.reason_label }}</dd>
+                        </div>
+                        <div class="return-items">
+                            <dt>{{ $t('order.returnItems') }}</dt>
+                            <dd>
+                                <span v-for="item in ret.items" :key="item.ordered_product_id" class="return-item">
+                                    {{ item.quantity }} &times; {{ item.title }}<template v-if="item.exchange_label"> &rarr; {{ item.exchange_label }}</template>
+                                </span>
+                            </dd>
+                        </div>
+                        <div v-if="ret.refund_amount !== null">
+                            <dt>{{ $t('order.returnRefunded') }}</dt>
+                            <dd>{{ money(ret.refund_amount) }}<span v-if="ret.refunded_at" class="return-when"> &middot; {{ returnDate(ret.refunded_at) }}</span></dd>
+                        </div>
+                        <div v-if="ret.replacement_order">
+                            <dt>{{ $t('order.returnReplacement') }}</dt>
+                            <dd><nuxt-link :to="`/user/order/${ret.replacement_order.id}`" class="return-link">#{{ ret.replacement_order.order }}</nuxt-link></dd>
+                        </div>
+                        <div v-if="ret.amount_charged > 0">
+                            <dt>{{ $t('order.returnPaidDifference') }}</dt>
+                            <dd>{{ money(ret.amount_charged) }}</dd>
+                        </div>
+                        <div v-if="ret.gift_card_amount > 0">
+                            <dt>{{ $t('order.returnGiftCard') }}</dt>
+                            <dd>{{ money(ret.gift_card_amount) }}</dd>
+                        </div>
+                        <div v-if="ret.points_returned > 0">
+                            <dt>{{ $t('order.returnPoints') }}</dt>
+                            <dd>{{ ret.points_returned }}</dd>
+                        </div>
+                    </dl>
+                    <p v-if="ret.status === 'awaiting_return'" class="parcel-scan">{{ $t('order.returnSendBack', { rma: ret.rma_number }) }}</p>
+                    <p v-if="ret.status === 'requested'" class="parcel-scan">{{ $t('returnForm.waitForUs') }}</p>
+                    <div v-if="ret.pay_url || ret.can_cancel" class="parcel-actions">
+                        <a v-if="ret.pay_url" :href="ret.pay_url" class="parcel-btn parcel-btn-primary">{{ $t('returnForm.payDifference') }}</a>
+                        <button v-if="ret.can_cancel" type="button" class="parcel-btn" :disabled="cancellingReturn === ret.id" @click="cancelReturn(ret)">
+                            {{ cancellingReturn === ret.id ? $t('returnForm.cancelling') : $t('returnForm.cancelRequest') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
 
             <!-- <div class="flow-auto mtb-15">
               <table class="mn-w-600x no-bg w-100 mtb-0">
@@ -656,6 +777,7 @@
   import LazyImage from '~/components/LazyImage'
   import RatePopup from '~/components/RatePopup'
   import AccountLayout from '~/components/AccountLayout'
+  import ReturnRequestForm from '~/components/ReturnRequestForm'
   import PayButton from "~/components/PayButton"
   import OrderCancelPopup from "~/components/OrderCancelPopup"
   import PriceFormat from "~/components/PriceFormat"
@@ -675,6 +797,9 @@
     },
     data() {
       return {
+        // the return / exchange request form, and the case being withdrawn
+        showReturnForm: false,
+        cancellingReturn: null,
         verifyPayment: false,
         cancelPopup: false,
         fetchingOrderData: false,
@@ -691,10 +816,35 @@
       PayButton,
       LazyImage,
       RatePopup,
-      AccountLayout
+      AccountLayout,
+      ReturnRequestForm
     },
     mixins: [util, metaHelper, global, orderVatView],
     computed: {
+      returns() {
+        return Array.isArray(this.ordered?.returns) ? this.ordered.returns : []
+      },
+      /*
+       * The button is only an offer: the form asks the server what can still go
+       * back, and the server enforces the window and the rest.
+       */
+      canRequestReturn() {
+        return this.isDelivered && parseInt(this.ordered?.payment_done) === 1
+      },
+      parcel() {
+        return this.ordered?.parcel || null
+      },
+      lastScan() {
+        return this.parcel?.checkpoints?.[0] || null
+      },
+      // Same reading as the track-order page's pill.
+      parcelTone() {
+        const tag = this.parcel?.tag
+        if (tag === 'Delivered') return 'good'
+        if (tag === 'Exception') return 'bad'
+        if (['AttemptFail', 'Expired'].includes(tag)) return 'warn'
+        return 'info'
+      },
       // The order the shared VAT statement (mixin/orderVatView) reads.
       vatOrder() {
         return this.ordered
@@ -918,6 +1068,45 @@
       ...mapGetters('common', ['currencyIcon', 'currencyPosition', 'setting'])
     },
     methods: {
+      async returnSubmitted() {
+        this.showReturnForm = false
+        await this.fetchingData()
+      },
+      async cancelReturn(ret) {
+        if (!window.confirm(this.$t('returnForm.confirmCancel'))) return
+        this.cancellingReturn = ret.id
+        try {
+          const data = await this.postRequest({
+            api: 'returnCancel',
+            params: { return_id: ret.id, ...(this.$auth?.loggedIn ? {} : { user_token: await this.getUserToken() }) },
+            requiredToken: !!this.$auth?.loggedIn,
+            lang: this.langCode
+          })
+          if (data?.status !== 200) {
+            this.setToastError(data?.message || this.$t('returnForm.sendFailed'))
+            return
+          }
+          await this.fetchingData()
+        } finally {
+          this.cancellingReturn = null
+        }
+      },
+      returnTone(status) {
+        return { refunded: 'good', exchanged: 'good', rejected: 'bad', cancelled: 'info', closed: 'info',
+          awaiting_return: 'warn', awaiting_payment: 'warn', requested: 'info' }[status] || 'info'
+      },
+      returnDate(value) {
+        const d = value ? new Date(value) : null
+        if (!d || isNaN(d.getTime())) return value || ''
+        return d.toLocaleDateString(this.$i18n?.locale || 'en-IE', { day: 'numeric', month: 'short', year: 'numeric' })
+      },
+      parcelDate(value, withTime = false) {
+        const d = value ? new Date(value) : null
+        if (!d || isNaN(d.getTime())) return value || ''
+        const opts = { weekday: 'short', day: 'numeric', month: 'short' }
+        if (withTime) Object.assign(opts, { hour: '2-digit', minute: '2-digit' })
+        return d.toLocaleString('en-IE', opts)
+      },
       formatPrice(value) {
         return Number(value || 0).toFixed(2)
       },
@@ -1064,7 +1253,7 @@
       },
       ...mapActions('resource', ['setCountryList', 'setPhoneList']),
       ...mapActions('user', ['getUserToken']),
-      ...mapActions('common', ['setToastMessage', 'setToastError', 'getRequest']),
+      ...mapActions('common', ['setToastMessage', 'setToastError', 'getRequest', 'postRequest']),
       ...mapActions('order', ['getOrderByUser', 'cancelOrder', 'updateOrderData']),
     },
     async mounted() {
@@ -1633,4 +1822,55 @@ ul.account-facts {
         top: 13px;
     }
 }
+
+/* ---------- parcel (AfterShip) ---------- */
+.parcel-box {
+    background: #fff;
+    border: 1px solid #E3E3EF;
+    border-radius: 20px;
+    padding: 20px 24px;
+    color: #130E2B;
+}
+.parcel-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.parcel-title { font-size: 18px; font-weight: 600; margin: 0; color: #232159; }
+.parcel-pill { margin-left: auto; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.parcel-pill-info { background: #EBEBFF; color: #33319A; }
+.parcel-pill-good { background: #ECFDF5; color: #047857; }
+.parcel-pill-warn { background: #FFFBEB; color: #B45309; }
+.parcel-pill-bad  { background: #FEF2F2; color: #B91C1C; }
+.parcel-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px 24px; margin: 0; }
+.parcel-facts dt { font-size: 12px; color: #6B6B80; margin-bottom: 2px; }
+.parcel-facts dd { margin: 0; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.parcel-number { font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.parcel-scan { margin: 14px 0 0; font-size: 14px; color: #4A4A5E; }
+.parcel-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.parcel-btn {
+    display: inline-flex; align-items: center; height: 40px; padding: 0 16px;
+    border: 1px solid #D7DAE9; border-radius: 8px; background: #fff;
+    color: #130E2B; font-size: 14px; font-weight: 500; text-decoration: none;
+}
+.parcel-btn:hover { border-color: #33319A; color: #33319A; }
+.parcel-btn-primary { background: #33319A; border-color: #33319A; color: #fff; }
+.parcel-btn-primary:hover { background: #28267d; color: #fff; }
+@media (max-width: 575px) {
+    .parcel-box { padding: 16px; }
+    .parcel-actions .parcel-btn { flex: 1 1 100%; justify-content: center; }
+}
+/* ---------- returns ---------- */
+.returns-box .return-row { padding: 14px 0; border-top: 1px solid #EEEEF5; }
+.returns-box .return-row:first-of-type { border-top: 0; padding-top: 0; }
+.return-row-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.return-rma { font-weight: 600; font-size: 15px; }
+.return-row-head .parcel-pill { margin-left: auto; }
+.return-items { grid-column: 1 / -1; }
+.return-item { display: block; font-weight: 500; }
+.return-type { font-size: 12px; font-weight: 600; color: #33319A; background: #EBEBFF; border-radius: 999px; padding: 2px 10px; }
+.return-link { color: #33319A; font-weight: 600; text-decoration: underline; }
+.return-ask {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    background: #fff; border: 1px dashed #C9CBE3; border-radius: 16px; padding: 16px 20px;
+}
+.return-ask strong { display: block; font-size: 15px; color: #232159; }
+.return-ask span { display: block; font-size: 13px; color: #6B6B80; }
+.return-when { margin-left: 4px; font-weight: 400; color: #6B6B80; font-size: 13px; }
 </style>

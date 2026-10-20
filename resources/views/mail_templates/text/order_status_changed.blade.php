@@ -6,9 +6,9 @@
 @endphp
 {!! __('lang.hello', [], $lang) !!}@if($brand->receiver_first) {!! $brand->receiver_first !!}@endif,
 
-{!! __('lang.mail_status_title', ['status' => $data->status_label], $lang) !!}
+{!! !empty($data->title) ? $data->title : __('lang.mail_status_title', ['status' => $data->status_label], $lang) !!}
 
-{!! __('lang.mail_status_sub', ['order' => $data->order], $lang) !!}
+{!! !empty($data->subtitle) ? $data->subtitle : __('lang.mail_status_sub', ['order' => $data->order], $lang) !!}
 
 {!! __('lang.mail_order_number', [], $lang) !!}: #{!! $data->order !!}
 {!! __('lang.status', [], $lang) !!}: {!! $data->status_label !!}
@@ -17,6 +17,12 @@
 {!! $row['label'] !!}: {!! $row['value'] !!}
 @endforeach
 
+@if(!empty($data->button_url))
+{!! $data->button_label !!}: {!! $data->button_url !!}
+@endif
+@if(!empty($data->track_url))
+{!! __('lang.mail_track_parcel', [], $lang) !!}: {!! $data->track_url !!}
+@endif
 {!! __('lang.view_order', [], $lang) !!}: {!! $orderUrl !!}
 
 {!! __('lang.mail_quote_order', [], $lang) !!}

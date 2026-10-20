@@ -149,6 +149,72 @@
             <p v-if="stoppedNote" class="tr-stopped">{{ stoppedNote }}</p>
           </div>
 
+          <!--
+            The parcel, as AfterShip last reported it. The tracking number,
+            the courier's scans and its link are only in the payload for the
+            signed-in owner or the signed link from the shipping email; anyone
+            else holding the order number sees the courier and the status.
+          -->
+          <div v-if="shipment" class="tr-card tr-ship">
+            <h3 class="tr-title">
+              Parcel
+              <span class="tr-pill" :class="`tr-pill-${shipmentTone}`">{{ shipment.status }}</span>
+            </h3>
+
+            <dl class="tr-facts">
+              <dt>Courier</dt>
+              <dd>{{ shipment.courier }}</dd>
+
+              <dt>Tracking number</dt>
+              <dd class="tr-ship-number">{{ shipment.tracking_number }}</dd>
+
+              <template v-if="shipment.detail && shipment.detail !== shipment.status">
+                <dt>Latest</dt>
+                <dd>{{ shipment.detail }}</dd>
+              </template>
+
+              <template v-if="shipment.expected_delivery">
+                <dt>Courier estimate</dt>
+                <dd>{{ fmtDay(shipment.expected_delivery.slice(0, 10)) }}</dd>
+              </template>
+
+              <template v-if="shipment.updated_at">
+                <dt>Updated</dt>
+                <dd>{{ fmtDateTime(shipment.updated_at) }}</dd>
+              </template>
+            </dl>
+
+            <ul v-if="shipment.checkpoints && shipment.checkpoints.length" class="tr-history tr-ship-scans">
+              <li
+                v-for="(scan, i) in shipment.checkpoints"
+                :key="i"
+                class="tr-history-item"
+              >
+                <span class="tr-history-dot" aria-hidden="true" />
+                <div>
+                  <strong>{{ scan.message || scan.status }}</strong>
+                  <span class="tr-history-at">
+                    {{ scan.at ? fmtDateTime(scan.at) : '' }}<template v-if="scan.place"> &middot; {{ scan.place }}</template>
+                  </span>
+                </div>
+              </li>
+            </ul>
+
+            <p v-if="!shipment.full" class="tr-note">
+              The full tracking number and courier scans are in your shipping email, or sign in to see them here.
+            </p>
+
+            <a
+              v-if="shipment.url"
+              :href="shipment.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="tr-btn tr-btn-primary tr-ship-link"
+            >
+              Track with {{ shipment.courier }}
+            </a>
+          </div>
+
           <div class="tr-grid">
 
             <!-- items -->
@@ -472,6 +538,17 @@
         return `${this.statusLabel}${when ? ' on ' + this.fmtDay(when) : ''}. The order will not move any further.`
       },
       // Newest first.
+      shipment() {
+        return this.order?.shipment || null
+      },
+      // Same three tones as the summary pill.
+      shipmentTone() {
+        const tag = this.shipment?.tag
+        if (tag === 'Delivered') return 'good'
+        if (tag === 'Exception') return 'bad'
+        if (['AttemptFail', 'Expired'].includes(tag)) return 'warn'
+        return 'info'
+      },
       history() {
         return [...(this.order?.timeline || [])].reverse()
       },
@@ -540,10 +617,20 @@
         this.formSubmitting = true
 
         try {
+          const params = { tracking_id: id }
+
+          /*
+           * The signed link from the shipping email unlocks the tracking
+           * number and courier scans for that one order. Only sent with the
+           * order it was issued for, not with a number typed in afterwards.
+           */
+          const token = (this.$route.query.t || '').toString()
+          if (token && id === (this.$route.query.order_id || '').toString().trim()) {
+            params.t = token
+          }
+
           const data = await this.getRequest({
-            params: {
-              tracking_id: id
-            },
+            params,
             lang: this.langCode,
             api: 'trackOder',
             // Signed in, the owner also gets the total and a link to the order.
@@ -1026,6 +1113,14 @@ a.tr-item-title:hover { color: #33319A; text-decoration: underline; }
   background: #28267d;
   color: #fff;
 }
+
+/* ---------- parcel (AfterShip) ---------- */
+
+.tr-ship .tr-title { align-items: center; }
+.tr-ship .tr-title .tr-pill { margin-left: auto; }
+.tr-ship-number { font-variant-numeric: tabular-nums; letter-spacing: .02em; word-break: break-all; }
+.tr-ship-scans { margin-top: 18px; }
+.tr-ship-link { margin-top: 16px; }
 
 /* ---------- small screens ---------- */
 

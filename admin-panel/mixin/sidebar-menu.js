@@ -30,6 +30,7 @@ export function buildSidebarMenu(t) {
 
     { section: 'ORDERS' },
     { path: 'orders', title: t('error.orders'), icon: 'fa-solid fa-cart-shopping', gate: 'order' },
+    { path: 'returns', title: 'Returns', icon: 'fa-solid fa-rotate-left', gate: 'order' },
     // { path: 'refunded', title: 'Refunded', icon: 'fa-solid fa-rotate-left' },
     // { path: 'cancelled', title: 'Cancelled', icon: 'fa-solid fa-ban' },
     // { path: 'incomplete', title: 'Incomplete', icon: 'fa-solid fa-file-circle-xmark' },

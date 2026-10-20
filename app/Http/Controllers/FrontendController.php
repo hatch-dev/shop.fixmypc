@@ -2900,6 +2900,19 @@ class FrontendController extends Controller
                 $data['currency'] = $order->currency;
             }
 
+            /*
+             * The parcel (AfterShip). Anyone with the order number sees the
+             * courier and where it has got to; the tracking number, the
+             * checkpoints and the courier's link need the signed-in owner or
+             * the signed link from the shipping email (`t`). See
+             * OrderShipment::publicView().
+             */
+            $shipment = \App\Models\OrderShipment::where('order_id', $order->id)->first();
+            $data['shipment'] = $shipment
+                ? $shipment->publicView($data['is_owner']
+                    || \App\Models\Helper\ShipmentTracking::verifySignature($order, $request->t))
+                : null;
+
             return response()->json(new Response('', $data));
 
         } catch (\Exception $e) {

@@ -108,6 +108,16 @@
                 {{ $t('setting.pi') }}
               </button>
 
+              <button
+                v-if="canStartReturn"
+                class="outline-btn"
+                type="button"
+                @click.prevent="$router.push(`/returns/start?order=${result.id}`)"
+              >
+                <i class="fa-solid fa-rotate-left mr-10" />
+                Start a return
+              </button>
+
               <!-- Contextual: only rendered when the order actually has a
                    cancellation to explain or a payment to refund. -->
               <template v-if="cancellationMessage">
@@ -665,9 +675,251 @@
                   {{ $t('profile.phone') }}: {{ result.address.phone }}
                 </span>
               </address>
+
+              <!--
+                Shipment tracking (AfterShip). Saving registers the parcel,
+                moves the order to On the way and emails the customer once;
+                the same details saved again do nothing. See ShipmentTracking.
+              -->
+              <div v-if="!isVendor && !isCollection" class="shipment-block">
+                <div class="ship-head">
+                  <span class="addr-heading">{{ $t('fSale.shipTracking') }}</span>
+                  <span v-if="shipment" class="ship-pill" :class="'ship-pill-' + shipmentTone">{{ shipment.tag_label }}</span>
+                </div>
+
+                <!-- The parcel as AfterShip last reported it. -->
+                <div v-if="shipment && !shipmentEditing" class="ship-card">
+                  <div class="ship-card-top">
+                    <div class="ship-ident">
+                      <span class="ship-courier">{{ shipment.courier_name }}</span>
+                      <span class="ship-number">
+                        {{ shipment.tracking_number }}
+                        <button
+                          type="button"
+                          class="ship-icon-btn"
+                          :title="$t('fSale.copyNumber')"
+                          :aria-label="$t('fSale.copyNumber')"
+                          @click="copyTrackingNumber"
+                        >
+                          <i class="fa-solid" :class="numberCopied ? 'fa-check' : 'fa-copy'" />
+                        </button>
+                      </span>
+                    </div>
+                    <a
+                      v-if="shipment.external_url"
+                      :href="shipment.external_url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="ship-track-link"
+                    >
+                      {{ $t('fSale.openTracking') }}
+                      <i class="fa-solid fa-arrow-up-right-from-square" />
+                    </a>
+                  </div>
+
+                  <p v-if="shipment.subtag_message" class="ship-detail">{{ shipment.subtag_message }}</p>
+
+                  <ul class="ship-meta">
+                    <li v-if="shipment.expected_delivery">
+                      <i class="fa-regular fa-calendar" />
+                      {{ $t('fSale.expectedDelivery') }}: <b>{{ shipmentDate(shipment.expected_delivery) }}</b>
+                    </li>
+                    <li v-if="shipment.last_synced_at">
+                      <i class="fa-regular fa-clock" />
+                      {{ $t('fSale.lastUpdate') }}: {{ shipmentDate(shipment.last_synced_at, true) }}
+                    </li>
+                  </ul>
+
+                  <div class="ship-card-actions">
+                    <ajax-button
+                      class="outline-btn xs"
+                      type="button"
+                      :text="$t('fSale.refreshStatus')"
+                      :loading-text="$t('profile.updatn')"
+                      :fetching-data="shipmentRefreshing"
+                      @clicked="refreshShipment"
+                    />
+                    <button
+                      v-if="shipmentAllowed"
+                      type="button"
+                      class="outline-btn xs"
+                      @click="startShipmentEdit"
+                    >
+                      <i class="fa-solid fa-pen mr-5" />{{ $t('fSale.editShipment') }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- No scan after 48h, failed attempt, courier problem, expired: staff are also emailed once. -->
+                <p v-if="shipment && shipment.attention" class="shipment-attention" role="alert">
+                  <i class="fa-solid fa-triangle-exclamation" />
+                  <span>{{ shipment.attention.message }}</span>
+                </p>
+                <p v-if="shipment && shipment.last_error" class="shipment-error">{{ shipment.last_error }}</p>
+
+                <!--
+                  Add a shipment, or change one after "Edit". The couriers are
+                  the ones activated in the AfterShip account (GET
+                  /couriers?active=true); typing filters that list. A courier
+                  is added under Settings -> Couriers in AfterShip.
+                -->
+                <form
+                  v-if="shipmentAllowed && (!shipment || shipmentEditing)"
+                  class="ship-form"
+                  @submit.prevent="saveShipment"
+                >
+                  <div class="ship-field">
+                    <label class="ship-label" for="ship-courier">{{ $t('fSale.courier') }}</label>
+                    <div v-outside-click="closeCourierList" class="courier-picker">
+                      <i class="fa-solid fa-magnifying-glass courier-picker-icon" />
+                      <input
+                        id="ship-courier"
+                        v-model="courierQuery"
+                        class="shipment-input"
+                        :class="{ 'has-value': selectedCourier && !courierQuery }"
+                        type="text"
+                        autocomplete="off"
+                        spellcheck="false"
+                        role="combobox"
+                        :aria-expanded="courierOpen ? 'true' : 'false'"
+                        :placeholder="selectedCourier ? selectedCourier.name : $t('fSale.searchCourier')"
+                        @focus="openCourierList"
+                        @input="courierOpen = true"
+                        @keydown.esc="closeCourierList"
+                      >
+                      <ul v-if="courierOpen" class="courier-list" role="listbox">
+                        <li v-if="courierLoading" class="courier-note">{{ $t('fSale.loadingCouriers') }}</li>
+                        <li v-else-if="courierError" class="courier-note is-error">{{ courierError }}</li>
+                        <template v-else>
+                          <li class="courier-group">{{ $t('fSale.activeCouriers') }}</li>
+                          <li
+                            v-for="c in courierOptions"
+                            :key="c.slug"
+                            class="courier-option"
+                            :class="{ 'is-selected': shipmentForm.courier === c.slug }"
+                            role="option"
+                            :aria-selected="shipmentForm.courier === c.slug ? 'true' : 'false'"
+                            @mousedown.prevent="pickCourier(c)"
+                          >
+                            <span class="courier-name">{{ c.name }}</span>
+                            <span class="courier-meta">{{ c.slug }}<template v-if="c.countries.length"> &middot; {{ c.countries.slice(0, 3).join(', ') }}</template></span>
+                          </li>
+                          <li v-if="!courierOptions.length" class="courier-note">
+                            {{ courierQuery.trim() ? $t('fSale.noCourierMatch') : $t('fSale.noActiveCouriers') }}
+                          </li>
+                        </template>
+                        <li v-if="couriersTotal" class="courier-foot" @mousedown.prevent>
+                          {{ $t('fSale.courierSource', { count: couriersTotal }) }}
+                          &middot;
+                          <a href="#" @click.prevent="loadCouriers(true)">{{ $t('fSale.refreshCouriers') }}</a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div class="ship-field">
+                    <label class="ship-label" for="ship-number">{{ $t('fSale.trackingNo') }}</label>
+                    <input
+                      id="ship-number"
+                      v-model.trim="shipmentForm.tracking_number"
+                      class="shipment-input"
+                      type="text"
+                      maxlength="64"
+                      autocomplete="off"
+                      spellcheck="false"
+                      required
+                    >
+                  </div>
+
+                  <!--
+                    What the chosen courier needs besides the number (its
+                    required_fields in AfterShip): address details come from
+                    the order, account number and key are typed here.
+                  -->
+                  <div v-if="selectedCourier && courierNeedsMore" class="courier-fields">
+                    <p v-if="autoFieldNames.length" class="shipment-hint">
+                      {{ $t('fSale.fieldsFromOrder', { courier: selectedCourier.name, fields: autoFieldNames.join(', ') }) }}
+                    </p>
+                    <div
+                      v-for="(label, field) in selectedCourier.manual_fields"
+                      :key="field"
+                      class="ship-field"
+                    >
+                      <label class="ship-label" :for="'ship-' + field">{{ label }}</label>
+                      <input
+                        :id="'ship-' + field"
+                        v-model.trim="shipmentForm.fields[field]"
+                        class="shipment-input"
+                        type="text"
+                        maxlength="128"
+                        autocomplete="off"
+                        required
+                      >
+                    </div>
+                  </div>
+
+                  <div class="ship-form-actions">
+                    <ajax-button
+                      class="primary-btn"
+                      type="submit"
+                      :text="shipment ? $t('fSale.updateShipment') : $t('fSale.saveShipment')"
+                      :loading-text="$t('profile.updatn')"
+                      :fetching-data="shipmentSaving"
+                    />
+                    <button
+                      v-if="shipment"
+                      type="button"
+                      class="outline-btn"
+                      @click="cancelShipmentEdit"
+                    >{{ $t('fSale.cancelEdit') }}</button>
+                  </div>
+
+                  <p v-if="!shipment && !shipmentNotice && !shipmentError" class="shipment-hint">
+                    {{ $t('fSale.shipmentHint') }}
+                  </p>
+                </form>
+
+                <p v-if="!shipmentAllowed && !shipment" class="fact-muted mt-10">{{ $t('fSale.shipConfirmFirst') }}</p>
+
+                <p v-if="shipmentNotice" class="shipment-notice" role="status">
+                  <i class="fa-solid fa-circle-check" />
+                  <span>{{ shipmentNotice }}</span>
+                </p>
+                <p v-if="shipmentError" class="shipment-error" role="alert">{{ shipmentError }}</p>
+              </div>
             </div>
           </section>
         </div>
+
+        <!-- ========================== Returns ========================== -->
+        <section
+          v-if="!isVendor && returnsInfo && returnsInfo.returns.length"
+          class="order-card order-full"
+        >
+          <div class="order-card-head">
+            <i class="fa-solid fa-rotate-left" />
+            Returns
+          </div>
+          <div class="order-card-body">
+            <table class="order-returns-table">
+              <tr>
+                <th>Return</th><th>Type</th><th>Opened</th><th>Reason</th><th>Units</th><th>Status</th><th>Refund</th>
+              </tr>
+              <tr v-for="ret in returnsInfo.returns" :key="ret.id">
+                <td><nuxt-link class="link" :to="`/returns/${ret.id}`">{{ ret.rma_number }}</nuxt-link></td>
+                <td>
+                  {{ ret.type === 'exchange' ? 'Exchange' : 'Return' }}
+                  <nuxt-link v-if="ret.replacement_order_id" class="link" :to="`/orders/${ret.replacement_order_id}`">(replacement)</nuxt-link>
+                </td>
+                <td>{{ ret.created_at }}</td>
+                <td>{{ ret.reason_label }}</td>
+                <td>{{ ret.units }}</td>
+                <td>{{ ret.status_label }}</td>
+                <td>{{ ret.refund_amount === null ? '—' : priceFormatting(ret.refund_amount) }}</td>
+              </tr>
+            </table>
+          </div>
+        </section>
 
         <!-- ========================== Timeline ========================= -->
         <section class="order-card order-full" v-if="timelineSteps.length">
@@ -758,6 +1010,25 @@
         result: null,
         loading: false,
         copied: false,
+        shipmentForm: { courier: '', tracking_number: '', fields: {} },
+        // The form is shown to add a shipment, or after "Edit" on an existing one.
+        shipmentEditing: false,
+        numberCopied: false,
+        // The courier picker, fed by AfterShip's courier list (shipmentCouriers()).
+        courierQuery: '',
+        courierOpen: false,
+        courierLoading: false,
+        courierError: '',
+        courierActive: [],
+        couriersTotal: 0,
+        couriersFetchedAt: null,
+        pickedCourier: null,
+        shipmentSaving: false,
+        shipmentRefreshing: false,
+        shipmentNotice: '',
+        shipmentError: '',
+        // Return cases and what is still returnable (order-return/order/{id}).
+        returnsInfo: null,
         statusIcons: {
           1: 'fa-cart-shopping',
           2: 'fa-circle-check',
@@ -810,6 +1081,57 @@
         return this.customer.account_type === 'trade'
       },
       /* Every line on an order shares one fulfilment type; 2 is collection. */
+      shipment() {
+        return this.result?.shipment_tracking || null
+      },
+      // Same reading as the storefront's tracking pill.
+      shipmentTone() {
+        const tag = this.shipment?.tag
+        if (tag === 'Delivered') return 'good'
+        if (tag === 'Exception') return 'bad'
+        if (['AttemptFail', 'Expired'].includes(tag)) return 'warn'
+        // Wrong or unrecognised courier, no scan after 48h: a problem, not a wait.
+        if (this.shipment?.attention) return 'warn'
+        if (tag === 'Pending') return 'muted'
+        return 'info'
+      },
+      // Activated couriers while the box is empty, search results once typing.
+      courierOptions() {
+        const q = this.courierQuery.trim().toLowerCase()
+        if (!q) return this.courierActive
+        return this.courierActive.filter(c =>
+          [c.name, c.other_name, c.slug].some(v => (v || '').toLowerCase().includes(q)))
+      },
+      /*
+       * The courier the form will save: the one picked, or the one already
+       * on the shipment (named from the row until the list has loaded).
+       */
+      selectedCourier() {
+        if (this.pickedCourier && this.pickedCourier.slug === this.shipmentForm.courier) {
+          return this.pickedCourier
+        }
+        const slug = this.shipmentForm.courier
+        if (!slug) return null
+        const known = this.courierActive.find(c => c.slug === slug)
+        if (known) return known
+        return this.shipment && this.shipment.courier_slug === slug
+          ? { slug, name: this.shipment.courier_name, countries: [], auto_fields: {}, manual_fields: {} }
+          : null
+      },
+      courierNeedsMore() {
+        const c = this.selectedCourier
+        return !!c && (Object.keys(c.auto_fields || {}).length + Object.keys(c.manual_fields || {}).length) > 0
+      },
+      autoFieldNames() {
+        return Object.values(this.selectedCourier?.auto_fields || {})
+      },
+      /*
+       * Confirmed, picked up or on the way, by the status the server last
+       * confirmed - the same rule saveShipment() enforces.
+       */
+      shipmentAllowed() {
+        return !this.isVendor && !this.isCollection && !!this.result?.shipment_allowed
+      },
       isCollection() {
         return parseInt(this.result?.ordered_products?.[0]?.shipping_type)
           === this.shippingTypeIn.pickup
@@ -1014,6 +1336,10 @@
       },
       isCashOnDelivery(){
         return parseInt(this.result?.order_method) === this.orderMethodsIn.CASH_ON_DELIVERY
+      },
+      canStartReturn() {
+        return !this.isVendor && this.$can('order', 'edit') && !!this.returnsInfo?.eligibility?.ok &&
+          (this.returnsInfo?.lines || []).some(line => line.returnable_quantity > 0)
       },
       cancellationMessage(){
         return this.result?.cancellation || null
@@ -1345,6 +1671,11 @@
             },
             api: 'updateOrderStatus'
           })
+          // Confirming the order opens the shipment form; finishing it closes it.
+          this.result = {
+            ...this.result,
+            shipment_allowed: [2, 3, 4].includes(parseInt(this.result.status))
+          }
         } catch (e) {
           return this.$nuxt.error(e)
         }
@@ -1384,10 +1715,185 @@
         }
         return  addArr.join(', ')
       },
+      /* The shipment section shows its own refusals; the page-top banner would repeat them. */
+      clearPageErrors() {
+        this.$store.dispatch('ui/setErrors', null)
+      },
+      startShipmentEdit() {
+        this.shipmentNotice = ''
+        this.shipmentError = ''
+        this.shipmentEditing = true
+        if (!this.courierActive.length && !this.courierLoading) {
+          this.loadCouriers()
+        }
+      },
+      cancelShipmentEdit() {
+        this.shipmentEditing = false
+        this.shipmentError = ''
+        this.courierQuery = ''
+        this.shipmentForm = {
+          courier: this.shipment?.courier_slug || '',
+          tracking_number: this.shipment?.tracking_number || '',
+          fields: {}
+        }
+      },
+      async copyTrackingNumber() {
+        try {
+          await navigator.clipboard.writeText(this.shipment?.tracking_number || '')
+          this.numberCopied = true
+          setTimeout(() => { this.numberCopied = false }, 1500)
+        } catch (e) {
+          // Clipboard blocked (http, permissions): the number is on screen to select.
+        }
+      },
+      /* AfterShip's activated couriers (and the list's size and age); refresh re-reads AfterShip now. */
+      async loadCouriers(refresh = false) {
+        this.courierLoading = true
+        this.courierError = ''
+        try {
+          const data = await this.getRequest({
+            params: refresh ? { refresh: 1 } : {},
+            api: 'shipmentCouriers'
+          })
+          this.courierActive = data?.active || []
+          this.couriersTotal = data?.total || 0
+          this.couriersFetchedAt = data?.fetched_at || null
+        } catch (e) {
+          this.courierError = e?.message || 'Could not load couriers from AfterShip.'
+        } finally {
+          this.courierLoading = false
+        }
+      },
+      openCourierList() {
+        this.courierOpen = true
+        if (!this.courierActive.length && !this.courierLoading) {
+          this.loadCouriers()
+        }
+      },
+      closeCourierList() {
+        this.courierOpen = false
+      },
+      pickCourier(c) {
+        this.pickedCourier = c
+        this.shipmentForm = { ...this.shipmentForm, courier: c.slug, fields: {} }
+        this.courierQuery = ''
+        this.courierOpen = false
+      },
+      shipmentDate(value, withTime = false) {
+        const d = value ? new Date(value) : null
+        if (!d || isNaN(d.getTime())) return value || ''
+        const opts = { day: 'numeric', month: 'short', year: 'numeric' }
+        if (withTime) Object.assign(opts, { hour: '2-digit', minute: '2-digit' })
+        return d.toLocaleString('en-IE', opts)
+      },
+      /*
+       * Take a shipment answer from the server: the row, and the status the
+       * order is now at (saving moves Confirmed / Picked up to On the way).
+       */
+      applyShipmentResult(data) {
+        const status = data.status !== undefined ? data.status : this.result.status
+        this.result = {
+          ...this.result,
+          shipment_tracking: data.shipment,
+          status,
+          allowed_transitions: data.allowed_transitions || this.result.allowed_transitions,
+          shipment_allowed: [2, 3, 4].includes(parseInt(status))
+        }
+        this.statusChanged = false
+        this.shipmentForm = {
+          courier: data.shipment?.courier_slug || '',
+          tracking_number: data.shipment?.tracking_number || '',
+          fields: {}
+        }
+        this.shipmentEditing = false
+      },
+      async saveShipment() {
+        if (this.shipmentSaving) return
+        this.shipmentNotice = ''
+        this.shipmentError = ''
+        if (!this.shipmentForm.courier) {
+          this.shipmentError = this.$t('fSale.chooseCourier')
+          return
+        }
+        this.shipmentSaving = true
+        try {
+          const data = await this.setRequest({
+            params: {
+              id: this.id,
+              courier: this.shipmentForm.courier,
+              tracking_number: this.shipmentForm.tracking_number,
+              fields: this.shipmentForm.fields
+            },
+            api: 'saveShipment'
+          })
+
+          // A refusal resolves with the whole envelope (status 201), not a throw.
+          if (!data || data.status === 201 || !data.shipment) {
+            this.shipmentError = data?.data?.form?.[0] || this.$store.getters['ui/errors']?.form?.[0] || 'AfterShip refused the shipment.'
+            this.clearPageErrors()
+            return
+          }
+
+          this.applyShipmentResult(data)
+          this.shipmentNotice = {
+            unchanged: this.$t('fSale.shipUnchanged'),
+            corrected: this.$t('fSale.shipCorrected'),
+            shipped_email_pending: this.$t('fSale.shipEmailPending'),
+            shipped: this.$t('fSale.shipSaved'),
+            tracking_email: this.$t('fSale.shipSaved')
+          }[data.notified] || this.$t('fSale.shipSaved')
+        } catch (e) {
+          this.shipmentError = e?.message || 'Could not save the shipment.'
+        } finally {
+          this.shipmentSaving = false
+        }
+      },
+      async refreshShipment() {
+        if (this.shipmentRefreshing) return
+        this.shipmentNotice = ''
+        this.shipmentError = ''
+        this.shipmentRefreshing = true
+        try {
+          const data = await this.setById({ id: this.id, params: {}, api: 'refreshShipment' })
+
+          if (!data || !data.shipment) {
+            this.shipmentError = this.$store.getters['ui/errors']?.form?.[0] || 'AfterShip could not be reached.'
+            this.clearPageErrors()
+            await this.fetchingData()
+            return
+          }
+
+          this.applyShipmentResult(data)
+          this.shipmentNotice = this.$t('fSale.shipRefreshed')
+        } catch (e) {
+          this.shipmentError = e?.message || 'AfterShip could not be reached.'
+        } finally {
+          this.shipmentRefreshing = false
+        }
+      },
+      async loadReturns() {
+        if (this.isVendor || !this.$can('order', 'view')) return
+        try {
+          this.returnsInfo = await this.getById({id: this.id, params: {}, api: 'getReturnsForOrder'})
+        } catch (e) {
+          // The order page stands without it.
+          this.returnsInfo = null
+        }
+      },
       async fetchingData() {
         try {
           this.loading = true
           this.result= Object.assign({}, await this.getById({id: this.id, params: {time_zone: this.timeZone}, api: 'getOrder'}))
+          this.shipmentForm = {
+            courier: this.result?.shipment_tracking?.courier_slug || '',
+            tracking_number: this.result?.shipment_tracking?.tracking_number || '',
+            fields: {}
+          }
+          // Couriers from AfterShip, only where the form is shown.
+          if (this.result?.shipment_allowed && !this.isVendor) {
+            this.loadCouriers()
+          }
+          this.loadReturns()
           this.loading = false
         } catch (e) {
           return this.$nuxt.error(e)
@@ -1395,7 +1901,7 @@
       },
       ...mapActions('resource', ['setCountryList']),
       ...mapActions('setting', ['getSetting']),
-      ...mapActions('common', ['setRequest', 'getById', 'setById'])
+      ...mapActions('common', ['setRequest', 'getById', 'setById', 'getRequest'])
     },
     async mounted() {
       if (!this.countryList) {
@@ -1424,3 +1930,9 @@
     }
   }
 </script>
+
+<style scoped>
+  .order-returns-table { width: 100%; font-size: 13px; border-collapse: collapse; }
+  .order-returns-table th, .order-returns-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #f2f4f7; }
+  .order-returns-table th { color: #6b7280; font-weight: 600; }
+</style>

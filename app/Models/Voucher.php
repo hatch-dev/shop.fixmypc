@@ -46,10 +46,13 @@ class Voucher extends Model
      * change does not set the cancelled flag, and the money goes back on
      * the card either way. A SQL expression so the admin report can filter
      * and total on it; $voucherId is an int or a column name.
+     *
+     * Less returned_amount: the gift card's share of items sent back on an
+     * order that still stands (a partial return), which goes back on the card.
      */
     public static function giftUsedSql($voucherId)
     {
-        return "(SELECT COALESCE(SUM(ov.discount), 0) FROM ordered_voucher ov"
+        return "(SELECT COALESCE(SUM(ov.discount - COALESCE(ov.returned_amount, 0)), 0) FROM ordered_voucher ov"
             . " JOIN orders o ON o.id = ov.order_id AND o.voucher_id = ov.voucher_id"
             . " WHERE ov.voucher_id = $voucherId"
             . " AND " . static::standingOrderSql('o') . ")";

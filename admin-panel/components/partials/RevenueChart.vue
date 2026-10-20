@@ -104,6 +104,14 @@
       >
         <i class="fa fa-circle-info"></i> {{ cancelledNote }}
       </span>
+      <!-- Return refunds are already off the figures above; this says by how much. -->
+      <span
+        v-if="summary.returns_refunded > 0"
+        class="chart-applied__note"
+        :title="returnsNote"
+      >
+        <i class="fa fa-rotate-left"></i> {{ returnsNote }}
+      </span>
     </p>
 
     <!-- Loading: placeholder bars keep the card at its real height -->
@@ -309,6 +317,12 @@
         return this.$t('index.cancelledExcluded', {
           count: this.summary.cancelled_orders,
           amount: this.priceFormatting(this.summary.cancelled_amount || 0)
+        })
+      },
+      returnsNote() {
+        return this.$t('index.returnsNetted', {
+          count: this.summary.returns_orders || 0,
+          amount: this.priceFormatting(this.summary.returns_refunded || 0)
         })
       },
       /** Any money actually received in the window - what the plot draws. */
