@@ -86,6 +86,10 @@
             tabId: 'cart-reservation',
           },
           {
+            title: this.$t('setting.asTab'),
+            tabId: 'aftership',
+          },
+          {
             title: this.$t('ship.pl'),
             tabId: 'plugins',
           },

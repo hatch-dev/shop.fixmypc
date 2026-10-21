@@ -67,7 +67,7 @@ class AfterShipException extends \RuntimeException
     {
         switch (true) {
             case $this->httpStatus === 401:
-                return 'AfterShip rejected the API key. Check AFTERSHIP_API_KEY in the server .env.';
+                return 'AfterShip rejected the API key. Check the API key in Settings > AfterShip.';
             case $this->httpStatus === 403:
                 return 'AfterShip refused this request for the account. Check the plan and API key permissions.';
             case $this->isQuotaExhausted():

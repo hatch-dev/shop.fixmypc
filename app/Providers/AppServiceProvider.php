@@ -50,5 +50,15 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\Queue::before(function () {
             \App\Models\Helper\MailBrand::forget();
         });
+
+        /*
+         * AfterShip settings saved in the admin replace the .env values.
+         * Not while config is being cached or published: that would write the
+         * decrypted secrets into bootstrap/cache/config.php.
+         */
+        $command = $this->app->runningInConsole() ? ($_SERVER['argv'][1] ?? '') : '';
+        if (!in_array($command, ['config:cache', 'optimize', 'config:show'], true)) {
+            \App\Models\Helper\AfterShipSettings::apply();
+        }
     }
 }

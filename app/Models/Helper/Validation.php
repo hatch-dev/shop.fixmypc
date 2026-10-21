@@ -837,6 +837,30 @@ class Validation
         return self::validationMessage($request, $rules, 'form', $messages);
     }
 
+    public static function aftership($request)
+    {
+        $min = AfterShipSettings::MIN_SYNC_MINUTES;
+        $max = AfterShipSettings::MAX_SYNC_MINUTES;
+
+        $rules = [
+            'api_key' => 'nullable|string|max:255',
+            'webhook_secret' => 'nullable|string|max:255',
+            'auto_deliver' => 'required|boolean',
+            'sync_minutes' => "nullable|integer|min:$min|max:$max",
+        ];
+
+        $messages = [
+            'api_key.max' => 'That API key is too long. Copy it again from AfterShip > Settings > API keys.',
+            'webhook_secret.max' => 'That webhook secret is too long. Copy it again from AfterShip > Settings > Webhooks.',
+            'auto_deliver.required' => 'Choose whether a delivered scan marks the order Delivered.',
+            'sync_minutes.integer' => 'The check interval must be a whole number of minutes.',
+            'sync_minutes.min' => "Check at most every $min minutes: each check uses one AfterShip API call.",
+            'sync_minutes.max' => "Check at least once a day ($max minutes).",
+        ];
+
+        return self::validationMessage($request, $rules, 'form', $messages);
+    }
+
     public static function address($request)
     {
         $rules = [

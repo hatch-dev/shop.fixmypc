@@ -468,6 +468,10 @@ Route::group([
             Route::post('sidebar-icons', [SettingsController::class, 'sidebarIconsAction']);
             Route::post('sidebar-icons-delete', [SettingsController::class, 'sidebarIconsDelete']);
 
+            Route::get('aftership', [SettingsController::class, 'aftershipFind']);
+            Route::post('aftership', [SettingsController::class, 'aftershipAction']);
+            Route::post('aftership-test', [SettingsController::class, 'aftershipTest']);
+
             Route::get('sumup', [SettingsController::class, 'getSumup']);
             Route::post('sumup', [SettingsController::class, 'updateSumup']);
         });

@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Helper\AfterShipSettings;
 use App\Models\Helper\CartHold;
+use App\Models\Helper\CourierDirectory;
+use App\Services\AfterShipException;
+use App\Services\AfterShipService;
 use App\Models\Helper\ControllerHelper;
 use App\Models\Setting;
 use App\Models\SidebarIcon;
@@ -598,6 +602,100 @@ class SettingsController extends ControllerHelper
 
             return response()->json(Validation::errorTokenLang($request->token, $lang));
 
+
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+
+    /**
+     * Settings > AfterShip. The secrets are never returned: only whether each
+     * is set, where it comes from (admin or .env) and its last four characters.
+     */
+    public function aftershipFind(Request $request)
+    {
+        try {
+            if ($can = Utils::userCan($this->user, 'setting.view')) {
+                return $can;
+            }
+
+            return response()->json(new Response($request->token, AfterShipSettings::describe()));
+
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+    /**
+     * Save Settings > AfterShip. A blank secret keeps the saved one; clear_*
+     * goes back to the .env value. A new API key can be a different AfterShip
+     * account, so the stored courier lists are dropped and fetched again.
+     */
+    public function aftershipAction(Request $request)
+    {
+        try {
+            $lang = $request->header('language');
+
+            if ($can = Utils::userCan($this->user, 'setting.edit')) {
+                return $can;
+            }
+
+            $validate = Validation::aftership($request);
+            if ($validate) {
+                return response()->json($validate);
+            }
+
+            $keyChanged = AfterShipSettings::save([
+                'api_key' => $request->input('api_key'),
+                'clear_api_key' => $request->boolean('clear_api_key'),
+                'webhook_secret' => $request->input('webhook_secret'),
+                'clear_webhook_secret' => $request->boolean('clear_webhook_secret'),
+                'auto_deliver' => $request->boolean('auto_deliver'),
+                'sync_minutes' => $request->input('sync_minutes'),
+            ], $request->user()->id);
+
+            if ($keyChanged) {
+                CourierDirectory::forgetStored();
+            }
+
+            return response()->json(new Response($request->token, AfterShipSettings::describe()));
+
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+    /**
+     * Check the saved API key against AfterShip: fetches the account's
+     * activated couriers (one API call; the free plan allows 100 a day) and
+     * keeps that list for the order screen's courier picker.
+     */
+    public function aftershipTest(Request $request)
+    {
+        try {
+            if ($can = Utils::userCan($this->user, 'setting.edit')) {
+                return $can;
+            }
+
+            $api = new AfterShipService();
+            if (!$api->isConfigured()) {
+                return response()->json(Validation::error($request->token,
+                    'No AfterShip API key is set. Enter one above and save first.'));
+            }
+
+            try {
+                $couriers = CourierDirectory::refreshActive($api);
+            } catch (AfterShipException $e) {
+                return response()->json(Validation::error($request->token, $e->adminMessage()));
+            }
+
+            return response()->json(new Response($request->token, [
+                'ok' => true,
+                'couriers' => array_values(array_map(function ($c) {
+                    return ['slug' => $c['slug'] ?? '', 'name' => $c['name'] ?? ($c['slug'] ?? '')];
+                }, $couriers)),
+            ]));
 
         } catch (\Exception $ex) {
             return response()->json(Validation::error($request->token, $ex->getMessage()));

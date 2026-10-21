@@ -1471,6 +1471,19 @@ CREATE TABLE `order_returns` (
   CONSTRAINT `order_returns_order_id_foreign` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `aftership_settings`;
+CREATE TABLE `aftership_settings` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `api_key` text DEFAULT NULL,
+  `webhook_secret` text DEFAULT NULL,
+  `auto_deliver` tinyint(1) DEFAULT NULL,
+  `sync_minutes` smallint(5) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 DROP TABLE IF EXISTS `order_shipments`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;

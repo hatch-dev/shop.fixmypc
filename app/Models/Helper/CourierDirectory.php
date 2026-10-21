@@ -275,4 +275,42 @@ class CourierDirectory
     {
         static::$memo = [];
     }
+
+    /**
+     * Ask AfterShip for the activated couriers and store them, or throw.
+     * Unlike active(true), a refusal is not hidden behind the stored copy:
+     * Settings > AfterShip uses this to prove the API key works.
+     *
+     * @throws AfterShipException
+     */
+    public static function refreshActive(AfterShipService $api)
+    {
+        $keyed = [];
+        foreach ($api->couriers(true) as $c) {
+            $n = static::normalise((array)$c);
+            if ($n['slug'] !== '') {
+                $keyed[$n['slug']] = $n;
+            }
+        }
+
+        static::write('active', $keyed);
+
+        return static::$memo['active'] = $keyed;
+    }
+
+    /**
+     * Drop the stored lists: a new API key can be another AfterShip account,
+     * whose activated couriers are not the old one's.
+     */
+    public static function forgetStored()
+    {
+        foreach (['active', 'all'] as $kind) {
+            $path = static::path($kind);
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+
+        static::flush();
+    }
 }
