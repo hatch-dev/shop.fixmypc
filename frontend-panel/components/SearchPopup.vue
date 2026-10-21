@@ -41,7 +41,7 @@
                 v-show="carousel.suggested.prev"
                 class="sp-nav sp-nav--prev"
                 type="button"
-                aria-label="previous"
+                :aria-label="$t('ui.searchPopupUi.aria.previous')"
                 @click.prevent="scrollCarousel('suggested', -1)"
               >
                 <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -61,7 +61,7 @@
                   @click.prevent="makeSearch(value.title)"
                   class="sp-chip"
                   type="button"
-                  aria-label="search"
+                  :aria-label="$t('ui.searchPopupUi.aria.search')"
                 >
                   <svg class="sp-chip-icon" width="12" height="12" viewBox="0 0 17 17" fill="none" aria-hidden="true">
                     <path
@@ -76,7 +76,7 @@
                 v-show="carousel.suggested.next"
                 class="sp-nav sp-nav--next"
                 type="button"
-                aria-label="next"
+                :aria-label="$t('ui.searchPopupUi.aria.next')"
                 @click.prevent="scrollCarousel('suggested', 1)"
               >
                 <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -104,7 +104,7 @@
                 v-show="carousel.categories.prev"
                 class="sp-nav sp-nav--prev"
                 type="button"
-                aria-label="previous"
+                :aria-label="$t('ui.searchPopupUi.aria.previous')"
                 @click.prevent="scrollCarousel('categories', -1)"
               >
                 <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -161,7 +161,7 @@
                 v-show="carousel.categories.next"
                 class="sp-nav sp-nav--next"
                 type="button"
-                aria-label="next"
+                :aria-label="$t('ui.searchPopupUi.aria.next')"
                 @click.prevent="scrollCarousel('categories', 1)"
               >
                 <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -190,7 +190,7 @@
                 v-show="carousel.products.prev"
                 class="sp-nav sp-nav--prev"
                 type="button"
-                aria-label="previous"
+                :aria-label="$t('ui.searchPopupUi.aria.previous')"
                 @click.prevent="scrollCarousel('products', -1)"
               >
                 <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -218,7 +218,7 @@
                 v-show="carousel.products.next"
                 class="sp-nav sp-nav--next"
                 type="button"
-                aria-label="next"
+                :aria-label="$t('ui.searchPopupUi.aria.next')"
                 @click.prevent="scrollCarousel('products', 1)"
               >
                 <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">

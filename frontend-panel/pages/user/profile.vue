@@ -10,9 +10,9 @@
 
         <!-- ══════════ PAGE HEAD ══════════ -->
         <header class="acct-page-head">
-          <h1 class="acct-page-title">My Account</h1>
+          <h1 class="acct-page-title">{{ $t('ui.userProfile.title') }}</h1>
           <p class="acct-page-lede">
-            Your details, preferences and security settings.
+            {{ $t('ui.userProfile.lede') }}
           </p>
         </header>
 
@@ -26,7 +26,7 @@
           :fields="6"
           :panels="2"
           heading
-          label="Loading your profile"
+          :label="$t('ui.userProfile.loadingProfile')"
         />
 
         <div v-else class="acct-stack">
@@ -34,7 +34,7 @@
           <!-- ══════════ 1 · PROFILE OVERVIEW ══════════ -->
           <section class="acct-card acct-overview" aria-labelledby="ov-h">
 
-            <h2 id="ov-h" class="sr-only">Profile overview</h2>
+            <h2 id="ov-h" class="sr-only">{{ $t('ui.userProfile.profileOverview') }}</h2>
 
             <div class="acct-ov-identity">
 
@@ -50,7 +50,7 @@
                 <button
                   type="button"
                   class="acct-avatar-edit"
-                  aria-label="Change your profile picture"
+                  :aria-label="$t('ui.userProfile.changePicture')"
                   @click="$refs.fileInput.click()"
                 >
                   <i class="fa-solid fa-camera" aria-hidden="true" />
@@ -59,7 +59,7 @@
 
               <div class="acct-ov-text">
 
-                <p class="acct-ov-name">{{ name || 'Your account' }}</p>
+                <p class="acct-ov-name">{{ name || $t('ui.userProfile.yourAccount') }}</p>
                 <p class="acct-ov-email">{{ email }}</p>
 
                 <!--
@@ -70,7 +70,7 @@
                 <div class="acct-ov-badges">
 
                   <span class="acct-pill" :class="`acct-pill-${accountType}`">
-                    {{ accountTypeLabel }} account
+                    {{ $t('ui.userProfile.accountPill', { type: accountTypeLabel }) }}
                   </span>
 
                   <span class="acct-pill" :class="`acct-pill-${statusTone}`">
@@ -82,7 +82,7 @@
                     class="acct-pill"
                     :class="`acct-pill-${tradeTone}`"
                   >
-                    Trade: {{ tradeStatusLabel }}
+                    {{ $t('ui.userProfile.tradePill', { status: tradeStatusLabel }) }}
                   </span>
 
                 </div>
@@ -92,16 +92,16 @@
             </div>
 
             <div v-if="selectedImageFile" class="acct-ov-avatar-save">
-              <p class="acct-help">New picture chosen — save it to keep it.</p>
+              <p class="acct-help">{{ $t('ui.userProfile.newPictureChosen') }}</p>
               <div class="acct-actions">
                 <button type="button" class="acct-btn acct-btn-ghost" @click="cancelAvatar">
-                  Cancel
+                  {{ $t('ui.userProfile.cancel') }}
                 </button>
                 <ajax-button
                   class="acct-btn acct-btn-primary"
                   type="button"
                   :fetching-data="profileSubmitting"
-                  text="Save picture"
+                  :text="$t('ui.userProfile.savePicture')"
                   @clicked="saveAvatar"
                 />
               </div>
@@ -113,14 +113,14 @@
           <section class="acct-card" aria-labelledby="pi-h">
 
             <div class="acct-card-head">
-              <h2 id="pi-h" class="acct-card-title">Personal Information</h2>
+              <h2 id="pi-h" class="acct-card-title">{{ $t('ui.userProfile.personalInfo') }}</h2>
               <button
                 v-if="!editing.personal"
                 type="button"
                 class="acct-btn acct-btn-ghost acct-btn-sm"
                 @click="startEdit('personal')"
               >
-                <i class="fa-solid fa-pen" aria-hidden="true" /> Edit
+                <i class="fa-solid fa-pen" aria-hidden="true" /> {{ $t('ui.userProfile.edit') }}
               </button>
             </div>
 
@@ -129,11 +129,11 @@
               <!-- view -->
               <dl v-if="!editing.personal" class="acct-grid acct-grid-pair">
                 <div class="acct-field">
-                  <dt class="acct-label">First name</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.firstName') }}</dt>
                   <dd class="acct-value">{{ firstName || '—' }}</dd>
                 </div>
                 <div class="acct-field">
-                  <dt class="acct-label">Last name</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.lastName') }}</dt>
                   <dd class="acct-value">{{ lastName || '—' }}</dd>
                 </div>
               </dl>
@@ -143,7 +143,7 @@
 
                 <div class="acct-field">
                   <label class="acct-label" for="pi-first">
-                    First name <span class="acct-req" aria-hidden="true">*</span>
+                    {{ $t('ui.userProfile.firstName') }} <span class="acct-req" aria-hidden="true">*</span>
                   </label>
                   <input
                     id="pi-first"
@@ -160,12 +160,12 @@
                     id="pi-first-err"
                     class="acct-error"
                   >
-                    Enter your first name.
+                    {{ $t('ui.userProfile.enterFirstName') }}
                   </p>
                 </div>
 
                 <div class="acct-field">
-                  <label class="acct-label" for="pi-last">Last name</label>
+                  <label class="acct-label" for="pi-last">{{ $t('ui.userProfile.lastName') }}</label>
                   <input
                     id="pi-last"
                     v-model="lastName"
@@ -182,13 +182,13 @@
                       class="acct-btn acct-btn-ghost"
                       @click="cancelEdit('personal')"
                     >
-                      Cancel
+                      {{ $t('ui.userProfile.cancel') }}
                     </button>
                     <ajax-button
                       class="acct-btn acct-btn-primary"
                       type="button"
                       :fetching-data="profileSubmitting"
-                      text="Save changes"
+                      :text="$t('ui.userProfile.saveChanges')"
                       @clicked="savePersonal"
                     />
                   </div>
@@ -204,14 +204,14 @@
           <section class="acct-card" aria-labelledby="ci-h">
 
             <div class="acct-card-head">
-              <h2 id="ci-h" class="acct-card-title">Contact Information</h2>
+              <h2 id="ci-h" class="acct-card-title">{{ $t('ui.userProfile.contactInfo') }}</h2>
               <button
                 v-if="!editing.contact"
                 type="button"
                 class="acct-btn acct-btn-ghost acct-btn-sm"
                 @click="startEdit('contact')"
               >
-                <i class="fa-solid fa-pen" aria-hidden="true" /> Edit
+                <i class="fa-solid fa-pen" aria-hidden="true" /> {{ $t('ui.userProfile.edit') }}
               </button>
             </div>
 
@@ -220,17 +220,17 @@
               <dl v-if="!editing.contact" class="acct-grid">
 
                 <div class="acct-field">
-                  <dt class="acct-label">Email address</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.emailAddress') }}</dt>
                   <dd class="acct-value acct-value-break">
                     {{ email || '—' }}
                     <span class="acct-inline-note">
-                      <i class="fa-solid fa-lock" aria-hidden="true" /> Cannot be changed here
+                      <i class="fa-solid fa-lock" aria-hidden="true" /> {{ $t('ui.userProfile.cannotChangeHere') }}
                     </span>
                   </dd>
                 </div>
 
                 <div class="acct-field">
-                  <dt class="acct-label">Mobile number</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.mobileNumber') }}</dt>
                   <dd class="acct-value">
                     <!--
                       Flag plus the number in its own country's international
@@ -250,7 +250,7 @@
                       class="acct-pill acct-pill-sm"
                       :class="phoneVerified ? 'acct-pill-good' : 'acct-pill-wait'"
                     >
-                      {{ phoneVerified ? 'Confirmed' : 'Not confirmed' }}
+                      {{ phoneVerified ? $t('ui.userProfile.confirmed') : $t('ui.userProfile.notConfirmed') }}
                     </span>
                   </dd>
                 </div>
@@ -260,7 +260,7 @@
               <form v-else class="acct-grid" @submit.prevent="saveContact">
 
                 <div class="acct-field">
-                  <label class="acct-label" for="ci-email">Email address</label>
+                  <label class="acct-label" for="ci-email">{{ $t('ui.userProfile.emailAddress') }}</label>
                   <input
                     id="ci-email"
                     :value="email"
@@ -270,13 +270,13 @@
                     aria-describedby="ci-email-help"
                   >
                   <p id="ci-email-help" class="acct-help">
-                    Your email is your sign-in. Contact us to change it.
+                    {{ $t('ui.userProfile.emailHelp') }}
                   </p>
                 </div>
 
                 <div class="acct-field">
                   <label class="acct-label" for="ci-phone">
-                    Mobile number <span class="acct-req" aria-hidden="true">*</span>
+                    {{ $t('ui.userProfile.mobileNumber') }} <span class="acct-req" aria-hidden="true">*</span>
                   </label>
                   <!--
                     The same control the registration form uses: country flag
@@ -301,7 +301,7 @@
                     {{ phoneError }}
                   </p>
                   <p id="ci-phone-help" class="acct-help">
-                    Changing this will ask you to confirm the new number again.
+                    {{ $t('ui.userProfile.phoneHelp') }}
                   </p>
                 </div>
 
@@ -312,13 +312,13 @@
                       class="acct-btn acct-btn-ghost"
                       @click="cancelEdit('contact')"
                     >
-                      Cancel
+                      {{ $t('ui.userProfile.cancel') }}
                     </button>
                     <ajax-button
                       class="acct-btn acct-btn-primary"
                       type="button"
                       :fetching-data="profileSubmitting"
-                      text="Save changes"
+                      :text="$t('ui.userProfile.saveChanges')"
                       @clicked="saveContact"
                     />
                   </div>
@@ -334,25 +334,25 @@
           <section class="acct-card" aria-labelledby="ad-h">
 
             <div class="acct-card-head">
-              <h2 id="ad-h" class="acct-card-title">Addresses</h2>
+              <h2 id="ad-h" class="acct-card-title">{{ $t('ui.userProfile.addresses') }}</h2>
               <nuxt-link to="/user/addresses" class="acct-btn acct-btn-ghost acct-btn-sm">
-                Manage addresses
+                {{ $t('ui.userProfile.manageAddresses') }}
               </nuxt-link>
             </div>
 
             <div class="acct-card-body">
 
-              <p v-if="loadingAddresses" class="acct-help">Loading your addresses…</p>
+              <p v-if="loadingAddresses" class="acct-help">{{ $t('ui.userProfile.loadingAddresses') }}</p>
 
               <!-- empty state -->
               <div v-else-if="!addresses.length" class="acct-empty">
                 <i class="fa-solid fa-location-dot acct-empty-ico" aria-hidden="true" />
-                <p class="acct-empty-title">No saved addresses yet</p>
+                <p class="acct-empty-title">{{ $t('ui.userProfile.noAddresses') }}</p>
                 <p class="acct-help">
-                  Save an address to make checkout quicker next time.
+                  {{ $t('ui.userProfile.noAddressesHelp') }}
                 </p>
                 <nuxt-link to="/user/addresses" class="acct-btn acct-btn-primary acct-btn-sm">
-                  Add an address
+                  {{ $t('ui.userProfile.addAddress') }}
                 </nuxt-link>
               </div>
 
@@ -375,7 +375,7 @@
                       v-if="Number(address.default) === 1"
                       class="acct-pill acct-pill-sm acct-pill-brand"
                     >
-                      Default
+                      {{ $t('ui.userProfile.default') }}
                     </span>
                   </div>
                   <p class="acct-addr-name">{{ address.name }}</p>
@@ -405,7 +405,7 @@
 
             <div class="acct-card-head">
               <h2 id="bz-h" class="acct-card-title">
-                {{ accountType === 'trade' ? 'Trade Information' : 'Business Information' }}
+                {{ accountType === 'trade' ? $t('ui.userProfile.tradeInformation') : $t('ui.userProfile.businessInformation') }}
               </h2>
               <button
                 v-if="!editing.business"
@@ -413,7 +413,7 @@
                 class="acct-btn acct-btn-ghost acct-btn-sm"
                 @click="startEdit('business')"
               >
-                <i class="fa-solid fa-pen" aria-hidden="true" /> Edit
+                <i class="fa-solid fa-pen" aria-hidden="true" /> {{ $t('ui.userProfile.edit') }}
               </button>
             </div>
 
@@ -423,7 +423,7 @@
               <dl class="acct-grid acct-grid-3 acct-locked">
 
                 <div class="acct-field">
-                  <dt class="acct-label">Account type</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.accountType') }}</dt>
                   <dd class="acct-value">
                     <span class="acct-pill" :class="`acct-pill-${accountType}`">
                       {{ accountTypeLabel }}
@@ -432,7 +432,7 @@
                 </div>
 
                 <div v-if="accountType === 'trade'" class="acct-field">
-                  <dt class="acct-label">Trade status</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.tradeStatus') }}</dt>
                   <dd class="acct-value">
                     <span class="acct-pill" :class="`acct-pill-${tradeTone}`">
                       {{ tradeStatusLabel }}
@@ -441,7 +441,7 @@
                 </div>
 
                 <div class="acct-field">
-                  <dt class="acct-label">Company details</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.companyDetails') }}</dt>
                   <dd class="acct-value">
                     <span class="acct-pill" :class="`acct-pill-${verificationTone}`">
                       {{ verificationLabel }}
@@ -450,10 +450,10 @@
                 </div>
 
                 <div v-if="accountType === 'business'" class="acct-field">
-                  <dt class="acct-label">Credit account</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.creditAccount') }}</dt>
                   <dd class="acct-value">
                     <span class="acct-pill" :class="creditLocked ? 'acct-pill-wait' : 'acct-pill-idle'">
-                      {{ creditLocked ? 'Applied for' : 'Not applied for' }}
+                      {{ creditLocked ? $t('ui.userProfile.appliedFor') : $t('ui.userProfile.notAppliedFor') }}
                     </span>
                   </dd>
                 </div>
@@ -462,9 +462,9 @@
 
               <p class="acct-locked-note">
                 <i class="fa-solid fa-lock" aria-hidden="true" />
-                These are set by us and cannot be changed here.
-                <nuxt-link to="/page/contact-us">Contact us</nuxt-link>
-                if something looks wrong.
+                <i18n path="ui.userProfile.lockedNote" :tag="false">
+                  <template #link><nuxt-link to="/page/contact-us">{{ $t('ui.userProfile.contactUs') }}</nuxt-link></template>
+                </i18n>
               </p>
 
               <hr class="acct-rule">
@@ -473,38 +473,38 @@
               <dl v-if="!editing.business" class="acct-grid">
 
                 <div class="acct-field">
-                  <dt class="acct-label">Company name</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.companyName') }}</dt>
                   <dd class="acct-value">{{ business.company_name || '—' }}</dd>
                 </div>
 
                 <div v-if="accountType === 'business'" class="acct-field">
-                  <dt class="acct-label">What the business does</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.sector') }}</dt>
                   <dd class="acct-value">{{ business.sector || '—' }}</dd>
                 </div>
 
                 <div class="acct-field">
-                  <dt class="acct-label">VAT number</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.vatNumber') }}</dt>
                   <dd class="acct-value">{{ business.vat_number || '—' }}</dd>
                 </div>
 
                 <div class="acct-field">
-                  <dt class="acct-label">Company registration number</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.croNumber') }}</dt>
                   <dd class="acct-value">{{ business.cro_number || '—' }}</dd>
                 </div>
 
                 <div v-if="accountType === 'trade'" class="acct-field">
-                  <dt class="acct-label">Website</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.website') }}</dt>
                   <dd class="acct-value acct-value-break">{{ business.website || '—' }}</dd>
                 </div>
 
                 <div class="acct-field acct-field-wide">
-                  <dt class="acct-label">Billing address</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.billingAddress') }}</dt>
                   <dd class="acct-value acct-value-pre">{{ business.billing_address || '—' }}</dd>
                 </div>
 
                 <div v-if="accountType !== 'personal'" class="acct-field">
-                  <dt class="acct-label">PO number required</dt>
-                  <dd class="acct-value">{{ business.requires_po ? 'Yes' : 'No' }}</dd>
+                  <dt class="acct-label">{{ $t('ui.userProfile.poRequired') }}</dt>
+                  <dd class="acct-value">{{ business.requires_po ? $t('ui.userProfile.yes') : $t('ui.userProfile.no') }}</dd>
                 </div>
 
               </dl>
@@ -512,7 +512,7 @@
               <form v-else class="acct-grid" @submit.prevent="saveBusinessDetails">
 
                 <div class="acct-field">
-                  <label class="acct-label" for="bz-company">Company name</label>
+                  <label class="acct-label" for="bz-company">{{ $t('ui.userProfile.companyName') }}</label>
                   <input
                     id="bz-company"
                     v-model.trim="business.company_name"
@@ -523,19 +523,19 @@
                 </div>
 
                 <div v-if="accountType === 'business'" class="acct-field">
-                  <label class="acct-label" for="bz-sector">What the business does</label>
+                  <label class="acct-label" for="bz-sector">{{ $t('ui.userProfile.sector') }}</label>
                   <select
                     id="bz-sector"
                     v-model="business.sector"
                     class="acct-input"
                   >
-                    <option value="">Choose one</option>
+                    <option value="">{{ $t('ui.userProfile.chooseOne') }}</option>
                     <option v-for="i in sectors" :key="i">{{ i }}</option>
                   </select>
                 </div>
 
                 <div class="acct-field">
-                  <label class="acct-label" for="bz-vat">VAT number</label>
+                  <label class="acct-label" for="bz-vat">{{ $t('ui.userProfile.vatNumber') }}</label>
                   <input
                     id="bz-vat"
                     v-model.trim="business.vat_number"
@@ -544,12 +544,12 @@
                     aria-describedby="bz-vat-help"
                   >
                   <p id="bz-vat-help" class="acct-help">
-                    As it appears on your VAT certificate.
+                    {{ $t('ui.userProfile.vatHelp') }}
                   </p>
                 </div>
 
                 <div class="acct-field">
-                  <label class="acct-label" for="bz-cro">Company registration number</label>
+                  <label class="acct-label" for="bz-cro">{{ $t('ui.userProfile.croNumber') }}</label>
                   <input
                     id="bz-cro"
                     v-model.trim="business.cro_number"
@@ -558,11 +558,11 @@
                     inputmode="numeric"
                     aria-describedby="bz-cro-help"
                   >
-                  <p id="bz-cro-help" class="acct-help">Digits only.</p>
+                  <p id="bz-cro-help" class="acct-help">{{ $t('ui.userProfile.digitsOnly') }}</p>
                 </div>
 
                 <div v-if="accountType === 'trade'" class="acct-field">
-                  <label class="acct-label" for="bz-web">Website or social page</label>
+                  <label class="acct-label" for="bz-web">{{ $t('ui.userProfile.websiteOrSocial') }}</label>
                   <input
                     id="bz-web"
                     v-model.trim="business.website"
@@ -573,7 +573,7 @@
                 </div>
 
                 <div class="acct-field acct-field-wide">
-                  <label class="acct-label" for="bz-billing">Billing address</label>
+                  <label class="acct-label" for="bz-billing">{{ $t('ui.userProfile.billingAddress') }}</label>
                   <textarea
                     id="bz-billing"
                     v-model.trim="business.billing_address"
@@ -593,9 +593,9 @@
                         class="acct-check-box"
                       >
                       <span class="acct-check-text">
-                        <span class="acct-check-title">Require a PO number on invoices</span>
+                        <span class="acct-check-title">{{ $t('ui.userProfile.requirePo') }}</span>
                         <span class="acct-help">
-                          Checkout will ask for a purchase order number on every order.
+                          {{ $t('ui.userProfile.requirePoHelp') }}
                         </span>
                       </span>
                     </label>
@@ -611,7 +611,7 @@
                         :disabled="creditLocked"
                       >
                       <span class="acct-check-text">
-                        <span class="acct-check-title">Apply for a 30-day credit account</span>
+                        <span class="acct-check-title">{{ $t('ui.userProfile.applyCredit') }}</span>
                         <span class="acct-help">{{ creditLine }}</span>
                       </span>
                     </label>
@@ -626,13 +626,13 @@
                       class="acct-btn acct-btn-ghost"
                       @click="cancelEdit('business')"
                     >
-                      Cancel
+                      {{ $t('ui.userProfile.cancel') }}
                     </button>
                     <ajax-button
                       class="acct-btn acct-btn-primary"
                       type="button"
                       :fetching-data="businessSubmitting"
-                      text="Save changes"
+                      :text="$t('ui.userProfile.saveChanges')"
                       @clicked="saveBusinessDetails"
                     />
                   </div>
@@ -650,24 +650,24 @@
 
                 <dl class="acct-grid acct-grid-3 acct-locked">
                   <div class="acct-field">
-                    <dt class="acct-label">Type of trade</dt>
+                    <dt class="acct-label">{{ $t('ui.userProfile.typeOfTrade') }}</dt>
                     <dd class="acct-value">{{ businessProfile.trade || '—' }}</dd>
                   </div>
                   <div class="acct-field">
-                    <dt class="acct-label">Expected monthly spend</dt>
+                    <dt class="acct-label">{{ $t('ui.userProfile.expectedSpend') }}</dt>
                     <dd class="acct-value">{{ businessProfile.expected_spend || '—' }}</dd>
                   </div>
                   <div class="acct-field">
-                    <dt class="acct-label">Resale declaration</dt>
+                    <dt class="acct-label">{{ $t('ui.userProfile.resaleDeclaration') }}</dt>
                     <dd class="acct-value">
-                      {{ businessProfile.resale_confirmed ? 'Confirmed' : 'Not confirmed' }}
+                      {{ businessProfile.resale_confirmed ? $t('ui.userProfile.confirmed') : $t('ui.userProfile.notConfirmed') }}
                     </dd>
                   </div>
                 </dl>
 
                 <p class="acct-locked-note">
                   <i class="fa-solid fa-lock" aria-hidden="true" />
-                  Part of your trade application. Contact us if any of it has changed.
+                  {{ $t('ui.userProfile.tradeAppNote') }}
                 </p>
 
               </template>
@@ -685,7 +685,7 @@
           >
 
             <div class="acct-card-head">
-              <h2 id="pr-h" class="acct-card-title">Communication Preferences</h2>
+              <h2 id="pr-h" class="acct-card-title">{{ $t('ui.userProfile.commsPrefs') }}</h2>
             </div>
 
             <div class="acct-card-body">
@@ -701,9 +701,9 @@
                       class="acct-check-box"
                     >
                     <span class="acct-check-text">
-                      <span class="acct-check-title">Offers by email</span>
+                      <span class="acct-check-title">{{ $t('ui.userProfile.offersEmail') }}</span>
                       <span class="acct-help">
-                        Deals, new stock and discount codes by email.
+                        {{ $t('ui.userProfile.offersEmailHelp') }}
                       </span>
                     </span>
                   </label>
@@ -718,9 +718,9 @@
                       class="acct-check-box"
                     >
                     <span class="acct-check-text">
-                      <span class="acct-check-title">Offers by text</span>
+                      <span class="acct-check-title">{{ $t('ui.userProfile.offersText') }}</span>
                       <span class="acct-help">
-                        Occasional offers to your mobile. Never more than a few a month.
+                        {{ $t('ui.userProfile.offersTextHelp') }}
                       </span>
                     </span>
                   </label>
@@ -735,9 +735,9 @@
                       class="acct-check-box"
                     >
                     <span class="acct-check-text">
-                      <span class="acct-check-title">Recommendations for my devices</span>
+                      <span class="acct-check-title">{{ $t('ui.userProfile.recommendations') }}</span>
                       <span class="acct-help">
-                        Parts and upgrades that fit the hardware you have bought.
+                        {{ $t('ui.userProfile.recommendationsHelp') }}
                       </span>
                     </span>
                   </label>
@@ -753,9 +753,9 @@
                       class="acct-check-box"
                     >
                     <span class="acct-check-text">
-                      <span class="acct-check-title">Trade mailing list</span>
+                      <span class="acct-check-title">{{ $t('ui.userProfile.tradeList') }}</span>
                       <span class="acct-help">
-                        Trade-only pricing bulletins and clearance lists.
+                        {{ $t('ui.userProfile.tradeListHelp') }}
                       </span>
                     </span>
                   </label>
@@ -764,8 +764,7 @@
               </ul>
 
               <p class="acct-help acct-prefs-note">
-                Order confirmations, delivery updates and security emails are
-                always sent — these settings cover marketing only.
+                {{ $t('ui.userProfile.prefsNote') }}
               </p>
 
               <div class="acct-actions acct-actions-start">
@@ -773,7 +772,7 @@
                   class="acct-btn acct-btn-primary"
                   type="button"
                   :fetching-data="preferencesSubmitting"
-                  text="Save preferences"
+                  :text="$t('ui.userProfile.savePreferences')"
                   @clicked="savePreferences"
                 />
               </div>
@@ -786,7 +785,7 @@
           <section class="acct-card" aria-labelledby="se-h">
 
             <div class="acct-card-head">
-              <h2 id="se-h" class="acct-card-title">Security</h2>
+              <h2 id="se-h" class="acct-card-title">{{ $t('ui.userProfile.security') }}</h2>
               <span
                 class="acct-pill"
                 :class="twoFactorOn ? 'acct-pill-good' : 'acct-pill-idle'"
@@ -796,7 +795,7 @@
                   :class="twoFactorOn ? 'fa-shield-halved' : 'fa-shield'"
                   aria-hidden="true"
                 />
-                {{ twoFactorOn ? 'Two-factor on' : 'Two-factor off' }}
+                {{ twoFactorOn ? $t('ui.userProfile.twoFactorOn') : $t('ui.userProfile.twoFactorOff') }}
               </span>
             </div>
 
@@ -812,14 +811,14 @@
                 >
 
                   <div class="acct-sec-head">
-                    <h3 class="acct-sub-title">Password</h3>
+                    <h3 class="acct-sub-title">{{ $t('ui.userProfile.password') }}</h3>
                     <button
                       v-if="!editing.password"
                       type="button"
                       class="acct-btn acct-btn-ghost acct-btn-sm"
                       @click="startEdit('password')"
                     >
-                      Change password
+                      {{ $t('ui.userProfile.changePassword') }}
                     </button>
                   </div>
 
@@ -827,53 +826,53 @@
                     ••••••••••
                   </p>
                   <p v-if="!editing.password" class="acct-help">
-                    Changing your password signs you out on every device.
+                    {{ $t('ui.userProfile.passwordHelp') }}
                   </p>
 
                   <form v-else @submit.prevent="updatePassword">
 
                     <div class="acct-field">
-                      <label class="acct-label" for="pw-current">Current password</label>
+                      <label class="acct-label" for="pw-current">{{ $t('ui.userProfile.currentPassword') }}</label>
                       <password-field
                         input-id="pw-current"
                         :value="currentPassword"
                         @change="currentPassword = $event"
                       />
                       <p v-if="!currentPassword && hasPasswordError" class="acct-error">
-                        Enter your current password.
+                        {{ $t('ui.userProfile.enterCurrentPassword') }}
                       </p>
                     </div>
 
                     <div class="acct-field">
-                      <label class="acct-label" for="pw-new">New password</label>
+                      <label class="acct-label" for="pw-new">{{ $t('ui.userProfile.newPassword') }}</label>
                       <password-field
                         input-id="pw-new"
                         :value="newPassword"
                         @change="newPassword = $event"
                       />
                       <p v-if="!newPassword && hasPasswordError" class="acct-error">
-                        Enter a new password.
+                        {{ $t('ui.userProfile.enterNewPassword') }}
                       </p>
                       <p v-else-if="invalidPassword && hasPasswordError" class="acct-error">
-                        Use at least 10 characters, with a capital letter and a number.
+                        {{ $t('ui.userProfile.passwordRule') }}
                       </p>
                     </div>
 
                     <div class="acct-field">
-                      <label class="acct-label" for="pw-confirm">Confirm new password</label>
+                      <label class="acct-label" for="pw-confirm">{{ $t('ui.userProfile.confirmNewPassword') }}</label>
                       <password-field
                         input-id="pw-confirm"
                         :value="confirmPassword"
                         @change="confirmPassword = $event"
                       />
                       <p v-if="!confirmPassword && hasPasswordError" class="acct-error">
-                        Confirm your new password.
+                        {{ $t('ui.userProfile.confirmYourNewPassword') }}
                       </p>
                       <p
                         v-else-if="confirmPassword !== newPassword && hasPasswordError"
                         class="acct-error"
                       >
-                        Those passwords do not match.
+                        {{ $t('ui.userProfile.passwordsMismatch') }}
                       </p>
                     </div>
 
@@ -883,13 +882,13 @@
                         class="acct-btn acct-btn-ghost"
                         @click="cancelEdit('password')"
                       >
-                        Cancel
+                        {{ $t('ui.userProfile.cancel') }}
                       </button>
                       <ajax-button
                         class="acct-btn acct-btn-primary"
                         type="button"
                         :fetching-data="passwordSubmitting"
-                        text="Update password"
+                        :text="$t('ui.userProfile.updatePassword')"
                         @clicked="updatePassword"
                       />
                     </div>
@@ -912,25 +911,25 @@
 
               <!-- active sessions -->
               <div class="acct-sec-head">
-                <h3 class="acct-sub-title">Active sessions</h3>
+                <h3 class="acct-sub-title">{{ $t('ui.userProfile.activeSessions') }}</h3>
                 <button
                   v-if="sessions.length > 1"
                   type="button"
                   class="acct-btn acct-btn-danger-ghost acct-btn-sm"
                   @click="logoutAllSession()"
                 >
-                  Sign out everywhere else
+                  {{ $t('ui.userProfile.signOutEverywhere') }}
                 </button>
               </div>
 
               <p class="acct-help">
-                Devices currently signed in to your account.
+                {{ $t('ui.userProfile.sessionsHelp') }}
               </p>
 
-              <p v-if="loadingSessions" class="acct-help">Loading your sessions…</p>
+              <p v-if="loadingSessions" class="acct-help">{{ $t('ui.userProfile.loadingSessions') }}</p>
 
               <p v-else-if="!sessions.length" class="acct-help">
-                No other devices are signed in.
+                {{ $t('ui.userProfile.noSessions') }}
               </p>
 
               <ul v-else class="acct-sessions">
@@ -948,11 +947,11 @@
                     <span class="acct-session-name">
                       <span class="acct-session-title">{{ sessionTitle(session) }}</span>
                       <span v-if="isCurrentSession(session)" class="acct-pill acct-pill-sm acct-pill-brand">
-                        This device
+                        {{ $t('ui.userProfile.thisDevice') }}
                       </span>
                     </span>
                     <span class="acct-help">
-                      <template v-if="isCurrentSession(session)">Active now</template>
+                      <template v-if="isCurrentSession(session)">{{ $t('ui.userProfile.activeNow') }}</template>
                       <template v-else>{{ sessionStatus(session) }}</template>
                       <template v-if="session.location"> · {{ session.location }}</template>
                     </span>
@@ -962,10 +961,10 @@
                     v-if="!isCurrentSession(session)"
                     type="button"
                     class="acct-btn acct-btn-danger-ghost acct-btn-sm"
-                    :aria-label="`Sign out ${sessionTitle(session)}`"
+                    :aria-label="$t('ui.userProfile.signOutDevice', { device: sessionTitle(session) })"
                     @click="logoutSession(session.session_id)"
                   >
-                    Sign out
+                    {{ $t('ui.userProfile.signOut') }}
                   </button>
                 </li>
               </ul>
@@ -982,7 +981,7 @@
                 :aria-expanded="showAllSessions ? 'true' : 'false'"
                 @click="showAllSessions = !showAllSessions"
               >
-                {{ showAllSessions ? 'Show fewer' : `Show all ${sessions.length} devices` }}
+                {{ showAllSessions ? $t('ui.userProfile.showFewer') : $t('ui.userProfile.showAllDevices', { count: sessions.length }) }}
                 <i class="fa-solid" :class="showAllSessions ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true" />
               </button>
 
@@ -994,7 +993,7 @@
           <section class="acct-card" aria-labelledby="as-h">
 
             <div class="acct-card-head">
-              <h2 id="as-h" class="acct-card-title">Account Status</h2>
+              <h2 id="as-h" class="acct-card-title">{{ $t('ui.userProfile.accountStatus') }}</h2>
             </div>
 
             <div class="acct-card-body">
@@ -1006,7 +1005,7 @@
               <dl class="acct-grid acct-grid-3 acct-locked acct-grid-pair">
 
                 <div class="acct-field">
-                  <dt class="acct-label">Account type</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.accountType') }}</dt>
                   <dd class="acct-value">
                     <span class="acct-pill" :class="`acct-pill-${accountType}`">
                       {{ accountTypeLabel }}
@@ -1015,7 +1014,7 @@
                 </div>
 
                 <div class="acct-field">
-                  <dt class="acct-label">Status</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.status') }}</dt>
                   <dd class="acct-value">
                     <span class="acct-pill" :class="`acct-pill-${statusTone}`">
                       {{ statusLabel }}
@@ -1024,7 +1023,7 @@
                 </div>
 
                 <div v-if="accountType === 'trade'" class="acct-field">
-                  <dt class="acct-label">Trade status</dt>
+                  <dt class="acct-label">{{ $t('ui.userProfile.tradeStatus') }}</dt>
                   <dd class="acct-value">
                     <span class="acct-pill" :class="`acct-pill-${tradeTone}`">
                       {{ tradeStatusLabel }}
@@ -1042,19 +1041,17 @@
                 v-if="accountType === 'trade' && account && account.trade_review_note"
                 class="acct-note"
               >
-                <strong>Note from us:</strong> {{ account.trade_review_note }}
+                <strong>{{ $t('ui.userProfile.noteFromUs') }}</strong> {{ account.trade_review_note }}
               </p>
 
               <p class="acct-locked-note">
                 <i class="fa-solid fa-lock" aria-hidden="true" />
-                <template v-if="upgradeOptions.length">
-                  You can upgrade your account type below. For any other change,
-                </template>
-                <template v-else>
-                  To change your account type,
-                </template>
-                <nuxt-link to="/page/contact-us">get in touch</nuxt-link>
-                and we will sort it out.
+                <i18n
+                  :path="upgradeOptions.length ? 'ui.userProfile.contactNoteUpgrade' : 'ui.userProfile.contactNote'"
+                  :tag="false"
+                >
+                  <template #link><nuxt-link to="/page/contact-us">{{ $t('ui.userProfile.getInTouch') }}</nuxt-link></template>
+                </i18n>
               </p>
 
             </div>
@@ -1083,9 +1080,9 @@
 
             <div class="acct-card-head">
               <h2 id="up-h" class="acct-card-title">
-                {{ upgradePending ? 'Your Trade Application' : 'Upgrade Your Account' }}
+                {{ upgradePending ? $t('ui.userProfile.yourTradeApplication') : $t('ui.userProfile.upgradeYourAccount') }}
               </h2>
-              <span v-if="upgradePending" class="acct-pill acct-pill-wait">Under review</span>
+              <span v-if="upgradePending" class="acct-pill acct-pill-wait">{{ $t('ui.userProfile.underReview') }}</span>
             </div>
 
             <div class="acct-card-body">
@@ -1094,31 +1091,30 @@
               <template v-if="upgradePending">
 
                 <p class="acct-headline">
-                  Sent {{ upgradeDate(upgradePending.submitted_at) }}. We usually review
-                  trade applications within one working day and will email you the outcome.
+                  {{ $t('ui.userProfile.pendingSent', { date: upgradeDate(upgradePending.submitted_at) }) }}
                   <template v-if="accountType === 'business'">
-                    Your business pricing carries on while we look at it.
+                    {{ $t('ui.userProfile.pendingBusiness') }}
                   </template>
                   <template v-else>
-                    Until then you buy at retail prices.
+                    {{ $t('ui.userProfile.pendingRetail') }}
                   </template>
                 </p>
 
                 <dl class="acct-grid acct-locked">
                   <div class="acct-field">
-                    <dt class="acct-label">Trading name</dt>
+                    <dt class="acct-label">{{ $t('ui.userProfile.tradingName') }}</dt>
                     <dd class="acct-value">{{ pendingDetail('company_name') }}</dd>
                   </div>
                   <div class="acct-field">
-                    <dt class="acct-label">Trade</dt>
+                    <dt class="acct-label">{{ $t('ui.userProfile.trade') }}</dt>
                     <dd class="acct-value">{{ pendingDetail('trade') }}</dd>
                   </div>
                   <div class="acct-field">
-                    <dt class="acct-label">VAT number</dt>
+                    <dt class="acct-label">{{ $t('ui.userProfile.vatNumber') }}</dt>
                     <dd class="acct-value">{{ pendingDetail('vat_number') }}</dd>
                   </div>
                   <div class="acct-field">
-                    <dt class="acct-label">Expected monthly spend</dt>
+                    <dt class="acct-label">{{ $t('ui.userProfile.expectedSpend') }}</dt>
                     <dd class="acct-value">{{ pendingDetail('expected_spend') }}</dd>
                   </div>
                 </dl>
@@ -1130,24 +1126,24 @@
                     class="acct-btn acct-btn-ghost"
                     @click="withdrawConfirm = true"
                   >
-                    Withdraw application
+                    {{ $t('ui.userProfile.withdrawApplication') }}
                   </button>
                   <template v-else>
                     <p class="acct-help acct-upgrade-confirm">
-                      Withdraw this application? You can apply again at any time.
+                      {{ $t('ui.userProfile.withdrawConfirm') }}
                     </p>
                     <button
                       type="button"
                       class="acct-btn acct-btn-ghost"
                       @click="withdrawConfirm = false"
                     >
-                      Keep it
+                      {{ $t('ui.userProfile.keepIt') }}
                     </button>
                     <ajax-button
                       class="acct-btn acct-btn-danger"
                       type="button"
                       :fetching-data="withdrawing"
-                      text="Yes, withdraw"
+                      :text="$t('ui.userProfile.yesWithdraw')"
                       @clicked="withdrawUpgrade"
                     />
                   </template>
@@ -1159,11 +1155,11 @@
               <template v-else-if="!upgradeChoice">
 
                 <p v-if="lastRejection" class="acct-note">
-                  <strong>Your last trade application was not approved.</strong>
+                  <strong>{{ $t('ui.userProfile.lastRejected') }}</strong>
                   <template v-if="lastRejection.review_note">
                     {{ lastRejection.review_note }}
                   </template>
-                  You are welcome to apply again.
+                  {{ $t('ui.userProfile.applyAgain') }}
                 </p>
 
                 <div class="acct-upgrade-options">
@@ -1201,22 +1197,19 @@
 
                 <p class="acct-field acct-field-wide acct-headline acct-upgrade-intro">
                   <template v-if="upgradeChoice === 'business'">
-                    Your account becomes a business account as soon as you confirm.
-                    Business pricing switches on straight away; we check the company
-                    details afterwards.
+                    {{ $t('ui.userProfile.introBusiness') }}
                   </template>
                   <template v-else>
-                    Our team reviews trade applications, usually within one working day.
+                    {{ $t('ui.userProfile.introTrade') }}
                     <template v-if="accountType === 'business'">
-                      Your business account and its pricing carry on unchanged until then,
-                      and the details below replace your current ones only if we approve.
+                      {{ $t('ui.userProfile.introTradeFromBusiness') }}
                     </template>
                   </template>
                 </p>
 
                 <div class="acct-field">
                   <label class="acct-label" for="up-company">
-                    {{ upgradeChoice === 'trade' ? 'Trading name' : 'Company name' }}
+                    {{ upgradeChoice === 'trade' ? $t('ui.userProfile.tradingName') : $t('ui.userProfile.companyName') }}
                     <span class="acct-req" aria-hidden="true">*</span>
                   </label>
                   <input
@@ -1229,13 +1222,13 @@
                     @input="clearUpgradeError('company_name')"
                   >
                   <p v-if="upgradeBad('company_name')" class="acct-error">
-                    {{ upgradeMessage('company_name', 'Enter the company name.') }}
+                    {{ upgradeMessage('company_name', $t('ui.userProfile.errors.companyName')) }}
                   </p>
                 </div>
 
                 <div v-if="upgradeChoice === 'business'" class="acct-field">
                   <label class="acct-label" for="up-sector">
-                    What the business does <span class="acct-req" aria-hidden="true">*</span>
+                    {{ $t('ui.userProfile.sector') }} <span class="acct-req" aria-hidden="true">*</span>
                   </label>
                   <select
                     id="up-sector"
@@ -1244,17 +1237,17 @@
                     :class="{'is-bad': upgradeBad('sector')}"
                     @change="clearUpgradeError('sector')"
                   >
-                    <option value="">Choose one</option>
+                    <option value="">{{ $t('ui.userProfile.chooseOne') }}</option>
                     <option v-for="i in sectors" :key="i">{{ i }}</option>
                   </select>
                   <p v-if="upgradeBad('sector')" class="acct-error">
-                    {{ upgradeMessage('sector', 'Pick the closest match.') }}
+                    {{ upgradeMessage('sector', $t('ui.userProfile.errors.pickClosest')) }}
                   </p>
                 </div>
 
                 <div v-else class="acct-field">
                   <label class="acct-label" for="up-trade">
-                    Trade <span class="acct-req" aria-hidden="true">*</span>
+                    {{ $t('ui.userProfile.trade') }} <span class="acct-req" aria-hidden="true">*</span>
                   </label>
                   <select
                     id="up-trade"
@@ -1263,17 +1256,17 @@
                     :class="{'is-bad': upgradeBad('trade')}"
                     @change="clearUpgradeError('trade')"
                   >
-                    <option value="">Choose one</option>
+                    <option value="">{{ $t('ui.userProfile.chooseOne') }}</option>
                     <option v-for="i in trades" :key="i">{{ i }}</option>
                   </select>
                   <p v-if="upgradeBad('trade')" class="acct-error">
-                    {{ upgradeMessage('trade', 'Pick the closest match.') }}
+                    {{ upgradeMessage('trade', $t('ui.userProfile.errors.pickClosest')) }}
                   </p>
                 </div>
 
                 <div class="acct-field">
                   <label class="acct-label" for="up-vat">
-                    VAT number
+                    {{ $t('ui.userProfile.vatNumber') }}
                     <span v-if="upgradeChoice === 'trade'" class="acct-req" aria-hidden="true">*</span>
                   </label>
                   <input
@@ -1287,13 +1280,13 @@
                   >
                   <p v-if="upgradeBad('vat_number')" class="acct-error">
                     {{ upgradeMessage('vat_number', upgradeChoice === 'trade'
-                      ? 'Trade accounts need a valid IE VAT number.'
-                      : 'Use IE + 7 digits + 1–2 letters.') }}
+                      ? $t('ui.userProfile.errors.vatTrade')
+                      : $t('ui.userProfile.errors.vatFormat')) }}
                   </p>
                 </div>
 
                 <div class="acct-field">
-                  <label class="acct-label" for="up-cro">Company registration number</label>
+                  <label class="acct-label" for="up-cro">{{ $t('ui.userProfile.croNumber') }}</label>
                   <input
                     id="up-cro"
                     v-model.trim="upgradeForm.cro_number"
@@ -1304,7 +1297,7 @@
                     @input="clearUpgradeError('cro_number')"
                   >
                   <p v-if="upgradeBad('cro_number')" class="acct-error">
-                    {{ upgradeMessage('cro_number', 'Digits only.') }}
+                    {{ upgradeMessage('cro_number', $t('ui.userProfile.digitsOnly')) }}
                   </p>
                 </div>
 
@@ -1312,7 +1305,7 @@
 
                   <div class="acct-field">
                     <label class="acct-label" for="up-spend">
-                      Expected monthly spend <span class="acct-req" aria-hidden="true">*</span>
+                      {{ $t('ui.userProfile.expectedSpend') }} <span class="acct-req" aria-hidden="true">*</span>
                     </label>
                     <select
                       id="up-spend"
@@ -1321,16 +1314,16 @@
                       :class="{'is-bad': upgradeBad('expected_spend')}"
                       @change="clearUpgradeError('expected_spend')"
                     >
-                      <option value="">Choose one</option>
+                      <option value="">{{ $t('ui.userProfile.chooseOne') }}</option>
                       <option v-for="i in spends" :key="i">{{ i }}</option>
                     </select>
                     <p v-if="upgradeBad('expected_spend')" class="acct-error">
-                      {{ upgradeMessage('expected_spend', 'Give us a rough band.') }}
+                      {{ upgradeMessage('expected_spend', $t('ui.userProfile.errors.spend')) }}
                     </p>
                   </div>
 
                   <div class="acct-field">
-                    <label class="acct-label" for="up-web">Website or social page</label>
+                    <label class="acct-label" for="up-web">{{ $t('ui.userProfile.websiteOrSocial') }}</label>
                     <input
                       id="up-web"
                       v-model.trim="upgradeForm.website"
@@ -1341,7 +1334,7 @@
                       @input="clearUpgradeError('website')"
                     >
                     <p v-if="upgradeBad('website')" class="acct-error">
-                      {{ upgradeMessage('website', 'Enter a valid website address.') }}
+                      {{ upgradeMessage('website', $t('ui.userProfile.errors.website')) }}
                     </p>
                   </div>
 
@@ -1349,7 +1342,7 @@
 
                 <div class="acct-field acct-field-wide">
                   <label class="acct-label" for="up-billing">
-                    {{ upgradeChoice === 'trade' ? 'Business address' : 'Billing address' }}
+                    {{ upgradeChoice === 'trade' ? $t('ui.userProfile.businessAddress') : $t('ui.userProfile.billingAddress') }}
                     <span class="acct-req" aria-hidden="true">*</span>
                   </label>
                   <textarea
@@ -1358,11 +1351,11 @@
                     rows="3"
                     class="acct-input acct-textarea"
                     :class="{'is-bad': upgradeBad('billing_address')}"
-                    placeholder="Street, town, county, Eircode"
+                    :placeholder="$t('ui.userProfile.addressPlaceholder')"
                     @input="clearUpgradeError('billing_address')"
                   />
                   <p v-if="upgradeBad('billing_address')" class="acct-error">
-                    {{ upgradeMessage('billing_address', 'We need an address for VAT invoices.') }}
+                    {{ upgradeMessage('billing_address', $t('ui.userProfile.errors.address')) }}
                   </p>
                 </div>
 
@@ -1377,9 +1370,9 @@
                         class="acct-check-box"
                       >
                       <span class="acct-check-text">
-                        <span class="acct-check-title">Require a PO number on invoices</span>
+                        <span class="acct-check-title">{{ $t('ui.userProfile.requirePo') }}</span>
                         <span class="acct-help">
-                          Checkout will ask for a purchase order number on every order.
+                          {{ $t('ui.userProfile.requirePoHelp') }}
                         </span>
                       </span>
                     </label>
@@ -1394,9 +1387,9 @@
                         class="acct-check-box"
                       >
                       <span class="acct-check-text">
-                        <span class="acct-check-title">Apply for a 30-day credit account</span>
+                        <span class="acct-check-title">{{ $t('ui.userProfile.applyCredit') }}</span>
                         <span class="acct-help">
-                          Reviewed separately. Card and bank transfer work straight away.
+                          {{ $t('ui.userProfile.creditHelpUpgrade') }}
                         </span>
                       </span>
                     </label>
@@ -1417,14 +1410,13 @@
                       >
                       <span class="acct-check-text">
                         <span class="acct-check-title">
-                          Parts bought on this account are fitted or resold as part of a
-                          business, not for personal use.
+                          {{ $t('ui.userProfile.resaleText') }}
                           <span class="acct-req" aria-hidden="true">*</span>
                         </span>
                       </span>
                     </label>
                     <p v-if="upgradeBad('resale_confirmed')" class="acct-error">
-                      {{ upgradeMessage('resale_confirmed', 'Trade accounts need this confirmation.') }}
+                      {{ upgradeMessage('resale_confirmed', $t('ui.userProfile.errors.resale')) }}
                     </p>
                   </div>
 
@@ -1437,8 +1429,8 @@
                         class="acct-check-box"
                       >
                       <span class="acct-check-text">
-                        <span class="acct-check-title">Trade mailing list</span>
-                        <span class="acct-help">Monthly ex-VAT price list and weekly stock updates.</span>
+                        <span class="acct-check-title">{{ $t('ui.userProfile.tradeList') }}</span>
+                        <span class="acct-help">{{ $t('ui.userProfile.tradeListHelpUpgrade') }}</span>
                       </span>
                     </label>
                   </div>
@@ -1449,7 +1441,7 @@
 
                 <div class="acct-field">
                   <label class="acct-label" for="up-password">
-                    Your password <span class="acct-req" aria-hidden="true">*</span>
+                    {{ $t('ui.userProfile.yourPassword') }} <span class="acct-req" aria-hidden="true">*</span>
                   </label>
                   <password-field
                     input-id="up-password"
@@ -1457,7 +1449,7 @@
                     @change="upgradePassword = $event; clearUpgradeError('password')"
                   />
                   <p v-if="upgradeBad('password')" class="acct-error">
-                    {{ upgradeMessage('password', 'Enter your password to confirm this change.') }}
+                    {{ upgradeMessage('password', $t('ui.userProfile.errors.password')) }}
                   </p>
                 </div>
 
@@ -1468,13 +1460,13 @@
                       class="acct-btn acct-btn-ghost"
                       @click="cancelUpgrade"
                     >
-                      Cancel
+                      {{ $t('ui.userProfile.cancel') }}
                     </button>
                     <ajax-button
                       class="acct-btn acct-btn-primary"
                       type="button"
                       :fetching-data="upgradeSubmitting"
-                      :text="upgradeChoice === 'business' ? 'Upgrade to business' : 'Send application'"
+                      :text="upgradeChoice === 'business' ? $t('ui.userProfile.upgradeToBusiness') : $t('ui.userProfile.sendApplication')"
                       @clicked="submitUpgrade"
                     />
                   </div>
@@ -1491,16 +1483,16 @@
 
             <div class="acct-card-body acct-danger">
               <div>
-                <h2 id="dz-h" class="acct-sub-title acct-danger-title">Delete account</h2>
+                <h2 id="dz-h" class="acct-sub-title acct-danger-title">{{ $t('ui.userProfile.deleteAccount') }}</h2>
                 <p class="acct-help">
-                  Once your account is deleted there is no going back. Please be certain.
+                  {{ $t('ui.userProfile.deleteHelp') }}
                 </p>
               </div>
               <ajax-button
                 class="acct-btn acct-btn-danger"
                 type="button"
                 :fetching-data="deletingAccount"
-                text="Delete account"
+                :text="$t('ui.userProfile.deleteAccount')"
                 @clicked="deleteAccount"
               />
             </div>
@@ -1528,9 +1520,7 @@
   import PhoneField from "~/components/PhoneField";
   import TwoFactorPanel from "~/components/TwoFactorPanel";
   import global from '~/mixin/global'
-  import {
-    SECTORS, TRADES, SPENDS, companyFieldErrors, companyPayload
-  } from '~/mixin/accountFields'
+  import {SECTORS, TRADES, SPENDS, companyFieldErrors, companyPayload} from '~/mixin/accountFields'
   import {parsePhoneNumberFromString} from 'libphonenumber-js'
   // The flag sprite the view-mode number uses. PhoneField pulls the same
   // stylesheet in; webpack emits it once.
@@ -1540,7 +1530,7 @@
     middleware: ['common-middleware', 'auth'],
     head() {
       return {
-        title: 'Profile',
+        title: this.$t('ui.userProfile.pageTitle'),
         meta: []
       }
     },
@@ -1790,8 +1780,8 @@
 
       phoneError() {
         return this.phoneTouched && !this.phoneValid
-          ? "That number doesn't look right for the country you picked."
-          : 'Enter a mobile number we can reach you on.'
+          ? this.$t('ui.userProfile.errors.phoneCountry')
+          : this.$t('ui.userProfile.errors.phoneEmpty')
       },
       passwordValid() {
         return this.newPassword && !this.invalidPassword
@@ -1812,19 +1802,19 @@
 
       accountTypeLabel() {
         return {
-          personal: 'Personal',
-          business: 'Business',
-          trade: 'Trade'
-        }[this.accountType] || 'Personal'
+          personal: this.$t('ui.userProfile.accountTypes.personal'),
+          business: this.$t('ui.userProfile.accountTypes.business'),
+          trade: this.$t('ui.userProfile.accountTypes.trade')
+        }[this.accountType] || this.$t('ui.userProfile.accountTypes.personal')
       },
 
       statusLabel() {
         return {
-          active: 'Active',
-          suspended: 'Suspended',
-          rejected: 'Not accepted',
-          pending: 'Pending'
-        }[this.account?.status] || 'Active'
+          active: this.$t('ui.userProfile.statuses.active'),
+          suspended: this.$t('ui.userProfile.statuses.suspended'),
+          rejected: this.$t('ui.userProfile.statuses.rejected'),
+          pending: this.$t('ui.userProfile.statuses.pending')
+        }[this.account?.status] || this.$t('ui.userProfile.statuses.active')
       },
 
       statusTone() {
@@ -1870,26 +1860,26 @@
 
         const cards = {
           business: {
-            label: 'Business account',
-            lede: 'For companies buying for their own use.',
+            label: this.$t('ui.userProfile.cards.business.label'),
+            lede: this.$t('ui.userProfile.cards.business.lede'),
             points: [
-              'Business pricing at the quantity breaks shown on each product, straight away',
-              'VAT invoices in your company name',
-              'Optional PO numbers and a 30-day credit application'
+              this.$t('ui.userProfile.cards.business.point1'),
+              this.$t('ui.userProfile.cards.business.point2'),
+              this.$t('ui.userProfile.cards.business.point3')
             ],
-            cta: 'Upgrade to business'
+            cta: this.$t('ui.userProfile.upgradeToBusiness')
           },
           trade: {
-            label: 'Trade account',
-            lede: 'For repair shops, resellers and field engineers.',
+            label: this.$t('ui.userProfile.cards.trade.label'),
+            lede: this.$t('ui.userProfile.cards.trade.lede'),
             points: [
-              'Reviewed by our team, usually within one working day',
+              this.$t('ui.userProfile.cards.trade.point1'),
               this.accountType === 'business'
-                ? 'Your business pricing carries on while we review it'
-                : 'Trade pricing at the quantity breaks once approved; retail until then',
-              'Trade price lists and stock updates by email'
+                ? this.$t('ui.userProfile.cards.trade.point2Business')
+                : this.$t('ui.userProfile.cards.trade.point2'),
+              this.$t('ui.userProfile.cards.trade.point3')
             ],
-            cta: 'Apply for a trade account'
+            cta: this.$t('ui.userProfile.cards.trade.cta')
           }
         }
 
@@ -1909,11 +1899,11 @@
 
       tradeStatusLabel() {
         return {
-          approved: 'Approved',
-          rejected: 'Not approved',
-          suspended: 'Suspended',
-          pending: 'Pending approval'
-        }[this.account?.trade_status] || 'Pending approval'
+          approved: this.$t('ui.userProfile.tradeStatuses.approved'),
+          rejected: this.$t('ui.userProfile.tradeStatuses.rejected'),
+          suspended: this.$t('ui.userProfile.tradeStatuses.suspended'),
+          pending: this.$t('ui.userProfile.tradeStatuses.pending')
+        }[this.account?.trade_status] || this.$t('ui.userProfile.tradeStatuses.pending')
       },
 
       tradeTone() {
@@ -1928,11 +1918,11 @@
 
       verificationLabel() {
         return {
-          verified: 'Verified',
-          rejected: 'Could not be verified',
-          pending: 'Being checked',
-          not_required: 'Nothing to verify'
-        }[this.account?.verification_status] || 'Being checked'
+          verified: this.$t('ui.userProfile.verification.verified'),
+          rejected: this.$t('ui.userProfile.verification.rejected'),
+          pending: this.$t('ui.userProfile.verification.pending'),
+          not_required: this.$t('ui.userProfile.verification.notRequired')
+        }[this.account?.verification_status] || this.$t('ui.userProfile.verification.pending')
       },
 
       verificationTone() {
@@ -1956,8 +1946,8 @@
 
       creditLine() {
         return this.creditLocked
-          ? 'Applied for. We will be in touch once it has been reviewed.'
-          : 'Ask us about paying on 30-day terms. Subject to approval.'
+          ? this.$t('ui.userProfile.creditApplied')
+          : this.$t('ui.userProfile.creditAsk')
       },
 
       /* Saved addresses, shown read-only here; managed on the Address Book. */
@@ -1980,12 +1970,12 @@
         const browser = session.browser && session.browser !== 'Unknown' ? session.browser : ''
         const platform = session.platform && session.platform !== 'Unknown' ? session.platform : ''
 
-        if (browser && platform) return `${browser} on ${platform}`
+        if (browser && platform) return this.$t('ui.userProfile.browserOnPlatform', { browser, platform })
 
         const engines = ['WebKit', 'Blink', 'Gecko', 'Trident', 'Unknown']
         const device = engines.includes(session.device_name) ? '' : session.device_name
 
-        return browser || platform || device || 'Unknown device'
+        return browser || platform || device || this.$t('ui.userProfile.unknownDevice')
       },
       getDeviceIcon(session) {
         if (session.device_type === 'Mobile') {
@@ -2006,24 +1996,26 @@
           (Date.now() - lastActivity.getTime()) / 60000
 
         if (diffMinutes < 5) {
-          return 'Active now'
+          return this.$t('ui.userProfile.activeNow')
         }
 
         if (diffMinutes < 60) {
-          return Math.floor(diffMinutes) + ' min ago'
+          return this.$t('ui.userProfile.minAgo', { n: Math.floor(diffMinutes) })
         }
 
         if (diffMinutes < 1440) {
-          return Math.floor(diffMinutes / 60) + ' hours ago'
+          return this.$t('ui.userProfile.hoursAgo', { n: Math.floor(diffMinutes / 60) })
         }
 
-        return Math.floor(diffMinutes / 1440) + ' days ago'
+        return this.$t('ui.userProfile.daysAgo', { n: Math.floor(diffMinutes / 1440) })
       },
 
       addressTypeLabel(address) {
         const type = (address?.type || 'home').toString()
 
-        return type.charAt(0).toUpperCase() + type.slice(1)
+        const key = 'ui.userProfile.addressTypes.' + type
+
+        return this.$te(key) ? this.$t(key) : type.charAt(0).toUpperCase() + type.slice(1)
       },
 
       /**
@@ -2208,7 +2200,7 @@
 
         } catch (error) {
           console.error(error)
-          this.setToastError('Failed to load sessions')
+          this.setToastError(this.$t('ui.userProfile.toast.loadSessionsFailed'))
         } finally {
           this.loadingSessions = false
         }
@@ -2252,7 +2244,7 @@
 
         } catch (error) {
           console.error(error)
-          this.setToastError('Failed to logout session')
+          this.setToastError(this.$t('ui.userProfile.toast.logoutSessionFailed'))
         }
       },
       handleImageUpload(e) {
@@ -2479,7 +2471,7 @@
           return false
 
         } catch (e) {
-          this.setToastError('We could not save that. Try again.')
+          this.setToastError(this.$t('ui.userProfile.toast.saveFailed'))
           return false
 
         } finally {
@@ -2496,7 +2488,7 @@
 
         return this.submitProfile({name: this.name}, {
           section: 'personal',
-          success: 'Your details have been saved.'
+          success: this.$t('ui.userProfile.toast.detailsSaved')
         })
       },
 
@@ -2519,14 +2511,14 @@
 
         return this.submitProfile({name: this.name, phone: this.phone}, {
           section: 'contact',
-          success: 'Your contact details have been saved.'
+          success: this.$t('ui.userProfile.toast.contactSaved')
         })
       },
 
       saveAvatar() {
         return this.submitProfile({name: this.name}, {
           asForm: true,
-          success: 'Your picture has been updated.'
+          success: this.$t('ui.userProfile.toast.pictureUpdated')
         })
       },
 
@@ -2556,13 +2548,13 @@
 
           if (data?.status === 200) {
             this.applySaved(data.data?.preferences)
-            this.setToastMessage('Preferences saved.')
+            this.setToastMessage(this.$t('ui.userProfile.toast.preferencesSaved'))
           } else {
             this.setToastError(data?.data?.form?.join(', ') || data?.message)
           }
 
         } catch (e) {
-          this.setToastError('We could not save your preferences.')
+          this.setToastError(this.$t('ui.userProfile.toast.preferencesFailed'))
         } finally {
           this.preferencesSubmitting = false
         }
@@ -2607,13 +2599,13 @@
               business_profile: data.data?.business_profile
             })
             this.$set(this.editing, 'business', false)
-            this.setToastMessage('Details saved.')
+            this.setToastMessage(this.$t('ui.userProfile.toast.businessSaved'))
           } else {
             this.setToastError(data?.data?.form?.join(', ') || data?.message)
           }
 
         } catch (e) {
-          this.setToastError('We could not save those details.')
+          this.setToastError(this.$t('ui.userProfile.toast.businessFailed'))
         } finally {
           this.businessSubmitting = false
         }
@@ -2721,7 +2713,7 @@
             this.upgradePassword = ''
             this.upgradeShowErrors = false
 
-            this.setToastMessage(data.message || 'Your account has been updated.')
+            this.setToastMessage(data.message || this.$t('ui.userProfile.toast.accountUpdated'))
 
             /*
              * A business upgrade changes what the basket costs. Prices are
@@ -2756,7 +2748,7 @@
           }
 
         } catch (e) {
-          this.setToastError('We could not change your account just now. Please try again.')
+          this.setToastError(this.$t('ui.userProfile.toast.upgradeFailed'))
         } finally {
           this.upgradeSubmitting = false
         }
@@ -2773,7 +2765,7 @@
           if (data?.status === 200) {
             this.upgrade = data.data
             this.withdrawConfirm = false
-            this.setToastMessage(data.message || 'Your application has been withdrawn.')
+            this.setToastMessage(data.message || this.$t('ui.userProfile.toast.withdrawn'))
           } else {
             this.setToastError(data?.data?.form?.join(' ') || data?.message)
             // Decided in the meantime: show where it actually stands.
@@ -2781,7 +2773,7 @@
           }
 
         } catch (e) {
-          this.setToastError('We could not withdraw the application just now.')
+          this.setToastError(this.$t('ui.userProfile.toast.withdrawFailed'))
         } finally {
           this.withdrawing = false
         }
@@ -2796,7 +2788,7 @@
 
         return date && !isNaN(date)
           ? date.toLocaleDateString('en-IE', {day: 'numeric', month: 'long', year: 'numeric'})
-          : 'recently'
+          : this.$t('ui.userProfile.recently')
       },
 
       onTwoFactorChanged({enabled}) {

@@ -14,7 +14,7 @@
      >
      <button
        v-if="closable"
-       aria-label="close"
+       :aria-label="$t('ui.bannerUi.aria.close')"
        class="btn-banner-close"
        @click.prevent="$emit('close')"
      >

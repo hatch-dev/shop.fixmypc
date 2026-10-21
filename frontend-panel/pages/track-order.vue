@@ -48,7 +48,7 @@
                   <input
                     type="text"
                     v-model="trackingId"
-                    :placeholder="$t('contact.your', { type: $t('addressPopup.order') }) + '. eg. ORD1578945'"
+                    :placeholder="$t('contact.your', { type: $t('addressPopup.order') }) + '. ' + $t('ui.trackOrderPage.example', { example: 'ORD1578945' })"
                   >
                 </div>
 
@@ -80,7 +80,7 @@
           <div class="img-wrap">
             <img
               src="~/assets/images/track-order.png"
-              alt="Error image"
+              :alt="$t('ui.trackOrderPage.imageAlt')"
               height="50"
               width="50"
             >
@@ -104,23 +104,23 @@
           <!-- summary -->
           <div class="tr-card tr-head" :class="`tr-head-${tone}`">
             <div class="tr-head-main">
-              <p class="tr-kicker">Order #{{ order.order }}</p>
+              <p class="tr-kicker">{{ $t('ui.trackOrderPage.orderNumber', { number: order.order }) }}</p>
               <h2 class="tr-headline">{{ headline }}</h2>
               <p v-if="subline" class="tr-sub">{{ subline }}</p>
             </div>
 
             <div class="tr-head-side">
               <span class="tr-pill" :class="`tr-pill-${tone}`">{{ statusLabel }}</span>
-              <p class="tr-meta">Placed {{ fmtDate(order.placed_at) }}</p>
+              <p class="tr-meta">{{ $t('ui.trackOrderPage.placed', { date: fmtDate(order.placed_at) }) }}</p>
               <p v-if="order.last_update" class="tr-meta">
-                Last update {{ fmtDateTime(order.last_update) }}
+                {{ $t('ui.trackOrderPage.lastUpdate', { date: fmtDateTime(order.last_update) }) }}
               </p>
             </div>
           </div>
 
           <!-- progress -->
           <div class="tr-card">
-            <h3 class="tr-title">Progress</h3>
+            <h3 class="tr-title">{{ $t('ui.trackOrderPage.progress') }}</h3>
 
             <ol
               class="tr-steps"
@@ -140,7 +140,7 @@
                 </span>
                 <span class="tr-step-label">
                   {{ step.label }}
-                  <span v-if="step.current" class="sr-only">(current step)</span>
+                  <span v-if="step.current" class="sr-only">{{ $t('ui.trackOrderPage.currentStep') }}</span>
                 </span>
                 <span class="tr-step-date">{{ step.at ? fmtShort(step.at) : '' }}</span>
               </li>
@@ -157,29 +157,29 @@
           -->
           <div v-if="shipment" class="tr-card tr-ship">
             <h3 class="tr-title">
-              Parcel
+              {{ $t('ui.trackOrderPage.parcel') }}
               <span class="tr-pill" :class="`tr-pill-${shipmentTone}`">{{ shipment.status }}</span>
             </h3>
 
             <dl class="tr-facts">
-              <dt>Courier</dt>
+              <dt>{{ $t('ui.trackOrderPage.courier') }}</dt>
               <dd>{{ shipment.courier }}</dd>
 
-              <dt>Tracking number</dt>
+              <dt>{{ $t('ui.trackOrderPage.trackingNumber') }}</dt>
               <dd class="tr-ship-number">{{ shipment.tracking_number }}</dd>
 
               <template v-if="shipment.detail && shipment.detail !== shipment.status">
-                <dt>Latest</dt>
+                <dt>{{ $t('ui.trackOrderPage.latest') }}</dt>
                 <dd>{{ shipment.detail }}</dd>
               </template>
 
               <template v-if="shipment.expected_delivery">
-                <dt>Courier estimate</dt>
+                <dt>{{ $t('ui.trackOrderPage.courierEstimate') }}</dt>
                 <dd>{{ fmtDay(shipment.expected_delivery.slice(0, 10)) }}</dd>
               </template>
 
               <template v-if="shipment.updated_at">
-                <dt>Updated</dt>
+                <dt>{{ $t('ui.trackOrderPage.updated') }}</dt>
                 <dd>{{ fmtDateTime(shipment.updated_at) }}</dd>
               </template>
             </dl>
@@ -201,7 +201,7 @@
             </ul>
 
             <p v-if="!shipment.full" class="tr-note">
-              The full tracking number and courier scans are in your shipping email, or sign in to see them here.
+              {{ $t('ui.trackOrderPage.fullTrackingNote') }}
             </p>
 
             <a
@@ -211,7 +211,7 @@
               rel="noopener noreferrer"
               class="tr-btn tr-btn-primary tr-ship-link"
             >
-              Track with {{ shipment.courier }}
+              {{ $t('ui.trackOrderPage.trackWith', { courier: shipment.courier }) }}
             </a>
           </div>
 
@@ -220,8 +220,8 @@
             <!-- items -->
             <div class="tr-card">
               <h3 class="tr-title">
-                Items
-                <span class="tr-count">{{ order.item_count }} {{ order.item_count === 1 ? 'item' : 'items' }}</span>
+                {{ $t('ui.trackOrderPage.items') }}
+                <span class="tr-count">{{ $tc('ui.trackOrderPage.itemCount', order.item_count, { count: order.item_count }) }}</span>
               </h3>
 
               <ul class="tr-items">
@@ -250,10 +250,10 @@
                     >
                       {{ item.title }}
                     </nuxt-link>
-                    <span v-else class="tr-item-title">{{ item.title || 'Item' }}</span>
+                    <span v-else class="tr-item-title">{{ item.title || $t('ui.trackOrderPage.item') }}</span>
 
                     <span v-if="item.variant" class="tr-item-variant">{{ item.variant }}</span>
-                    <span class="tr-item-qty">Qty {{ item.quantity }}</span>
+                    <span class="tr-item-qty">{{ $t('ui.trackOrderPage.qty', { qty: item.quantity }) }}</span>
                   </div>
                 </li>
               </ul>
@@ -262,24 +262,24 @@
             <!-- delivery + payment -->
             <div class="tr-card">
               <h3 class="tr-title">
-                {{ isCollection ? 'Click & Collect' : 'Delivery' }}
+                {{ isCollection ? $t('ui.trackOrderPage.clickCollect') : $t('ui.trackOrderPage.delivery') }}
               </h3>
 
               <dl class="tr-facts">
                 <template v-if="order.estimate">
-                  <dt>{{ isCollection ? 'Estimated ready' : 'Estimated delivery' }}</dt>
+                  <dt>{{ isCollection ? $t('ui.trackOrderPage.estimatedReady') : $t('ui.trackOrderPage.estimatedDelivery') }}</dt>
                   <dd :class="{ 'tr-late': order.estimate.late }">
                     {{ fmtDay(order.estimate.date) }}
-                    <span v-if="order.estimate.late" class="tr-late-tag">Running late</span>
+                    <span v-if="order.estimate.late" class="tr-late-tag">{{ $t('ui.trackOrderPage.runningLate') }}</span>
                   </dd>
                 </template>
 
                 <template v-if="isCollection && order.collection_point">
-                  <dt>Collect from</dt>
+                  <dt>{{ $t('ui.trackOrderPage.collectFrom') }}</dt>
                   <dd>{{ order.collection_point.address }}</dd>
 
                   <template v-if="order.collection_point.phone">
-                    <dt>Store phone</dt>
+                    <dt>{{ $t('ui.trackOrderPage.storePhone') }}</dt>
                     <dd>
                       <a :href="`tel:${order.collection_point.phone}`">{{ order.collection_point.phone }}</a>
                     </dd>
@@ -287,11 +287,11 @@
                 </template>
 
                 <template v-else-if="order.destination">
-                  <dt>Delivering to</dt>
+                  <dt>{{ $t('ui.trackOrderPage.deliveringTo') }}</dt>
                   <dd>{{ order.destination }}</dd>
                 </template>
 
-                <dt>Payment</dt>
+                <dt>{{ $t('ui.trackOrderPage.payment') }}</dt>
                 <dd>
                   <!-- "Cash on delivery · Pay on collection" said it twice -->
                   <span v-if="order.payment_method && !isCash">{{ order.payment_method }} · </span>
@@ -301,20 +301,20 @@
                 </dd>
 
                 <template v-if="order.is_owner && order.total_amount">
-                  <dt>Order total</dt>
+                  <dt>{{ $t('ui.trackOrderPage.orderTotal') }}</dt>
                   <dd><strong>{{ money(order.total_amount) }}</strong></dd>
                 </template>
               </dl>
 
               <p v-if="isCollection && order.state === 'active'" class="tr-note">
-                Bring your order number when you collect. We will contact you if anything changes.
+                {{ $t('ui.trackOrderPage.collectNote') }}
               </p>
             </div>
           </div>
 
           <!-- history -->
           <div class="tr-card">
-            <h3 class="tr-title">Order history</h3>
+            <h3 class="tr-title">{{ $t('ui.trackOrderPage.orderHistory') }}</h3>
 
             <ul class="tr-history">
               <li
@@ -334,8 +334,8 @@
           <!-- help -->
           <div class="tr-card tr-help">
             <div>
-              <h3 class="tr-title tr-title-flush">Need help with this order?</h3>
-              <p class="tr-sub">Quote order number <strong>{{ order.order }}</strong> and we will look into it.</p>
+              <h3 class="tr-title tr-title-flush">{{ $t('ui.trackOrderPage.needHelp') }}</h3>
+              <i18n path="ui.trackOrderPage.quoteOrder" tag="p" class="tr-sub"><template #number><strong>{{ order.order }}</strong></template></i18n>
             </div>
 
             <div class="tr-help-actions">
@@ -344,21 +344,21 @@
                 :to="`/user/order/${order.id}`"
                 class="tr-btn tr-btn-primary"
               >
-                View full order
+                {{ $t('ui.trackOrderPage.viewFullOrder') }}
               </nuxt-link>
               <a
                 v-if="supportEmail"
                 :href="`mailto:${supportEmail}?subject=${encodeURIComponent('Order ' + order.order)}`"
                 class="tr-btn"
               >
-                Email us
+                {{ $t('ui.trackOrderPage.emailUs') }}
               </a>
               <a
                 v-if="supportPhone"
                 :href="`tel:${supportPhone}`"
                 class="tr-btn"
               >
-                Call {{ supportPhone }}
+                {{ $t('ui.trackOrderPage.call', { phone: supportPhone }) }}
               </a>
             </div>
           </div>
@@ -377,11 +377,11 @@
 
   // The five steps an order moves through. 6-8 end it early.
   const STEPS = [
-    { status: 1, label: 'Order placed' },
-    { status: 2, label: 'Confirmed' },
-    { status: 3, label: 'Picked up' },
-    { status: 4, label: 'On the way' },
-    { status: 5, label: 'Delivered' }
+    { status: 1, key: 'placed' },
+    { status: 2, key: 'confirmed' },
+    { status: 3, key: 'pickedUp' },
+    { status: 4, key: 'onTheWay' },
+    { status: 5, key: 'delivered' }
   ]
 
   export default {
@@ -441,7 +441,7 @@
           return {
             ...step,
             index: i + 1,
-            label: step.status === 5 && this.isCollection ? 'Collected' : step.label,
+            label: step.status === 5 && this.isCollection ? this.$t('ui.trackOrderPage.status.collected') : this.stepLabel(step.key),
             done,
             current: !this.stopped && !delivered && step.status === status,
             at: this.reachedAt[step.status] || null
@@ -451,14 +451,14 @@
       statusLabel() {
         const state = this.order?.state
 
-        if (state === 'cancelled') return 'Cancelled'
-        if (state === 'returned') return 'Returned'
-        if (state === 'refunded') return 'Refunded'
-        if (state === 'delivered') return this.isCollection ? 'Collected' : 'Delivered'
-        if (this.order?.estimate?.late) return 'Running late'
+        if (state === 'cancelled') return this.$t('ui.trackOrderPage.status.cancelled')
+        if (state === 'returned') return this.$t('ui.trackOrderPage.status.returned')
+        if (state === 'refunded') return this.$t('ui.trackOrderPage.status.refunded')
+        if (state === 'delivered') return this.isCollection ? this.$t('ui.trackOrderPage.status.collected') : this.$t('ui.trackOrderPage.status.delivered')
+        if (this.order?.estimate?.late) return this.$t('ui.trackOrderPage.runningLate')
 
         const step = STEPS.find(s => s.status === parseInt(this.order?.status))
-        return step ? step.label : 'Order placed'
+        return step ? this.stepLabel(step.key) : this.$t('ui.trackOrderPage.steps.placed')
       },
       tone() {
         const state = this.order?.state
@@ -474,27 +474,31 @@
 
         switch (o?.state) {
           case 'delivered':
-            return (this.isCollection ? 'Collected' : 'Delivered')
-              + (at[5] ? ` on ${this.fmtDay(at[5])}` : '')
+            if (at[5]) {
+              return this.isCollection
+                ? this.$t('ui.trackOrderPage.headline.collectedOn', { date: this.fmtDay(at[5]) })
+                : this.$t('ui.trackOrderPage.headline.deliveredOn', { date: this.fmtDay(at[5]) })
+            }
+            return this.isCollection ? this.$t('ui.trackOrderPage.status.collected') : this.$t('ui.trackOrderPage.status.delivered')
           case 'cancelled':
-            return 'This order was cancelled'
+            return this.$t('ui.trackOrderPage.headline.cancelled')
           case 'returned':
-            return 'This order was returned'
+            return this.$t('ui.trackOrderPage.headline.returned')
           case 'refunded':
-            return 'This order has been refunded'
+            return this.$t('ui.trackOrderPage.headline.refunded')
         }
 
         if (o?.estimate?.late) {
-          return 'Your order is running late'
+          return this.$t('ui.trackOrderPage.headline.late')
         }
 
         if (o?.estimate) {
           return this.isCollection
-            ? `Ready to collect by ${this.fmtDay(o.estimate.date)}`
-            : `Arriving by ${this.fmtDay(o.estimate.date)}`
+            ? this.$t('ui.trackOrderPage.headline.readyBy', { date: this.fmtDay(o.estimate.date) })
+            : this.$t('ui.trackOrderPage.headline.arrivingBy', { date: this.fmtDay(o.estimate.date) })
         }
 
-        return 'We have your order'
+        return this.$t('ui.trackOrderPage.headline.received')
       },
       subline() {
         const o = this.order
@@ -502,25 +506,25 @@
         if (o?.state === 'cancelled' || o?.state === 'refunded') {
           if (o.refund) {
             return o.refund.at
-              ? `A refund was issued on ${this.fmtDay(o.refund.at)}. Card refunds usually take 5-10 working days to appear.`
-              : 'A refund has been issued. Card refunds usually take 5-10 working days to appear.'
+              ? this.$t('ui.trackOrderPage.sub.refundIssuedOn', { date: this.fmtDay(o.refund.at) })
+              : this.$t('ui.trackOrderPage.sub.refundIssued')
           }
 
           return o.paid
-            ? 'If you were charged, contact us below about your refund.'
-            : 'Nothing was charged for this order.'
+            ? this.$t('ui.trackOrderPage.sub.ifCharged')
+            : this.$t('ui.trackOrderPage.sub.notCharged')
         }
 
         if (o?.state === 'delivered') {
-          return 'Something not right? Contact us below.'
+          return this.$t('ui.trackOrderPage.sub.delivered')
         }
 
         if (o?.estimate?.late) {
-          return `It was due ${this.fmtDay(o.estimate.date)}. Sorry for the delay - contact us below and we will chase it for you.`
+          return this.$t('ui.trackOrderPage.sub.late', { date: this.fmtDay(o.estimate.date) })
         }
 
         if (o?.estimate) {
-          return 'Based on the delivery option chosen at checkout.'
+          return this.$t('ui.trackOrderPage.sub.estimate')
         }
 
         return ''
@@ -535,7 +539,9 @@
 
         const when = this.reachedAt[code]
 
-        return `${this.statusLabel}${when ? ' on ' + this.fmtDay(when) : ''}. The order will not move any further.`
+        return when
+          ? this.$t('ui.trackOrderPage.stoppedOn', { status: this.statusLabel, date: this.fmtDay(when) })
+          : this.$t('ui.trackOrderPage.stopped', { status: this.statusLabel })
       },
       // Newest first.
       shipment() {
@@ -557,21 +563,30 @@
       },
       paymentLabel() {
         if (this.order?.paid) {
-          return 'Paid'
+          return this.$t('ui.trackOrderPage.pay.paid')
         }
 
         // A stopped order that was never paid is not waiting for money.
         if (this.stopped) {
-          return 'Not charged'
+          return this.$t('ui.trackOrderPage.pay.notCharged')
         }
 
         // Cash is paid at the door or the counter, not missing.
         return this.isCash
-          ? (this.isCollection ? 'Pay on collection' : 'Pay on delivery')
-          : 'Awaiting payment'
+          ? (this.isCollection ? this.$t('ui.trackOrderPage.pay.onCollection') : this.$t('ui.trackOrderPage.pay.onDelivery'))
+          : this.$t('ui.trackOrderPage.pay.awaiting')
       }
     },
     methods: {
+      stepLabel(key) {
+        return {
+          placed: this.$t('ui.trackOrderPage.steps.placed'),
+          confirmed: this.$t('ui.trackOrderPage.steps.confirmed'),
+          pickedUp: this.$t('ui.trackOrderPage.steps.pickedUp'),
+          onTheWay: this.$t('ui.trackOrderPage.steps.onTheWay'),
+          delivered: this.$t('ui.trackOrderPage.steps.delivered')
+        }[key]
+      },
       /*
        * Dates arrive as ISO strings, or as a plain YYYY-MM-DD for the
        * estimate. A plain date is read as local midnight - new Date() would
@@ -648,13 +663,13 @@
             this.order = null
             // The API's own "We couldn't found anything." is not a sentence.
             this.errors = data?.status === 201
-              ? ['We could not find an order with that number. Check it against your order confirmation email.']
-              : (data?.data?.form || ['We could not look up that order just now. Please try again.'])
+              ? [this.$t('ui.trackOrderPage.errors.notFound')]
+              : (data?.data?.form || [this.$t('ui.trackOrderPage.errors.lookupFailed')])
           }
 
         } catch (e) {
           this.order = null
-          this.errors = ['We could not look up that order just now. Please try again.']
+          this.errors = [this.$t('ui.trackOrderPage.errors.lookupFailed')]
         } finally {
           this.formSubmitting = false
         }

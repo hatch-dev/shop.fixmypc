@@ -2,25 +2,24 @@
   <div class="bid-page">
 
     <header class="bid-head">
-      <h1 v-if="orderNumber">Order #{{ orderNumber }}</h1>
+      <h1 v-if="orderNumber">{{ $t('ui.supplierBid.orderNumber', { number: orderNumber }) }}</h1>
       <!--
         Names who is asking. The supplier arrives from a message with no
         account and no branding around the form, so "give us your price" does
         not say who "us" is.
       -->
-      <p v-if="!loading && !loadError && bidItems.length">
-        <strong v-if="store">{{ store }}</strong><span v-else>We</span>
-        would like your price for the {{ bidItems.length }}
-        item{{ bidItems.length === 1 ? '' : 's' }} below.
-      </p>
+      <i18n v-if="!loading && !loadError && bidItems.length" :path="bidItems.length === 1 ? 'ui.supplierBid.introOne' : 'ui.supplierBid.introMany'" tag="p">
+        <template #who><strong v-if="store">{{ store }}</strong><span v-else>{{ $t('ui.supplierBid.we') }}</span></template>
+        <template #count>{{ bidItems.length }}</template>
+      </i18n>
     </header>
 
-    <div v-if="loading" class="bid-state">Loading your request…</div>
+    <div v-if="loading" class="bid-state">{{ $t('ui.supplierBid.loading') }}</div>
 
     <div v-else-if="loadError" class="bid-state bid-state--error">{{ loadError }}</div>
 
     <div v-else-if="!bidItems.length" class="bid-state">
-      There is nothing to quote on in this request.
+      {{ $t('ui.supplierBid.nothingToQuote') }}
     </div>
 
     <ul v-else class="bid-list">
@@ -34,7 +33,7 @@
             loading="lazy"
             @error="imageFailed(item.id)"
           >
-          <span v-else class="bid-media__fallback" aria-hidden="true">No image</span>
+          <span v-else class="bid-media__fallback" aria-hidden="true">{{ $t('ui.supplierBid.noImage') }}</span>
         </div>
 
         <div class="bid-body">
@@ -53,9 +52,9 @@
           </ul>
 
           <p class="bid-qty">
-            Quantity needed: <strong>{{ item.quantity }}</strong>
+            {{ $t('ui.supplierBid.quantityNeeded') }} <strong>{{ item.quantity }}</strong>
             <span v-if="item.ordered_price != null">
-              · ordered at <strong>{{ vatNote(item) }}</strong>
+              · {{ $t('ui.supplierBid.orderedAt') }} <strong>{{ vatNote(item) }}</strong>
             </span>
           </p>
 
@@ -66,7 +65,7 @@
           -->
           <div class="bid-form">
             <label class="bid-field bid-field--price">
-              <span class="bid-label">Your price</span>
+              <span class="bid-label">{{ $t('ui.supplierBid.yourPrice') }}</span>
               <span class="bid-price">
                 <span class="bid-price__cur">€</span>
                 <input
@@ -82,9 +81,9 @@
             </label>
 
             <label class="bid-field">
-              <span class="bid-label">Condition</span>
+              <span class="bid-label">{{ $t('ui.supplierBid.condition') }}</span>
               <select v-model="item.grade" :disabled="item.saving">
-                <option disabled value="">Select…</option>
+                <option disabled value="">{{ $t('ui.supplierBid.select') }}</option>
                 <option v-for="grade in grades" :key="grade" :value="grade">
                   {{ grade }}
                 </option>
@@ -97,7 +96,7 @@
               :disabled="item.saving"
               @click="submitBid(item)"
             >
-              {{ item.saving ? 'Sending…' : (item.submitted ? 'Update' : 'Submit') }}
+              {{ item.saving ? $t('ui.supplierBid.sending') : (item.submitted ? $t('ui.supplierBid.update') : $t('ui.supplierBid.submit')) }}
             </button>
           </div>
 
@@ -111,14 +110,14 @@
             given.
           -->
           <p v-else-if="item.justSaved" class="bid-msg bid-msg--ok">
-            Price sent{{ store ? ' to ' + store : '' }}:
-            €{{ money(item.submitted.price) }} · {{ item.submitted.grade }}
+            {{ store
+              ? $t('ui.supplierBid.priceSentTo', { store: store, price: money(item.submitted.price), grade: item.submitted.grade })
+              : $t('ui.supplierBid.priceSent', { price: money(item.submitted.price), grade: item.submitted.grade }) }}
           </p>
 
           <p v-else-if="item.submitted" class="bid-msg bid-msg--note">
-            Your current quote: <strong>€{{ money(item.submitted.price) }}</strong>
-            · {{ item.submitted.grade }}<span v-if="quotedAt(item)"> · sent {{ quotedAt(item) }}</span>.
-            Change it above and press Update.
+            <i18n path="ui.supplierBid.currentQuote" tag="span"><template #price><strong>€{{ money(item.submitted.price) }}</strong></template><template #grade>{{ item.submitted.grade }}</template></i18n><span v-if="quotedAt(item)"> · {{ $t('ui.supplierBid.sentAt', { when: quotedAt(item) }) }}</span>.
+            {{ $t('ui.supplierBid.changeHint') }}
           </p>
         </div>
       </li>
@@ -153,7 +152,7 @@ export default {
 
     if (!this.token) {
       this.loading = false
-      this.loadError = 'This link is no longer valid.'
+      this.loadError = this.$t('ui.supplierBid.linkInvalid')
       return
     }
 
@@ -206,7 +205,7 @@ export default {
       } catch (error) {
         this.loadError = this.messageFrom(
           error,
-          'We could not load this request. Please check the link and try again.'
+          this.$t('ui.supplierBid.loadFailed')
         )
       } finally {
         this.loading = false
@@ -249,11 +248,11 @@ export default {
     vatNote(item) {
       const price = `€${Number(item.ordered_price).toFixed(2)}`
 
-      return item.ordered_price_includes_vat ? `${price} inc. VAT` : `${price} ex. VAT`
+      return item.ordered_price_includes_vat ? this.$t('ui.supplierBid.incVat', { price }) : this.$t('ui.supplierBid.exVat', { price })
     },
 
     productTitle(item) {
-      return (item.product && item.product.title) || 'Item no longer listed'
+      return (item.product && item.product.title) || this.$t('ui.supplierBid.itemNotListed')
     },
 
     attributesFor(item) {
@@ -306,12 +305,12 @@ export default {
       const price = parseFloat(item.price)
 
       if (!price || price <= 0) {
-        item.error = 'Please enter a price.'
+        item.error = this.$t('ui.supplierBid.enterPrice')
         return
       }
 
       if (!item.grade) {
-        item.error = 'Please select a grade.'
+        item.error = this.$t('ui.supplierBid.selectGrade')
         return
       }
 
@@ -337,7 +336,7 @@ export default {
       } catch (error) {
         item.error = this.messageFrom(
           error,
-          'We could not save that price. Please try again.'
+          this.$t('ui.supplierBid.saveFailed')
         )
       } finally {
         item.saving = false

@@ -54,7 +54,7 @@ export default {
            * with it everything the customer had just typed.
            */
           console.error('Address could not be saved', data)
-          this.setToastError(this.addressFailureMessage(data, 'We could not save that address. Please try again.'))
+          this.setToastError(this.addressFailureMessage(data, this.$t('ui.addressRules.saveFailed')))
         }
         this.submittingAddressData = false
 
@@ -159,11 +159,11 @@ export default {
               // addressError above.
               console.error('Address list could not be loaded', data)
               this.addressError = this.addressFailureMessage(data,
-                'We could not load your saved addresses just now.')
+                this.$t('ui.addressRules.loadFailed'))
             }
           } catch (e) {
             console.error('Address list could not be loaded', e)
-            this.addressError = 'We could not load your saved addresses just now.'
+            this.addressError = this.$t('ui.addressRules.loadFailed')
           } finally {
             // In finally: a thrown request used to return early and leave the
             // flag stuck on.

@@ -18,14 +18,14 @@
         class="address-load-retry"
         @click.prevent="fetchingData"
       >
-        Try again
+        {{ $t('ui.userAddressUi.tryAgain') }}
       </button>
     </p>
 
     <div
       class="address-list"
       :role="hasRadio ? 'radiogroup' : null"
-      aria-label="Delivery addresses"
+      :aria-label="$t('ui.userAddressUi.listAria')"
     >
       <!--
         Placeholder cards inside the list rather than a spinner above it. This
@@ -103,7 +103,7 @@
                     v-if="parseInt(value.default) === 1"
                     class="address-default-pill"
                   >
-                    Default
+                    {{ $t('ui.userAddressUi.defaultBadge') }}
                   </span>
                 </span>
               </div>
@@ -112,22 +112,22 @@
                 <button
                   type="button"
                   class="address-action-button"
-                  aria-label="Edit address"
-                  title="Edit"
+                  :aria-label="$t('ui.userAddressUi.editAria')"
+                  :title="$t('ui.userAddressUi.edit')"
                   @click.stop.prevent="editAddress(value)"
                 >
                   <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
                     <path d="M4 20h4.2l10-10a2 2 0 0 0 0-2.8l-1.4-1.4a2 2 0 0 0-2.8 0l-10 10V20Z" />
                   </svg>
-                  <span class="address-action-label">Edit</span>
+                  <span class="address-action-label">{{ $t('ui.userAddressUi.edit') }}</span>
                 </button>
 
                 <button
                   type="button"
                   class="address-action-button is-danger"
                   :disabled="ajaxDeleting === value.id"
-                  aria-label="Delete address"
-                  title="Delete"
+                  :aria-label="$t('ui.userAddressUi.deleteAria')"
+                  :title="$t('ui.userAddressUi.delete')"
                   @click.stop.prevent="deleting(value)"
                 >
                   <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
@@ -160,7 +160,7 @@
               :disabled="ajaxDefaulting === value.id"
               @click.stop.prevent="setAsDefault(value)"
             >
-              {{ ajaxDefaulting === value.id ? 'Saving…' : 'Set as default' }}
+              {{ ajaxDefaulting === value.id ? $t('ui.userAddressUi.saving') : $t('ui.userAddressUi.setDefault') }}
             </button>
           </div>
         </div>
@@ -177,7 +177,7 @@
         >
           <span class="address-add-icon" aria-hidden="true">+</span>
           <span>
-            Add new address
+            {{ $t('ui.userAddressUi.addNew') }}
           </span>
         </button>
       </div>
@@ -190,27 +190,27 @@
         class="address-form-panel"
       >
         <h3 class="address-form-title">
-          Complete your address below
+          {{ $t('ui.userAddressUi.formTitle') }}
         </h3>
 
         <form class="address-form" @submit.prevent="savingAddressData">
           <div class="address-form-grid">
             <div class="address-field">
-              <label for="address-full-name">Full Name <span class="req">*</span></label>
+              <label for="address-full-name">{{ $t('ui.userAddressUi.fullName') }} <span class="req">*</span></label>
               <input
                 id="address-full-name"
                 v-model="fullName"
                 type="text"
                 class="address-input"
                 autocomplete="name"
-                placeholder="Enter name"
+                :placeholder="$t('ui.userAddressUi.namePlaceholder')"
                 :class="{ 'field-invalid': showError('name') }"
               >
               <p v-if="showError('name')" class="address-error">{{ fieldErrors.name }}</p>
             </div>
 
             <div class="address-field">
-              <label for="address-email">Email Address <span class="req">*</span></label>
+              <label for="address-email">{{ $t('ui.userAddressUi.email') }} <span class="req">*</span></label>
               <input
                 id="address-email"
                 v-model.trim="addressData.email"
@@ -218,7 +218,7 @@
                 class="address-input"
                 autocomplete="email"
                 inputmode="email"
-                placeholder="Enter email"
+                :placeholder="$t('ui.userAddressUi.emailPlaceholder')"
                 :class="{ 'field-invalid': showError('email') }"
               >
               <p v-if="showError('email')" class="address-error">{{ fieldErrors.email }}</p>
@@ -227,7 +227,7 @@
             <!-- the flag picker is the country control: choosing one sets the
                  delivery country below and reloads its counties -->
             <div class="address-field">
-              <label for="address-phone">Contact Number <span class="req">*</span></label>
+              <label for="address-phone">{{ $t('ui.userAddressUi.phone') }} <span class="req">*</span></label>
               <phone-field
                 :value="addressData.phone"
                 :names="countryList"
@@ -240,7 +240,7 @@
             </div>
 
             <div class="address-field">
-              <label for="address-country">Country <span class="req">*</span></label>
+              <label for="address-country">{{ $t('ui.userAddressUi.country') }} <span class="req">*</span></label>
               <!--
                 Follows the flag on the contact number until it is picked
                 here; either way it goes through applyCountry, which clears
@@ -255,7 +255,7 @@
                   :class="{ placeholder: !addressData.country, 'field-invalid': showError('country') }"
                 >
                   <option value="">
-                    Select country
+                    {{ $t('ui.userAddressUi.selectCountry') }}
                   </option>
                   <option
                     v-for="country in countryOptions"
@@ -267,32 +267,32 @@
                 </select>
               </div>
               <p v-if="showError('country')" class="address-error">{{ fieldErrors.country }}</p>
-              <p v-else class="address-hint">Follows the flag on your contact number unless you pick one here.</p>
+              <p v-else class="address-hint">{{ $t('ui.userAddressUi.countryHint') }}</p>
             </div>
 
             <div class="address-field">
-              <label for="address-line-1">Address 1 <span class="req">*</span></label>
+              <label for="address-line-1">{{ $t('ui.userAddressUi.address1') }} <span class="req">*</span></label>
               <input
                 id="address-line-1"
                 v-model="addressData.address_1"
                 type="text"
                 class="address-input"
                 autocomplete="address-line1"
-                placeholder="Enter address"
+                :placeholder="$t('ui.userAddressUi.addressPlaceholder')"
                 :class="{ 'field-invalid': showError('address_1') }"
               >
               <p v-if="showError('address_1')" class="address-error">{{ fieldErrors.address_1 }}</p>
             </div>
 
             <div class="address-field">
-              <label for="address-line-2">Address 2</label>
+              <label for="address-line-2">{{ $t('ui.userAddressUi.address2') }}</label>
               <input
                 id="address-line-2"
                 v-model="addressData.address_2"
                 type="text"
                 class="address-input"
                 autocomplete="address-line2"
-                placeholder="Apartment, unit, floor (optional)"
+                :placeholder="$t('ui.userAddressUi.address2Placeholder')"
               >
             </div>
 
@@ -340,7 +340,7 @@
             -->
             <div class="address-field">
               <label :for="hasTownOptions ? 'address-town' : 'address-city'">
-                Town / City <span class="req">*</span>
+                {{ $t('ui.userAddressUi.town') }} <span class="req">*</span>
               </label>
 
               <div v-if="hasTownOptions" class="address-select-wrap">
@@ -362,7 +362,7 @@
                     {{ town }}
                   </option>
                   <option :value="townOther">
-                    Other - not on this list
+                    {{ $t('ui.userAddressUi.townOther') }}
                   </option>
                 </select>
               </div>
@@ -376,7 +376,7 @@
                 :class="{ 'address-town-typed': hasTownOptions, 'field-invalid': showError('city') }"
                 autocomplete="address-level2"
                 :disabled="!townReady"
-                :placeholder="hasTownOptions ? 'Type your town or city' : townPlaceholder"
+                :placeholder="hasTownOptions ? $t('ui.userAddressUi.typeTown') : townPlaceholder"
                 @input="townTyped = true"
               >
 
@@ -411,7 +411,7 @@
             </div>
 
             <div class="address-field">
-              <label for="address-type">Address Type</label>
+              <label for="address-type">{{ $t('ui.userAddressUi.addressType') }}</label>
               <div class="address-select-wrap">
                 <select
                   id="address-type"
@@ -419,10 +419,10 @@
                   class="address-select"
                 >
                   <option value="home">
-                    Home
+                    {{ $t('ui.userAddressUi.types.home') }}
                   </option>
                   <option value="office">
-                    Work
+                    {{ $t('ui.userAddressUi.types.work') }}
                   </option>
                 </select>
               </div>
@@ -434,14 +434,14 @@
               The basket keeps the shorter form.
             -->
             <div v-if="manage" class="address-field address-field-wide">
-              <label for="address-instructions">Delivery Instructions (optional)</label>
+              <label for="address-instructions">{{ $t('ui.userAddressUi.instructions') }}</label>
               <textarea
                 id="address-instructions"
                 v-model="addressData.delivery_instruction"
                 class="address-textarea"
                 rows="3"
                 maxlength="500"
-                placeholder="For example: leave with the neighbour at no. 12"
+                :placeholder="$t('ui.userAddressUi.instructionsPlaceholder')"
               />
             </div>
 
@@ -452,7 +452,7 @@
                 :true-value="1"
                 :false-value="0"
               >
-              <span>Set a default delivery address</span>
+              <span>{{ $t('ui.userAddressUi.setDefaultAddress') }}</span>
             </label>
 
             <div class="address-form-actions">
@@ -460,7 +460,7 @@
                 type="submit"
                 class="address-save-button"
               >
-                {{ editing ? 'Update' : 'Save' }}
+                {{ editing ? $t('ui.userAddressUi.update') : $t('ui.userAddressUi.save') }}
               </button>
 
               <button
@@ -468,7 +468,7 @@
                 class="address-cancel-button"
                 @click="cancelForm"
               >
-                Cancel
+                {{ $t('ui.userAddressUi.cancel') }}
               </button>
             </div>
           </div>
@@ -631,29 +631,29 @@
         const name = (this.fullName || '').trim()
 
         if (!name) {
-          errors.name = 'Enter the name for this delivery.'
+          errors.name = this.$t('ui.userAddressUi.errors.nameRequired')
         } else if (name.length < 2) {
-          errors.name = 'That name looks too short.'
+          errors.name = this.$t('ui.userAddressUi.errors.nameShort')
         }
 
         if (!data.email) {
-          errors.email = 'Enter an email address.'
+          errors.email = this.$t('ui.userAddressUi.errors.emailRequired')
         } else if (!this.isValidEmail(data.email)) {
-          errors.email = 'That email address is not valid.'
+          errors.email = this.$t('ui.userAddressUi.errors.emailInvalid')
         }
 
         if (!data.phone) {
-          errors.phone = 'Enter a contact number.'
+          errors.phone = this.$t('ui.userAddressUi.errors.phoneRequired')
         } else if (!this.phoneValid) {
-          errors.phone = 'That number is not valid for the country on the flag.'
+          errors.phone = this.$t('ui.userAddressUi.errors.phoneInvalid')
         }
 
         if (!data.country) {
-          errors.country = 'Choose a country.'
+          errors.country = this.$t('ui.userAddressUi.errors.countryRequired')
         }
 
         if (!(data.address_1 || '').trim()) {
-          errors.address_1 = 'Enter the first line of the address.'
+          errors.address_1 = this.$t('ui.userAddressUi.errors.address1Required')
         }
 
         /*
@@ -662,14 +662,14 @@
          * for the one thing they have not got to yet.
          */
         if (this.hasRegions && !data.state) {
-          errors.state = `Choose a ${this.regionLabel.toLowerCase()}.`
+          errors.state = this.$t('ui.userAddressUi.errors.regionRequired', { region: this.regionLabel.toLowerCase() })
         }
 
         if (this.townReady) {
           if (!(data.city || '').trim()) {
-            errors.city = 'Enter a town or city.'
+            errors.city = this.$t('ui.userAddressUi.errors.townRequired')
           } else if (!this.isValidTown(data.city)) {
-            errors.city = 'That does not look like a town name.'
+            errors.city = this.$t('ui.userAddressUi.errors.townInvalid')
           }
         }
 
@@ -678,11 +678,13 @@
           const label = this.postcodeLabel.toLowerCase()
 
           if (!(data.zip || '').trim()) {
-            errors.zip = `Enter ${/^[aeiou]/.test(label) ? 'an' : 'a'} ${label}.`
+            errors.zip = /^[aeiou]/.test(label)
+              ? this.$t('ui.userAddressUi.errors.postcodeRequiredAn', { label })
+              : this.$t('ui.userAddressUi.errors.postcodeRequiredA', { label })
           } else if (!this.isValidPostcode(data.zip)) {
             errors.zip = this.postcodeExample
-              ? `Enter a valid ${label}, for example ${this.postcodeExample}.`
-              : `Enter a valid ${label}.`
+              ? this.$t('ui.userAddressUi.errors.postcodeInvalidExample', { label, example: this.postcodeExample })
+              : this.$t('ui.userAddressUi.errors.postcodeInvalid', { label })
           }
         }
 
@@ -864,14 +866,14 @@
         this.selectedAddress = key
       },
       addressTypeLabel(type) {
-        const label = (type || 'Home').toString().trim()
+        const label = (type || 'home').toString().trim()
 
-        if (!label) {
-          return 'Home'
+        if (!label || label.toLowerCase() === 'home') {
+          return this.$t('ui.userAddressUi.types.home')
         }
 
         if (label.toLowerCase() === 'office') {
-          return 'Work'
+          return this.$t('ui.userAddressUi.types.work')
         }
 
         return label.charAt(0).toUpperCase() + label.slice(1)
@@ -936,7 +938,7 @@
         this.phoneTouched = true
 
         if (this.hasFieldErrors) {
-          this.setToastError('Please correct the highlighted fields.')
+          this.setToastError(this.$t('ui.userAddressUi.correctFields'))
 
           this.$nextTick(() => {
             const el = this.$el.querySelector('.field-invalid')
@@ -1171,13 +1173,13 @@
           })
 
           if (data?.status === 200) {
-            this.setToastMessage('Default address updated')
+            this.setToastMessage(this.$t('ui.userAddressUi.defaultUpdated'))
             await this.fetchingData()
           } else {
-            this.setToastError(this.addressFailureMessage(data, 'We could not change your default address.'))
+            this.setToastError(this.addressFailureMessage(data, this.$t('ui.userAddressUi.defaultFailed')))
           }
         } catch (e) {
-          this.setToastError('We could not change your default address.')
+          this.setToastError(this.$t('ui.userAddressUi.defaultFailed'))
         } finally {
           this.ajaxDefaulting = 0
         }

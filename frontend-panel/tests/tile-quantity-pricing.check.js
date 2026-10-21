@@ -25,6 +25,7 @@ const path = require('path')
 const fs = require('fs')
 
 const ROOT = path.resolve(__dirname, '..')
+const { withI18n, installI18n } = require('./i18n-en')
 const NM = path.join(ROOT, 'node_modules')
 
 const babel = require(path.join(NM, '@babel/core'))
@@ -62,7 +63,7 @@ const LISTING = {
  * line, wiring the dependencies between them the way Vue would.
  */
 function view(product, cartEntry) {
-  const ctx = {
+  const ctx = withI18n({
     product,
     cartEntry: cartEntry || null,
     get cartLine() { return helper.computed.cartLine.call(ctx) },
@@ -77,7 +78,7 @@ function view(product, cartEntry) {
     get vatCounterpart() { return helper.computed.vatCounterpart.call(ctx) },
     get livePrice() { return helper.computed.livePrice.call(ctx) },
     get livePrevPrice() { return helper.computed.livePrevPrice.call(ctx) },
-  }
+  })
 
   return {
     price: ctx.livePrice,

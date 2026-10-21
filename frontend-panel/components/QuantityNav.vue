@@ -1,7 +1,7 @@
 <template>
   <span class="quantity-area ">
     <button
-      aria-label="subtract"
+      :aria-label="$t('ui.quantityNavUi.subtract')"
       @click.prevent="qty(-1)"
       :disabled="value <= 1"
     >
@@ -9,7 +9,7 @@
     </button>
     <span class="no-control">{{ qtyComputed }}</span>
     <button
-      aria-label="add"
+      :aria-label="$t('ui.quantityNavUi.add')"
       @click.prevent="qty(1)"
       :disabled="max === 0 || value >= max"
     >

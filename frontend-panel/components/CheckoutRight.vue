@@ -14,8 +14,8 @@
             </svg>
           </span>
           <span class="summary-head-text">
-            Order Summary
-            <small class="summary-head-note">All prices are in {{ currencyName }}</small>
+            {{ $t('ui.checkoutSummary.orderSummary') }}
+            <small class="summary-head-note">{{ $t('ui.checkoutSummary.allPricesAreIn', { currency: currencyName }) }}</small>
           </span>
         </h5>
 
@@ -69,16 +69,16 @@
 
         <div class="sum-row">
           <span class="sum-label">
-            You Save
+            {{ $t('ui.checkoutSummary.youSave') }}
             <!--
               Click to open the figure behind the row. A popover rather than a
               title attribute: these explanations carry amounts worth reading,
               and a native tooltip is unreachable on a touch screen.
             -->
             <info-popover
-              title="Your savings"
-              label="About your total saving"
-              lede="What you save against the original prices, at the prices shown."
+              :title="$t('ui.checkoutSummary.savingsTitle')"
+              :label="$t('ui.checkoutSummary.savingsLabel')"
+              :lede="$t('ui.checkoutSummary.savingsLede')"
               :groups="savingsExplainerGroups"
               :rows="savingsExplainerRows"
               :note="savingsExplainerNote"
@@ -100,11 +100,11 @@
         -->
         <div class="sum-row">
           <span class="sum-label">
-            Products Total<template v-if="hasVat"> (Ex-VAT)</template>
+            {{ $t('ui.checkoutSummary.productsTotal') }}<template v-if="hasVat"> {{ $t('ui.checkoutSummary.exVatParen') }}</template>
             <info-popover
-              title="Products total"
-              label="About the products total"
-              :lede="hasVat ? 'What your products cost before VAT, after the saving. The VAT on all of them is in the row below.' : 'What your products cost at the prices shown on their cards, after the saving.'"
+              :title="$t('ui.checkoutSummary.productsTitle')"
+              :label="$t('ui.checkoutSummary.productsLabel')"
+              :lede="hasVat ? $t('ui.checkoutSummary.productsLedeVat') : $t('ui.checkoutSummary.productsLede')"
               :rows="productsExplainerRows"
             />
           </span>
@@ -125,11 +125,11 @@
         -->
         <div class="sum-row">
           <span class="sum-label">
-            VAT<template v-if="vatRateLabel"> ({{ vatRateLabel }})</template>
+            {{ $t('ui.checkoutSummary.vat') }}<template v-if="vatRateLabel"> ({{ vatRateLabel }})</template>
             <info-popover
-              title="VAT details"
-              label="About the VAT"
-              lede="All the VAT on your order: the VAT inside the price of products priced Inc-VAT and the VAT added to products priced Ex-VAT. It is charged once."
+              :title="$t('ui.checkoutSummary.vatTitle')"
+              :label="$t('ui.checkoutSummary.vatLabel')"
+              :lede="$t('ui.checkoutSummary.vatLede')"
               :rows="vatExplainerRows"
               :note="vatExplainerNote"
             />
@@ -157,7 +157,7 @@
           <span class="sum-stale-icon" aria-hidden="true">
             <span class="sum-stale-spin"></span>
           </span>
-          <span>Updating prices&hellip;</span>
+          <span>{{ $t('ui.checkoutSummary.updatingPrices') }}</span>
         </p>
 
         <!--
@@ -170,20 +170,20 @@
           <span>
             {{ pricesError }}
             <button type="button" class="sum-retry" :disabled="pricesPending" @click="retryPrices">
-              {{ pricesPending ? 'Trying…' : 'Try again' }}
+              {{ pricesPending ? $t('ui.checkoutSummary.trying') : $t('ui.checkoutSummary.tryAgain') }}
             </button>
           </span>
         </p>
 
         <div v-if="formatPrice(flashDiscount) > 0" class="sum-row">
-          <span class="sum-label">Flash Discount</span>
+          <span class="sum-label">{{ $t('ui.checkoutSummary.flashDiscount') }}</span>
           <span class="sum-value text-success">
             - <price-format :price="formatPrice(flashDiscount)" :decimals="2" />
           </span>
         </div>
 
         <div v-if="formatPrice(voucherResult?.offered) > 0" class="sum-row">
-          <span class="sum-label">Voucher</span>
+          <span class="sum-label">{{ $t('ui.checkoutSummary.voucher') }}</span>
           <span class="sum-value text-success">
             - <price-format :price="formatPrice(voucherResult?.offered || 0)" :decimals="2" />
           </span>
@@ -219,8 +219,8 @@
           class="sum-row"
         >
           <span class="sum-label">
-            {{ bundle.title || 'Bundle saving' }}
-            <small class="sum-note">while the whole bundle is in your basket</small>
+            {{ bundle.title || $t('ui.checkoutSummary.bundleSaving') }}
+            <small class="sum-note">{{ $t('ui.checkoutSummary.bundleNote') }}</small>
           </span>
           <span class="sum-value text-success">
             - <price-format :price="formatPrice(bundle.discount)" :decimals="2" />
@@ -228,7 +228,7 @@
         </div>
 
         <div v-if="formatPrice(pointsDiscount) > 0" class="sum-row">
-          <span class="sum-label">Cherry Points</span>
+          <span class="sum-label">{{ $t('ui.checkoutSummary.cherryPoints') }}</span>
           <span class="sum-value text-success">
             - <price-format :price="formatPrice(pointsDiscount)" :decimals="2" />
           </span>
@@ -242,7 +242,7 @@
         <div class="sum-row">
           <span class="sum-label">
             {{ $t('checkoutRight.shipping') }}
-            <small v-if="isFreeShipping && !shippingUndecided && !isCollectionChoice" class="sum-note">Standard delivery</small>
+            <small v-if="isFreeShipping && !shippingUndecided && !isCollectionChoice" class="sum-note">{{ $t('ui.checkoutSummary.standardDelivery') }}</small>
           </span>
           <span class="sum-value">
             <price-format v-if="shippingUndecided" :price="formatPrice(0)" :decimals="2" />
@@ -255,7 +255,7 @@
 
         <!-- .sum-total carries the second rule as its own top border -->
         <div class="sum-total">
-          <span class="sum-total-label">Total (Inc-VAT)</span>
+          <span class="sum-total-label">{{ $t('ui.checkoutSummary.totalIncVat') }}</span>
           <span class="sum-total-value">
             <price-format v-if="!hasStaleLines" :price="formatPrice(totalPrice)" :decimals="2" />
             <span v-else class="sum-pending">&mdash;</span>
@@ -268,13 +268,13 @@
         -->
         <div v-if="walletApplied > 0 && !hasStaleLines" class="sum-split">
           <div class="sum-row">
-            <span class="sum-label">Paid from wallet</span>
+            <span class="sum-label">{{ $t('ui.checkoutSummary.paidFromWallet') }}</span>
             <span class="sum-value text-success">
               -<price-format :price="formatPrice(walletApplied)" :decimals="2" />
             </span>
           </div>
           <div class="sum-row sum-split-due">
-            <span class="sum-label">Left to pay</span>
+            <span class="sum-label">{{ $t('ui.checkoutSummary.leftToPay') }}</span>
             <span class="sum-value">
               <price-format :price="formatPrice(amountLeftToPay)" :decimals="2" />
             </span>
@@ -290,21 +290,17 @@
         <div v-if="loyaltyNudge" class="loyalty-nudge">
           <div class="loyalty-nudge-head">
             <span class="loyalty-nudge-icon">★</span>
-            <span>
-              Add
-              <strong><price-format :price="formatPrice(loyaltyNudge.shortfall)" :decimals="2" /></strong>
-              more to
-              {{ loyaltyNudge.upgrade ? 'upgrade to' : 'unlock' }}
-              <strong>{{ loyaltyNudge.label }}</strong>
-            </span>
+            <i18n :path="loyaltyNudge.upgrade ? 'ui.checkoutSummary.nudgeUpgrade' : 'ui.checkoutSummary.nudgeUnlock'" tag="span">
+              <template #amount><strong><price-format :price="formatPrice(loyaltyNudge.shortfall)" :decimals="2" /></strong></template>
+              <template #label><strong>{{ loyaltyNudge.label }}</strong></template>
+            </i18n>
           </div>
 
-          <div class="loyalty-nudge-sub">
-            {{ loyaltyNudge.benefit }} on orders over
-            <price-format :price="formatPrice(loyaltyNudge.threshold)" :decimals="2" />
-            &mdash; saving you at least
-            <price-format :price="formatPrice(loyaltyNudge.reward)" :decimals="2" />
-          </div>
+          <i18n path="ui.checkoutSummary.nudgeSub" tag="div" class="loyalty-nudge-sub">
+            <template #benefit>{{ loyaltyNudge.benefit }}</template>
+            <template #threshold><price-format :price="formatPrice(loyaltyNudge.threshold)" :decimals="2" /></template>
+            <template #reward><price-format :price="formatPrice(loyaltyNudge.reward)" :decimals="2" /></template>
+          </i18n>
 
           <div
             class="loyalty-nudge-bar"
@@ -344,14 +340,14 @@
 
         <!-- SECOND BUTTON -->
         <button class="continue-btn" @click="goToHome">
-          Continue Shopping
+          {{ $t('ui.checkoutSummary.continueShopping') }}
         </button>
 
         <hr class="seprate-hr">
 
         <!-- PAYMENT IMAGE -->
         <div class="payment-icons">
-          <img :src="require('~/assets/images/cards.png')" alt="cards" />
+          <img :src="require('~/assets/images/cards.png')" :alt="$t('ui.checkoutSummary.cardsAlt')" />
         </div>
 
         <!-- SECURE -->
@@ -361,7 +357,7 @@
               d="M3.375 3.375V4.5H7.125V3.375C7.125 2.33906 6.28594 1.5 5.25 1.5C4.21406 1.5 3.375 2.33906 3.375 3.375V3.375M1.875 4.5V3.375C1.875 1.51172 3.38672 0 5.25 0C7.11328 0 8.625 1.51172 8.625 3.375V4.5H9C9.82734 4.5 10.5 5.17266 10.5 6V10.5C10.5 11.3273 9.82734 12 9 12H1.5C0.672656 12 0 11.3273 0 10.5V6C0 5.17266 0.672656 4.5 1.5 4.5H1.875V4.5"
               fill="#6B7280" />
           </svg>
-          Secure Checkout Guaranteed
+          {{ $t('ui.checkoutSummary.secureCheckout') }}
         </div>
 
       </div>
@@ -427,7 +423,7 @@
             <div class="mfs-panel-inner">
 
               <div v-if="formatPrice(productsDiscount) > 0" class="sum-row">
-                <span class="sum-label">You Save</span>
+                <span class="sum-label">{{ $t('ui.checkoutSummary.youSave') }}</span>
                 <span class="sum-value text-success">
                   -<price-format :price="formatPrice(productsDiscount)" :decimals="2" />
                 </span>
@@ -435,7 +431,7 @@
 
               <div class="sum-row">
                 <span class="sum-label">
-                  Products Total<template v-if="hasVat"> (Ex-VAT)</template>
+                  {{ $t('ui.checkoutSummary.productsTotal') }}<template v-if="hasVat"> {{ $t('ui.checkoutSummary.exVatParen') }}</template>
                 </span>
                 <span class="sum-value">
                   <price-format v-if="!hasStaleLines" :price="formatPrice(productsNet)" :decimals="2" />
@@ -448,7 +444,7 @@
                    rate label as the card. -->
               <div class="sum-row">
                 <span class="sum-label">
-                  VAT<template v-if="vatRateLabel"> ({{ vatRateLabel }})</template>
+                  {{ $t('ui.checkoutSummary.vat') }}<template v-if="vatRateLabel"> ({{ vatRateLabel }})</template>
                 </span>
                 <span class="sum-value">
                   <price-format v-if="!hasStaleLines" :price="formatPrice(vatTotal)" :decimals="2" />
@@ -457,14 +453,14 @@
               </div>
 
               <div v-if="formatPrice(flashDiscount) > 0" class="sum-row">
-                <span class="sum-label">Flash Discount</span>
+                <span class="sum-label">{{ $t('ui.checkoutSummary.flashDiscount') }}</span>
                 <span class="sum-value text-success">
                   - <price-format :price="formatPrice(flashDiscount)" :decimals="2" />
                 </span>
               </div>
 
               <div v-if="formatPrice(voucherResult?.offered) > 0" class="sum-row">
-                <span class="sum-label">Voucher</span>
+                <span class="sum-label">{{ $t('ui.checkoutSummary.voucher') }}</span>
                 <span class="sum-value text-success">
                   - <price-format :price="formatPrice(voucherResult?.offered || 0)" :decimals="2" />
                 </span>
@@ -482,14 +478,14 @@
                 :key="`mfs-bundle-${bundle.id}`"
                 class="sum-row"
               >
-                <span class="sum-label">{{ bundle.title || 'Bundle saving' }}</span>
+                <span class="sum-label">{{ bundle.title || $t('ui.checkoutSummary.bundleSaving') }}</span>
                 <span class="sum-value text-success">
                   - <price-format :price="formatPrice(bundle.discount)" :decimals="2" />
                 </span>
               </div>
 
               <div v-if="formatPrice(pointsDiscount) > 0" class="sum-row">
-                <span class="sum-label">Cherry Points</span>
+                <span class="sum-label">{{ $t('ui.checkoutSummary.cherryPoints') }}</span>
                 <span class="sum-value text-success">
                   - <price-format :price="formatPrice(pointsDiscount)" :decimals="2" />
                 </span>
@@ -506,13 +502,13 @@
 
               <template v-if="walletApplied > 0 && !hasStaleLines">
                 <div class="sum-row">
-                  <span class="sum-label">Paid from wallet</span>
+                  <span class="sum-label">{{ $t('ui.checkoutSummary.paidFromWallet') }}</span>
                   <span class="sum-value text-success">
                     -<price-format :price="formatPrice(walletApplied)" :decimals="2" />
                   </span>
                 </div>
                 <div class="sum-row sum-split-due">
-                  <span class="sum-label">Left to pay</span>
+                  <span class="sum-label">{{ $t('ui.checkoutSummary.leftToPay') }}</span>
                   <span class="sum-value">
                     <price-format :price="formatPrice(amountLeftToPay)" :decimals="2" />
                   </span>
@@ -526,7 +522,7 @@
                 <span class="sum-stale-icon" aria-hidden="true">
                   <span class="sum-stale-spin"></span>
                 </span>
-                <span>Updating prices&hellip;</span>
+                <span>{{ $t('ui.checkoutSummary.updatingPrices') }}</span>
               </p>
 
               <p v-else-if="hasStaleLines" class="sum-stale is-failed">
@@ -534,7 +530,7 @@
                 <span>
                   {{ pricesError }}
                   <button type="button" class="sum-retry" :disabled="pricesPending" @click="retryPrices">
-                    {{ pricesPending ? 'Trying…' : 'Try again' }}
+                    {{ pricesPending ? $t('ui.checkoutSummary.trying') : $t('ui.checkoutSummary.tryAgain') }}
                   </button>
                 </span>
               </p>
@@ -556,7 +552,7 @@
                     d="M3.375 3.375V4.5H7.125V3.375C7.125 2.33906 6.28594 1.5 5.25 1.5C4.21406 1.5 3.375 2.33906 3.375 3.375V3.375M1.875 4.5V3.375C1.875 1.51172 3.38672 0 5.25 0C7.11328 0 8.625 1.51172 8.625 3.375V4.5H9C9.82734 4.5 10.5 5.17266 10.5 6V10.5C10.5 11.3273 9.82734 12 9 12H1.5C0.672656 12 0 11.3273 0 10.5V6C0 5.17266 0.672656 4.5 1.5 4.5H1.875V4.5"
                     fill="#6B7280" />
                 </svg>
-                Secure Checkout Guaranteed &middot; All prices in {{ currencyName }}
+                {{ $t('ui.checkoutSummary.secureCheckout') }} &middot; {{ $t('ui.checkoutSummary.allPricesIn', { currency: currencyName }) }}
               </p>
 
             </div>
@@ -578,12 +574,10 @@
           -->
           <div v-if="loyaltyNudge" class="mfs-nudge">
             <span class="mfs-nudge-icon" aria-hidden="true">★</span>
-            <span>
-              Add
-              <strong><price-format :price="formatPrice(loyaltyNudge.shortfall)" :decimals="2" /></strong>
-              more to {{ loyaltyNudge.upgrade ? 'upgrade to' : 'unlock' }}
-              <strong>{{ loyaltyNudge.label }}</strong>
-            </span>
+            <i18n :path="loyaltyNudge.upgrade ? 'ui.checkoutSummary.nudgeUpgrade' : 'ui.checkoutSummary.nudgeUnlock'" tag="span">
+              <template #amount><strong><price-format :price="formatPrice(loyaltyNudge.shortfall)" :decimals="2" /></strong></template>
+              <template #label><strong>{{ loyaltyNudge.label }}</strong></template>
+            </i18n>
           </div>
 
           <!--
@@ -601,13 +595,13 @@
             aria-controls="mobile-summary-panel"
             @click="mobileOpen = !mobileOpen"
           >
-            <span class="mfs-head-label">Total (Inc-VAT)</span>
+            <span class="mfs-head-label">{{ $t('ui.checkoutSummary.totalIncVat') }}</span>
             <span class="mfs-head-value">
               <price-format v-if="!hasStaleLines" :price="formatPrice(totalPrice)" :decimals="2" />
               <span v-else class="sum-pending">&mdash;</span>
             </span>
             <span class="mfs-sr">
-              {{ mobileOpen ? 'Hide price breakdown' : 'Show price breakdown' }}
+              {{ mobileOpen ? $t('ui.checkoutSummary.hideBreakdown') : $t('ui.checkoutSummary.showBreakdown') }}
             </span>
             <svg class="mfs-chev" width="18" height="18" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
@@ -813,7 +807,7 @@ export default {
      * internal admin title.
      */
     loyaltyLabel() {
-      return this.$store.state.cart.loyaltyDiscount?.label || 'Loyalty Discount'
+      return this.$store.state.cart.loyaltyDiscount?.label || this.$t('ui.checkoutSummary.loyaltyDiscount')
     },
     loyaltyBenefit() {
       return this.$store.state.cart.loyaltyDiscount?.benefit || ''
@@ -835,7 +829,7 @@ export default {
         return ''
       }
 
-      return days === 1 ? ' · ends today' : ` · ${days} days left`
+      return days === 1 ? this.$t('ui.checkoutSummary.endsToday') : this.$t('ui.checkoutSummary.daysLeft', { days })
     },
     loyaltyNudge() {
       const next = this.$store.state.cart.loyaltyDiscount?.next
@@ -1083,7 +1077,7 @@ export default {
         const quantity = parseInt(row?.quantity || 0)
         const unit = Number(row?.unit_price ?? row?.upsell_price ?? 0)
         const rated = parseFloat(row?.vat_rate || 0) > 0
-        const basis = rated ? (row?.vat_inclusive ? 'Inc-VAT' : 'Ex-VAT') : ''
+        const basis = rated ? (row?.vat_inclusive ? this.$t('ui.checkoutSummary.incVat') : this.$t('ui.checkoutSummary.exVat')) : ''
 
         return {
           label: `${row?.flash_product?.title || ''}${basis ? ` (${basis})` : ''}`,
@@ -1092,12 +1086,12 @@ export default {
       })
 
       if (this.vatIncluded > 0.004) {
-        rows.push({ label: 'At the prices shown', value: this.money(this.cartPrice.totalPriceWithOffer) })
-        rows.push({ label: 'Less VAT inside Inc-VAT prices', value: `-${this.money(this.vatIncluded)}` })
+        rows.push({ label: this.$t('ui.checkoutSummary.explain.atPricesShown'), value: this.money(this.cartPrice.totalPriceWithOffer) })
+        rows.push({ label: this.$t('ui.checkoutSummary.explain.lessVatInside'), value: `-${this.money(this.vatIncluded)}` })
       }
 
       rows.push({
-        label: this.hasVat ? 'Products total (Ex-VAT)' : 'Products total',
+        label: this.hasVat ? this.$t('ui.checkoutSummary.explain.productsTotalExVat') : this.$t('ui.checkoutSummary.explain.productsTotal'),
         value: this.money(this.productsNet),
         strong: true,
       })
@@ -1121,19 +1115,19 @@ export default {
      */
     savingsExplainerGroups() {
       return this.savingsDetails.map((row) => {
-        const basis = row.inclusive ? 'Inc-VAT' : 'Ex-VAT'
+        const basis = row.inclusive ? this.$t('ui.checkoutSummary.incVat') : this.$t('ui.checkoutSummary.exVat')
 
         return {
           name: row.title,
           lines: [`${this.money(row.unitFrom)} → ${this.money(row.unitTo)} ${basis}`],
-          total: `= ${this.money(row.baseSaving)} off × ${row.quantity}`,
+          total: this.$t('ui.checkoutSummary.explain.savingLine', { amount: this.money(row.baseSaving), qty: row.quantity }),
         }
       })
     },
 
     savingsExplainerRows() {
       return [
-        { label: 'Total you save', value: this.money(this.productsDiscount), strong: true },
+        { label: this.$t('ui.checkoutSummary.explain.totalYouSave'), value: this.money(this.productsDiscount), strong: true },
       ]
     },
 
@@ -1146,9 +1140,7 @@ export default {
     savingsExplainerNote() {
       if (!this.hasMixedVatBasis) return ''
 
-      return 'Savings are shown at the prices displayed. A saving on an Ex-VAT '
-        + 'product reduces the VAT added below as well, so it takes a little '
-        + 'more than this off your total.'
+      return this.$t('ui.checkoutSummary.explain.savingsNote')
     },
 
     /*
@@ -1208,7 +1200,7 @@ export default {
 
       const rows = [
         {
-          label: this.vatRateLabel ? `VAT added (${this.vatRateLabel})` : 'VAT added',
+          label: this.vatRateLabel ? this.$t('ui.checkoutSummary.explain.vatAddedRate', { rate: this.vatRateLabel }) : this.$t('ui.checkoutSummary.explain.vatAdded'),
           value: this.money(added),
         },
       ]
@@ -1216,12 +1208,12 @@ export default {
       // Only when some of the basket carries its VAT internally; on an all
       // ex-VAT basket the two figures are the same and a zero row says nothing.
       if (included > 0.004) {
-        rows.push({ label: 'Inside Inc-VAT prices', value: this.money(included) })
-        rows.push({ label: 'Total VAT in this order', value: this.money(total), strong: true })
+        rows.push({ label: this.$t('ui.checkoutSummary.explain.insideIncVat'), value: this.money(included) })
+        rows.push({ label: this.$t('ui.checkoutSummary.explain.totalVat'), value: this.money(total), strong: true })
       }
 
-      rows.push({ label: 'Net Ex-VAT', value: this.money(this.cartPrice.exVat) })
-      rows.push({ label: 'Total Inc-VAT', value: this.money(this.cartPrice.incVat) })
+      rows.push({ label: this.$t('ui.checkoutSummary.explain.netExVat'), value: this.money(this.cartPrice.exVat) })
+      rows.push({ label: this.$t('ui.checkoutSummary.explain.totalIncVat'), value: this.money(this.cartPrice.incVat) })
 
       return rows
     },
@@ -1229,7 +1221,7 @@ export default {
     vatExplainerNote() {
       if (this.vatRateLabel) return ''
 
-      return 'Your basket has products at more than one VAT rate.'
+      return this.$t('ui.checkoutSummary.explain.mixedRates')
     },
 
     totalPrice() {

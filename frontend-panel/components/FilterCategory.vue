@@ -5,7 +5,7 @@
       <button
         v-if="backBtn"
         type="button"
-        aria-label="Go back"
+        :aria-label="$t('ui.filterCategoryUi.aria.goBack')"
         @click.prevent="$emit('go-back')"
       >
         {{ $t('date.gb') }}

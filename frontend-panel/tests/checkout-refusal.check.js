@@ -15,6 +15,7 @@ const fs = require('fs')
 const path = require('path')
 
 const ROOT = path.resolve(__dirname, '..')
+const { withI18n, installI18n } = require('./i18n-en')
 const NM = path.join(ROOT, 'node_modules')
 
 const babel = require(path.join(NM, '@babel/core'))
@@ -54,7 +55,7 @@ const PaymentGateways = loadComponent(path.join(ROOT, 'components/PaymentGateway
 const Checkout = loadComponent(path.join(ROOT, 'pages/checkout.vue'))
 
 function context(component, state) {
-  const vm = Object.create(null)
+  const vm = withI18n(Object.create(null))
   Object.assign(vm, state)
 
   for (const source of [...(component.mixins || []), component]) {

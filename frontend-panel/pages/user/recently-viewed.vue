@@ -15,15 +15,15 @@
         v-if="fetchingRecentlyViewedData"
         :tiles="6"
         heading
-        label="Loading recently viewed products"
+        :label="$t('ui.recentlyViewed.loading')"
       />
 
       <div v-else>
 
       <div class="card-box p-4 mb-4 d-flex justify-content-between align-items-center flex-wrap my-orders-box">
           <div>
-              <h5 class="mb-1">Recently Viewed</h5>
-              <small class="text-muted">View and manage your recently viewed items.</small>
+              <h5 class="mb-1">{{ $t('ui.recentlyViewed.title') }}</h5>
+              <small class="text-muted">{{ $t('ui.recentlyViewed.subtitle') }}</small>
           </div>
           <div class="d-flex gap-3">
             <div class="date-filter-wrapper d-flex align-items-center">
@@ -33,26 +33,26 @@
                 @change="fetchingData" 
                 class="date-filter-select"
               >
-                <option value="7_days">Last 7 Days</option>
-                <option value="30_days">Last 30 Days</option>
-                <option value="90_days">Last 3 Months</option>
-                <option value="all">All Time</option>
+                <option value="7_days">{{ $t('ui.recentlyViewed.last7Days') }}</option>
+                <option value="30_days">{{ $t('ui.recentlyViewed.last30Days') }}</option>
+                <option value="90_days">{{ $t('ui.recentlyViewed.last3Months') }}</option>
+                <option value="all">{{ $t('ui.recentlyViewed.allTime') }}</option>
               </select>
 
             </div>
             <a href="#" @click.prevent="clearHistory" class="share-link d-flex align-items-center share-whishlist" >
-                <i class="fa-solid fa-trash-can" style="color: rgb(82, 90, 107);"></i><span class="ms-2 ">Clear History</span>
+                <i class="fa-solid fa-trash-can" style="color: rgb(82, 90, 107);"></i><span class="ms-2 ">{{ $t('ui.recentlyViewed.clearHistory') }}</span>
             </a>
           </div>
       </div>
       <div class="Frequently-card-box p-0 mb-4">
         <div class="section-header d-flex justify-content-between align-items-center">
-            <span>Active Recently Viewed</span>
-            <small class="text-muted">🛡️ Account is secure</small>
+            <span>{{ $t('ui.recentlyViewed.activeRecentlyViewed') }}</span>
+            <small class="text-muted">🛡️ {{ $t('ui.recentlyViewed.accountSecure') }}</small>
         </div>
         <div class="p-3">
             <div v-if="currentRecentlyViewed && !currentRecentlyViewed.length" class="info-msg">
-               No recently viewed products found.
+               {{ $t('ui.recentlyViewed.empty') }}
             </div>
             <div v-else>
               <product-view-list
@@ -101,7 +101,7 @@ import ProductViewList from '../../components/ProductViewList.vue'
     middleware: ['common-middleware', 'auth'],
     head() {
       return {
-        title: 'Recently Viewed',
+        title: this.$t('ui.recentlyViewed.title'),
         meta: []
       }
     },

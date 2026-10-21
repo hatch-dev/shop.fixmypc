@@ -12,7 +12,7 @@
         :aria-expanded="drawerOpen ? 'true' : 'false'"
         @click="drawerOpen = true"
       >
-        <span><i class="fa-solid fa-bars"></i> Account Menu</span>
+        <span><i class="fa-solid fa-bars"></i> {{ $t('ui.accountLayout.accountMenu') }}</span>
         <i class="fa-solid fa-chevron-right"></i>
       </button>
 
@@ -29,7 +29,7 @@
               ref="drawerClose"
               type="button"
               class="account-drawer-close"
-              aria-label="Close menu"
+              :aria-label="$t('ui.accountLayout.closeMenu')"
               @click="drawerOpen = false"
             >
               <i class="fa-solid fa-xmark"></i>
@@ -57,7 +57,7 @@
                 <span class="account-sk account-sk-avatar" aria-hidden="true"></span>
                 <span class="account-sk account-sk-name" aria-hidden="true"></span>
                 <span class="account-sk account-sk-email" aria-hidden="true"></span>
-                <span class="sr-only">Loading your account</span>
+                <span class="sr-only">{{ $t('ui.accountLayout.loading') }}</span>
               </template>
             </div>
 
@@ -87,7 +87,7 @@
               <a href="#" class="account-menu-item account-logout" @click.prevent="logout">
                 <span class="account-menu-label">
                   <i class="fa-solid fa-right-from-bracket"></i>
-                  Logout
+                  {{ $t('ui.accountLayout.logout') }}
                 </span>
               </a>
             </nav>
@@ -120,14 +120,14 @@
       return {
         drawerOpen: false,
         menu: [
-          { label: 'Dashboard', route: 'dashboard', link: '/user/dashboard', icon: 'fa-solid fa-table-columns' },
-          { label: 'Profile', route: 'profile', link: '/user/profile', icon: 'fa-solid fa-user' },
-          { label: 'Address Book', route: 'addresses', link: '/user/addresses', icon: 'fa-solid fa-address-book' },
-          { label: 'My Orders', route: 'orders', link: '/user/orders', icon: 'fa-solid fa-bag-shopping' },
-          { label: 'My Wishlist', route: 'wishlists', link: '/user/wishlists', icon: 'fa-solid fa-heart' },
-          { label: 'Recently Viewed', route: 'recently-viewed', link: '/user/recently-viewed', icon: 'fa-solid fa-clock-rotate-left' },
-          { label: 'Vouchers', route: 'vouchers', link: '/user/vouchers', icon: 'fa-solid fa-ticket' },
-          { label: 'Savers Club', route: 'savers-club', link: '/user/savers-club', icon: 'fa-solid fa-piggy-bank' },
+          { label: this.$t('ui.accountLayout.menu.dashboard'), route: 'dashboard', link: '/user/dashboard', icon: 'fa-solid fa-table-columns' },
+          { label: this.$t('ui.accountLayout.menu.profile'), route: 'profile', link: '/user/profile', icon: 'fa-solid fa-user' },
+          { label: this.$t('ui.accountLayout.menu.addressBook'), route: 'addresses', link: '/user/addresses', icon: 'fa-solid fa-address-book' },
+          { label: this.$t('ui.accountLayout.menu.orders'), route: 'orders', link: '/user/orders', icon: 'fa-solid fa-bag-shopping' },
+          { label: this.$t('ui.accountLayout.menu.wishlist'), route: 'wishlists', link: '/user/wishlists', icon: 'fa-solid fa-heart' },
+          { label: this.$t('ui.accountLayout.menu.recentlyViewed'), route: 'recently-viewed', link: '/user/recently-viewed', icon: 'fa-solid fa-clock-rotate-left' },
+          { label: this.$t('ui.accountLayout.menu.vouchers'), route: 'vouchers', link: '/user/vouchers', icon: 'fa-solid fa-ticket' },
+          { label: this.$t('ui.accountLayout.menu.saversClub'), route: 'savers-club', link: '/user/savers-club', icon: 'fa-solid fa-piggy-bank' },
         ]
       }
     },

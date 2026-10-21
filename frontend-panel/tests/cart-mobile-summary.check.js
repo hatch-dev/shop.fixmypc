@@ -45,6 +45,7 @@ global.SVGElement = dom.window.SVGElement
 global.getComputedStyle = dom.window.getComputedStyle
 
 const Vue = require(path.join(NM, 'vue/dist/vue.common.dev.js'))
+const { withI18n, installI18n } = require('./i18n-en')
 const babel = require(path.join(NM, '@babel/core'))
 const compiler = require(path.join(NM, 'vue-template-compiler'))
 
@@ -119,11 +120,7 @@ options.components = {
   },
 }
 
-Vue.prototype.$t = (key) => ({
-  'checkoutRight.shipping': 'Shipping',
-  'invent.fre': 'Free',
-  'checkoutRight.proceedToCheckout': 'Proceed to checkout',
-}[key] || key)
+installI18n(Vue)
 
 /*
  * The basket from the summary brief: one line priced Ex-VAT, one Inc-VAT, so

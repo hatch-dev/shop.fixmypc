@@ -3,17 +3,16 @@
     <div class="container-fluid ptb-20 ptb-sm-15 flow-hidden my-4">
       <div class="category-banner">
         <div class="category-content">
-          <h2 class="top-banner-heading">Browse Our Categories</h2>
+          <h2 class="top-banner-heading">{{ $t('ui.categoryListingLayoutUi.bannerTitle') }}</h2>
           <p class="top-banner-description">
-            Explore thousands of products organized by category and brand.
-            Find exactly what you're looking for.
+            {{ $t('ui.categoryListingLayoutUi.bannerText') }}
           </p>
         </div>
       </div>
       <div class="category-header d-flex justify-content-between align-items-center flex-wrap my-5">
         <div>
-          <h4>All Categories</h4>
-          <p>Browse by category or explore brands within each section</p>
+          <h4>{{ $t('ui.categoryListingLayoutUi.allCategories') }}</h4>
+          <p>{{ $t('ui.categoryListingLayoutUi.allCategoriesText') }}</p>
         </div>
         <div class="mt-2 mt-md-0 sort-col">
           <!-- a button with an anchored menu, the same shape as the scope
@@ -77,7 +76,7 @@
         <div v-for="(value, index) in categories" :key="index" class="col-6 col-md-6 col-lg-3 mb-4">
           <div class="category-card">
             <div class="item-badge">
-              {{ value.products_count || 0 }} Items
+              {{ $t('ui.categoryListingLayoutUi.itemsCount', { count: value.products_count || 0 }) }}
             </div>
             <div class="category-icon">
               <lazy-image
@@ -102,7 +101,7 @@
               :aria-expanded="isSubsOpen(value.id) ? 'true' : 'false'"
               @click="toggleSubs(value.id)"
             >
-              <span>Top Subcategories</span>
+              <span>{{ $t('ui.categoryListingLayoutUi.topSubcategories') }}</span>
               <svg
                 class="subcat-caret"
                 :class="{ open: isSubsOpen(value.id) }"
@@ -134,7 +133,7 @@
               :to="categoryLink(value)"
               :title="value.title"
             >
-              <span>Browse {{ value.title }}</span>
+              <span>{{ $t('ui.categoryListingLayoutUi.browseCategory', { name: value.title }) }}</span>
               <span class="arrow">→</span>
             </nuxt-link>
           </div>
@@ -142,7 +141,7 @@
       </div>
       <div class="text-center my-5 load-more-wrap" v-if="categoryPage < categoryLastPage">
         <a @click="loadMoreCategories" class="load-more-btn">
-          LOAD MORE CATEGORIES
+          {{ $t('ui.categoryListingLayoutUi.loadMoreCategories') }}
           <span class="arrow">→</span>
         </a>
       </div>
@@ -151,8 +150,8 @@
 
       <div class="brand-section my-5">
         <div class="section-title">
-          <h3>Featured Brands</h3>
-          <p>Shop from the world’s most trusted brands</p>
+          <h3>{{ $t('ui.categoryListingLayoutUi.featuredBrands') }}</h3>
+          <p>{{ $t('ui.categoryListingLayoutUi.featuredBrandsText') }}</p>
         </div>
       </div>
       <div class="row g-4 brand-grid">
@@ -175,7 +174,7 @@
       </div>
       <div class="text-center my-5 load-more-wrap" v-if="brandPage < brandLastPage">
         <a @click="loadMoreBrands" class="load-more-btn">
-          LOAD MORE BRANDS
+          {{ $t('ui.categoryListingLayoutUi.loadMoreBrands') }}
           <span class="arrow">→</span>
         </a>
       </div>
@@ -186,9 +185,9 @@
         v-if="categoryInsights.length"
       >
         <div class="section-title">
-          <h3>Category Insights</h3>
+          <h3>{{ $t('ui.categoryListingLayoutUi.categoryInsights') }}</h3>
           <p>
-            Discover trending categories and popular brands
+            {{ $t('ui.categoryListingLayoutUi.categoryInsightsText') }}
           </p>
         </div>
         <div class="row g-4">
@@ -245,8 +244,8 @@
 
       <!-- Browse by price range -->
       <div class="price-section">
-        <h3>Browse by Price Range</h3>
-        <p>Find products that fit your budget</p>
+        <h3>{{ $t('ui.categoryListingLayoutUi.priceRangeTitle') }}</h3>
+        <p>{{ $t('ui.categoryListingLayoutUi.priceRangeText') }}</p>
       </div>
 
       <div class="row g-4 price-grid">
@@ -270,7 +269,7 @@
                 {{ range.description }}
               </div>
               <div class="price-badge">
-                {{ range.products_count }} products
+                {{ $t('ui.categoryListingLayoutUi.productsCount', { count: range.products_count }) }}
               </div>
             <!-- </div> -->
           </div>
@@ -287,15 +286,15 @@
           class="m-sheet"
           role="dialog"
           aria-modal="true"
-          aria-label="Sort categories"
+          :aria-label="$t('ui.categoryListingLayoutUi.sortCategories')"
         >
           <div class="m-sheet-h">
             <span class="m-sheet-grab" aria-hidden="true" />
-            <b>Sort by</b>
+            <b>{{ $t('ui.categoryListingLayoutUi.sortBy') }}</b>
             <button
               type="button"
               class="m-sheet-close"
-              aria-label="Close"
+              :aria-label="$t('ui.categoryListingLayoutUi.close')"
               @click="closeSortSheet"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -355,11 +354,11 @@
         openSubs: [],
         sortOptions: [
           {
-            label: 'Name A-Z',
+            label: this.$t('ui.categoryListingLayoutUi.nameAsc'),
             value: 'name_asc'
           },
           {
-            label: 'Name Z-A',
+            label: this.$t('ui.categoryListingLayoutUi.nameDesc'),
             value: 'name_desc'
           }
         ],

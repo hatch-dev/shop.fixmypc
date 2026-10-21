@@ -15,7 +15,7 @@
       class="col-12"
       :panels="2"
       heading
-      label="Loading your addresses"
+      :label="$t('ui.userAccountAddress.loading')"
     />
 
     <template v-else>
@@ -37,14 +37,14 @@
         class="address-load-retry"
         @click.prevent="fetchingData"
       >
-        Try again
+        {{ $t('ui.userAccountAddress.tryAgain') }}
       </button>
     </p>
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h5 class="mb-0 ab-title">Address Book</h5>
-            <small class="text-muted">Manage your saved addresses for faster checkout.</small>
+            <h5 class="mb-0 ab-title">{{ $t('ui.userAccountAddress.title') }}</h5>
+            <small class="text-muted">{{ $t('ui.userAccountAddress.subtitle') }}</small>
         </div>
     </div>
 
@@ -55,7 +55,7 @@
       <div class="col-md-6" v-for="(address, index) in currentAddresses">
           <div class="shipping-address-card position-relative">
               <span v-if="address.default == 1" class="badge-default">
-                DEFAULT
+                {{ $t('ui.userAccountAddress.defaultBadge') }}
               </span> 
               <div class="d-flex align-items-center mb-2">
                   <div class="icon-circle me-2">
@@ -78,14 +78,14 @@
                     class="address-edit"
                     @click.prevent="editAddress(address)"
                   >
-                    <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+                    <i class="fa-solid fa-pen-to-square me-1"></i> {{ $t('ui.userAccountAddress.edit') }}
                   </a>
                   <a
                     href="#"
                     class="address-delete"
                     @click.prevent="userAddressDelete(address.id)"
                   >
-                    <i class="fa-regular fa-trash-can me-1"></i> Delete
+                    <i class="fa-regular fa-trash-can me-1"></i> {{ $t('ui.userAccountAddress.delete') }}
                   </a>
                 </div>
                 <a
@@ -94,7 +94,7 @@
                   v-if="address.default != 1"
                   @click.prevent="setDefaultAddress(address)"
                 >
-                  Set as Default
+                  {{ $t('ui.userAccountAddress.setDefault') }}
                 </a>
               </div>
           </div>
@@ -103,7 +103,7 @@
 
     <div>
         <a href="#" class="add-address" @click.prevent="toggleAddressForm">
-            <span class="plus-icon"><i class="fa-solid fa-plus" style="color: rgb(255, 255, 255);"></i></span> Add New Address
+            <span class="plus-icon"><i class="fa-solid fa-plus" style="color: rgb(255, 255, 255);"></i></span> {{ $t('ui.userAccountAddress.addNew') }}
         </a>
     </div>
 
@@ -114,41 +114,41 @@
         class="col-12 mt-4"
       >
         <div class="form-container card p-3">
-          <h5 class="mb-4">Complete your address below</h5>
+          <h5 class="mb-4">{{ $t('ui.userAccountAddress.formTitle') }}</h5>
             <form @submit.prevent="savingAddressData">
               <div class="row g-3">
                 <div class="col-md-6">
-                  <label class="form-label">First Name</label>
+                  <label class="form-label">{{ $t('ui.userAccountAddress.firstName') }}</label>
                   <input
                     type="text"
                     class="form-control delivery-filed"
                     :class="{ 'is-invalid': !addressData.first_name && hasAddressErrors }"
-                    placeholder="Enter First name"
+                    :placeholder="$t('ui.userAccountAddress.firstNamePlaceholder')"
                     v-model="addressData.first_name"
                   >
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label">Last Name</label>
+                  <label class="form-label">{{ $t('ui.userAccountAddress.lastName') }}</label>
                   <input
                     type="text"
                     class="form-control delivery-filed"
                     :class="{ 'is-invalid': !addressData.last_name && hasAddressErrors }"
-                    placeholder="Enter Last name"
+                    :placeholder="$t('ui.userAccountAddress.lastNamePlaceholder')"
                     v-model="addressData.last_name"
                   >
                 </div>
                 <div class="col-12">
-                  <label class="form-label">Email Address</label>
+                  <label class="form-label">{{ $t('ui.userAccountAddress.email') }}</label>
                   <input
                     type="email"
                     class="form-control delivery-filed"
-                    placeholder="Enter email"
+                    :placeholder="$t('ui.userAccountAddress.emailPlaceholder')"
                     v-model="addressData.email"
                     :class="{ 'is-invalid': (!addressData.email || !isValidEmail(addressData.email)) && hasAddressErrors }"
                   >
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label">Phone Number</label>
+                  <label class="form-label">{{ $t('ui.userAccountAddress.phone') }}</label>
                   <div class="input-group">
                     <span class="input-group-text">
                       {{ phoneList[addressData.country] }}
@@ -163,23 +163,23 @@
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label">Address Label</label>
+                  <label class="form-label">{{ $t('ui.userAccountAddress.addressLabel') }}</label>
                   <select
                     class="form-select delivery-filed"
                     v-model="addressData.type"
                     :class="{ 'is-invalid': !addressData.type && hasAddressErrors }"
                   >
-                    <option value="">Select Address Type</option>
-                    <option value="home">Home</option>
-                    <option value="office">Office</option>
+                    <option value="">{{ $t('ui.userAccountAddress.selectType') }}</option>
+                    <option value="home">{{ $t('ui.userAccountAddress.types.home') }}</option>
+                    <option value="office">{{ $t('ui.userAccountAddress.types.office') }}</option>
                   </select>
                 </div>
                 <div class="col-12">
-                  <label class="form-label">Street Address</label>
+                  <label class="form-label">{{ $t('ui.userAccountAddress.street') }}</label>
                   <input
                     type="text"
                     class="form-control delivery-filed"
-                    placeholder="Street address or P.O. Box"
+                    :placeholder="$t('ui.userAccountAddress.streetPlaceholder')"
                     v-model="addressData.address_1"
                     :class="{ 'is-invalid': !addressData.address_1 && hasAddressErrors }"
                   >
@@ -188,7 +188,7 @@
                   <input
                     type="text"
                     class="form-control delivery-filed"
-                    placeholder="Apt, suite, unit, building, floor, etc. (optional)"
+                    :placeholder="$t('ui.userAccountAddress.address2Placeholder')"
                     v-model="addressData.address_2"
                   >
                 </div>
@@ -199,14 +199,14 @@
                   as duplicates of each other rather than as its children.
                 -->
                 <div class="col-md-6">
-                  <label class="form-label">Country</label>
+                  <label class="form-label">{{ $t('ui.userAccountAddress.country') }}</label>
                   <select
                     class="form-select delivery-filed"
                     v-model="addressData.country"
                     @change="onCountryChange"
                     :class="{ 'is-invalid': !addressData.country && hasAddressErrors }"
                   >
-                    <option value="">Select Country</option>
+                    <option value="">{{ $t('ui.userAccountAddress.selectCountry') }}</option>
 
                     <option
                       v-for="(country, key) in countryList"
@@ -243,7 +243,7 @@
                   address.
                 -->
                 <div class="col-md-6">
-                  <label class="form-label">Town / City</label>
+                  <label class="form-label">{{ $t('ui.userAccountAddress.town') }}</label>
 
                   <select
                     v-if="hasTownOptions"
@@ -260,7 +260,7 @@
                     >
                       {{ town }}
                     </option>
-                    <option :value="townOther">Other - not on this list</option>
+                    <option :value="townOther">{{ $t('ui.userAccountAddress.townOther') }}</option>
                   </select>
 
                   <input
@@ -269,7 +269,7 @@
                     class="form-control delivery-filed"
                     :class="{ 'mt-2': hasTownOptions, 'is-invalid': townReady && !addressData.city && hasAddressErrors }"
                     :disabled="!townReady"
-                    :placeholder="hasTownOptions ? 'Type your town or city' : townPlaceholder"
+                    :placeholder="hasTownOptions ? $t('ui.userAccountAddress.typeTown') : townPlaceholder"
                     v-model="addressData.city"
                     @input="townTyped = true"
                   >
@@ -301,12 +301,12 @@
                 </div>
 
                 <div class="col-12">
-                  <label class="form-label">Delivery Instructions (Optional)</label>
+                  <label class="form-label">{{ $t('ui.userAccountAddress.instructions') }}</label>
                   <textarea
                     class="form-control delivery-filed"
                     rows="3"
                     style="height: 100px;"
-                    placeholder="Enter delivery instructions"
+                    :placeholder="$t('ui.userAccountAddress.instructionsPlaceholder')"
                     v-model="addressData.delivery_instruction"
                   ></textarea>
                 </div>
@@ -316,11 +316,11 @@
                     v-model="addressData.default"
                     class="me-2"
                   >
-                  <label>Set as default address</label>
+                  <label>{{ $t('ui.userAccountAddress.setDefaultAddress') }}</label>
                 </div>
                 <div class="col-12 mt-3">
                   <button type="submit" class="btn btn-purple me-2">
-                    {{ editing ? 'Update' : 'Save' }}
+                    {{ editing ? $t('ui.userAccountAddress.update') : $t('ui.userAccountAddress.save') }}
                   </button>
 
                   <button
@@ -328,7 +328,7 @@
                     class="btn btn-outline-secondary"
                     @click="cancelForm"
                   >
-                    Cancel
+                    {{ $t('ui.userAccountAddress.cancel') }}
                   </button>
                 </div>
               </div>
@@ -494,7 +494,8 @@
     },
     methods: {
       capitalizeFirst(val) {
-        if (!val) return 'Home'
+        if (!val || val === 'home') return this.$t('ui.userAccountAddress.types.home')
+        if (val === 'office') return this.$t('ui.userAccountAddress.types.office')
         return val.charAt(0).toUpperCase() + val.slice(1)
       },
       async setDefaultAddress(address) {
@@ -505,9 +506,9 @@
           })
 
           await this.fetchingData()
-          this.setToastMessage('Default address updated')
+          this.setToastMessage(this.$t('ui.userAccountAddress.defaultUpdated'))
         } catch (e) {
-          this.setToastError('Failed to set default')
+          this.setToastError(this.$t('ui.userAccountAddress.defaultFailed'))
         }
       },
       editAddress(value) {
@@ -599,7 +600,7 @@
          * server checks the same two things regardless.
          */
         if (this.hasRegions && !this.addressData.state) {
-          this.setToastError(`Choose a ${this.regionLabel.toLowerCase()}.`)
+          this.setToastError(this.$t('ui.userAccountAddress.chooseRegion', { region: this.regionLabel.toLowerCase() }))
           return
         }
 
@@ -608,8 +609,8 @@
 
           this.setToastError(
             this.postcodeExample
-              ? `Enter a valid ${label}, for example ${this.postcodeExample}.`
-              : `Enter a valid ${label}.`
+              ? this.$t('ui.userAccountAddress.invalidPostcodeExample', { label, example: this.postcodeExample })
+              : this.$t('ui.userAccountAddress.invalidPostcode', { label })
           )
           return
         }

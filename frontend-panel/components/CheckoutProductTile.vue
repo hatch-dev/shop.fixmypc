@@ -25,7 +25,7 @@
 
         <ul class="tile-meta">
           <li>
-            <span class="meta-label">Qty</span>
+            <span class="meta-label">{{ $t('ui.checkoutProductTile.qty') }}</span>
             <span class="meta-value">{{ productQuantity }}</span>
           </li>
           <li v-for="(i, index) in currentAttr" :key="`attr-${index}`">

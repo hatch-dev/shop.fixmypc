@@ -378,6 +378,24 @@ export function isValidTown(value) {
  * The mixin half. A component supplies `addressCountry` and `states`, and
  * gets back everything the country decides about the levels below it.
  */
+// English names and hints from the table above that have a translation (ui.addressRules.*)
+const POSTCODE_LABEL_KEYS = {'Postal code': 'postalCode', 'Postcode': 'postcode', 'ZIP code': 'zipCode', 'PIN code': 'pinCode'}
+const POSTCODE_HINT_KEYS = {
+  'Seven characters, for example A65 F4E2.': 'eircode',
+  'For example SW1A 1AA.': 'gb',
+  'Five digits, or ZIP+4 as 10001-2345.': 'us',
+  'For example K1A 0B1.': 'ca',
+  'Six digits, for example 110001.': 'in',
+  'Four digits.': 'four',
+  'Five digits.': 'five',
+  'Six digits.': 'six',
+  'Four digits then two letters.': 'nl',
+  'Five digits, written 00-001.': 'pl',
+  'Seven digits, written 1000-001.': 'pt',
+  'Seven digits, written 100-0001.': 'jp',
+  'Eight digits, written 01310-100.': 'br'
+}
+
 export default {
   data() {
     return {
@@ -407,7 +425,11 @@ export default {
       return postcodeRule(this.addressCountry)
     },
     postcodeLabel() {
-      return this.postcodeRule ? this.postcodeRule.label : 'Postal code'
+      // generic English names are translated; a country's own name (Eircode, CEP, PLZ) is kept
+      const label = this.postcodeRule ? this.postcodeRule.label : 'Postal code'
+      const key = POSTCODE_LABEL_KEYS[label]
+
+      return key ? this.$t(`ui.addressRules.${key}`) : label
     },
     postcodeRequired() {
       return !!this.postcodeRule
@@ -416,14 +438,17 @@ export default {
       return this.postcodeRule ? this.postcodeRule.example : ''
     },
     postcodeHint() {
-      return this.postcodeRule ? this.postcodeRule.hint : ''
+      const hint = this.postcodeRule ? this.postcodeRule.hint : ''
+      const key = POSTCODE_HINT_KEYS[hint]
+
+      return key ? this.$t(`ui.addressRules.hints.${key}`) : hint
     },
     postcodePlaceholder() {
       if (!this.postcodeRule) {
-        return 'Not used in this country'
+        return this.$t('ui.addressRules.notUsedHere')
       }
 
-      return this.postcodeExample || `Enter ${this.postcodeLabel.toLowerCase()}`
+      return this.postcodeExample || this.$t('ui.addressRules.enterLabel', { label: this.lowerLabel(this.postcodeLabel) })
     },
     postcodeMaxLength() {
       if (!this.postcodeRule) {
@@ -439,30 +464,30 @@ export default {
       return this.addressCountry === 'IE'
     },
     regionLabel() {
-      return this.isIreland ? 'County' : 'State / Region'
+      return this.isIreland ? this.$t('ui.addressRules.county') : this.$t('ui.addressRules.stateRegion')
     },
     hasRegions() {
       return Object.keys(this.states || {}).length > 0
     },
     regionPlaceholder() {
       if (!this.addressCountry) {
-        return 'Choose a country first'
+        return this.$t('ui.addressRules.chooseCountryFirst')
       }
 
       return this.hasRegions
-        ? `Select ${this.regionLabel.toLowerCase()}`
-        : 'Not applicable'
+        ? this.$t('ui.addressRules.selectLabel', { label: this.lowerLabel(this.regionLabel) })
+        : this.$t('ui.addressRules.notApplicable')
     },
     townPlaceholder() {
       if (!this.townReady) {
-        return `Choose a ${this.regionLabel.toLowerCase()} first`
+        return this.$t('ui.addressRules.chooseLabelFirst', { label: this.lowerLabel(this.regionLabel) })
       }
 
       if (this.fetchingTowns) {
-        return 'Loading towns...'
+        return this.$t('ui.addressRules.loadingTowns')
       }
 
-      return this.hasTownOptions ? 'Select town or city' : 'Enter city'
+      return this.hasTownOptions ? this.$t('ui.addressRules.selectTown') : this.$t('ui.addressRules.enterCity')
     },
     /*
      * Town and postcode open as soon as there is a country, in whatever
@@ -502,6 +527,10 @@ export default {
     }
   },
   methods: {
+    // a field name inside a sentence, lower-cased the way the current language does it
+    lowerLabel(label) {
+      return String(label || '').toLocaleLowerCase(this.$i18n ? this.$i18n.locale : undefined)
+    },
     /*
      * One state's towns, from the API. Ireland never asks - its list is here
      * already. A country or state the server has no list for answers with an
@@ -582,7 +611,7 @@ export default {
         const name = (states || this.states || {})[county]?.name
 
         return name
-          ? `This Eircode is registered to Co. ${name}. Check the county above.`
+          ? this.$t('ui.addressRules.eircodeCounty', { name })
           : ''
       }
 
@@ -600,12 +629,12 @@ export default {
       if (town === 'D') {
         return key[0] === 'D'
           ? ''
-          : `This Eircode starts ${key}. Dublin addresses start D01 to D24, or D6W. Check the town or the Eircode.`
+          : this.$t('ui.addressRules.eircodeDublin', { key })
       }
 
       return key === town
         ? ''
-        : `This Eircode starts ${key}, and ${this.addressCity} addresses start ${town}. Check the town or the Eircode.`
+        : this.$t('ui.addressRules.eircodeTown', { key, city: this.addressCity, town })
     }
   }
 }

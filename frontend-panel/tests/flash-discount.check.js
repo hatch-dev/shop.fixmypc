@@ -37,6 +37,8 @@ global.SVGElement = dom.window.SVGElement
 global.getComputedStyle = dom.window.getComputedStyle
 
 const Vue = require(path.join(NM, 'vue/dist/vue.common.dev.js'))
+const { withI18n, installI18n } = require('./i18n-en')
+installI18n(Vue)
 const Vuex = require(path.join(NM, 'vuex'))
 const babel = require(path.join(NM, '@babel/core'))
 const compiler = require(path.join(NM, 'vue-template-compiler'))

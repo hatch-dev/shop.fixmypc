@@ -57,7 +57,7 @@
                  <span
                    v-if="liveVatCounterpart.vat !== null"
                    class="price-vat-amount"
-                 >(VAT {{ formatVatRate(liveVatCounterpart.rate) }}
+                 >({{ $t('ui.productTileUi.vatRate', { rate: formatVatRate(liveVatCounterpart.rate) }) }}
                    <price-format :price="liveVatCounterpart.vat" />)</span>
                </p>
                <!--
@@ -108,16 +108,16 @@
               @click.stop.prevent="addProductToCart"
               :class="{ 'out-of-stock': !isBackOrder && productInventory.quantity === 0 }">
               <span v-if="!isBackOrder && productInventory.quantity === 0">
-                Out of Stock
+                {{ $t('ui.productTileUi.outOfStock') }}
               </span>
               <span v-else>
-                {{ ajaxingCart ? 'Adding...' : 'Add to cart' }}
+                {{ ajaxingCart ? $t('ui.productTileUi.adding') : $t('ui.productTileUi.addToCart') }}
               </span>
             </button>
                 </div>
                 <span class="badge-stack">
                   <span v-if="liveReducedPercent" class="badge-discount badge-same">
-                    {{ liveReducedPercent }}% off
+                    {{ $t('ui.productTileUi.percentOff', { percent: liveReducedPercent }) }}
                   </span>
                   <span v-if="product.end_time" class="badge-flash-sale badge-same">
                     {{ $t("product.flash_sale") }}
@@ -126,7 +126,7 @@
                     {{ $t("product.clearance") }}
                   </span>
                   <span v-if="product.is_new" class="badge-new badge-same">
-                    New
+                    {{ $t('ui.productTileUi.new') }}
                   </span>
                 </span>
              </div>

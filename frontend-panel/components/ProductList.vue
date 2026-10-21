@@ -18,7 +18,7 @@
           v-show="railPrev"
           type="button"
           class="rail-arrow rail-arrow--prev"
-          aria-label="previous"
+          :aria-label="$t('ui.productListUi.aria.previous')"
           @click.prevent="scrollRail(-1)"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
@@ -26,15 +26,15 @@
         </button>
 
         <div class="rail" ref="rail" @scroll.passive="updateRail">
-        <nuxt-link :to="categoryLink(category)" :title="`All ${category.title}`" class="sub-chip on">
+        <nuxt-link :to="categoryLink(category)" :title="$t('ui.productListUi.allIn', { name: category.title })" class="sub-chip on">
           <span class="ico">
             <lazy-image
               :data-src="getImageURL(category.image)"
-              :title="`All ${category.title}`"
-              :alt="`All ${category.title}`"
+              :title="$t('ui.productListUi.allIn', { name: category.title })"
+              :alt="$t('ui.productListUi.allIn', { name: category.title })"
             />
           </span>
-          All {{ (category.title || '').toLowerCase() }}
+          {{ $t('ui.productListUi.allIn', { name: (category.title || '').toLowerCase() }) }}
           <span class="n">{{ category.products_count || 0 }}</span>
         </nuxt-link>
 
@@ -57,7 +57,7 @@
           v-show="railNext"
           type="button"
           class="rail-arrow rail-arrow--next"
-          aria-label="next"
+          :aria-label="$t('ui.productListUi.aria.next')"
           @click.prevent="scrollRail(1)"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
@@ -98,13 +98,13 @@
               </client-only>
 
               <div class="view-tog">
-                <button type="button" :class="{ on: view === 'grid' }" aria-label="Grid view" @click.prevent="view = 'grid'">
+                <button type="button" :class="{ on: view === 'grid' }" :aria-label="$t('ui.productListUi.gridView')" @click.prevent="view = 'grid'">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
                     <rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
                   </svg>
                 </button>
-                <button type="button" :class="{ on: view === 'list' }" aria-label="List view" @click.prevent="view = 'list'">
+                <button type="button" :class="{ on: view === 'list' }" :aria-label="$t('ui.productListUi.listView')" @click.prevent="view = 'list'">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
@@ -145,7 +145,7 @@
                 </svg>
               </div>
               <b>{{ $t('listingLayout.noProductFound') }}</b>
-              <p>Widen the price range or clear a filter to see more of the range.</p>
+              <p>{{ $t('ui.productListUi.emptyHint') }}</p>
               <div class="empty-acts" v-if="activeFilters.length">
                 <button type="button" class="btn btn-ink btn-sm" @click.prevent="clearAllFilters">
                   {{ $t('listingLayout.clear') }}

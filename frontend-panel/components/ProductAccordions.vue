@@ -8,7 +8,7 @@
           :class="{ collapsed: activeAccordion !== 'review' }"
           @click="toggleAccordion('review')"
         >
-          Reviews
+          {{ $t('ui.productAccordionsUi.reviews') }}
         </button>
       </h2>
       <div
@@ -33,7 +33,7 @@
           :class="{ collapsed: activeAccordion !== 'payment' }"
           @click="toggleAccordion('payment')"
         >
-          Payment Options Available
+          {{ $t('ui.productAccordionsUi.paymentOptions') }}
         </button>
       </h2>
 
@@ -75,7 +75,7 @@
           :class="{ collapsed: activeAccordion !== index }"
           @click="toggleAccordion(index)"
         >
-          {{ customization.template?.title || `Template #${customization.template_id}` }}
+          {{ customization.template?.title || $t('ui.productAccordionsUi.templateNumber', { id: customization.template_id }) }}
         </button>
       </h2>
 

@@ -14,17 +14,17 @@
                             <i class="fa-solid fa-building-columns"></i>
                         </div>
                         <div>
-                            <div class="page-title">Bank Transfer Payment</div>
-                            <div class="order-id">Order #{{ order?.order }}</div>
+                            <div class="page-title">{{ $t('ui.orderBank.title') }}</div>
+                            <div class="order-id">{{ $t('ui.orderBank.orderNo', { order: order?.order }) }}</div>
                         </div>
                     </div>
                     <div v-if="paymentState === 'paid'" class="card-box state-box state-paid">
                         <i class="fa-solid fa-circle-check"></i>
-                        <span>We have received your payment for this order. Thank you.</span>
+                        <span>{{ $t('ui.orderBank.paidNotice') }}</span>
                     </div>
                     <div v-else-if="paymentState === 'cancelled'" class="card-box state-box state-cancelled">
                         <i class="fa-solid fa-circle-xmark"></i>
-                        <span>This order was cancelled because no bank transfer arrived within {{ holdHours }} hours. Please do not send a payment for it. If you already have, contact us and we will sort it out.</span>
+                        <span>{{ $t('ui.orderBank.cancelledNotice', { hours: holdHours }) }}</span>
                     </div>
 
                     <div class="card-box info-box">
@@ -34,57 +34,57 @@
                                 <path d="M12 24C18.623 24 24 18.623 24 12C24 5.37702 18.623 0 12 0C5.37702 0 0 5.37702 0 12C0 18.623 5.37702 24 12 24ZM10.125 15.75H11.25V12.75H10.125C9.50156 12.75 9 12.2484 9 11.625Cnan nan 9.50156 10.5 10.125 10.5H12.375C12.9984 10.5 13.5 11.0016 13.5 11.625V15.75H13.875C14.4984 15.75 15 16.2516 15 16.875Cnan nan 14.4984 18 13.875 18H10.125C9.50156 18 9 17.4984 9 16.875Cnan nan 9.50156 15.75 10.125 15.75ZM12 6C12.8279 6 13.5 6.67213 13.5 7.5C13.5 8.32787 12.8279 9 12 9C11.1721 9 10.5 8.32787 10.5 7.5C10.5 6.67213 11.1721 6 12 6Z" fill="#130E2B"/>
                                 </svg>
                           </span>
-                            <div class="info-title">Important Payment Information</div>
+                            <div class="info-title">{{ $t('ui.orderBank.importantInfo') }}</div>
                         </div>
                         <ul class="payment-list mb-0">
-                            <li>Please complete your bank transfer within {{ holdHours }} hours to secure your order</li>
-                            <li>You must include your Order Number as the payment reference</li>
-                            <li>If payment is not received within {{ holdHours }} hours, your order will be automatically cancelled</li>
-                            <li>Please note: The same pricing and availability may not be guaranteed if you need to reorder</li>
+                            <li>{{ $t('ui.orderBank.infoWithinHours', { hours: holdHours }) }}</li>
+                            <li>{{ $t('ui.orderBank.infoIncludeRef') }}</li>
+                            <li>{{ $t('ui.orderBank.infoAutoCancel', { hours: holdHours }) }}</li>
+                            <li>{{ $t('ui.orderBank.infoPricingNote') }}</li>
                         </ul>
                     </div>
 
                     <div class="card-box bank-details-card">
                         <div class="bank-card-header">
                             <i class="fa-solid fa-building-columns"></i>
-                            <div class="header-title">Bank Account Details</div>
+                            <div class="header-title">{{ $t('ui.orderBank.bankDetails') }}</div>
                         </div>
 
                         <div class="bank-card-body">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <div class="bank-tittle">Bank Name</div>
+                                    <div class="bank-tittle">{{ $t('ui.orderBank.bankName') }}</div>
                                     <div class="input-box position-relative">
                                         <input type="text" class="form-control form-account-deatils pe-5" :value="payment?.bank_name" readonly>
                                         <i class="fa-regular fa-copy copy-icon" @click="copyToClipboard(payment?.bank_name, 'bank_name')"></i>
-                                        <span class="copy-msg" :style="{ opacity: copyState['bank_name'] ? 1 : 0 }">Copied!</span>
+                                        <span class="copy-msg" :style="{ opacity: copyState['bank_name'] ? 1 : 0 }">{{ $t('ui.orderBank.copied') }}</span>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <div class="bank-tittle">Account Name</div>
+                                    <div class="bank-tittle">{{ $t('ui.orderBank.accountName') }}</div>
                                     <div class="input-box position-relative">
                                         <input type="text" class="form-control form-account-deatils pe-5" :value="payment?.account_name" readonly>
                                         <i class="fa-regular fa-copy copy-icon" @click="copyToClipboard(payment?.account_name, 'account_name')"></i>
-                                        <span class="copy-msg" :style="{ opacity: copyState['account_name'] ? 1 : 0 }">Copied!</span>
+                                        <span class="copy-msg" :style="{ opacity: copyState['account_name'] ? 1 : 0 }">{{ $t('ui.orderBank.copied') }}</span>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6" v-if="showAccountNumber">
-                                    <div class="bank-tittle">Account Number</div>
+                                    <div class="bank-tittle">{{ $t('ui.orderBank.accountNumber') }}</div>
                                     <div class="input-box position-relative">
                                         <input type="text" class="form-control form-account-deatils pe-5" :value="payment?.account_number" readonly>
                                         <i class="fa-regular fa-copy copy-icon" @click="copyToClipboard(payment?.account_number, 'account_number')"></i>
-                                        <span class="copy-msg" :style="{ opacity: copyState['account_number'] ? 1 : 0 }">Copied!</span>
+                                        <span class="copy-msg" :style="{ opacity: copyState['account_number'] ? 1 : 0 }">{{ $t('ui.orderBank.copied') }}</span>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6" v-if="payment && payment.sort_code">
-                                    <div class="bank-tittle">Sort Code</div>
+                                    <div class="bank-tittle">{{ $t('ui.orderBank.sortCode') }}</div>
                                     <div class="input-box position-relative">
                                         <input type="text" class="form-control form-account-deatils pe-5" :value="payment?.sort_code" readonly>
                                         <i class="fa-regular fa-copy copy-icon" @click="copyToClipboard(payment?.sort_code, 'sort_code')"></i>
-                                        <span class="copy-msg" :style="{ opacity: copyState['sort_code'] ? 1 : 0 }">Copied!</span>
+                                        <span class="copy-msg" :style="{ opacity: copyState['sort_code'] ? 1 : 0 }">{{ $t('ui.orderBank.copied') }}</span>
                                     </div>
                                 </div>
 
@@ -93,25 +93,25 @@
                                     <div class="input-box position-relative">
                                         <input type="text" class="form-control form-account-deatils pe-5" :value="iban" readonly>
                                         <i class="fa-regular fa-copy copy-icon" @click="copyToClipboard(iban, 'iban')"></i>
-                                        <span class="copy-msg" :style="{ opacity: copyState['iban'] ? 1 : 0 }">Copied!</span>
+                                        <span class="copy-msg" :style="{ opacity: copyState['iban'] ? 1 : 0 }">{{ $t('ui.orderBank.copied') }}</span>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6" v-if="payment && payment.bic_swift">
-                                    <div class="bank-tittle">BIC/SWIFT Code</div>
+                                    <div class="bank-tittle">{{ $t('ui.orderBank.bicSwift') }}</div>
                                     <div class="input-box position-relative">
                                         <input type="text" class="form-control form-account-deatils pe-5" :value="payment?.bic_swift" readonly>
                                         <i class="fa-regular fa-copy copy-icon" @click="copyToClipboard(payment?.bic_swift, 'bic_swift')"></i>
-                                        <span class="copy-msg" :style="{ opacity: copyState['bic_swift'] ? 1 : 0 }">Copied!</span>
+                                        <span class="copy-msg" :style="{ opacity: copyState['bic_swift'] ? 1 : 0 }">{{ $t('ui.orderBank.copied') }}</span>
                                     </div>
                                 </div>
 
                                 <div class="col-12 amount-field">
-                                    <div class="bank-tittle">Payment Amount</div>
+                                    <div class="bank-tittle">{{ $t('ui.orderBank.paymentAmount') }}</div>
                                     <div class="input-box position-relative">
                                         <input type="text" class="form-control form-account-deatils pe-5" :value="transferAmount ? '\u20ac' + amount(transferAmount) : ''" readonly>
                                         <i class="fa-regular fa-copy copy-icon" @click="copyToClipboard(transferAmount, 'total_price')"></i>
-                                        <span class="copy-msg" :style="{ opacity: copyState['total_price'] ? 1 : 0 }">Copied!</span>
+                                        <span class="copy-msg" :style="{ opacity: copyState['total_price'] ? 1 : 0 }">{{ $t('ui.orderBank.copied') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -119,17 +119,17 @@
                             <div class="payment-ref">
                                 <div class="payment-ref-label">
                                     <i class="fa-solid fa-triangle-exclamation"></i>
-                                    <span>Payment Reference</span>
+                                    <span>{{ $t('ui.orderBank.paymentReference') }}</span>
                                 </div>
                                 <div class="payment-ref-field">
                                     <div class="ref-box position-relative">
                                         <span>{{ order?.order }}</span>
                                         <i class="fa-regular fa-copy copy-icon" @click="copyToClipboard(order?.order, 'order')"></i>
-                                        <span class="copy-msg" :style="{ opacity: copyState['order'] ? 1 : 0 }">Copied!</span>
+                                        <span class="copy-msg" :style="{ opacity: copyState['order'] ? 1 : 0 }">{{ $t('ui.orderBank.copied') }}</span>
                                     </div>
                                     <small>
                                         <i class="fa-solid fa-circle-info"></i>
-                                        You MUST include this order number as your payment reference
+                                        {{ $t('ui.orderBank.mustIncludeRef') }}
                                     </small>
                                 </div>
                             </div>
@@ -138,60 +138,60 @@
                           <div class="card-box instruction-card">
                         <div class="section-heading">
                             <i class="fa-solid fa-list-check"></i>
-                            <h6>Step-by-Step Payment Instructions</h6>
+                            <h6>{{ $t('ui.orderBank.stepsTitle') }}</h6>
                         </div>
 
                         <div class="step">
                             <div class="step-number">1</div>
                             <div class="step-login-tittle">
-                                <h5>Log in to your online banking</h5>
-                                <span class="step-login-subtittle">Access your bank's online banking platform or mobile app</span>
+                                <h5>{{ $t('ui.orderBank.step1Title') }}</h5>
+                                <span class="step-login-subtittle">{{ $t('ui.orderBank.step1Text') }}</span>
                             </div>
                         </div>
                         <div class="step">
                             <div class="step-number">2</div>
                             <div class="step-login-tittle">
-                                <h5>Set up a new payment or transfer</h5>
-                                <span class="step-login-subtittle">Select the option to make a payment to a new beneficiary</span>
+                                <h5>{{ $t('ui.orderBank.step2Title') }}</h5>
+                                <span class="step-login-subtittle">{{ $t('ui.orderBank.step2Text') }}</span>
                             </div>
                         </div>
                         <div class="step">
                             <div class="step-number">3</div>
                             <div class="step-login-tittle">
-                                <h5>Enter the bank account details</h5>
-                                <span class="step-login-subtittle">Copy the IBAN and BIC provided above</span>
+                                <h5>{{ $t('ui.orderBank.step3Title') }}</h5>
+                                <span class="step-login-subtittle">{{ $t('ui.orderBank.step3Text') }}</span>
                             </div>
                         </div>
                         <div class="step">
                             <div class="step-number">4</div>
                             <div class="step-login-tittle">
-                                <h5>Enter the payment amount</h5>
-                                <span class="step-login-subtittle">Transfer exactly &euro;{{ amount(transferAmount) }} to ensure proper processing</span>
+                                <h5>{{ $t('ui.orderBank.step4Title') }}</h5>
+                                <span class="step-login-subtittle">{{ $t('ui.orderBank.step4Text', { amount: '\u20ac' + amount(transferAmount) }) }}</span>
                             </div>
                         </div>
                         <div class="step featured-step">
                             <div class="step-number">5</div>
                             <div class="step-login-tittle">
                                 <h5>
-                                    Add payment reference
-                                    <span class="required-badge">REQUIRED</span>
+                                    {{ $t('ui.orderBank.step5Title') }}
+                                    <span class="required-badge">{{ $t('ui.orderBank.required') }}</span>
                                 </h5>
-                                <span class="step-login-subtittle">In the reference/description field, enter: {{ order?.order }}</span>
-                                <small>This is critical for tracking your payment to your order</small>
+                                <span class="step-login-subtittle">{{ $t('ui.orderBank.step5Text', { ref: order?.order }) }}</span>
+                                <small>{{ $t('ui.orderBank.step5Note') }}</small>
                             </div>
                         </div>
                         <div class="step">
                             <div class="step-number">6</div>
                             <div class="step-login-tittle">
-                                <h5>Review and confirm the payment</h5>
-                                <span class="step-login-subtittle">Double-check all details before authorizing the transfer</span>
+                                <h5>{{ $t('ui.orderBank.step6Title') }}</h5>
+                                <span class="step-login-subtittle">{{ $t('ui.orderBank.step6Text') }}</span>
                             </div>
                         </div>
                         <div class="step">
                             <div class="step-number">7</div>
                             <div class="step-login-tittle">
-                                <h5>Save your payment receipt</h5>
-                                <span class="step-login-subtittle">Keep a screenshot or PDF of your transaction confirmation for your records</span>
+                                <h5>{{ $t('ui.orderBank.step7Title') }}</h5>
+                                <span class="step-login-subtittle">{{ $t('ui.orderBank.step7Text') }}</span>
                             </div>
                         </div>
                     </div>
@@ -199,24 +199,24 @@
                     <div class="card-box next-card">
                         <div class="section-heading mb-3">
                             <i class="fa-solid fa-clock"></i>
-                            <div class="info-title">What Happens Next?</div>
+                            <div class="info-title">{{ $t('ui.orderBank.nextTitle') }}</div>
                         </div>
                         <ul class="list-unstyled info-list">
                             <li>
                                 <i class="fa-solid fa-circle-check"></i>
-                                <span class="happen-next-text">We will monitor our bank account for incoming payments matching your order number</span>
+                                <span class="happen-next-text">{{ $t('ui.orderBank.next1') }}</span>
                             </li>
                             <li>
                                 <i class="fa-solid fa-circle-check"></i>
-                                <span class="happen-next-text">Once your payment is confirmed (usually within 1-2 business days), we'll send you an email confirmation</span>
+                                <span class="happen-next-text">{{ $t('ui.orderBank.next2') }}</span>
                             </li>
                             <li>
                                 <i class="fa-solid fa-circle-check"></i>
-                                <span class="happen-next-text">Your order will be processed and shipped according to our standard delivery times</span>
+                                <span class="happen-next-text">{{ $t('ui.orderBank.next3') }}</span>
                             </li>
                             <li>
                                 <i class="fa-solid fa-circle-check"></i>
-                                <span class="happen-next-text">You can track your order status in your account dashboard under "My Orders"</span>
+                                <span class="happen-next-text">{{ $t('ui.orderBank.next4') }}</span>
                             </li>
                         </ul>
                     </div>
@@ -226,18 +226,18 @@
                             <div class="icon-warning">
                                 <i class="fa-solid fa-triangle-exclamation"></i>
                             </div>
-                            <h5 class="plicy-heading">Automatic Cancellation Policy</h5>
+                            <h5 class="plicy-heading">{{ $t('ui.orderBank.policyTitle') }}</h5>
                         </div>
                         <div class="plicy-subheading">
                             <p>
-                                If we do not receive your payment within {{ holdHours }} hours from the time of order placement, your order will be automatically cancelled to free up inventory for other customers.
+                                {{ $t('ui.orderBank.policy1', { hours: holdHours }) }}
                             </p>
                             <p>
-                                Please note that pricing, promotional offers, and product availability may change. If your order is cancelled and you wish to place a new order, the same pricing and deals may no longer be available.
+                                {{ $t('ui.orderBank.policy2') }}
                             </p>
                             <p class="mb-0 policy-note">
                                 <i class="fa-solid fa-circle-info"></i>
-                                To avoid cancellation and secure your current pricing, please complete your bank transfer as soon as possible.
+                                {{ $t('ui.orderBank.policy3') }}
                             </p>
                         </div>
                     </div>
@@ -245,28 +245,28 @@
                     <div class="card-box help-section">
                         <div class="section-heading mb-3">
                             <i class="fa-solid fa-circle-question"></i>
-                            <h5 class="need-help">Need Help?</h5>
+                            <h5 class="need-help">{{ $t('ui.orderBank.needHelp') }}</h5>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="help-card">
                                     <div>
                                         <i class="fa-solid fa-phone"></i>
-                                        <strong>Call Us</strong>
+                                        <strong>{{ $t('ui.orderBank.callUs') }}</strong>
                                     </div>
                                     <span>01 504 7000</span>
                                     <span>0874523344</span>
-                                    <small>Mon-Fri: 9am-6pm</small>
+                                    <small>{{ $t('ui.orderBank.openingHours') }}</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="help-card">
                                     <div>
                                         <i class="fa-solid fa-envelope"></i>
-                                        <strong>Email Us</strong>
+                                        <strong>{{ $t('ui.orderBank.emailUs') }}</strong>
                                     </div>
                                     <span>support@fixmypc.ie</span>
-                                    <small>We respond within 24 hours</small>
+                                    <small>{{ $t('ui.orderBank.respondTime') }}</small>
                                 </div>
                             </div>
                         </div>
@@ -275,7 +275,7 @@
                     <div class="payment-actions">
                         <a href="#" class="return-link">
                             <i class="fa-solid fa-angle-left"></i>
-                            Return to payment methods
+                            {{ $t('ui.orderBank.returnToMethods') }}
                         </a>
                         <!-- Asks for the transfer reference first. It went straight
                              on to "complete" and the reference was never taken, so
@@ -283,7 +283,7 @@
                              non-payment by a customer who had paid. -->
                         <button class="btn btn-primary-custom" @click="askForReference">
                             <i class="fa-solid fa-check"></i>
-                            I Have Made the Payment
+                            {{ $t('ui.orderBank.iHavePaid') }}
                         </button>
                     </div>
                 </div>
@@ -291,25 +291,25 @@
                 <div class="col-lg-4">
                     <div class="timer-card" v-if="paymentState === 'awaiting' && order?.transfer_deadline">
                         <i class="fa-solid fa-hourglass-half timer-icon"></i>
-                        <h5>Payment Deadline</h5>
-                        <p class="timer-subtitle">Complete payment within</p>
+                        <h5>{{ $t('ui.orderBank.deadline') }}</h5>
+                        <p class="timer-subtitle">{{ $t('ui.orderBank.completeWithin') }}</p>
                         <div class="timer-box text-center">
                             <div class="time">{{ formattedTime }}</div>
-                            <div class="label">HOURS : MINUTES : SECONDS</div>
+                            <div class="label">{{ $t('ui.orderBank.timerLabel') }}</div>
                         </div>
-                        <p class="order-placed">Order placed: {{ order?.created }}</p>
+                        <p class="order-placed">{{ $t('ui.orderBank.orderPlaced', { date: order?.created }) }}</p>
                     </div>
                     <!-- The sweep does not cancel an order once a reference
                          is in: we are the ones it is waiting on. -->
                     <div class="timer-card" v-else-if="paymentState === 'checking'">
                         <i class="fa-solid fa-magnifying-glass-dollar timer-icon"></i>
-                        <h5>Checking your transfer</h5>
-                        <p class="timer-subtitle">You gave us reference {{ order.trans_id }}. We will email you as soon as it arrives.</p>
-                        <p class="order-placed">Order placed: {{ order?.created }}</p>
+                        <h5>{{ $t('ui.orderBank.checking') }}</h5>
+                        <p class="timer-subtitle">{{ $t('ui.orderBank.checkingText', { ref: order.trans_id }) }}</p>
+                        <p class="order-placed">{{ $t('ui.orderBank.orderPlaced', { date: order?.created }) }}</p>
                     </div>
 
                     <div class="summary-box">
-                        <h6>Order Summary</h6>
+                        <h6>{{ $t('ui.orderBank.orderSummary') }}</h6>
 
                         <!--
                             Stated the way the account that placed the order is
@@ -332,10 +332,10 @@
                                 <span class="text-muted-small">
                                     {{ item?.updated_inventory?.inventory_attributes?.map(i => i.attribute_value.title).join(' / ') }}
                                 </span>
-                                <span v-if="Number(item.quantity) > 1" class="text-muted-small">Qty {{ item.quantity }}</span>
+                                <span v-if="Number(item.quantity) > 1" class="text-muted-small">{{ $t('ui.orderBank.qty', { qty: item.quantity }) }}</span>
                                 <span class="price">
                                     &euro;{{ amount(lineAmount(item)) }}
-                                    <span v-if="orderIsNet && Number(item.vat) > 0" class="price-basis">Ex-VAT</span>
+                                    <span v-if="orderIsNet && Number(item.vat) > 0" class="price-basis">{{ $t('ui.orderBank.exVat') }}</span>
                                 </span>
                             </div>
                         </div>
@@ -344,16 +344,16 @@
 
                         <template v-if="orderIsNet">
                             <div class="summary-line">
-                                <span>Net (Ex-VAT)</span>
+                                <span>{{ $t('ui.orderBank.netExVat') }}</span>
                                 <h6 class="subtotal-price">&euro;{{ amount(orderCalc.ex_vat) }}</h6>
                             </div>
                             <div v-for="row in orderVatRows" :key="row.label" class="summary-line">
-                                <span>VAT ({{ row.label }})</span>
+                                <span>{{ $t('ui.orderBank.vatRate', { rate: row.label }) }}</span>
                                 <h6 class="subtotal-price">&euro;{{ amount(row.vat) }}</h6>
                             </div>
                         </template>
                         <div v-else class="summary-line">
-                            <span>Subtotal</span>
+                            <span>{{ $t('ui.orderBank.subtotal') }}</span>
                             <h6 class="subtotal-price">&euro;{{ amount(orderCalc.inc_vat) }}</h6>
                         </div>
 
@@ -364,9 +364,9 @@
 
                         <!-- Stated even when free: a missing row and free shipping look the same. -->
                         <div class="summary-line">
-                            <span>Shipping</span>
+                            <span>{{ $t('ui.orderBank.shipping') }}</span>
                             <h6 v-if="Number(orderCalc.shipping) > 0" class="subtotal-price">&euro;{{ amount(orderCalc.shipping) }}</h6>
-                            <h6 v-else class="subtotal-price text-success">FREE</h6>
+                            <h6 v-else class="subtotal-price text-success">{{ $t('ui.orderBank.free') }}</h6>
                         </div>
 
                         <div class="divider"></div>
@@ -378,35 +378,35 @@
                         -->
                         <div class="summary-total">
                             <div>
-                                <div class="total-label">{{ orderIsNet ? 'Total (Inc-VAT)' : 'Total' }}</div>
-                                <small v-if="!orderIsNet && orderHasVat">Includes &euro;{{ amount(orderCalc.vat) }} VAT</small>
+                                <div class="total-label">{{ orderIsNet ? $t('ui.orderBank.totalIncVat') : $t('ui.orderBank.total') }}</div>
+                                <small v-if="!orderIsNet && orderHasVat">{{ $t('ui.orderBank.includesVat', { amount: '\u20ac' + amount(orderCalc.vat) }) }}</small>
                             </div>
                             <div class="total-text">&euro;{{ amount(orderCalc.total) }}</div>
                         </div>
 
                         <div v-if="Number(orderCalc.wallet_paid) > 0" class="wallet-split">
                             <div class="summary-line">
-                                <span>Paid from wallet</span>
+                                <span>{{ $t('ui.orderBank.paidFromWallet') }}</span>
                                 <h6 class="subtotal-price text-success">-&euro;{{ amount(orderCalc.wallet_paid) }}</h6>
                             </div>
                             <div class="summary-line">
-                                <span>Left to transfer</span>
+                                <span>{{ $t('ui.orderBank.leftToTransfer') }}</span>
                                 <h6 class="subtotal-price">&euro;{{ amount(transferAmount) }}</h6>
                             </div>
                         </div>
 
                         <div class="order-info">
                             <span class="order-info-text">
-                                <strong>Order Number:</strong>
+                                <strong>{{ $t('ui.orderBank.orderNumber') }}</strong>
                                 <span>{{ order?.order }}</span>
                             </span>
                             <span class="order-info-text">
-                                <strong>Order Date:</strong>
+                                <strong>{{ $t('ui.orderBank.orderDate') }}</strong>
                                 <span>{{ order?.created }}</span>
                             </span>
                             <span class="order-info-text">
-                                <strong>Payment Method:</strong>
-                                <span>Bank Transfer</span>
+                                <strong>{{ $t('ui.orderBank.paymentMethod') }}</strong>
+                                <span>{{ $t('ui.orderBank.bankTransfer') }}</span>
                             </span>
                         </div>
                     </div>
@@ -458,11 +458,11 @@ import BankPopup from '~/components/BankPopup'
         // Only the discounts the order had, in the confirmation page's order.
         discountRows() {
             return [
-                ['flash_discount', 'Flash Discount'],
-                ['bundle_discount', 'Bundle Saving'],
-                ['voucher', 'Voucher Discount'],
-                ['loyalty_discount', this.orderCalc.loyalty_label || 'Loyalty Discount'],
-                ['points_discount', 'Cherry Points']
+                ['flash_discount', this.$t('ui.orderBank.flashDiscount')],
+                ['bundle_discount', this.$t('ui.orderBank.bundleSaving')],
+                ['voucher', this.$t('ui.orderBank.voucherDiscount')],
+                ['loyalty_discount', this.orderCalc.loyalty_label || this.$t('ui.orderBank.loyaltyDiscount')],
+                ['points_discount', this.$t('ui.orderBank.cherryPoints')]
             ]
                 .filter(([key]) => Number(this.orderCalc[key]) > 0)
                 .map(([key, label]) => ({ key, label, amount: this.orderCalc[key] }))

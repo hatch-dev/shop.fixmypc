@@ -10,15 +10,15 @@
             <div class="pr-banner-inner">
 
                 <div class="pr-banner-text">
-                    <span>SHOP AND</span>
-                    <strong>SAVE BIG</strong>
-                    <span>ON LATEST PRODUCT</span>
+                    <span>{{ $t('ui.topPromoBanner.shopAnd') }}</span>
+                    <strong>{{ $t('ui.topPromoBanner.saveBig') }}</strong>
+                    <span>{{ $t('ui.topPromoBanner.onLatest') }}</span>
                 </div>
                 
                 <div class="pr-banner-center-div">
                    <div class="pr-banner-price-box">
                     <span class="pr-banner-label">
-                        STARTING FROM
+                        {{ $t('ui.topPromoBanner.startingFrom') }}
                     </span>
 
                     <span class="pr-banner-price">
@@ -27,14 +27,14 @@
                 </div>
 
                 <div class="pr-banner-discount-wrap">
-                    <span class="pr-banner-up">UP TO</span>
+                    <span class="pr-banner-up">{{ $t('ui.topPromoBanner.upTo') }}</span>
 
                     <span class="pr-banner-discount">
                         30%
                     </span>
 
                     <span class="pr-banner-off">
-                        OFF
+                        {{ $t('ui.topPromoBanner.off') }}
                     </span>
                 </div>
 

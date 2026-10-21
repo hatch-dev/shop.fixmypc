@@ -41,7 +41,7 @@ export default {
     },
     // "(Inc-VAT)" names a side, so it is only said when there is VAT.
     orderGrossTag() {
-      return this.orderHasVat ? ' (Inc-VAT)' : ''
+      return this.orderHasVat ? this.$t('ui.vatView.incTag') : ''
     },
     /*
      * One row per rate charged. A zero rate is left out: it is a margin
@@ -60,7 +60,7 @@ export default {
       const c = this.orderCalc
 
       return this.orderIsNet
-        ? { list: c.subtotal_ex_vat, discount: c.discount_ex_vat, net: c.ex_vat, tag: ' (Ex-VAT)' }
+        ? { list: c.subtotal_ex_vat, discount: c.discount_ex_vat, net: c.ex_vat, tag: this.$t('ui.vatView.exTag') }
         : { list: c.subtotal_inc_vat, discount: c.discount_inc_vat, net: c.inc_vat, tag: this.orderGrossTag }
     },
     /*
@@ -71,18 +71,18 @@ export default {
       const order = this.vatOrder || {}
 
       if (Number(order.payment_done) === 1) {
-        return { label: 'Paid', color: '#05B942' }
+        return { label: this.$t('ui.vatView.paid'), color: '#05B942' }
       }
 
       const cancelled = Number(order.cancelled) === 1 || [6, 8].includes(Number(order.status))
 
       if (!cancelled && Number(order.order_method) === 7) {
         return order.trans_id
-          ? { label: 'Checking transfer', color: '#b45309' }
-          : { label: 'Awaiting transfer', color: '#b45309' }
+          ? { label: this.$t('ui.vatView.checkingTransfer'), color: '#b45309' }
+          : { label: this.$t('ui.vatView.awaitingTransfer'), color: '#b45309' }
       }
 
-      return { label: 'Not Paid', color: '#dc3545' }
+      return { label: this.$t('ui.vatView.notPaid'), color: '#dc3545' }
     }
   },
   methods: {
@@ -108,10 +108,10 @@ export default {
         discount: Number(pick('discount_ex_vat', 'discount_inc_vat', item?.line_discount) || 0),
         // Its own row only in the net statement; inside the price otherwise.
         vat: net ? vat : 0,
-        vatLabel: rate > 0 ? `VAT (${rate}%)` : 'VAT',
+        vatLabel: rate > 0 ? this.$t('ui.vatView.vatRate', { rate }) : this.$t('ui.vatView.vat'),
         exTag: net && vat > 0,
         total: pick('inc_vat', 'inc_vat', item?.line_total),
-        totalTag: net && vat > 0 ? ' (Inc-VAT)' : ''
+        totalTag: net && vat > 0 ? this.$t('ui.vatView.incTag') : ''
       }
     }
   }

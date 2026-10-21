@@ -14,7 +14,7 @@
     </div>
 
     <div class="pw-strength-meta">
-      <span>Password strength</span>
+      <span>{{ $t('ui.passwordStrength.title') }}</span>
       <strong :class="strength">
         {{ label }}
       </strong>
@@ -25,16 +25,16 @@
       class="pw-strength-rules"
     >
       <li :class="{ passed: checks.length }">
-        At least {{ minPasswordLength }} characters
+        {{ $t('ui.passwordStrength.minLength', { count: minPasswordLength }) }}
       </li>
       <li :class="{ passed: checks.letterCase }">
-        Upper &amp; lowercase letters
+        {{ $t('ui.passwordStrength.letterCase') }}
       </li>
       <li :class="{ passed: checks.number }">
-        At least one number
+        {{ $t('ui.passwordStrength.number') }}
       </li>
       <li :class="{ passed: checks.symbol }">
-        At least one symbol
+        {{ $t('ui.passwordStrength.symbol') }}
       </li>
     </ul>
 
@@ -65,9 +65,9 @@
       },
       label() {
         return {
-          weak: 'Weak',
-          medium: 'Medium',
-          strong: 'Strong'
+          weak: this.$t('ui.passwordStrength.weak'),
+          medium: this.$t('ui.passwordStrength.medium'),
+          strong: this.$t('ui.passwordStrength.strong')
         }[this.strength] || ''
       }
     }

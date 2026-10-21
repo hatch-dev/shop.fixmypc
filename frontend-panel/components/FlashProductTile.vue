@@ -15,7 +15,7 @@
 
 
         <button
-          aria-label="submit"
+          :aria-label="$t('ui.flashProductTileUi.aria.submit')"
           class="compare-btn"
           :title="$t('product.compare')"
           @click.prevent="addToCompare"

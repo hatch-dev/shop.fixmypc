@@ -54,7 +54,7 @@
                     </template>
             </h2>
             <button
-              aria-label="submit"
+              :aria-label="$t('ui.stickyCartBtn.submitAria')"
               class="compare-btn"
               @click.prevent="wishListAction"
             >

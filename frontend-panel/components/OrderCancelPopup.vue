@@ -65,7 +65,7 @@
     <template v-slot:pop-footer>
       <div class="flex j-end gap-10">
         <button
-          aria-label="close"
+          :aria-label="$t('ui.orderCancelPopupUi.closeAria')"
           class="outline-btn plr-30 plr-sm-15"
           @click.prevent="$emit('close')"
         >

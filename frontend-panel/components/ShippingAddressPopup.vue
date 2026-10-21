@@ -187,7 +187,7 @@
     <div class="flex start mlr-0 gap-10">
       <button
         v-if="editing"
-        aria-label="submit"
+        :aria-label="$t('ui.shippingAddressPopup.submitAria')"
         class="outline-btn plr-30 plr-sm-15"
         @click.prevent="clearData"
       >

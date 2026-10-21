@@ -60,7 +60,7 @@
             <input
               type="text"
               v-model="transId"
-              placeholder="eg. ORD1578945"
+              :placeholder="$t('ui.bankPopup.transIdPlaceholder', { example: 'ORD1578945' })"
             >
           </div>
 

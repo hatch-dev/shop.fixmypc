@@ -17,15 +17,15 @@
         v-if="fetchingWishlistData"
         :tiles="6"
         heading
-        label="Loading your wishlist"
+        :label="$t('ui.userWishlists.loadingWishlist')"
       />
 
       <div v-else>
 
       <div class="card-box p-4 mb-4 d-flex justify-content-between align-items-center flex-wrap my-orders-box">
           <div>
-              <h5 class="mb-1">My Wishlist</h5>
-              <small class="text-muted">View and manage your wishlist items.</small>
+              <h5 class="mb-1">{{ $t('ui.userWishlists.title') }}</h5>
+              <small class="text-muted">{{ $t('ui.userWishlists.subtitle') }}</small>
           </div>
           <!-- Was href="#" with nothing behind it. -->
           <button
@@ -35,7 +35,7 @@
             aria-controls="wishlist-share-panel"
             @click="toggleShare"
           >
-              <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span class="ms-2">Share Wishlist</span>
+              <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span class="ms-2">{{ $t('ui.userWishlists.shareWishlist') }}</span>
           </button>
       </div>
 
@@ -49,18 +49,17 @@
         v-if="shareOpen"
         id="wishlist-share-panel"
         class="share-panel mb-4"
-        aria-label="Share your wishlist"
+        :aria-label="$t('ui.userWishlists.shareYourWishlist')"
       >
-        <p v-if="shareLoading" class="share-help mb-0">Loading…</p>
+        <p v-if="shareLoading" class="share-help mb-0">{{ $t('ui.userWishlists.loading') }}</p>
 
         <template v-else-if="!shareToken">
-          <h6 class="share-title">Share your wishlist</h6>
+          <h6 class="share-title">{{ $t('ui.userWishlists.shareYourWishlist') }}</h6>
           <p class="share-help">
-            Anyone with the link can see the items on your wishlist and your first name.
-            They cannot see your email, address or orders, and you can stop sharing at any time.
+            {{ $t('ui.userWishlists.shareHelp') }}
           </p>
           <p v-if="!wishlistCount" class="share-help share-warn">
-            Your wishlist is empty. Add something first, then share it.
+            {{ $t('ui.userWishlists.emptyCannotShare') }}
           </p>
           <button
             type="button"
@@ -68,15 +67,15 @@
             :disabled="shareBusy || !wishlistCount"
             @click="enableShare"
           >
-            {{ shareBusy ? 'Creating link…' : 'Create share link' }}
+            {{ shareBusy ? $t('ui.userWishlists.creatingLink') : $t('ui.userWishlists.createLink') }}
           </button>
         </template>
 
         <template v-else>
-          <h6 class="share-title">Your wishlist link</h6>
+          <h6 class="share-title">{{ $t('ui.userWishlists.yourLink') }}</h6>
 
           <div class="share-row">
-            <label for="wishlist-share-url" class="sr-only">Wishlist link</label>
+            <label for="wishlist-share-url" class="sr-only">{{ $t('ui.userWishlists.wishlistLink') }}</label>
             <input
               id="wishlist-share-url"
               ref="shareInput"
@@ -87,7 +86,7 @@
               @focus="$event.target.select()"
             >
             <button type="button" class="share-btn share-btn-primary" @click="copyShare">
-              {{ copied ? 'Copied' : 'Copy link' }}
+              {{ copied ? $t('ui.userWishlists.copied') : $t('ui.userWishlists.copyLink') }}
             </button>
           </div>
 
@@ -98,7 +97,7 @@
               class="share-btn"
               @click="nativeShare"
             >
-              <i class="fa-solid fa-share-nodes" aria-hidden="true"></i> Share…
+              <i class="fa-solid fa-share-nodes" aria-hidden="true"></i> {{ $t('ui.userWishlists.shareNative') }}
             </button>
             <a
               class="share-btn"
@@ -110,12 +109,12 @@
             </a>
             <a
               class="share-btn"
-              :href="`mailto:?subject=${encodeURIComponent('My FixMyPC wishlist')}&body=${encodeURIComponent(shareText + '\n\n' + shareUrl)}`"
+              :href="`mailto:?subject=${encodeURIComponent($t('ui.userWishlists.myWishlist'))}&body=${encodeURIComponent(shareText + '\n\n' + shareUrl)}`"
             >
-              <i class="fa-solid fa-envelope" aria-hidden="true"></i> Email
+              <i class="fa-solid fa-envelope" aria-hidden="true"></i> {{ $t('ui.userWishlists.email') }}
             </a>
             <a class="share-btn" :href="shareUrl" target="_blank" rel="noopener">
-              Preview
+              {{ $t('ui.userWishlists.preview') }}
             </a>
 
             <button
@@ -124,15 +123,15 @@
               :disabled="shareBusy"
               @click="disableShare"
             >
-              {{ shareBusy ? 'Stopping…' : 'Stop sharing' }}
+              {{ shareBusy ? $t('ui.userWishlists.stopping') : $t('ui.userWishlists.stopSharing') }}
             </button>
           </div>
         </template>
       </section>
       <div class="Frequently-card-box p-0 mb-4">
         <div class="section-header d-flex justify-content-between align-items-center">
-            <span>Saved items</span>
-            <span v-if="wishlistCount" class="wl-count">{{ wishlistCount }} {{ wishlistCount === 1 ? 'item' : 'items' }}</span>
+            <span>{{ $t('ui.userWishlists.savedItems') }}</span>
+            <span v-if="wishlistCount" class="wl-count">{{ $tc('ui.userWishlists.itemsCount', wishlistCount, { count: wishlistCount }) }}</span>
         </div>
         <div class="p-3">
             <div v-if="currentWishLists && !currentWishLists.length" class="info-msg">
@@ -214,7 +213,7 @@ import ProductViewList from '../../components/ProductViewList.vue'
     middleware: ['common-middleware'],
     head() {
       return {
-        title: 'Wishlists',
+        title: this.$t('ui.userWishlists.pageTitle'),
         meta: []
       }
     },
@@ -258,7 +257,7 @@ import ProductViewList from '../../components/ProductViewList.vue'
         return `${window.location.origin}/wishlist/shared/${this.shareToken}`
       },
       shareText() {
-        return 'Have a look at my wishlist on FixMyPC:'
+        return this.$t('ui.userWishlists.shareText')
       },
       canNativeShare() {
         return process.client && typeof navigator !== 'undefined' && !!navigator.share
@@ -324,7 +323,7 @@ import ProductViewList from '../../components/ProductViewList.vue'
        */
       async toggleShare() {
         if (!this.$auth?.loggedIn) {
-          this.setToastError('Sign in to share your wishlist.')
+          this.setToastError(this.$t('ui.userWishlists.signInToShare'))
           this.$router.push('/login')
           return
         }
@@ -337,7 +336,7 @@ import ProductViewList from '../../components/ProductViewList.vue'
           const data = await this.shareApi('get')
           this.shareToken = data?.status === 200 ? data.data?.token : null
         } catch (e) {
-          this.setToastError('We could not load your share settings. Please try again.')
+          this.setToastError(this.$t('ui.userWishlists.loadShareFailed'))
           this.shareOpen = false
         } finally {
           this.shareLoading = false
@@ -351,7 +350,7 @@ import ProductViewList from '../../components/ProductViewList.vue'
           this.shareToken = data.data.token
           this.$nextTick(() => this.$refs.shareInput?.select())
         } catch (e) {
-          this.setToastError('We could not create a share link. Please try again.')
+          this.setToastError(this.$t('ui.userWishlists.createFailed'))
         } finally {
           this.shareBusy = false
         }
@@ -362,9 +361,9 @@ import ProductViewList from '../../components/ProductViewList.vue'
           const data = await this.shareApi('delete')
           if (data?.status !== 200) throw new Error('refused')
           this.shareToken = null
-          this.setToastMessage('Your wishlist link has been switched off.')
+          this.setToastMessage(this.$t('ui.userWishlists.switchedOff'))
         } catch (e) {
-          this.setToastError('We could not stop sharing. Please try again.')
+          this.setToastError(this.$t('ui.userWishlists.stopFailed'))
         } finally {
           this.shareBusy = false
         }
@@ -383,7 +382,7 @@ import ProductViewList from '../../components/ProductViewList.vue'
       },
       async nativeShare() {
         try {
-          await navigator.share({title: 'My FixMyPC wishlist', text: this.shareText, url: this.shareUrl})
+          await navigator.share({title: this.$t('ui.userWishlists.myWishlist'), text: this.shareText, url: this.shareUrl})
         } catch (e) {
           // Cancelled by the customer: nothing to report.
         }

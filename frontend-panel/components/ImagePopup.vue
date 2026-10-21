@@ -117,7 +117,7 @@
                   :id="generateElemId(index)"
                   class="full-dimen opacity-0"
                   :data-source="getImageURL(value.image)"
-                  alt="Product image"
+                  :alt="$t('ui.imagePopupUi.productImage')"
                   height="100"
                   width="100"
                 />

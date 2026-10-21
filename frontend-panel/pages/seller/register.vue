@@ -162,7 +162,7 @@
       v-if="emailVerificationForm && !verified"
     >
       <div class="center-text mb-30">
-        <h1 class="mt-10 mb-20 color-primary">Verification</h1>
+        <h1 class="mt-10 mb-20 color-primary">{{ $t('ui.sellerRegister.verification') }}</h1>
         <p>{{ $t('register.sentEmail') }}</p>
       </div>
 

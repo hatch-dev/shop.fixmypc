@@ -5,7 +5,7 @@
       <button
         type="button"
         :disabled="!stock && !offer"
-        aria-label="submit"
+        :aria-label="$t('ui.filterAvailabilityUi.aria.submit')"
         @click.prevent="clearAll"
       >
         {{ $t('listingLayout.clear') }}

@@ -8,31 +8,34 @@
   <div class="d-flex gap-2 align-items-start">
     <i class="fa-solid fa-bolt"></i>
     <div>
-      <strong>{{ applied ? 'Flash Discount Applied!' : 'Flash Discount Available!' }}</strong><br>
+      <strong>{{ applied ? $t('ui.flashDiscount.applied') : $t('ui.flashDiscount.available') }}</strong><br>
 
       <!--
         Percentage and fixed read differently, and the old copy printed both
         as "N% OFF" -- a EUR 20 fixed discount was advertised as 20% off.
       -->
-      <small v-if="isPercentage">
-        Additional {{ promotion.value }}% off<template v-if="cap">
-          up to <price-format :price="cap" :decimals="2"/></template>
+      <i18n v-if="isPercentage && cap" path="ui.flashDiscount.percentOffUpTo" tag="small">
+        <template #percent>{{ promotion.value }}</template>
+        <template #cap><price-format :price="cap" :decimals="2"/></template>
+      </i18n>
+      <small v-else-if="isPercentage">
+        {{ $t('ui.flashDiscount.percentOff', { percent: promotion.value }) }}
       </small>
-      <small v-else>
-        <price-format :price="fixedValue" :decimals="2"/> off your order
-      </small>
+      <i18n v-else path="ui.flashDiscount.fixedOff" tag="small">
+        <template #amount><price-format :price="fixedValue" :decimals="2"/></template>
+      </i18n>
 
       <template v-if="minCartValue > 0">
         <br>
-        <small>
-          Minimum <price-format :price="minCartValue" :decimals="2"/> cart amount required
-        </small>
+        <i18n path="ui.flashDiscount.minimum" tag="small">
+          <template #amount><price-format :price="minCartValue" :decimals="2"/></template>
+        </i18n>
       </template>
     </div>
   </div>
 
   <div class="text-end small">
-    <div>Expires in</div>
+    <div>{{ $t('ui.flashDiscount.expiresIn') }}</div>
     <strong>{{ timeLeft }}</strong>
   </div>
 
@@ -62,7 +65,7 @@
     @click="apply"
   >
     <i class="fa-solid fa-rocket"></i>
-    <span>Apply and save <price-format :price="offer" :decimals="2"/></span>
+    <i18n path="ui.flashDiscount.applyAndSave" tag="span"><template #amount><price-format :price="offer" :decimals="2"/></template></i18n>
   </button>
 
   <button
@@ -72,15 +75,15 @@
     @click="remove"
   >
     <i class="fa-solid fa-circle-check"></i>
-    <span>Saving <price-format :price="amount" :decimals="2"/> &middot; Remove</span>
+    <i18n path="ui.flashDiscount.savingRemove" tag="span"><template #amount><price-format :price="amount" :decimals="2"/></template></i18n>
   </button>
 
   <div v-else class="status-pill shortfall">
     <i class="fa-solid fa-cart-plus"></i>
-    <span v-if="!selectedProducts.length">Select an item to start saving</span>
-    <span v-else>
-      Add <price-format :price="shortfall" :decimals="2"/> more to unlock this discount
-    </span>
+    <span v-if="!selectedProducts.length">{{ $t('ui.flashDiscount.selectItem') }}</span>
+    <i18n v-else path="ui.flashDiscount.addMore" tag="span">
+      <template #amount><price-format :price="shortfall" :decimals="2"/></template>
+    </i18n>
   </div>
 
 </div>
@@ -134,9 +137,9 @@ export default {
       return this.now > 0 && this.isLive && this.selectedProducts.length > 0
     },
     progressLabel() {
-      if (this.applied) return 'Total savings'
+      if (this.applied) return this.$t('ui.flashDiscount.totalSavings')
 
-      return this.eligible ? 'Available saving' : 'Progress to minimum'
+      return this.eligible ? this.$t('ui.flashDiscount.availableSaving') : this.$t('ui.flashDiscount.progressToMinimum')
     },
     /*
      * Progress towards the minimum the basket has to clear. It used to plot
@@ -161,7 +164,7 @@ export default {
       // A three-day promotion counted down from "72:00:00" before.
       const hours = days ? Math.floor((diff % 86400000) / 3600000) : Math.floor(diff / 3600000)
 
-      return (days ? days + 'd ' : '')
+      return (days ? this.$t('ui.flashDiscount.daysShort', { count: days }) + ' ' : '')
         + pad(hours) + ':'
         + pad(Math.floor((diff % 3600000) / 60000)) + ':'
         + pad(Math.floor((diff % 60000) / 1000))

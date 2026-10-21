@@ -45,6 +45,25 @@ function lookup(bundle, key) {
 
 const english = JSON.parse(fs.readFileSync(path.join(ROOT, 'lang/en.json'), 'utf8'))
 
+/*
+ * A key built in code ($t('myOrders.refund.' + r.key)) is found as its prefix.
+ * The prefix names a group: it has to exist and hold text, the rest comes at run time.
+ */
+function present(bundle, key) {
+  if (!key.endsWith('.')) return lookup(bundle, key) !== undefined
+
+  let cur = bundle
+  for (const segment of key.slice(0, -1).split('.')) {
+    if (cur === null || typeof cur !== 'object' || !(segment in cur)) return false
+    cur = cur[segment]
+  }
+  return cur !== null && typeof cur === 'object' && Object.values(cur).some(v => typeof v === 'string')
+}
+
+const OTHER_LANGUAGES = ['tr', 'ar', 'fr', 'hi']
+const bundles = Object.fromEntries(OTHER_LANGUAGES.map(code =>
+  [code, JSON.parse(fs.readFileSync(path.join(ROOT, `lang/${code}.json`), 'utf8'))]))
+
 const referenced = new Map()
 
 for (const file of walk(ROOT, [])) {
@@ -72,12 +91,29 @@ console.log('\ntranslation keys')
 
 test('every key the storefront asks for has English text', () => {
   const missing = [...referenced.entries()]
-    .filter(([key]) => lookup(english, key) === undefined)
+    .filter(([key]) => !present(english, key))
     .map(([key, files]) => `${key} (${[...files].join(', ')})`)
 
   assert.deepStrictEqual(
     missing, [],
     'these would render as raw keys:\n           ' + missing.join('\n           ')
+  )
+})
+
+test('every key the storefront asks for is translated in every language', () => {
+  // Otherwise that text silently stays English for a shopper who picked Turkish.
+  const missing = []
+  for (const code of OTHER_LANGUAGES) {
+    for (const [key, files] of referenced) {
+      if (present(english, key) && !present(bundles[code], key)) {
+        missing.push(`${code}: ${key} (${[...files].join(', ')})`)
+      }
+    }
+  }
+
+  assert.deepStrictEqual(
+    missing, [],
+    'these fall back to English:\n           ' + missing.join('\n           ')
   )
 })
 

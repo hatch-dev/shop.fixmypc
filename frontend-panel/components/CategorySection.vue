@@ -3,9 +3,9 @@
 
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5 class="slider-collection-heading">Featured Categories</h5>
+        <h5 class="slider-collection-heading">{{ $t('ui.categorySectionUi.featuredCategories') }}</h5>
         <nuxt-link :to="`/categories`" class="link">
-            Show all
+            {{ $t('ui.categorySectionUi.showAll') }}
         </nuxt-link>
       </div>
 

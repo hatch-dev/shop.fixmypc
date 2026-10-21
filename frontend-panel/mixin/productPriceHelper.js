@@ -120,7 +120,7 @@ export default {
         return ''
       }
 
-      return this.product.vat_inclusive ? 'Inc-VAT' : 'Ex-VAT'
+      return this.product.vat_inclusive ? this.$t('ui.priceHelper.inc') : this.$t('ui.priceHelper.ex')
     },
     /*
      * The gross figure, shown only when the headline is quoted ex-VAT.
@@ -142,7 +142,7 @@ export default {
       }
 
       return {
-        label: 'Inc-VAT',
+        label: this.$t('ui.priceHelper.inc'),
         amount: parseFloat(this.product.display_price_inc_vat),
         /* The tax inside that figure, and the rate it was charged at, so the
            line can read "Inc-VAT €859.77 (VAT 23% €160.77)". Both are the
@@ -227,7 +227,7 @@ export default {
 
       return {
         inclusive,
-        short: inclusive ? 'Inc-VAT' : 'Ex-VAT',
+        short: inclusive ? this.$t('ui.priceHelper.inc') : this.$t('ui.priceHelper.ex'),
       }
     },
     /*
@@ -260,28 +260,28 @@ export default {
 
       if (detail.inclusive) {
         return {
-          title: 'Inc-VAT pricing',
-          label: 'About this product’s Inc-VAT price',
-          lede: 'The price shown already includes VAT.',
+          title: this.$t('ui.priceHelper.incTitle'),
+          label: this.$t('ui.priceHelper.incAbout'),
+          lede: this.$t('ui.priceHelper.incLede'),
           rows: [
-            { label: 'Current price', value: this.money(detail.amount) },
-            { label: 'VAT included', value: this.money(detail.vat) },
-            { label: 'Ex-VAT value', value: this.money(exVat) },
+            { label: this.$t('ui.priceHelper.currentPrice'), value: this.money(detail.amount) },
+            { label: this.$t('ui.priceHelper.vatIncluded'), value: this.money(detail.vat) },
+            { label: this.$t('ui.priceHelper.exValue'), value: this.money(exVat) },
           ],
           note: '',
         }
       }
 
       return {
-        title: 'Ex-VAT pricing',
-        label: 'About this product’s Ex-VAT price',
-        lede: 'The price shown excludes VAT.',
+        title: this.$t('ui.priceHelper.exTitle'),
+        label: this.$t('ui.priceHelper.exAbout'),
+        lede: this.$t('ui.priceHelper.exLede'),
         rows: [
-          { label: 'Current price', value: this.money(exVat) },
-          { label: 'VAT rate', value: rate },
-          { label: 'Inc-VAT equivalent', value: this.money(detail.amount) },
+          { label: this.$t('ui.priceHelper.currentPrice'), value: this.money(exVat) },
+          { label: this.$t('ui.priceHelper.vatRate'), value: rate },
+          { label: this.$t('ui.priceHelper.incEquivalent'), value: this.money(detail.amount) },
         ],
-        note: 'VAT is added at checkout using the tax rule that applies to this product.',
+        note: this.$t('ui.priceHelper.exNote'),
       }
     },
     /*
@@ -370,7 +370,7 @@ export default {
 
       return Number.isFinite(inc)
         ? {
-            label: 'Inc-VAT',
+            label: this.$t('ui.priceHelper.inc'),
             amount: inc,
             vat: Number.isFinite(vat) ? vat : null,
             rate,

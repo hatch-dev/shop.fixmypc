@@ -7,7 +7,7 @@
       to="/login"
       class="auth-back"
     >
-      <span aria-hidden="true">&larr;</span> Back to sign in
+      <span aria-hidden="true">&larr;</span> {{ $t('ui.guestCheckout.backToSignIn') }}
     </nuxt-link>
 
     <button
@@ -17,7 +17,7 @@
       @click="step = step === 'payment' ? 'verify' : 'details'"
     >
       <span aria-hidden="true">&larr;</span>
-      {{ step === 'payment' ? 'Back to your email' : 'Back to your details' }}
+      {{ step === 'payment' ? $t('ui.guestCheckout.backToEmail') : $t('ui.guestCheckout.backToDetails') }}
     </button>
 
     <auth-steps
@@ -34,8 +34,7 @@
       v-if="step === 'verify'"
       class="auth-lede"
     >
-      We sent a 6-digit code to <b>{{ form.email }}</b>. Enter it below and
-      we&rsquo;ll take you to payment.
+      <i18n path="ui.guestCheckout.codeSent" :tag="false"><template #email><b>{{ form.email }}</b></template></i18n>
     </p>
 
     <p
@@ -65,8 +64,7 @@
     <template v-else-if="step === 'payment'">
 
       <div class="auth-note auth-note-go guest-note-top">
-        <b>{{ form.email }}</b> is confirmed. Your receipt and tracking link
-        go there, and we&rsquo;ll set up your account on it once you&rsquo;ve paid.
+        <i18n path="ui.guestCheckout.emailConfirmed" :tag="false"><template #email><b>{{ form.email }}</b></template></i18n>
       </div>
 
       <!-- ─────────── ORDER SUMMARY ─────────── -->
@@ -88,7 +86,7 @@
               v-if="deliveryPrice > 0"
               :price="formatPrice(deliveryPrice)"
             />
-            <template v-else>Free</template>
+            <template v-else>{{ $t('ui.guestCheckout.free') }}</template>
           </b>
         </div>
 
@@ -96,7 +94,7 @@
           v-if="taxTotal > 0"
           class="guest-cart-line"
         >
-          <span>VAT</span>
+          <span>{{ $t('ui.guestCheckout.vat') }}</span>
           <b><price-format :price="formatPrice(taxTotal)" /></b>
         </div>
 
@@ -110,7 +108,7 @@
           :key="`guest-bundle-${bundle.id}`"
           class="guest-cart-line"
         >
-          <span>{{ bundle.title || 'Bundle saving' }}</span>
+          <span>{{ bundle.title || $t('ui.guestCheckout.bundleSaving') }}</span>
           <b class="guest-cart-off">
             &minus; <price-format :price="formatPrice(bundle.discount)" />
           </b>
@@ -120,14 +118,14 @@
           v-if="voucherDiscount > 0"
           class="guest-cart-line"
         >
-          <span>Voucher {{ appliedVoucherCode }}</span>
+          <span>{{ $t('ui.guestCheckout.voucherLine', { code: appliedVoucherCode }) }}</span>
           <b class="guest-cart-off">
             &minus; <price-format :price="formatPrice(voucherDiscount)" />
           </b>
         </div>
 
         <div class="guest-cart-line guest-cart-total">
-          <span>Total to pay</span>
+          <span>{{ $t('ui.guestCheckout.totalToPay') }}</span>
           <b><price-format :price="formatPrice(payableTotal)" /></b>
         </div>
 
@@ -139,7 +137,7 @@
         <div class="guest-recap-body">
 
           <div class="guest-recap-head">
-            {{ isCollection ? 'Collecting in store' : 'Delivering to' }}
+            {{ isCollection ? $t('ui.guestCheckout.collectingInStore') : $t('ui.guestCheckout.deliveringTo') }}
           </div>
 
           <div class="guest-recap-line">{{ form.name }}</div>
@@ -162,7 +160,7 @@
           class="guest-recap-edit"
           @click="step = 'details'"
         >
-          Edit
+          {{ $t('ui.guestCheckout.edit') }}
         </button>
 
       </div>
@@ -174,7 +172,7 @@
           class="auth-label"
           for="g-voucher"
         >
-          Voucher code
+          {{ $t('ui.guestCheckout.voucherCode') }}
         </label>
 
         <div class="guest-voucher">
@@ -185,7 +183,7 @@
             class="auth-input"
             :class="{ invalid: !!voucherError }"
             :readonly="voucherDiscount > 0"
-            placeholder="Enter a code"
+            :placeholder="$t('ui.guestCheckout.enterCode')"
           >
 
           <button
@@ -194,7 +192,7 @@
             class="auth-btn-ghost guest-voucher-btn"
             @click="clearVoucher"
           >
-            Remove
+            {{ $t('ui.guestCheckout.remove') }}
           </button>
 
           <button
@@ -204,7 +202,7 @@
             :disabled="!voucher || checkingVoucher"
             @click="checkVoucher"
           >
-            {{ checkingVoucher ? 'Checking...' : 'Apply' }}
+            {{ checkingVoucher ? $t('ui.guestCheckout.checking') : $t('ui.guestCheckout.apply') }}
           </button>
 
         </div>
@@ -220,7 +218,7 @@
 
       <!-- ─────────── HOW TO PAY ─────────── -->
       <h2 class="auth-sub-head guest-sub-head">
-        How would you like to pay?
+        {{ $t('ui.guestCheckout.howToPay') }}
       </h2>
 
       <payment-gateways
@@ -236,7 +234,7 @@
           class="auth-btn-ghost"
           @click="$router.push('/cart')"
         >
-          Back to basket
+          {{ $t('ui.guestCheckout.backToBasket') }}
         </button>
       </div>
 
@@ -262,7 +260,7 @@
         <div class="auth-form-group">
 
           <label class="auth-label">
-            Confirmation code
+            {{ $t('ui.guestCheckout.confirmationCode') }}
             <span class="auth-label-required">*</span>
           </label>
 
@@ -278,7 +276,7 @@
             v-if="codeInvalid"
             class="auth-error"
           >
-            That code has expired or doesn&rsquo;t match. Send a new one.
+            {{ $t('ui.guestCheckout.codeExpired') }}
           </small>
 
         </div>
@@ -286,8 +284,8 @@
         <ajax-button
           class="auth-btn-primary"
           :fetching-data="submitting"
-          loading-text="Confirming..."
-          text="Confirm and continue to payment"
+          :loading-text="$t('ui.guestCheckout.confirming')"
+          :text="$t('ui.guestCheckout.confirmContinue')"
         />
 
       </form>
@@ -299,20 +297,19 @@
           :disabled="submitting"
           @click="sendCode(true)"
         >
-          Send a new code
+          {{ $t('ui.guestCheckout.sendNewCode') }}
         </button>
         <button
           type="button"
           class="auth-btn-ghost"
           @click="step = 'details'"
         >
-          Use a different email
+          {{ $t('ui.guestCheckout.useDifferentEmail') }}
         </button>
       </div>
 
       <div class="auth-note auth-note-warn guest-note-spaced">
-        Nothing in your inbox after a minute? Check your spam folder.
-        Your basket is held until you finish.
+        {{ $t('ui.guestCheckout.spamNote') }}
       </div>
 
     </template>
@@ -339,7 +336,7 @@
               v-if="deliveryPrice > 0"
               :price="formatPrice(deliveryPrice)"
             />
-            <template v-else>Free</template>
+            <template v-else>{{ $t('ui.guestCheckout.free') }}</template>
           </b>
         </div>
 
@@ -347,19 +344,19 @@
           v-if="taxTotal > 0"
           class="guest-cart-line"
         >
-          <span>VAT</span>
+          <span>{{ $t('ui.guestCheckout.vat') }}</span>
           <b><price-format :price="formatPrice(taxTotal)" /></b>
         </div>
 
         <div class="guest-cart-line guest-cart-total">
-          <span>Total</span>
+          <span>{{ $t('ui.guestCheckout.total') }}</span>
           <b><price-format :price="formatPrice(orderTotal)" /></b>
         </div>
 
       </div>
 
       <p class="auth-hint guest-cart-note">
-        Any voucher is applied on the payment screen.
+        {{ $t('ui.guestCheckout.voucherOnPayment') }}
       </p>
 
       <form @submit.prevent="submit">
@@ -371,7 +368,7 @@
             class="auth-label"
             for="g-name"
           >
-            Full Name
+            {{ $t('ui.guestCheckout.fullName') }}
             <span class="auth-label-required">*</span>
           </label>
 
@@ -382,7 +379,7 @@
             :class="{ invalid: showError('name') }"
             type="text"
             autocomplete="name"
-            placeholder="Enter name"
+            :placeholder="$t('ui.guestCheckout.enterName')"
           >
 
           <small
@@ -400,7 +397,7 @@
             class="auth-label"
             for="g-email"
           >
-            Email Address
+            {{ $t('ui.guestCheckout.emailAddress') }}
             <span class="auth-label-required">*</span>
           </label>
 
@@ -412,7 +409,7 @@
             type="email"
             inputmode="email"
             autocomplete="email"
-            placeholder="Enter email"
+            :placeholder="$t('ui.guestCheckout.enterEmail')"
           >
 
           <small
@@ -426,7 +423,7 @@
             v-else
             class="auth-hint"
           >
-            Receipt, invoice and order updates go here.
+            {{ $t('ui.guestCheckout.emailHint') }}
           </small>
 
         </div>
@@ -442,7 +439,7 @@
             class="auth-label"
             for="g-phone"
           >
-            Contact Number
+            {{ $t('ui.guestCheckout.contactNumber') }}
             <span class="auth-label-required">*</span>
           </label>
 
@@ -466,7 +463,7 @@
 
         <!-- ─────────── DELIVERY OR COLLECTION ─────────── -->
         <div class="auth-form-group">
-          <label class="auth-label">How do you want it?</label>
+          <label class="auth-label">{{ $t('ui.guestCheckout.howDoYouWantIt') }}</label>
         </div>
 
         <div class="guest-seg">
@@ -483,8 +480,8 @@
             <span class="guest-seg-face">
               <span class="guest-seg-dot" />
               <span>
-                <b>Delivery</b>
-                <span>Sent by post{{ deliverySubLabel }}</span>
+                <b>{{ $t('ui.guestCheckout.delivery') }}</b>
+                <span>{{ $t('ui.guestCheckout.sentByPost', { suffix: deliverySubLabel }) }}</span>
               </span>
             </span>
 
@@ -502,8 +499,8 @@
             <span class="guest-seg-face">
               <span class="guest-seg-dot" />
               <span>
-                <b>Collect in store</b>
-                <span>{{ collectionSubLabel }} &mdash; we&rsquo;ll email you when it&rsquo;s ready</span>
+                <b>{{ $t('ui.guestCheckout.collectInStore') }}</b>
+                <span>{{ $t('ui.guestCheckout.collectReady', { price: collectionSubLabel }) }}</span>
               </span>
             </span>
 
@@ -523,13 +520,14 @@
           role="alert"
         >
           <p class="guest-restricted-title">
-            {{ restrictedLines.length === 1 ? 'This item' : 'These items' }}
-            {{ isCollection ? 'cannot be collected' : `cannot be sent to ${activeQuote.country_name}` }}:
+            {{ isCollection
+              ? (restrictedLines.length === 1 ? $t('ui.guestCheckout.restrictedOneCollect') : $t('ui.guestCheckout.restrictedManyCollect'))
+              : (restrictedLines.length === 1 ? $t('ui.guestCheckout.restrictedOneSend', { country: activeQuote.country_name }) : $t('ui.guestCheckout.restrictedManySend', { country: activeQuote.country_name })) }}:
           </p>
           <ul>
             <li v-for="line in restrictedLines" :key="line.id">
               <span>{{ line.title }}</span>
-              <a href="#" role="button" @click.prevent="removeFromOrder(line.id)">Remove from this order</a>
+              <a href="#" role="button" @click.prevent="removeFromOrder(line.id)">{{ $t('ui.guestCheckout.removeFromOrder') }}</a>
             </li>
           </ul>
         </div>
@@ -545,7 +543,7 @@
                 class="auth-label"
                 for="g-country"
               >
-                Country
+                {{ $t('ui.guestCheckout.country') }}
                 <span class="auth-label-required">*</span>
               </label>
 
@@ -562,7 +560,7 @@
                 :class="{ invalid: showError('country') }"
               >
                 <option value="">
-                  Select country
+                  {{ $t('ui.guestCheckout.selectCountry') }}
                 </option>
                 <option
                   v-for="country in countryOptions"
@@ -585,14 +583,14 @@
                 class="auth-error"
                 role="alert"
               >
-                {{ undeliverableMessage }} Choose a country we deliver to, or collect in store.
+                {{ undeliverableMessage }} {{ $t('ui.guestCheckout.chooseDeliverCountry') }}
               </small>
 
               <small
                 v-else
                 class="auth-hint"
               >
-                Follows the flag on your contact number unless you pick one here.
+                {{ $t('ui.guestCheckout.flagHint') }}
               </small>
 
             </div>
@@ -651,7 +649,7 @@
               class="auth-label"
               for="g-address-1"
             >
-              Address 1
+              {{ $t('ui.guestCheckout.address1') }}
               <span class="auth-label-required">*</span>
             </label>
 
@@ -662,7 +660,7 @@
               :class="{ invalid: showError('address_1') }"
               type="text"
               autocomplete="address-line1"
-              placeholder="Enter address"
+              :placeholder="$t('ui.guestCheckout.enterAddress')"
             >
 
             <small
@@ -680,7 +678,7 @@
               class="auth-label"
               for="g-address-2"
             >
-              Address 2
+              {{ $t('ui.guestCheckout.address2') }}
             </label>
 
             <input
@@ -689,7 +687,7 @@
               class="auth-input"
               type="text"
               autocomplete="address-line2"
-              placeholder="Apartment, unit, floor (optional)"
+              :placeholder="$t('ui.guestCheckout.address2Placeholder')"
             >
 
           </div>
@@ -702,7 +700,7 @@
                 class="auth-label"
                 for="g-city"
               >
-                Town / City
+                {{ $t('ui.guestCheckout.townCity') }}
                 <span class="auth-label-required">*</span>
               </label>
 
@@ -730,7 +728,7 @@
                   {{ town }}
                 </option>
                 <option :value="townOther">
-                  Other - not on this list
+                  {{ $t('ui.guestCheckout.townOtherOption') }}
                 </option>
               </select>
 
@@ -743,7 +741,7 @@
                 type="text"
                 autocomplete="address-level2"
                 :disabled="!townReady"
-                :placeholder="hasTownOptions ? 'Type your town or city' : townPlaceholder"
+                :placeholder="hasTownOptions ? $t('ui.guestCheckout.typeTown') : townPlaceholder"
                 @input="townTyped = true"
               >
 
@@ -818,7 +816,7 @@
               class="auth-label"
               for="g-type"
             >
-              Address Type
+              {{ $t('ui.guestCheckout.addressType') }}
             </label>
 
             <select
@@ -827,10 +825,10 @@
               class="auth-input"
             >
               <option value="home">
-                Home
+                {{ $t('ui.guestCheckout.home') }}
               </option>
               <option value="office">
-                Work
+                {{ $t('ui.guestCheckout.work') }}
               </option>
             </select>
 
@@ -842,8 +840,7 @@
           v-else
           class="auth-note"
         >
-          Nothing is posted on a collection order. We&rsquo;ll email
-          <b>{{ form.email || 'you' }}</b> the moment it&rsquo;s ready to collect.
+          <i18n path="ui.guestCheckout.collectionNote" :tag="false"><template #email><b>{{ form.email || $t('ui.guestCheckout.you') }}</b></template></i18n>
         </div>
 
         <!-- ─────────── TERMS ─────────── -->
@@ -859,12 +856,11 @@
             <span class="auth-custom-checkbox" />
 
             <span>
-              I agree to the terms of sale and the
-              <nuxt-link
+              <i18n path="ui.guestCheckout.agreeTerms" :tag="false"><template #link><nuxt-link
                 to="/page/privacy-policy"
                 class="auth-foot-link"
                 target="_blank"
-              >privacy notice</nuxt-link>.
+              >{{ $t('ui.guestCheckout.privacyNotice') }}</nuxt-link></template></i18n>
               <span class="auth-label-required">*</span>
             </span>
 
@@ -874,7 +870,7 @@
             v-if="hasErrors && !form.terms"
             class="auth-error"
           >
-            Tick the box to continue.
+            {{ $t('ui.guestCheckout.tickBox') }}
           </small>
 
         </div>
@@ -882,8 +878,8 @@
         <ajax-button
           class="auth-btn-primary"
           :fetching-data="submitting"
-          loading-text="Saving your details..."
-          :text="emailAlreadyConfirmed ? 'Continue to payment' : 'Continue and confirm email'"
+          :loading-text="$t('ui.guestCheckout.savingDetails')"
+          :text="emailAlreadyConfirmed ? $t('ui.guestCheckout.continueToPayment') : $t('ui.guestCheckout.continueConfirmEmail')"
         />
 
       </form>
@@ -894,17 +890,17 @@
           class="auth-btn-ghost"
           @click="$router.push('/cart')"
         >
-          Back to basket
+          {{ $t('ui.guestCheckout.backToBasket') }}
         </button>
       </div>
 
       <p class="auth-foot">
-        Want order history and faster checkout next time?
+        {{ $t('ui.guestCheckout.wantHistory') }}
         <nuxt-link
           to="/register"
           class="auth-foot-link"
         >
-          Create an account
+          {{ $t('ui.guestCheckout.createAccount') }}
         </nuxt-link>
       </p>
 
@@ -1029,27 +1025,27 @@
     computed: {
       wizardSteps() {
         return [
-          {key: 'details', label: 'Your details'},
-          {key: 'verify', label: 'Confirm email'},
-          {key: 'payment', label: 'Payment'}
+          {key: 'details', label: this.$t('ui.guestCheckout.steps.details')},
+          {key: 'verify', label: this.$t('ui.guestCheckout.steps.verify')},
+          {key: 'payment', label: this.$t('ui.guestCheckout.steps.payment')}
         ]
       },
       headings() {
 
         if (this.step === 'verify') {
-          return {title: 'Confirm your email', lede: ''}
+          return {title: this.$t('ui.guestCheckout.headings.verifyTitle'), lede: ''}
         }
 
         if (this.step === 'payment') {
           return {
-            title: 'Pay for your order',
-            lede: 'One last step. Nothing is charged until you confirm.'
+            title: this.$t('ui.guestCheckout.headings.paymentTitle'),
+            lede: this.$t('ui.guestCheckout.headings.paymentLede')
           }
         }
 
         return {
-          title: 'Check out as a guest',
-          lede: 'No account needed. We’ll email your receipt and a tracking link for the order.'
+          title: this.$t('ui.guestCheckout.headings.detailsTitle'),
+          lede: this.$t('ui.guestCheckout.headings.detailsLede')
         }
       },
       voucherDiscount() {
@@ -1150,21 +1146,21 @@
         const name = (data.name || '').trim()
 
         if (!name) {
-          errors.name = 'Enter the name for this delivery.'
+          errors.name = this.$t('ui.guestCheckout.errors.nameRequired')
         } else if (name.length < 2) {
-          errors.name = 'That name looks too short.'
+          errors.name = this.$t('ui.guestCheckout.errors.nameShort')
         }
 
         if (!data.email) {
-          errors.email = 'Enter an email address.'
+          errors.email = this.$t('ui.guestCheckout.errors.emailRequired')
         } else if (!this.isValidEmail(data.email)) {
-          errors.email = 'That email address is not valid.'
+          errors.email = this.$t('ui.guestCheckout.errors.emailInvalid')
         }
 
         if (!data.phone) {
-          errors.phone = 'Enter a contact number.'
+          errors.phone = this.$t('ui.guestCheckout.errors.phoneRequired')
         } else if (!this.phoneValid) {
-          errors.phone = 'That number is not valid for the country on the flag.'
+          errors.phone = this.$t('ui.guestCheckout.errors.phoneInvalid')
         }
 
         // Nothing is posted on a collection order, so nothing below applies.
@@ -1173,11 +1169,11 @@
         }
 
         if (!data.country) {
-          errors.country = 'Choose a country.'
+          errors.country = this.$t('ui.guestCheckout.errors.countryRequired')
         }
 
         if (!(data.address_1 || '').trim()) {
-          errors.address_1 = 'Enter the first line of the address.'
+          errors.address_1 = this.$t('ui.guestCheckout.errors.address1Required')
         }
 
         /*
@@ -1186,14 +1182,14 @@
          * for the one thing they have not got to yet.
          */
         if (this.hasRegions && !data.state) {
-          errors.state = `Choose a ${this.regionLabel.toLowerCase()}.`
+          errors.state = this.$t('ui.guestCheckout.errors.regionRequired', { region: this.regionLabel.toLowerCase() })
         }
 
         if (this.townReady) {
           if (!(data.city || '').trim()) {
-            errors.city = 'Enter a town or city.'
+            errors.city = this.$t('ui.guestCheckout.errors.cityRequired')
           } else if (!this.isValidTown(data.city)) {
-            errors.city = 'That does not look like a town name.'
+            errors.city = this.$t('ui.guestCheckout.errors.cityInvalid')
           }
         }
 
@@ -1202,11 +1198,13 @@
           const label = this.postcodeLabel.toLowerCase()
 
           if (!(data.zip || '').trim()) {
-            errors.zip = `Enter ${/^[aeiou]/.test(label) ? 'an' : 'a'} ${label}.`
+            errors.zip = /^[aeiou]/.test(label)
+              ? this.$t('ui.guestCheckout.errors.postcodeRequiredAn', { label })
+              : this.$t('ui.guestCheckout.errors.postcodeRequiredA', { label })
           } else if (!this.isValidPostcode(data.zip)) {
             errors.zip = this.postcodeExample
-              ? `Enter a valid ${label}, for example ${this.postcodeExample}.`
-              : `Enter a valid ${label}.`
+              ? this.$t('ui.guestCheckout.errors.postcodeInvalidExample', { label, example: this.postcodeExample })
+              : this.$t('ui.guestCheckout.errors.postcodeInvalid', { label })
           }
         }
 
@@ -1269,10 +1267,10 @@
 
         return this.postagePrice > 0
           ? `, ${this.priceLabel(this.postagePrice)}`
-          : ', free'
+          : this.$t('ui.guestCheckout.commaFree')
       },
       fulfilmentLabel() {
-        return this.isCollection ? 'Collection - in store' : 'Delivery - by post'
+        return this.isCollection ? this.$t('ui.guestCheckout.collectionInStore') : this.$t('ui.guestCheckout.deliveryByPost')
       },
       activeQuote() {
         return this.isCollection ? this.quotes.collection : this.quotes.delivery
@@ -1302,7 +1300,7 @@
       collectionSubLabel() {
         const price = this.shippingTotal(true)
 
-        return price > 0 ? this.priceLabel(price) : 'Free'
+        return price > 0 ? this.priceLabel(price) : this.$t('ui.guestCheckout.free')
       },
       ...mapGetters('language', ['langCode']),
       ...mapGetters('cart', {cartProducts: 'checkoutProducts'}),
@@ -1665,7 +1663,7 @@
 
         if (data?.status !== 200) {
           this.setToastError(
-            data?.data?.form?.join(', ') || 'We could not save that address.'
+            data?.data?.form?.join(', ') || this.$t('ui.guestCheckout.toast.addressSaveFailed')
           )
           return null
         }
@@ -1681,7 +1679,7 @@
 
         if (this.hasFieldErrors || !this.form.terms) {
 
-          this.setToastError('Please correct the highlighted fields.')
+          this.setToastError(this.$t('ui.guestCheckout.toast.correctFields'))
 
           this.$nextTick(() => {
 
@@ -1823,17 +1821,17 @@
           })
 
           if (res?.status === 201) {
-            this.voucherError = res.data?.form?.[0] || 'That code is not valid for this order.'
+            this.voucherError = res.data?.form?.[0] || this.$t('ui.guestCheckout.toast.voucherInvalid')
             return
           }
 
           this.voucherResult = res.data
           this.appliedVoucherCode = res.data?.code || this.voucher
 
-          this.setToastMessage('Voucher applied.')
+          this.setToastMessage(this.$t('ui.guestCheckout.toast.voucherApplied'))
 
         } catch (e) {
-          this.voucherError = 'We could not check that code just now.'
+          this.voucherError = this.$t('ui.guestCheckout.toast.voucherCheckFailed')
         } finally {
           this.checkingVoucher = false
         }
@@ -1869,7 +1867,7 @@
             this.step = 'verify'
 
             if (resend) {
-              this.setToastMessage('A new code is on its way.')
+              this.setToastMessage(this.$t('ui.guestCheckout.toast.newCodeSent'))
             }
 
             this.$nextTick(() => {

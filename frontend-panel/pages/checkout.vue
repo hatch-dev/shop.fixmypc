@@ -14,8 +14,8 @@
             -->
             <section class="review-panel mb-3" aria-labelledby="review-panel-title">
               <header class="review-panel-head">
-                <h2 id="review-panel-title" class="review-panel-title">Review your order</h2>
-                <p class="review-panel-sub">Check the details below, then choose how to pay.</p>
+                <h2 id="review-panel-title" class="review-panel-title">{{ $t('ui.checkoutPage.reviewTitle') }}</h2>
+                <p class="review-panel-sub">{{ $t('ui.checkoutPage.reviewSub') }}</p>
               </header>
 
               <dl class="review-rows">
@@ -23,15 +23,15 @@
                 <div class="review-row" :class="{ 'is-missing': !isCollection && !selectedAddress }">
                   <dt class="review-row-label">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9.5" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg>
-                    {{ isCollection ? 'Collect from' : 'Ship to' }}
+                    {{ isCollection ? $t('ui.checkoutPage.collectFrom') : $t('ui.checkoutPage.shipTo') }}
                   </dt>
                   <dd class="review-row-value">
                     <template v-if="isCollection">
                       <template v-if="collectionPoint">
                         <span>{{ collectionPoint.lines.join(', ') }}</span>
-                        <span v-if="collectionPoint.phone" class="review-muted">Store: {{ collectionPoint.phone }}</span>
+                        <span v-if="collectionPoint.phone" class="review-muted">{{ $t('ui.checkoutPage.storePhone', { phone: collectionPoint.phone }) }}</span>
                       </template>
-                      <span v-else class="review-muted">Our store &mdash; we&rsquo;ll email you the details.</span>
+                      <span v-else class="review-muted">{{ $t('ui.checkoutPage.ourStore') }}</span>
                       <!-- who collects, and how we reach them when it is ready -->
                       <span v-if="contactSummary" class="review-contact">
                         <span class="review-strong">{{ contactSummary.name }}</span>
@@ -41,18 +41,18 @@
                     <template v-else-if="selectedAddress">
                       <span>
                         <span class="review-strong">{{ selectedAddress.name }}</span>
-                        <span class="review-tag">{{ selectedAddress.type || 'Home' }}</span>
+                        <span class="review-tag">{{ selectedAddress.type || $t('ui.checkoutPage.home') }}</span>
                       </span>
                       <span>{{ addressLines.join(', ') }}</span>
                       <span v-if="shipToContact" class="review-muted">{{ shipToContact }}</span>
                     </template>
                     <span v-else class="review-warning">
-                      No delivery address yet. A posted order needs somewhere to go.
+                      {{ $t('ui.checkoutPage.noAddress') }}
                     </span>
                   </dd>
                   <dd class="review-row-action">
                     <button type="button" class="review-change" @click="goToShipping">
-                      {{ !isCollection && !selectedAddress ? 'Add' : 'Change' }}
+                      {{ !isCollection && !selectedAddress ? $t('ui.checkoutPage.add') : $t('ui.checkoutPage.change') }}
                     </button>
                   </dd>
                 </div>
@@ -62,14 +62,14 @@
                   <dt class="review-row-label">
                     <svg v-if="isCollection" viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true"><path d="M4 9.5 5.5 4h13L20 9.5M4 9.5h16M4 9.5V20h16V9.5M9.5 20v-5h5v5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
                     <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true"><path d="M3 6h11v10H3zM14 9h4l3 3.5V16h-7" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7" cy="17.5" r="1.8" fill="#fff" stroke="currentColor" stroke-width="1.6"/><circle cx="17.5" cy="17.5" r="1.8" fill="#fff" stroke="currentColor" stroke-width="1.6"/></svg>
-                    Method
+                    {{ $t('ui.checkoutPage.method') }}
                   </dt>
                   <dd class="review-row-value">
-                    <span class="review-strong">{{ isCollection ? 'Collection in store' : 'Send by Post' }}</span>
+                    <span class="review-strong">{{ isCollection ? $t('ui.checkoutPage.collectionInStore') : $t('ui.checkoutPage.sendByPost') }}</span>
                     <span class="review-muted">
-                      <template v-if="isCollection">We&rsquo;ll email you when it&rsquo;s ready to collect.</template>
-                      <template v-else-if="deliveryDays">Usually delivered within {{ deliveryDays }} working {{ deliveryDays === 1 ? 'day' : 'days' }}.</template>
-                      <template v-else>Tracked delivery to your address.</template>
+                      <template v-if="isCollection">{{ $t('ui.checkoutPage.readyEmail') }}</template>
+                      <template v-else-if="deliveryDays">{{ $tc('ui.checkoutPage.deliveredWithin', deliveryDays, { days: deliveryDays }) }}</template>
+                      <template v-else>{{ $t('ui.checkoutPage.trackedDelivery') }}</template>
                     </span>
 
                     <!-- the method switch, only while changing it -->
@@ -78,7 +78,7 @@
                       id="delivery-options"
                       class="review-switch"
                       role="radiogroup"
-                      aria-label="Delivery or collection"
+                      :aria-label="$t('ui.checkoutPage.deliveryOrCollection')"
                     >
                       <button
                         type="button"
@@ -87,7 +87,7 @@
                         :class="['review-switch-opt', { active: deliveryType === 'delivery' }]"
                         @click="setDeliveryType('delivery')"
                       >
-                        Send by Post
+                        {{ $t('ui.checkoutPage.sendByPost') }}
                       </button>
                       <button
                         type="button"
@@ -96,13 +96,13 @@
                         :class="['review-switch-opt', { active: deliveryType === 'collection' }]"
                         @click="setDeliveryType('collection')"
                       >
-                        Collect in store &middot; Free
+                        {{ $t('ui.checkoutPage.collectInStore') }} &middot; {{ $t('ui.checkoutPage.free') }}
                       </button>
                     </div>
                   </dd>
                   <dd class="review-row-action review-row-action-price">
                     <span class="review-price" :class="{ 'is-free': !(cartPrice.shippingPrice > 0) }">
-                      {{ cartPrice.shippingPrice > 0 ? money(cartPrice.shippingPrice) : 'Free' }}
+                      {{ cartPrice.shippingPrice > 0 ? money(cartPrice.shippingPrice) : $t('ui.checkoutPage.free') }}
                     </span>
                     <button
                       id="delivery-choice"
@@ -111,7 +111,7 @@
                       :aria-expanded="String(editingDelivery)"
                       @click="editingDelivery = !editingDelivery"
                     >
-                      {{ editingDelivery ? 'Done' : 'Change' }}
+                      {{ editingDelivery ? $t('ui.checkoutPage.done') : $t('ui.checkoutPage.change') }}
                     </button>
                   </dd>
                 </div>
@@ -121,9 +121,9 @@
             <section class="review-items mb-3" aria-labelledby="review-items-title">
               <div class="review-items-head">
                 <h2 id="review-items-title" class="review-items-title">
-                  Items <span class="review-items-count">{{ itemCount }}</span>
+                  {{ $t('ui.checkoutPage.items') }} <span class="review-items-count">{{ itemCount }}</span>
                 </h2>
-                <nuxt-link to="/cart" class="review-change">Edit basket</nuxt-link>
+                <nuxt-link to="/cart" class="review-change">{{ $t('ui.checkoutPage.editBasket') }}</nuxt-link>
               </div>
               <checkout-review-item
                 v-for="line in checkedProduct"
@@ -146,12 +146,12 @@
               <div class="accordion-item">
                 <h5 class="accordion-header">
                   <button type="button" class="accordion-button" disabled>
-                    <span class="delivery-heading">Purchase order</span>
+                    <span class="delivery-heading">{{ $t('ui.checkoutPage.purchaseOrder') }}</span>
                   </button>
                 </h5>
                 <div class="po-body">
                   <label class="po-label" for="po-number">
-                    Purchase order number <span class="po-required">*</span>
+                    {{ $t('ui.checkoutPage.purchaseOrderNumber') }} <span class="po-required">*</span>
                   </label>
                   <input
                     id="po-number"
@@ -159,7 +159,7 @@
                     class="po-input"
                     :class="{ invalid: purchaseOrderError }"
                     maxlength="64"
-                    placeholder="e.g. PO-10482"
+                    :placeholder="$t('ui.checkoutPage.poPlaceholder')"
                     autocomplete="off"
                     @input="purchaseOrderError = ''"
                   >
@@ -167,7 +167,7 @@
                     {{ purchaseOrderError }}
                   </small>
                   <small v-else class="po-help">
-                    We will print this on your invoice so your accounts team can match it.
+                    {{ $t('ui.checkoutPage.poHelp') }}
                   </small>
                 </div>
               </div>
@@ -182,10 +182,10 @@
             -->
             <section id="paymentAccordion" class="review-pay mb-3" aria-labelledby="review-pay-title">
               <div class="review-pay-head">
-                <h2 id="review-pay-title" class="review-pay-title">Payment</h2>
+                <h2 id="review-pay-title" class="review-pay-title">{{ $t('ui.checkoutPage.payment') }}</h2>
                 <p class="review-pay-sub">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3" stroke="currentColor" stroke-width="1.8"/></svg>
-                  All transactions are secure and encrypted.
+                  {{ $t('ui.checkoutPage.secureNote') }}
                 </p>
               </div>
               <div class="review-pay-body">
@@ -199,7 +199,7 @@
                           :collection-order="isCollection"
                           :blocked="needsDeliveryAddress"
                           :purchase-order-number="purchaseOrderNumber"
-                          blocked-reason="Add a delivery address before placing this order."
+                          :blocked-reason="$t('ui.checkoutPage.blockedReason')"
                           @field-error="onFieldError"
                           @confirm-state="payState = $event"
                           @wallet-applied="walletApplied = $event"
@@ -274,10 +274,10 @@
                 @click="showVoucherList = !showVoucherList"
               >
                 <span v-if="!showVoucherList">
-                  Show Available Vouchers
+                  {{ $t('ui.checkoutPage.showVouchers') }}
                 </span>
                 <span v-else>
-                  Hide Available Vouchers
+                  {{ $t('ui.checkoutPage.hideVouchers') }}
                 </span>
               </button>
               <transition name="fade">
@@ -307,10 +307,10 @@
                   >
                     <i class="fa fa-ticket"></i>
                     <h6>
-                      No Active Vouchers
+                      {{ $t('ui.checkoutPage.noVouchers') }}
                     </h6>
                     <p>
-                      You currently don't have any available vouchers for this order.
+                      {{ $t('ui.checkoutPage.noVouchersText') }}
                     </p>
                   </div>
                   <div
@@ -333,18 +333,18 @@
                         </span>
                       </div>
                       <p v-if="item.is_gift_card" class="voucher-description">
-                        <span>Gift card · no minimum spend</span>
+                        <span>{{ $t('ui.checkoutPage.giftCardNoMin') }}</span>
                       </p>
                       <p v-else class="voucher-description">
                         <span>
-                          Min spend {{ money(item.min_spend) }}
+                          {{ $t('ui.checkoutPage.minSpend', { amount: money(item.min_spend) }) }}
                         </span>
                         <span v-if="voucherCap(item)">
-                          Max discount {{ money(item.capped_price) }}
+                          {{ $t('ui.checkoutPage.maxDiscount', { amount: money(item.capped_price) }) }}
                         </span>
                       </p>
                       <small class="voucher-expiry">
-                        Valid till {{ item.end_time }}
+                        {{ $t('ui.checkoutPage.validTill', { date: item.end_time }) }}
                       </small>
                     </div>
                     <button
@@ -370,10 +370,10 @@
                           item.code?.trim()?.toLowerCase()
                         "
                       >
-                        Remove
+                        {{ $t('ui.checkoutPage.remove') }}
                       </span>
                       <span v-else>
-                        Apply
+                        {{ $t('ui.checkoutPage.apply') }}
                       </span>
                     </button>
                   </div>
@@ -773,7 +773,7 @@
           })
         })
         this.setToastMessage(
-          'Voucher removed successfully'
+          this.$t('ui.checkoutPage.toast.voucherRemoved')
         )
       },
       async loadVouchers() {
@@ -833,7 +833,7 @@
        */
       voucherOffer(item) {
         if (item.is_gift_card) {
-          return this.money(item.gift_balance) + ' balance'
+          return this.$t('ui.checkoutPage.offer.balance', { amount: this.money(item.gift_balance) })
         }
 
         if (Number(item.type) === 2) {
@@ -844,10 +844,10 @@
           }
 
           // 15.00 -> "15%", 12.50 -> "12.5%"
-          return String(rate.toFixed(2)).replace(/\.?0+$/, '') + '% off'
+          return this.$t('ui.checkoutPage.offer.percentOff', { rate: String(rate.toFixed(2)).replace(/\.?0+$/, '') })
         }
 
-        return this.money(item.price) + ' off'
+        return this.$t('ui.checkoutPage.offer.amountOff', { amount: this.money(item.price) })
       },
 
       /*
@@ -955,11 +955,11 @@
             const product = data?.data?.product?.[0]
             const first = product ? Object.values(product)[0] : data?.data?.form?.[0]
 
-            this.setToastError((Array.isArray(first) ? first[0] : first) || 'That delivery option is not available for this order.')
+            this.setToastError((Array.isArray(first) ? first[0] : first) || this.$t('ui.checkoutPage.toast.deliveryUnavailable'))
           }
         } catch (e) {
           revert()
-          this.setToastError('That delivery option could not be saved. Please try again.')
+          this.setToastError(this.$t('ui.checkoutPage.toast.deliverySaveFailed'))
         }
       },
       async checkVoucher() {

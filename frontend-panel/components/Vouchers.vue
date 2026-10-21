@@ -12,15 +12,15 @@
       :cards="3"
       :tiles="4"
       heading
-      label="Loading your vouchers"
+      :label="$t('ui.vouchersPanel.loading')"
     />
 
     <template v-else>
 
     <div class="card-box p-4 mb-4 d-flex justify-content-between align-items-center">
         <div>
-            <h5 class="mb-1 order-hrading">My Vouchers</h5>
-            <small class="text-muted">Manage your discount vouchers and gift codes</small>
+            <h5 class="mb-1 order-hrading">{{ $t('ui.vouchersPanel.title') }}</h5>
+            <small class="text-muted">{{ $t('ui.vouchersPanel.subtitle') }}</small>
         </div>
     </div>
 
@@ -29,9 +29,9 @@
           <div class="voucher-stat position-relative">
               <div class="stat-icon"><i class="fa-solid fa-ticket"
                       style="color: rgb(82, 90, 107);"></i></div>
-              <small>TOTAL VOUCHERS</small>
+              <small>{{ $t('ui.vouchersPanel.stats.total') }}</small>
               <h5 class="total-vouchers">{{ totalVouchers }}</h5>
-              <span class="text-muted small">Active & Expired</span>
+              <span class="text-muted small">{{ $t('ui.vouchersPanel.stats.totalSub') }}</span>
           </div>
       </div>
       <div class="col-4">
@@ -39,9 +39,9 @@
               <div class="stat-icon"><i class="fa-solid fa-circle-check"
                       style="color: rgb(82, 90, 107);"></i></div>
 
-              <small>ACTIVE VOUCHERS</small>
+              <small>{{ $t('ui.vouchersPanel.stats.active') }}</small>
               <h5 class="total-vouchers">{{ activeVouchers }}</h5>
-              <span class="text-muted small">Ready to use</span>
+              <span class="text-muted small">{{ $t('ui.vouchersPanel.stats.activeSub') }}</span>
           </div>
       </div>
       <div class="col-4">
@@ -49,10 +49,10 @@
               <div class="stat-icon"><i class="fa-solid fa-euro-sign"
                       style="color: rgb(82, 90, 107);"></i></div>
 
-              <small>TOTAL SAVED</small>
+              <small>{{ $t('ui.vouchersPanel.stats.saved') }}</small>
               <!-- null until /user/savings answers; a dash rather than a guess -->
               <h5 class="total-vouchers">{{ totalSaved === null ? '—' : currencyIcon + totalSaved }}</h5>
-              <span class="text-muted small">Lifetime savings</span>
+              <span class="text-muted small">{{ $t('ui.vouchersPanel.stats.savedSub') }}</span>
           </div>
       </div>
     </div>
@@ -67,15 +67,14 @@
         <div class="gift-redeem-head">
           <span class="gift-redeem-icon" aria-hidden="true"><i class="fa-solid fa-gift"></i></span>
           <div>
-            <h6 class="mb-1">Redeem a gift card</h6>
+            <h6 class="mb-1">{{ $t('ui.vouchersPanel.redeem.title') }}</h6>
             <small class="text-muted d-block">
-              Enter the code from your gift card email. It is added to your vouchers below:
-              apply it at checkout, and anything an order does not use stays on it for next time.
+              {{ $t('ui.vouchersPanel.redeem.help') }}
             </small>
           </div>
         </div>
         <div class="voucher-form mb-0 mt-3">
-            <label for="gift-redeem" class="sr-only">Gift card code</label>
+            <label for="gift-redeem" class="sr-only">{{ $t('ui.vouchersPanel.redeem.codeLabel') }}</label>
             <input
               id="gift-redeem"
               v-model.trim="redeemCode"
@@ -88,30 +87,30 @@
               maxlength="20"
             >
             <button type="submit" class="apply-btn" :disabled="!redeemCode || redeeming">
-              {{ redeeming ? 'Adding…' : 'Add to my vouchers' }}
+              {{ redeeming ? $t('ui.vouchersPanel.redeem.adding') : $t('ui.vouchersPanel.redeem.add') }}
             </button>
         </div>
     </form>
     
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 mb-2 voucher-list-head">
         <h6 class="mb-0">
-          {{ filterType === 'active' ? 'Active Vouchers' :
-            filterType === 'expired' ? 'Expired Vouchers' :
-            'All Vouchers' }}
+          {{ filterType === 'active' ? $t('ui.vouchersPanel.list.active') :
+            filterType === 'expired' ? $t('ui.vouchersPanel.list.expired') :
+            $t('ui.vouchersPanel.list.all') }}
         </h6>
 
         <div class="d-flex align-items-center gap-2">
-            <small class="text-muted">Sort by:</small>
+            <small class="text-muted">{{ $t('ui.vouchersPanel.sort.label') }}</small>
             <select v-model="sortBy" class="sort-select" :disabled="filterType === 'expired'">
-              <option value="high_discount">Discount High → Low</option>
-              <option value="low_discount">Discount Low → High</option>
-              <option value="expiring_soon">Expiring Soon</option>
-              <option value="best_value">Best Value</option>
+              <option value="high_discount">{{ $t('ui.vouchersPanel.sort.highDiscount') }}</option>
+              <option value="low_discount">{{ $t('ui.vouchersPanel.sort.lowDiscount') }}</option>
+              <option value="expiring_soon">{{ $t('ui.vouchersPanel.sort.expiringSoon') }}</option>
+              <option value="best_value">{{ $t('ui.vouchersPanel.sort.bestValue') }}</option>
             </select>
         </div>
     </div>
     <div v-if="filterType !== 'expired' && !filteredActiveList.length" class="text-muted mt-3">
-      No active vouchers
+      {{ $t('ui.vouchersPanel.noActive') }}
     </div>
     <div v-if="filterType !== 'expired'">
         <div v-for="item in filteredActiveList" :key="item.id" class="voucher-card mt-3">
@@ -119,23 +118,22 @@
                 <div>
                     <div class="d-flex gap-2">
                         <h6 class="off-next-purchase">{{ item.title }}</h6>
-                        <span class="btn-active" v-if="getDaysLeft(item) !== 'Expired'">
-                          ACTIVE
+                        <span class="btn-active" v-if="getDaysLeftNumber(item) > 0">
+                          {{ $t('ui.vouchersPanel.badgeActive') }}
                         </span>
                     </div>
                     <p v-if="item.is_gift_card" class="text-muted small mt-1 mb-3">
-                        Gift card. {{ currencyIcon }}{{ item.gift_balance }} left of {{ currencyIcon }}{{ Number(item.gift_value).toFixed(2) }}.
-                        No minimum spend; what an order does not use stays for next time.
+                        {{ $t('ui.vouchersPanel.giftCardDesc', { balance: currencyIcon + item.gift_balance, value: currencyIcon + Number(item.gift_value).toFixed(2) }) }}
                     </p>
                     <p v-else-if="item.user_id" class="text-muted small mt-1 mb-3">
-                        Gift voucher. One use, on any order, for your account only.
+                        {{ $t('ui.vouchersPanel.giftVoucherDesc') }}
                     </p>
                     <p v-else class="text-muted small mt-1 mb-3">
-                        Valid on orders above {{ currencyIcon + item.min_spend }}. Cannot be combined with other offers.
+                        {{ $t('ui.vouchersPanel.minSpendDesc', { amount: currencyIcon + item.min_spend }) }}
                     </p>
                     <div class="d-flex gap-5 flex-wrap expire-boxed voucher-meta">
                         <div>
-                            <small class="text-muted">Code</small><br>
+                            <small class="text-muted">{{ $t('ui.vouchersPanel.code') }}</small><br>
                             <div class="code-box">
                                 {{ item.code }}
                               </div>
@@ -146,25 +144,25 @@
                                 <i class="fa-solid fa-copy"></i>
 
                                 <span class="tooltip-text">
-                                  {{ copiedVouchedId === item.id ? 'Copied!' : 'Copy' }}
+                                  {{ copiedVouchedId === item.id ? $t('ui.vouchersPanel.copiedBang') : $t('ui.vouchersPanel.copy') }}
                                 </span>
                               </span>
                         </div>
                         <div v-if="item.is_gift_card">
-                            <small class="text-muted">Balance</small><br>
+                            <small class="text-muted">{{ $t('ui.vouchersPanel.balance') }}</small><br>
                             <strong>{{ currencyIcon }}{{ item.gift_balance }}</strong>
                         </div>
                         <div v-else>
-                            <small class="text-muted">Discount</small><br>
+                            <small class="text-muted">{{ $t('ui.vouchersPanel.discount') }}</small><br>
                             <strong>{{ item.type === 2 ? item.price + '%' : currencyIcon + item.price }}</strong>
                         </div>
                         <div>
-                            <small class="text-muted">Expires</small><br>
+                            <small class="text-muted">{{ $t('ui.vouchersPanel.expires') }}</small><br>
                             <strong>{{ item.end_time }}</strong>
                         </div>
                     </div>
                 </div>
-                <button class="btn-use-now" @click="goToCart">Use Now</button>
+                <button class="btn-use-now" @click="goToCart">{{ $t('ui.vouchersPanel.useNow') }}</button>
             </div>
 
             <div class="voucher-progress-wrapper mt-3">
@@ -176,39 +174,39 @@
         </div>
     </div>
     <div class="mt-3" v-if="filterType !== 'active'">
-      <h6>Expired Vouchers</h6>
+      <h6>{{ $t('ui.vouchersPanel.list.expired') }}</h6>
     </div>
     <div v-if="filterType !== 'active' && !expiredList.length" class="text-muted mt-3">
-      No expired vouchers
+      {{ $t('ui.vouchersPanel.noExpired') }}
     </div>
     <div v-if="filterType !== 'active'" v-for="item in expiredList" :key="item.id" class="voucher-card expired-voucher mt-3">
       <div class="d-flex justify-content-between align-items-start flex-wrap">
           <div>
               <strong>{{ item.title }}</strong>
-              <span class="badge-expired ms-2">{{ isUsedUp(item) ? 'USED' : 'EXPIRED' }}</span>
+              <span class="badge-expired ms-2">{{ isUsedUp(item) ? $t('ui.vouchersPanel.badgeUsed') : $t('ui.vouchersPanel.badgeExpired') }}</span>
               <!-- was the same "Welcome discount for new customers" text on every expired voucher -->
               <p v-if="isUsedUp(item)" class="text-muted small mt-1 mb-3">
-                  Gift card. All {{ currencyIcon }}{{ Number(item.gift_value).toFixed(2) }} has been spent.
+                  {{ $t('ui.vouchersPanel.usedUpDesc', { value: currencyIcon + Number(item.gift_value).toFixed(2) }) }}
               </p>
               <p v-else class="text-muted small mt-1 mb-3">
-                  Was valid on orders above {{ currencyIcon + item.min_spend }}.
+                  {{ $t('ui.vouchersPanel.wasValidDesc', { amount: currencyIcon + item.min_spend }) }}
               </p>
               <div class="d-flex gap-5 flex-wrap expire-boxed voucher-meta">
                   <div>
-                      <small class="text-muted">Code</small><br>
+                      <small class="text-muted">{{ $t('ui.vouchersPanel.code') }}</small><br>
                       <div class="code-box">{{ item.code }}</div>
                   </div>
                   <div>
-                      <small class="text-muted">Discount</small><br>
+                      <small class="text-muted">{{ $t('ui.vouchersPanel.discount') }}</small><br>
                       <strong>{{ item.type === 2 ? item.price + '%' : currencyIcon + item.price }}</strong>
                   </div>
                   <div>
-                      <small class="text-muted">{{ isUsedUp(item) ? 'Valid until' : 'Expired On' }}</small><br>
+                      <small class="text-muted">{{ isUsedUp(item) ? $t('ui.vouchersPanel.validUntil') : $t('ui.vouchersPanel.expiredOn') }}</small><br>
                       <strong>{{ item.end_time }}</strong>
                   </div>
               </div>
           </div>
-          <button class="btn btn-light btn-sm" disabled>{{ isUsedUp(item) ? 'Used' : 'Expired' }}</button>
+          <button class="btn btn-light btn-sm" disabled>{{ isUsedUp(item) ? $t('ui.vouchersPanel.used') : $t('ui.vouchersPanel.expired') }}</button>
       </div>
     </div>
 
@@ -219,9 +217,9 @@
     <section v-if="giftCodes.length" ref="giftCodesSection" class="card-box p-4 mt-4 gift-codes">
       <div class="gift-codes-head">
         <div>
-          <h6 class="mb-1">My gift cards</h6>
+          <h6 class="mb-1">{{ $t('ui.vouchersPanel.giftCodes.title') }}</h6>
           <small class="text-muted">
-            Cards you have bought. Each code can be redeemed once, by whoever has it.
+            {{ $t('ui.vouchersPanel.giftCodes.sub') }}
           </small>
         </div>
         <span class="gift-codes-count">{{ giftCodes.length }}</span>
@@ -238,20 +236,20 @@
                 v-if="gc.state === 'available'"
                 type="button"
                 class="gift-code-copy"
-                :aria-label="`Copy ${gc.code}`"
+                :aria-label="$t('ui.vouchersPanel.giftCodes.copyCode', { code: gc.code })"
                 @click="copyText(gc.code, gc.id)"
               >
                 <i class="fa-regular" :class="copiedGiftId === gc.id ? 'fa-circle-check' : 'fa-copy'" aria-hidden="true"></i>
-                {{ copiedGiftId === gc.id ? 'Copied' : 'Copy' }}
+                {{ copiedGiftId === gc.id ? $t('ui.vouchersPanel.copied') : $t('ui.vouchersPanel.copy') }}
               </button>
             </div>
             <span class="gift-code-meta">
-              {{ gc.title }} · bought {{ shortDate(gc.purchased_at) }}
-              <template v-if="gc.state === 'available' && gc.expires_at"> · valid until {{ shortDate(gc.expires_at) }}</template>
+              {{ gc.title }} · {{ $t('ui.vouchersPanel.giftCodes.bought', { date: shortDate(gc.purchased_at) }) }}
+              <template v-if="gc.state === 'available' && gc.expires_at"> · {{ $t('ui.vouchersPanel.giftCodes.validUntil', { date: shortDate(gc.expires_at) }) }}</template>
             </span>
             <span v-if="gc.recipient" class="gift-code-meta">
               <i class="fa-regular fa-envelope" aria-hidden="true"></i>
-              Sent to {{ gc.recipient }}
+              {{ $t('ui.vouchersPanel.giftCodes.sentTo', { name: gc.recipient }) }}
             </span>
           </div>
 
@@ -264,7 +262,7 @@
               :disabled="redeeming"
               @click="redeemGift(gc.code)"
             >
-              Add to my vouchers
+              {{ $t('ui.vouchersPanel.redeem.add') }}
             </button>
           </div>
         </li>
@@ -280,10 +278,9 @@
     -->
     <section v-if="giftVouchers.length && activeDesign" class="card-box gb mt-4 mb-4">
       <div class="gb-head">
-        <h6 class="gb-title">Send a gift card</h6>
+        <h6 class="gb-title">{{ $t('ui.vouchersPanel.builder.title') }}</h6>
         <p class="gb-sub">
-          Buy for yourself or someone else. Every card is its own code, valid for 5 years,
-          and redeeming it adds it to Vouchers, ready to apply at checkout.
+          {{ $t('ui.vouchersPanel.builder.sub') }}
         </p>
       </div>
 
@@ -294,7 +291,7 @@
           <div class="gb-card" :class="`gb-theme-${themeIndex}`" aria-hidden="true">
             <div class="gb-card-top">
               <span class="gb-card-brand">FixMyPC</span>
-              <span class="gb-card-kind">Gift card</span>
+              <span class="gb-card-kind">{{ $t('ui.vouchersPanel.builder.cardKind') }}</span>
             </div>
             <div class="gb-card-value">
               <span v-if="gbAmount">{{ currencyIcon }}{{ formatMoney(gbAmount) }}</span>
@@ -302,7 +299,7 @@
             </div>
             <div class="gb-card-bottom">
               <span class="gb-card-for">
-                {{ gbGift.on ? (gbGift.name ? `For ${gbGift.name}` : 'For someone special') : 'For you' }}
+                {{ gbGift.on ? (gbGift.name ? $t('ui.vouchersPanel.builder.forName', { name: gbGift.name }) : $t('ui.vouchersPanel.builder.forSomeone')) : $t('ui.vouchersPanel.builder.forYou') }}
               </span>
               <span class="gb-card-design">{{ activeDesign.title }}</span>
             </div>
@@ -314,7 +311,7 @@
           </p>
 
           <!-- design picker, only when there is a choice -->
-          <div v-if="giftVouchers.length > 1" class="gb-designs" role="radiogroup" aria-label="Design">
+          <div v-if="giftVouchers.length > 1" class="gb-designs" role="radiogroup" :aria-label="$t('ui.vouchersPanel.builder.design')">
             <button
               v-for="(design, i) in giftVouchers"
               :key="design.id"
@@ -339,8 +336,8 @@
         <div class="gb-steps">
 
           <div class="gb-step">
-            <span class="gb-step-label"><span class="gb-num">1</span> Choose a value</span>
-            <div class="gb-values" role="radiogroup" aria-label="Value">
+            <span class="gb-step-label"><span class="gb-num">1</span> {{ $t('ui.vouchersPanel.builder.chooseValue') }}</span>
+            <div class="gb-values" role="radiogroup" :aria-label="$t('ui.vouchersPanel.builder.value')">
               <button
                 v-for="amt in activeDesign.amounts"
                 :key="amt"
@@ -357,33 +354,33 @@
           </div>
 
           <div class="gb-step">
-            <span class="gb-step-label"><span class="gb-num">2</span> How many</span>
+            <span class="gb-step-label"><span class="gb-num">2</span> {{ $t('ui.vouchersPanel.builder.howMany') }}</span>
             <div class="gb-qty-row">
               <div class="gb-qty">
                 <button
                   type="button"
-                  aria-label="One fewer"
+                  :aria-label="$t('ui.vouchersPanel.builder.oneFewer')"
                   :disabled="gbQty <= activeDesign.min_quantity"
                   @click="decreaseQty(activeDesign)"
                 >−</button>
                 <span aria-live="polite">{{ gbQty }}</span>
                 <button
                   type="button"
-                  aria-label="One more"
+                  :aria-label="$t('ui.vouchersPanel.builder.oneMore')"
                   :disabled="gbQty >= activeDesign.max_quantity"
                   @click="increaseQty(activeDesign)"
                 >+</button>
               </div>
               <span class="gb-muted">
-                {{ gbQty > 1 ? `${gbQty} separate codes` : 'One code' }} ·
-                up to {{ activeDesign.max_quantity }}
+                {{ gbQty > 1 ? $t('ui.vouchersPanel.builder.separateCodes', { count: gbQty }) : $t('ui.vouchersPanel.builder.oneCode') }} ·
+                {{ $t('ui.vouchersPanel.builder.upTo', { max: activeDesign.max_quantity }) }}
               </span>
             </div>
           </div>
 
           <div class="gb-step">
-            <span class="gb-step-label"><span class="gb-num">3</span> Who is it for?</span>
-            <div class="gb-seg" role="radiogroup" aria-label="Recipient">
+            <span class="gb-step-label"><span class="gb-num">3</span> {{ $t('ui.vouchersPanel.builder.whoFor') }}</span>
+            <div class="gb-seg" role="radiogroup" :aria-label="$t('ui.vouchersPanel.builder.recipient')">
               <button
                 type="button"
                 role="radio"
@@ -391,7 +388,7 @@
                 :aria-checked="!gbGift.on ? 'true' : 'false'"
                 @click="gbGift.on = false"
               >
-                <i class="fa-regular fa-user" aria-hidden="true"></i> For me
+                <i class="fa-regular fa-user" aria-hidden="true"></i> {{ $t('ui.vouchersPanel.builder.forMe') }}
               </button>
               <button
                 type="button"
@@ -400,14 +397,14 @@
                 :aria-checked="gbGift.on ? 'true' : 'false'"
                 @click="gbGift.on = true"
               >
-                <i class="fa-solid fa-gift" aria-hidden="true"></i> As a gift
+                <i class="fa-solid fa-gift" aria-hidden="true"></i> {{ $t('ui.vouchersPanel.builder.asGift') }}
               </button>
             </div>
 
             <div v-if="gbGift.on" class="gb-recipient">
               <div class="gb-field-row">
                 <div class="gb-field">
-                  <label class="gb-label" for="gb-recipient-name">Their name <span aria-hidden="true">*</span></label>
+                  <label class="gb-label" for="gb-recipient-name">{{ $t('ui.vouchersPanel.builder.theirName') }} <span aria-hidden="true">*</span></label>
                   <input
                     id="gb-recipient-name"
                     ref="gbName"
@@ -415,7 +412,7 @@
                     type="text"
                     class="gift-field"
                     :class="{ invalid: gbErrors.name }"
-                    placeholder="e.g. Aoife Murphy"
+                    :placeholder="$t('ui.vouchersPanel.builder.namePlaceholder')"
                     maxlength="120"
                     autocomplete="off"
                     :aria-invalid="gbErrors.name ? 'true' : 'false'"
@@ -424,7 +421,7 @@
                   <small v-if="gbErrors.name" class="gb-error" role="alert">{{ gbErrors.name }}</small>
                 </div>
                 <div class="gb-field">
-                  <label class="gb-label" for="gb-recipient-email">Their email <span aria-hidden="true">*</span></label>
+                  <label class="gb-label" for="gb-recipient-email">{{ $t('ui.vouchersPanel.builder.theirEmail') }} <span aria-hidden="true">*</span></label>
                   <input
                     id="gb-recipient-email"
                     ref="gbEmail"
@@ -443,7 +440,7 @@
                 </div>
               </div>
               <div class="gb-field">
-                <label class="gb-label" for="gb-recipient-message">Message <span class="gb-optional">(optional)</span></label>
+                <label class="gb-label" for="gb-recipient-message">{{ $t('ui.vouchersPanel.builder.message') }} <span class="gb-optional">{{ $t('ui.vouchersPanel.builder.optional') }}</span></label>
                 <div class="gb-message-wrap">
                   <textarea
                     id="gb-recipient-message"
@@ -453,7 +450,7 @@
                     :class="{ invalid: gbErrors.message }"
                     rows="2"
                     maxlength="300"
-                    placeholder="Happy birthday! Treat yourself."
+                    :placeholder="$t('ui.vouchersPanel.builder.messagePlaceholder')"
                     :aria-invalid="gbErrors.message ? 'true' : 'false'"
                     @blur="touchGift('message')"
                   ></textarea>
@@ -463,22 +460,22 @@
               </div>
               <p v-if="gbGiftValid" class="gb-sending">
                 <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-                Sending to <strong>{{ gbGift.name }}</strong> at <strong>{{ gbGift.email }}</strong>
+                <i18n path="ui.vouchersPanel.builder.sendingTo" :tag="false"><template #name><strong>{{ gbGift.name }}</strong></template><template #email><strong>{{ gbGift.email }}</strong></template></i18n>
               </p>
               <p class="gb-muted gb-note">
                 <i class="fa-regular fa-envelope" aria-hidden="true"></i>
-                We email the {{ gbQty > 1 ? 'codes' : 'code' }} to them straight away, with your name and message.
+                {{ gbQty > 1 ? $t('ui.vouchersPanel.builder.emailThemMany') : $t('ui.vouchersPanel.builder.emailThemOne') }}
               </p>
             </div>
             <p v-else class="gb-muted gb-note">
               <i class="fa-regular fa-envelope" aria-hidden="true"></i>
-              The {{ gbQty > 1 ? 'codes go' : 'code goes' }} to your email and to My gift cards below.
+              {{ gbQty > 1 ? $t('ui.vouchersPanel.builder.toYouMany') : $t('ui.vouchersPanel.builder.toYouOne') }}
             </p>
           </div>
 
           <div class="gb-step">
-            <span class="gb-step-label"><span class="gb-num">4</span> Pay with</span>
-            <div class="gb-pay" role="radiogroup" aria-label="Payment method">
+            <span class="gb-step-label"><span class="gb-num">4</span> {{ $t('ui.vouchersPanel.builder.payWith') }}</span>
+            <div class="gb-pay" role="radiogroup" :aria-label="$t('ui.vouchersPanel.builder.paymentMethod')">
               <label class="gb-pay-opt" :class="{ active: gbMethod === 'wallet', disabled: !gbWalletCovers }">
                 <input
                   v-model="paymentMethod[activeDesign.id]"
@@ -489,8 +486,8 @@
                 >
                 <span class="gb-pay-icon"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span>
                 <span class="gb-pay-text">
-                  <strong>Wallet</strong>
-                  <small>{{ currencyIcon }}{{ Number(wallet?.balance || 0).toFixed(2) }} available</small>
+                  <strong>{{ $t('ui.vouchersPanel.builder.wallet') }}</strong>
+                  <small>{{ $t('ui.vouchersPanel.builder.available', { amount: currencyIcon + Number(wallet?.balance || 0).toFixed(2) }) }}</small>
                 </span>
               </label>
               <label class="gb-pay-opt" :class="{ active: gbMethod === 'sumup' }">
@@ -502,14 +499,13 @@
                 >
                 <span class="gb-pay-icon"><i class="fa-regular fa-credit-card" aria-hidden="true"></i></span>
                 <span class="gb-pay-text">
-                  <strong>Card</strong>
-                  <small>Visa, Mastercard and more</small>
+                  <strong>{{ $t('ui.vouchersPanel.builder.card') }}</strong>
+                  <small>{{ $t('ui.vouchersPanel.builder.cardSub') }}</small>
                 </span>
               </label>
             </div>
             <p v-if="gbAmount && !gbWalletCovers" class="gb-muted gb-note">
-              Your wallet doesn't cover {{ currencyIcon }}{{ gbTotal.toFixed(2) }}.
-              <nuxt-link to="/user/savers-club">Top up</nuxt-link> or pay by card.
+              <i18n path="ui.vouchersPanel.builder.walletShort" :tag="false"><template #amount>{{ currencyIcon }}{{ gbTotal.toFixed(2) }}</template><template #link><nuxt-link to="/user/savers-club">{{ $t('ui.vouchersPanel.builder.topUp') }}</nuxt-link></template></i18n>
             </p>
           </div>
 
@@ -517,7 +513,7 @@
           <div class="gb-summary">
             <div class="gb-summary-line">
               <span v-if="gbAmount">{{ gbQty }} × {{ currencyIcon }}{{ formatMoney(gbAmount) }}</span>
-              <span v-else class="gb-muted">Choose a value to see the total</span>
+              <span v-else class="gb-muted">{{ $t('ui.vouchersPanel.builder.chooseToSeeTotal') }}</span>
               <strong>{{ currencyIcon }}{{ gbTotal.toFixed(2) }}</strong>
             </div>
             <button
@@ -527,15 +523,15 @@
               @click="purchaseVoucher(activeDesign)"
             >
               <template v-if="purchasingId === activeDesign.id">
-                <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> Processing…
+                <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i> {{ $t('ui.vouchersPanel.builder.processing') }}
               </template>
-              <template v-else-if="!gbAmount">Choose a value</template>
-              <template v-else-if="gbGift.on && !gbGiftValid">Add their details to continue</template>
+              <template v-else-if="!gbAmount">{{ $t('ui.vouchersPanel.builder.chooseValue') }}</template>
+              <template v-else-if="gbGift.on && !gbGiftValid">{{ $t('ui.vouchersPanel.builder.addDetails') }}</template>
               <template v-else-if="gbMethod === 'wallet'">
-                Pay {{ currencyIcon }}{{ gbTotal.toFixed(2) }} from wallet
+                {{ $t('ui.vouchersPanel.builder.payWallet', { amount: currencyIcon + gbTotal.toFixed(2) }) }}
               </template>
               <template v-else>
-                Pay {{ currencyIcon }}{{ gbTotal.toFixed(2) }} by card <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                {{ $t('ui.vouchersPanel.builder.payCard', { amount: currencyIcon + gbTotal.toFixed(2) }) }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
               </template>
             </button>
           </div>
@@ -544,15 +540,14 @@
     </section>
 
     <div class="voucher-card p-4 mb-4">
-        <h6 class="mb-3  voucher-terms-heading">Voucher Terms & Conditions</h6>
+        <h6 class="mb-3  voucher-terms-heading">{{ $t('ui.vouchersPanel.terms.title') }}</h6>
         <ul class="vouchers-terms-list">
-            <li>Vouchers are valid for single use only unless otherwise specified</li>
-            <li>Multiple vouchers cannot be combined in a single transaction</li>
-            <li>Vouchers cannot be exchanged for cash or credit</li>
-            <li>Check individual voucher terms for specific restrictions and minimum purchase
-                requirements</li>
-            <li>Expired vouchers cannot be reactivated or extended</li>
-            <li>Gift vouchers purchased with Savers Club balance are non-refundable</li>
+            <li>{{ $t('ui.vouchersPanel.terms.singleUse') }}</li>
+            <li>{{ $t('ui.vouchersPanel.terms.noCombine') }}</li>
+            <li>{{ $t('ui.vouchersPanel.terms.noCash') }}</li>
+            <li>{{ $t('ui.vouchersPanel.terms.checkTerms') }}</li>
+            <li>{{ $t('ui.vouchersPanel.terms.noReactivate') }}</li>
+            <li>{{ $t('ui.vouchersPanel.terms.nonRefundable') }}</li>
         </ul>
     </div>
 
@@ -861,12 +856,12 @@
         const gift = this.giftFor(voucher.id)
 
         if (!amount) {
-          this.setToastError('Choose a value first.')
+          this.setToastError(this.$t('ui.vouchersPanel.toast.chooseValueFirst'))
           return
         }
 
         if (qty < voucher.min_quantity || qty > voucher.max_quantity) {
-          this.setToastError(`Choose between ${voucher.min_quantity} and ${voucher.max_quantity}.`)
+          this.setToastError(this.$t('ui.vouchersPanel.toast.chooseBetween', { min: voucher.min_quantity, max: voucher.max_quantity }))
           return
         }
 
@@ -882,7 +877,7 @@
         // The wallet cannot cover it: say so rather than send a request that will be refused.
         if (method === 'wallet' && (this.wallet?.balance || 0) < amount * qty) {
           this.$set(this.paymentMethod, voucher.id, 'sumup')
-          this.setToastError('Not enough in your wallet. Card is selected instead.')
+          this.setToastError(this.$t('ui.vouchersPanel.toast.notEnoughWallet'))
           return
         }
 
@@ -905,7 +900,7 @@
             const {data} = await this.$axios.post(`${this.apiBase()}api/v1/user/purchase-gift-voucher/start`, payload)
 
             if (!data?.checkout_id) {
-              this.setToastError(data?.message || 'We could not start the payment. Please try again.')
+              this.setToastError(data?.message || this.$t('ui.vouchersPanel.toast.paymentStartFailed'))
               return
             }
 
@@ -919,7 +914,7 @@
               payment_method: 'wallet'
             })
 
-            this.setToastMessage(data?.message || 'Gift card bought')
+            this.setToastMessage(data?.message || this.$t('ui.vouchersPanel.toast.bought'))
 
             this.$delete(this.selectedVoucherAmounts, voucher.id)
             this.$set(this.selectedVoucherQty, voucher.id, voucher.min_quantity)
@@ -941,7 +936,7 @@
             this.giftServerErrors = mapped
             this.focusGiftField(mapped)
           } else {
-            this.setToastError(res.message || 'Purchase failed')
+            this.setToastError(res.message || this.$t('ui.vouchersPanel.toast.purchaseFailed'))
           }
         } finally {
           this.purchasingId = null
@@ -954,17 +949,17 @@
         const email = (gift.email || '').trim()
         const own = (this.profile?.email || this.$auth?.user?.email || '').trim().toLowerCase()
 
-        if (!name) errs.name = "Enter the recipient's name."
-        else if (name.length < 2) errs.name = "The recipient's name looks too short."
-        else if (name.length > 120) errs.name = "The recipient's name is too long (120 characters at most)."
-        else if (!/\p{L}/u.test(name)) errs.name = "Enter the recipient's name in letters."
+        if (!name) errs.name = this.$t('ui.vouchersPanel.errors.nameRequired')
+        else if (name.length < 2) errs.name = this.$t('ui.vouchersPanel.errors.nameShort')
+        else if (name.length > 120) errs.name = this.$t('ui.vouchersPanel.errors.nameLong')
+        else if (!/\p{L}/u.test(name)) errs.name = this.$t('ui.vouchersPanel.errors.nameLetters')
 
-        if (!email) errs.email = 'Enter the email address to send the gift card to.'
-        else if (email.length > 190) errs.email = 'That email address is too long.'
-        else if (!/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(email)) errs.email = 'Enter a valid email address for the recipient.'
-        else if (own && email.toLowerCase() === own) errs.email = 'That is your own email address. Choose "For me" instead.'
+        if (!email) errs.email = this.$t('ui.vouchersPanel.errors.emailRequired')
+        else if (email.length > 190) errs.email = this.$t('ui.vouchersPanel.errors.emailLong')
+        else if (!/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(email)) errs.email = this.$t('ui.vouchersPanel.errors.emailInvalid')
+        else if (own && email.toLowerCase() === own) errs.email = this.$t('ui.vouchersPanel.errors.emailOwn')
 
-        if ((gift.message || '').length > 300) errs.message = 'Keep the message to 300 characters.'
+        if ((gift.message || '').length > 300) errs.message = this.$t('ui.vouchersPanel.errors.messageLong')
         return errs
       },
       touchGift(field) {
@@ -1020,11 +1015,11 @@
         this.redeeming = true
         try {
           const {data} = await this.$axios.post(`${this.apiBase()}api/v1/user/gift-voucher-codes/redeem`, {code})
-          this.setToastMessage(data?.message || 'Gift card added to your vouchers')
+          this.setToastMessage(data?.message || this.$t('ui.vouchersPanel.toast.added'))
           this.redeemCode = ''
           await Promise.all([this.fetchGiftCodes(), this.refreshVoucherList()])
         } catch (e) {
-          this.setToastError(e.response?.data?.message || 'We could not redeem that gift card.')
+          this.setToastError(e.response?.data?.message || this.$t('ui.vouchersPanel.toast.redeemFailed'))
         } finally {
           this.redeeming = false
         }
@@ -1039,8 +1034,8 @@
         } catch (e) {}
       },
       giftStateLabel(gc) {
-        if (gc.state === 'redeemed') return gc.redeemed_by_me ? 'In your vouchers' : 'Redeemed'
-        return {available: gc.recipient ? 'Sent, not redeemed' : 'Available', void: 'Cancelled', expired: 'Expired'}[gc.state] || gc.state
+        if (gc.state === 'redeemed') return gc.redeemed_by_me ? this.$t('ui.vouchersPanel.giftState.inVouchers') : this.$t('ui.vouchersPanel.giftState.redeemed')
+        return {available: gc.recipient ? this.$t('ui.vouchersPanel.giftState.sentNotRedeemed') : this.$t('ui.vouchersPanel.giftState.available'), void: this.$t('ui.vouchersPanel.giftState.cancelled'), expired: this.$t('ui.vouchersPanel.giftState.expired')}[gc.state] || gc.state
       },
       shortDate(value) {
         const d = value ? new Date(value) : null
@@ -1138,9 +1133,9 @@
       getDaysLeft(item) {
         const end = this.parseDate(item.end_time)
         const now = new Date()
-        if (!end || end < now) return 'Expired'
+        if (!end || end < now) return this.$t('ui.vouchersPanel.expired')
         const days = Math.ceil((end - now) / (1000 * 60 * 60 * 24))
-        return `${days} days left`
+        return this.$t('ui.vouchersPanel.daysLeft', { count: days })
       },
       copyCode(item) {
         navigator.clipboard.writeText(item.code)

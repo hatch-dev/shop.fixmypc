@@ -1,7 +1,7 @@
 <template>
   <div class="p-tile">
     <span class="card-overlay">
-      <span class="buy-btn" @click.stop="goToProduct">Buy Now</span>
+      <span class="buy-btn" @click.stop="goToProduct">{{ $t('ui.embedProductTileUi.buyNow') }}</span>
     </span>
     <nuxt-link
       :title="product.title"

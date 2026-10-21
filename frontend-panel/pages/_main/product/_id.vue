@@ -71,11 +71,11 @@
                       </svg>
                     </span>
                     <span>
-                      "{{ lastAddedProduct }}" has been added to your cart.
+                      {{ $t('ui.productPage.addedToCart', { name: lastAddedProduct }) }}
                     </span>
                   </div>
                   <button class="view-cart-btn" @click="handleViewCart">
-                    View Cart
+                    {{ $t('ui.productPage.viewCart') }}
                   </button>
                 </div>
                 <div class="product-detail">
@@ -181,17 +181,17 @@
                              <div>
                                 <div class="order-badge">
                                   <span v-if="isInStock" class="badge-success"
-                                    >In Stock<template v-if="stockUnits"
+                                    >{{ $t('detail.inStock') }}<template v-if="stockUnits"
                                       > · {{ stockUnits }}
-                                      {{ stockUnits === 1 ? 'unit' : 'units' }}</template
+                                      {{ $tc('ui.productPage.unit', stockUnits) }}</template
                                     ></span
                                   >
-                                  <span v-else class="badge-danger">Out of Stock</span>
+                                  <span v-else class="badge-danger">{{ $t('detail.outOfStock') }}</span>
                                   <span v-if="isBackOrder" class="badge-secondary"
-                                    >Back Order</span
+                                    >{{ $t('ui.productPage.backOrder') }}</span
                                   >
                                   <span v-if="selectedInventory.sku" class="config-sku">
-                                    SKU:
+                                    {{ $t('ui.productPage.sku') }}
                                     <strong>{{ selectedInventory.sku }}</strong>
                                   </span>
                                 </div>
@@ -273,7 +273,7 @@
                                     </span>
                                     {{
                                       selectedVoucher?.code == value.code
-                                        ? 'Applied'
+                                        ? $t('ui.productPage.applied')
                                         : $t('detailRight.off', {
                                           amount: getPriceType(value)
                                         })
@@ -485,7 +485,7 @@
                             </template>
                             <template v-else-if="hasCrossSells">
                             <h6 class="frequently-bought-together-title">
-                              Frequently bought together
+                              {{ $t('ui.productPage.frequentlyBoughtTogether') }}
                             </h6>
                             <div class="frequently-bought-together-grid">
                               <!-- LEFT: IMAGES -->
@@ -515,14 +515,14 @@
                               <div class="frequently-bought-together-grid-text-div">
                                 <div class="f-b-t-total">
                                   <span class="f-b-t-total-label">
-                                    Total for {{ bundleItemCount }} item{{ bundleItemCount === 1 ? '' : 's' }}
+                                    {{ $tc('ui.productPage.totalForItems', bundleItemCount, { count: bundleItemCount }) }}
                                   </span>
                                   <span class="f-b-t-price-row">
                                     <strong class="f-b-t-total-value">€{{ totalPrice }}</strong>
                                     <s v-if="bundleSavings > 0" class="f-b-t-was">€{{ bundleOriginalTotal.toFixed(2) }}</s>
                                   </span>
                                   <span v-if="bundleSavings > 0" class="f-b-t-save">
-                                    You save €{{ bundleSavings.toFixed(2) }}
+                                    {{ $t('ui.productPage.youSave', { amount: bundleSavings.toFixed(2) }) }}
                                   </span>
                                 </div>
                                 <button
@@ -530,7 +530,7 @@
                                   :disabled="bundleItemCount < 1"
                                   @click="handleCartWithExtras"
                                 >
-                                  Add {{ bundleItemCount }} to basket
+                                  {{ $t('ui.productPage.addToBasket', { count: bundleItemCount }) }}
                                 </button>
                               </div>
                             </div>
@@ -541,7 +541,7 @@
                               <div class="p_dt_checkbox-list">
                                 <label class="accessories-upgrades-checkbox-span">
                                   <input type="checkbox" checked disabled />
-                                  This item: {{ productData.main_product.name }}
+                                  {{ $t('ui.productPage.thisItem', { name: productData.main_product.name }) }}
                                   <!-- Says how many, because the price beside
                                        it is the rate for that many. -->
                                   <template v-if="bundleMainQuantity > 1">
@@ -667,7 +667,7 @@
                                     />
                                   </svg>
                                 </span>
-                                Essentials Bundle
+                                {{ $t('ui.productPage.essentialsBundle') }}
                               </h5>
                               <div
                                 v-for="(bundle, bIndex) in productData.bundle_deal"
@@ -767,14 +767,14 @@
               <div class="fmpc-trust-info__icon">
                 <img
                   :src="require('~/assets/images/product-secure-stats/delivery.png')"
-                  alt="Quick delivery"
+                  :alt="$t('ui.productPage.trust.quickDeliveryAlt')"
                 />
               </div>
 
-              <h3 class="fmpc-trust-info__title">Quick delivery and pickups</h3>
+              <h3 class="fmpc-trust-info__title">{{ $t('ui.productPage.trust.deliveryTitle') }}</h3>
 
               <p class="fmpc-trust-info__description">
-                You will receive your phone within 1-3 business days
+                {{ $t('ui.productPage.trust.deliveryText') }}
               </p>
             </div>
 
@@ -782,14 +782,14 @@
               <div class="fmpc-trust-info__icon">
                 <img
                   :src="require('~/assets/images/product-secure-stats/secure.png')"
-                  alt="Quick delivery"
+                  :alt="$t('ui.productPage.trust.quickDeliveryAlt')"
                 />
               </div>
 
-              <h3 class="fmpc-trust-info__title">Secure Payments</h3>
+              <h3 class="fmpc-trust-info__title">{{ $t('ui.productPage.trust.paymentsTitle') }}</h3>
 
               <p class="fmpc-trust-info__description">
-                We only use the most trustworthy local payment providers
+                {{ $t('ui.productPage.trust.paymentsText') }}
               </p>
             </div>
 
@@ -797,14 +797,14 @@
               <div class="fmpc-trust-info__icon">
                 <img
                   :src="require('~/assets/images/product-secure-stats/returns.png')"
-                  alt="Quick delivery"
+                  :alt="$t('ui.productPage.trust.quickDeliveryAlt')"
                 />
               </div>
 
-              <h3 class="fmpc-trust-info__title">Warranty and returns</h3>
+              <h3 class="fmpc-trust-info__title">{{ $t('ui.productPage.trust.warrantyTitle') }}</h3>
 
               <p class="fmpc-trust-info__description">
-                12-month warranty and 30-day free returns
+                {{ $t('ui.productPage.trust.warrantyText') }}
               </p>
             </div>
           </div>
@@ -813,7 +813,7 @@
        <div class="container-fluid">
         <!-- Features -->
         <div class="product-intro-section">
-          <h2 class="intro-title">{{ product.title }} Features</h2>
+          <h2 class="intro-title">{{ $t('ui.productPage.features', { title: product.title }) }}</h2>
 
           <div class="intro-description" v-dompurify-html="description" />
         </div>
@@ -841,7 +841,7 @@
   v-if="product.specifications && product.specifications.length"
   class="spec-technical-specifications technical-specifications mt-40"
 >
-  <h3 class="spec-title">Technical Specifications</h3>
+  <h3 class="spec-title">{{ $t('ui.productPage.technicalSpecifications') }}</h3>
 
   <!-- Desktop -->
   <div
@@ -851,8 +851,8 @@
     <table class="spec-table">
       <thead>
         <tr>
-          <th>Category</th>
-          <th>Specification</th>
+          <th>{{ $t('ui.productPage.category') }}</th>
+          <th>{{ $t('ui.productPage.specification') }}</th>
         </tr>
       </thead>
 

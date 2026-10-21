@@ -107,9 +107,9 @@
                       </button>
                     </div>
                   </div>
-                  <input ref="desktopSearchInput" @focus="openSearchPopup"  @blur="blurSearchInput"  type="text" placeholder="Search parts, devices and repairs…"
+                  <input ref="desktopSearchInput" @focus="openSearchPopup"  @blur="blurSearchInput"  type="text" :placeholder="$t('header.searchParts')"
                     v-model="searchedText">
-                  <button aria-label="submit" type="submit" class="search-btn fx-header-search">
+                  <button :aria-label="$t('header.search')" type="submit" class="search-btn fx-header-search">
                     <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path
                         d="M15.75 15.75L12.125 12.125M14.0833 7.41667C14.0833 11.0986 11.0986 14.0833 7.41667 14.0833C3.73477 14.0833 0.75 11.0986 0.75 7.41667C0.75 3.73477 3.73477 0.75 7.41667 0.75C11.0986 0.75 14.0833 3.73477 14.0833 7.41667Z"
@@ -210,19 +210,19 @@
                       </nuxt-link>
                       <div class="divider"></div>
                       <nuxt-link to="/track-order">
-                        Track Order
+                        {{ $t('header.trackOrder') }}
                       </nuxt-link>
 
                       <nuxt-link to="/page/faq">
-                        FAQ
+                        {{ $t('header.faq') }}
                       </nuxt-link>
 
                       <nuxt-link to="/page/help">
-                        Help
+                        {{ $t('header.help') }}
                       </nuxt-link>
 
                       <nuxt-link to="/page/contact">
-                        Contact Us
+                        {{ $t('header.contact') }}
                       </nuxt-link>
                     </template>
                     <!-- LOGGED IN -->
@@ -299,7 +299,7 @@
                 </button>
                 <button type="button" class="dr-deal dr-deal-clear" @click.prevent="navigateBadge('clearance')">
                   <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
-                  <span>{{ $t('product.clearance') }}</span>
+                  <span>{{ $t('header.clearance') }}</span>
                 </button>
               </div>
 
@@ -399,7 +399,7 @@
                     d="M13.8133 11.3867C13.8133 11.6267 13.76 11.8733 13.6467 12.1133C13.5333 12.3533 13.3867 12.58 13.1933 12.7933C12.8667 13.1533 12.5067 13.4133 12.1 13.58C11.7 13.7467 11.2667 13.8333 10.8 13.8333C10.12 13.8333 9.39333 13.6733 8.62667 13.3467C7.86 13.02 7.09333 12.58 6.33333 12.0267C5.56667 11.4667 4.84 10.8467 4.14667 10.16C3.46 9.46667 2.84 8.74 2.28667 7.98C1.74 7.22 1.3 6.46 0.98 5.70667C0.66 4.94667 0.5 4.22 0.5 3.52667C0.5 3.07333 0.58 2.64 0.74 2.24C0.9 1.83333 1.15333 1.46 1.50667 1.12667C1.93333 0.706667 2.4 0.5 2.89333 0.5C3.08 0.5 3.26667 0.54 3.43333 0.62C3.60667 0.7 3.76 0.82 3.88 0.993333L5.42667 3.17333C5.54667 3.34 5.63333 3.49333 5.69333 3.64C5.75333 3.78 5.78667 3.92 5.78667 4.04667C5.78667 4.20667 5.74 4.36667 5.64667 4.52C5.56 4.67333 5.43333 4.83333 5.27333 4.99333L4.76667 5.52C4.69333 5.59333 4.66 5.68 4.66 5.78667C4.66 5.84 4.66667 5.88667 4.68 5.94C4.7 5.99333 4.72 6.03333 4.73333 6.07333C4.85333 6.29333 5.06 6.58 5.35333 6.92667C5.65333 7.27333 5.97333 7.62667 6.32 7.98C6.68 8.33333 7.02667 8.66 7.38 8.96C7.72667 9.25333 8.01333 9.45333 8.24 9.57333C8.27333 9.58667 8.31333 9.60667 8.36 9.62667C8.41333 9.64667 8.46667 9.65333 8.52667 9.65333C8.64 9.65333 8.72667 9.61333 8.8 9.54L9.30667 9.04C9.47333 8.87333 9.63333 8.74667 9.78667 8.66667C9.94 8.57333 10.0933 8.52667 10.26 8.52667C10.3867 8.52667 10.52 8.55333 10.6667 8.61333C10.8133 8.67333 10.9667 8.76 11.1333 8.87333L13.34 10.44C13.5133 10.56 13.6333 10.7 13.7067 10.8667C13.7733 11.0333 13.8133 11.2 13.8133 11.3867Z"
                     stroke="#130E2B" stroke-miterlimit="10" />
                 </svg>
-                <span class="contact">{{ phone }}</span>
+                <span class="contact" dir="ltr">{{ phone }}</span>
               </a>
 
              <span class="small-info-separate-line">&nbsp; | &nbsp;</span>
@@ -411,7 +411,7 @@
                     fill="#25D366" />
                 </svg>
 
-                <span class="contact">{{ whatsapp }}</span>
+                <span class="contact" dir="ltr">{{ whatsapp }}</span>
               </a>
 
               <span class="small-info-separate-line">&nbsp; | &nbsp;</span>
@@ -483,7 +483,7 @@
                         d="M0.761419 12.0462C0.761419 15.2712 3.36975 17.8796 6.59475 17.8796C9.81975 17.8796 12.4281 15.2712 12.4281 12.0462C12.4281 9.64622 11.9614 8.37122 11.9614 8.37122L10.3698 10.0629C10.3698 10.0629 11.2531 6.49622 9.05309 3.83789C7.78642 2.30456 6.38642 1.21289 6.38642 1.21289C6.38642 1.21289 5.61142 3.22122 4.72809 4.70456C4.01142 5.89622 3.59475 6.75456 3.31975 8.54622C2.81975 8.01289 2.41975 7.27956 2.06975 6.45456C2.06975 6.45456 0.561419 8.97122 0.769753 12.0379L0.761419 12.0462Z"
                         stroke="white" stroke-width="1.5" />
                     </svg>
-                    Hot Deals
+                    {{ $t('header.hotDeals') }}
                   </span>
                   <span class="badge-green" @click="navigateBadge('clearance')">
                     <svg width="16" height="19" viewBox="0 0 16 19" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -495,7 +495,7 @@
                       <path d="M5.33325 8.25H10.3333" stroke="white" stroke-width="1.5" stroke-linecap="round"
                         stroke-linejoin="round" />
                     </svg>
-                    <span class="nw_img">Clearance</span>
+                    <span class="nw_img">{{ $t('header.clearance') }}</span>
                   </span>
                 </div>
                 <div class="small-info">
@@ -519,7 +519,7 @@
                         d="M13.8133 11.3867C13.8133 11.6267 13.76 11.8733 13.6467 12.1133C13.5333 12.3533 13.3867 12.58 13.1933 12.7933C12.8667 13.1533 12.5067 13.4133 12.1 13.58C11.7 13.7467 11.2667 13.8333 10.8 13.8333C10.12 13.8333 9.39333 13.6733 8.62667 13.3467C7.86 13.02 7.09333 12.58 6.33333 12.0267C5.56667 11.4667 4.84 10.8467 4.14667 10.16C3.46 9.46667 2.84 8.74 2.28667 7.98C1.74 7.22 1.3 6.46 0.98 5.70667C0.66 4.94667 0.5 4.22 0.5 3.52667C0.5 3.07333 0.58 2.64 0.74 2.24C0.9 1.83333 1.15333 1.46 1.50667 1.12667C1.93333 0.706667 2.4 0.5 2.89333 0.5C3.08 0.5 3.26667 0.54 3.43333 0.62C3.60667 0.7 3.76 0.82 3.88 0.993333L5.42667 3.17333C5.54667 3.34 5.63333 3.49333 5.69333 3.64C5.75333 3.78 5.78667 3.92 5.78667 4.04667C5.78667 4.20667 5.74 4.36667 5.64667 4.52C5.56 4.67333 5.43333 4.83333 5.27333 4.99333L4.76667 5.52C4.69333 5.59333 4.66 5.68 4.66 5.78667C4.66 5.84 4.66667 5.88667 4.68 5.94C4.7 5.99333 4.72 6.03333 4.73333 6.07333C4.85333 6.29333 5.06 6.58 5.35333 6.92667C5.65333 7.27333 5.97333 7.62667 6.32 7.98C6.68 8.33333 7.02667 8.66 7.38 8.96C7.72667 9.25333 8.01333 9.45333 8.24 9.57333C8.27333 9.58667 8.31333 9.60667 8.36 9.62667C8.41333 9.64667 8.46667 9.65333 8.52667 9.65333C8.64 9.65333 8.72667 9.61333 8.8 9.54L9.30667 9.04C9.47333 8.87333 9.63333 8.74667 9.78667 8.66667C9.94 8.57333 10.0933 8.52667 10.26 8.52667C10.3867 8.52667 10.52 8.55333 10.6667 8.61333C10.8133 8.67333 10.9667 8.76 11.1333 8.87333L13.34 10.44C13.5133 10.56 13.6333 10.7 13.7067 10.8667C13.7733 11.0333 13.8133 11.2 13.8133 11.3867Z"
                         stroke="#130E2B" stroke-miterlimit="10" />
                     </svg>
-                    <span class="contact">{{ phone }}</span>
+                    <span class="contact" dir="ltr">{{ phone }}</span>
                   </a>
 
                   <span class="small-info-separate-line">&nbsp; | &nbsp;</span>
@@ -531,7 +531,7 @@
                         fill="#25D366" />
                     </svg>
 
-                    <span class="contact">{{ whatsapp }}</span>
+                    <span class="contact" dir="ltr">{{ whatsapp }}</span>
                   </a>
                 </div>
       </div>
@@ -547,7 +547,7 @@
                 :to="`/all/${megaCategory.slug}`"
                 @click.native="closeMega"
               >
-                <span class="nm">All {{ (megaCategory.title || '').toLowerCase() }}</span>
+                <span class="nm">{{ $t('header.allIn', { name: (megaCategory.title || '').toLocaleLowerCase($i18n.locale) }) }}</span>
                 <span class="n">{{ megaCategory.products_count || 0 }}</span>
               </nuxt-link>
               <nuxt-link
@@ -572,7 +572,7 @@
               <div>
                 <b>{{ megaCategory.title }}</b>
                 <span class="mega-card-count">
-                  {{ megaCategory.products_count || 0 }} products
+                  {{ $t('header.productsCount', { count: megaCategory.products_count || 0 }) }}
                 </span>
               </div>
             </div>

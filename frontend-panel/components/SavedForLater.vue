@@ -6,9 +6,9 @@
           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        Saved for Later
+        {{ $t('ui.savedForLater.title') }}
         <span class="cart-count">
-          ({{ saved.length }} {{ saved.length === 1 ? 'item' : 'items' }})
+          ({{ $tc('ui.savedForLater.itemCount', saved.length, { count: saved.length }) }})
         </span>
       </h5>
     </div>
@@ -52,9 +52,9 @@
             </h6>
             <div class="saved-meta">
               <price-format class="saved-price" :price="itemPrice(item)" />
-              <span class="saved-qty">Qty {{ item.quantity }}</span>
+              <span class="saved-qty">{{ $t('ui.savedForLater.qty', { count: item.quantity }) }}</span>
             </div>
-            <p v-if="!inStock(item)" class="saved-stock-out">Out of stock</p>
+            <p v-if="!inStock(item)" class="saved-stock-out">{{ $t('ui.savedForLater.outOfStock') }}</p>
           </div>
 
           <div class="saved-actions">
@@ -70,13 +70,13 @@
                 <circle cx="10" cy="20" r="1.4" fill="currentColor"/>
                 <circle cx="17" cy="20" r="1.4" fill="currentColor"/>
               </svg>
-              {{ busyId === item.id ? 'Moving…' : 'Move to Cart' }}
+              {{ busyId === item.id ? $t('ui.savedForLater.moving') : $t('ui.savedForLater.moveToCart') }}
             </button>
             <button
               type="button"
               class="saved-remove-btn"
               :disabled="busyId === item.id"
-              aria-label="Remove saved item"
+              :aria-label="$t('ui.savedForLater.removeSaved')"
               @click.prevent="removeItem(item)"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -213,7 +213,7 @@
             this.saved = this.saved.filter(i => i.id !== item.id)
 
             if (notify) {
-              this.setToastMessage('Removed from saved items')
+              this.setToastMessage(this.$t('ui.savedForLater.removed'))
             }
           } else if (notify) {
             this.setToastError(data?.message)

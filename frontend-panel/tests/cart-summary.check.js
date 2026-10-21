@@ -36,6 +36,7 @@ const path = require('path')
 const fs = require('fs')
 
 const ROOT = path.resolve(__dirname, '..')
+const { withI18n, installI18n } = require('./i18n-en')
 const NM = path.join(ROOT, 'node_modules')
 
 const babel = require(path.join(NM, '@babel/core'))
@@ -101,7 +102,7 @@ const tile = loadSfc(path.join(ROOT, 'components/CartProductTile.vue'))
  * the arithmetic the page runs rather than a copy of it kept in step by hand.
  */
 function vmFor (component, seed) {
-  const vm = Object.create(null)
+  const vm = withI18n(Object.create(null))
 
   Object.assign(vm, {
     // The two util-mixin helpers these components borrow.
@@ -115,7 +116,6 @@ function vmFor (component, seed) {
     currentInventoryPriceCalc: (inventory, product) =>
       parseFloat(product?.offered || product?.selling || 0),
     $emit: () => {},
-    $t: (key) => key,
     // getters as well as state: the summary reads the flash discount from
     // cart/flashDiscountAmount, which is derived rather than stored.
     $store: {
@@ -199,7 +199,7 @@ const SAMSUNG = {
 const BASKET = [IPHONE, SAMSUNG]
 
 function savings(rows) {
-  return summary.computed.savingsDetails.call({ checkedProduct: rows })
+  return summary.computed.savingsDetails.call(withI18n({ checkedProduct: rows }))
 }
 
 let failures = 0
@@ -554,7 +554,7 @@ check('one row per rate, highest first', () => {
     '0.00': { rate: 0, ex: 50, vat: 0, inc: 50 },
   }
 
-  const rows = summary.computed.vatBreakdown.call({ cartPrice: { byRate } })
+  const rows = summary.computed.vatBreakdown.call(withI18n({ cartPrice: { byRate } }))
 
   assert.deepStrictEqual(rows.map(r => r.rate), [23, 13.5, 0])
 })
@@ -565,7 +565,7 @@ check('a rate carrying no goods is not listed', () => {
     '9.00': { rate: 9, ex: 0, vat: 0, inc: 0 },
   }
 
-  const rows = summary.computed.vatBreakdown.call({ cartPrice: { byRate } })
+  const rows = summary.computed.vatBreakdown.call(withI18n({ cartPrice: { byRate } }))
 
   assert.strictEqual(rows.length, 1)
 })
@@ -617,7 +617,7 @@ check('a complete basket is never flagged', () => {
 console.log('\nthe mixed-basis notice')
 
 function mixed(rows) {
-  return summary.computed.hasMixedVatBasis.call({ checkedProduct: rows })
+  return summary.computed.hasMixedVatBasis.call(withI18n({ checkedProduct: rows }))
 }
 
 check('a basket holding both conventions says so', () => {

@@ -16,25 +16,25 @@
         :cards="3"
         :rows="4"
         heading
-        label="Loading your Savers Club"
+        :label="$t('ui.saversClub.loading')"
       />
 
       <template v-else>
 
       <div class="card-box-club p-4 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
-            <h5 class="mb-1 order-hrading">Savers Club</h5>
+            <h5 class="mb-1 order-hrading">{{ $t('ui.saversClub.title') }}</h5>
             <small class="text-muted">
-                Your wallet, rewards, and exclusive membership benefits
+                {{ $t('ui.saversClub.subtitle') }}
             </small>
         </div>
         <div class="d-flex gap-2">
             <!-- downloads the whole wallet history as a CSV (it used to only scroll to the table) -->
             <button type="button" class="btn-statement" :disabled="downloadingStatement" @click="downloadStatement">
-                <i class="fa-solid fa-download me-1" style="color: rgb(82, 90, 107);"></i> {{ downloadingStatement ? 'Preparing…' : 'Statement' }}
+                <i class="fa-solid fa-download me-1" style="color: rgb(82, 90, 107);"></i> {{ downloadingStatement ? $t('ui.saversClub.preparing') : $t('ui.saversClub.statement') }}
             </button>
             <button type="button" @click="scrollToWalletTopup" class="btn-add-money">
-                <i class="fa-solid fa-plus me-1" style="color: #fff;"></i> Add Money
+                <i class="fa-solid fa-plus me-1" style="color: #fff;"></i> {{ $t('ui.saversClub.addMoney') }}
             </button>
         </div>
       </div>
@@ -43,12 +43,12 @@
 
             <!-- Left -->
             <div>
-                <p class="wallet-balance">Wallet Balance</p>
+                <p class="wallet-balance">{{ $t('ui.saversClub.walletBalance') }}</p>
                 <h2 class="my-2 wallet-amount">{{ currencyIcon }}{{ money(wallet?.balance) }}</h2>
-                <p class="wallet-balance">Available to spend</p>
+                <p class="wallet-balance">{{ $t('ui.saversClub.availableToSpend') }}</p>
                 <!-- the wallet API has always sent this; the page never showed it -->
                 <p v-if="Number(wallet?.pending) > 0" class="wallet-pending">
-                  {{ currencyIcon }}{{ money(wallet.pending) }} top-up pending
+                  {{ $t('ui.saversClub.topupPending', { amount: currencyIcon + money(wallet.pending) }) }}
                 </p>
             </div>
 
@@ -62,34 +62,34 @@
                 -->
                 <div v-if="isMember" class="permium-member-btn mb-2">
                   <i class="fa-solid fa-crown me-1" aria-hidden="true"></i>
-                  {{ membership.plan ? membership.plan.name : '' }} member
+                  {{ $t('ui.saversClub.planMember', { plan: membership.plan ? membership.plan.name : '' }) }}
                 </div>
                 <div v-else-if="account" class="permium-member-btn mb-2">
                   <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i>
-                  {{ accountTypeLabel }} account
+                  {{ $t('ui.saversClub.accountBadge', { type: accountTypeLabel }) }}
                 </div>
                 <p v-if="accountStateLabel" class="member-state">{{ accountStateLabel }}</p>
                 <!-- was the literal "Joined since May 2026" for every customer -->
-                <p v-if="memberSince" class="member-since">Member since {{ memberSince }}</p>
+                <p v-if="memberSince" class="member-since">{{ $t('ui.saversClub.memberSince', { date: memberSince }) }}</p>
             </div>
 
         </div>
         <div class="wallet-divider"></div>
         <div class="wallet-stats mt-3">
           <div>
-              <small>Cherry Points</small>
-              <h6 class="mb-1 cherry-points-total">{{ points?.points || 0 }} pts</h6>
-              <small class="opacity-75">≈ {{ currencyIcon }}{{ money(points?.value) }} value</small>
+              <small>{{ $t('ui.saversClub.cherryPoints') }}</small>
+              <h6 class="mb-1 cherry-points-total">{{ $t('ui.saversClub.pts', { n: points?.points || 0 }) }}</h6>
+              <small class="opacity-75">{{ $t('ui.saversClub.approxValue', { amount: currencyIcon + money(points?.value) }) }}</small>
           </div>
           <div>
-              <small>Total Saved</small>
+              <small>{{ $t('ui.saversClub.totalSaved') }}</small>
               <!-- was transactions?.totalSaved: a field an array never has, so always 0 -->
               <h6 class="mb-1 cherry-points-total">{{ lifetimeSaved === null ? '—' : currencyIcon + lifetimeSaved }}</h6>
-              <small class="opacity-75">Lifetime savings</small>
+              <small class="opacity-75">{{ $t('ui.saversClub.lifetimeSavings') }}</small>
           </div>
           <div>
-              <small>Free Shipping</small>
-              <h6 class="mb-1 cherry-points-total">{{ hasFreeShipping ? 'Included' : '—' }}</h6>
+              <small>{{ $t('ui.saversClub.freeShipping') }}</small>
+              <h6 class="mb-1 cherry-points-total">{{ hasFreeShipping ? $t('ui.saversClub.included') : '—' }}</h6>
               <small class="opacity-75">{{ freeShippingNote }}</small>
           </div>
         </div>
@@ -99,8 +99,8 @@
               <div ref="walletTopupSection" class="card-box-club p-4 h-100" :class="{ 'topup-highlight': topupHighlight }">
                   <div class="d-flex justify-content-between mb-3">
                       <div>
-                          <h6 class="mb-1 wallet-money">Add Money to Wallet</h6>
-                          <small class="wallet-topup">Top up your wallet balance instantly</small>
+                          <h6 class="mb-1 wallet-money">{{ $t('ui.saversClub.addMoneyToWallet') }}</h6>
+                          <small class="wallet-topup">{{ $t('ui.saversClub.topupInstantly') }}</small>
                       </div>
                       <span class="icon-box"><i class="fa-regular fa-credit-card"
                               style="color: rgb(82, 90, 107);"></i></span>
@@ -115,7 +115,7 @@
                         {{ currencyIcon }}{{ amt }}
                       </button>
                   </div>
-                  <label class="wallet-topup mb-1">Custom Amount</label>
+                  <label class="wallet-topup mb-1">{{ $t('ui.saversClub.customAmount') }}</label>
                   <input
                     type="number"
                     v-model="customAmount"
@@ -137,8 +137,8 @@
                     :disabled="!finalAmount || !!amountError || processingPayment"
                     @click="submitTopup"
                   >
-                    <span v-if="processingPayment">Processing...</span>
-                    <span v-else>Add {{ currencyIcon }}{{ money(finalAmount) }}</span>
+                    <span v-if="processingPayment">{{ $t('ui.saversClub.processing') }}</span>
+                    <span v-else>{{ $t('ui.saversClub.addAmount', { amount: currencyIcon + money(finalAmount) }) }}</span>
                   </button>
               </div>
           </div>
@@ -146,15 +146,15 @@
               <div class="card-box-club p-4 h-100">
                   <div class="d-flex justify-content-between mb-3">
                       <div>
-                          <h6 class="mb-1 wallet-money">Cherry Points</h6>
-                          <small class="wallet-topup">Earn & redeem reward points</small>
+                          <h6 class="mb-1 wallet-money">{{ $t('ui.saversClub.cherryPoints') }}</h6>
+                          <small class="wallet-topup">{{ $t('ui.saversClub.earnRedeem') }}</small>
                       </div>
                       <span class="icon-box"><i class="fa-solid fa-coins"
                               style="color: rgb(82, 90, 107);"></i></span>
                   </div>
                   <div class="points-box mb-3">
                       <div class="d-flex justify-content-between mb-1">
-                          <small>Current Points</small>
+                          <small>{{ $t('ui.saversClub.currentPoints') }}</small>
                           <strong>{{ pointsBalance.toLocaleString('en-IE') }}</strong>
                       </div>
                       <!--
@@ -169,28 +169,27 @@
                       <!-- orders placed but not delivered yet: why a new customer sees 0 -->
                       <div v-if="pendingPoints > 0" class="points-pending">
                           <i class="fa-regular fa-clock me-1" aria-hidden="true"></i>
-                          +{{ pendingPoints.toLocaleString('en-IE') }} pts on the way from
-                          {{ pendingOrders }} {{ pendingOrders === 1 ? 'order' : 'orders' }} awaiting delivery
+                          {{ $tc('ui.saversClub.pendingPoints', pendingOrders, { points: pendingPoints.toLocaleString('en-IE'), count: pendingOrders }) }}
                       </div>
                   </div>
                   <div class="d-flex justify-content-between small mb-1">
-                      <span class="conversion-rate">Earn Rate</span>
-                      <span class="pts">1 pt per {{ currencyIcon }}1 paid</span>
+                      <span class="conversion-rate">{{ $t('ui.saversClub.earnRate') }}</span>
+                      <span class="pts">{{ $t('ui.saversClub.earnRateValue', { amount: currencyIcon + '1' }) }}</span>
                   </div>
                   <div class="d-flex justify-content-between small mb-1">
-                      <span class="conversion-rate">Conversion Rate</span>
-                      <span class="pts">100 pts = {{ currencyIcon }}1 off</span>
+                      <span class="conversion-rate">{{ $t('ui.saversClub.conversionRate') }}</span>
+                      <span class="pts">{{ $t('ui.saversClub.conversionRateValue', { amount: currencyIcon + '1' }) }}</span>
                   </div>
                   <div class="d-flex justify-content-between small mb-3">
-                      <span class="conversion-rate">Points Value</span>
+                      <span class="conversion-rate">{{ $t('ui.saversClub.pointsValue') }}</span>
                       <span class="pts">{{ currencyIcon }}{{ money(points?.value) }}</span>
                   </div>
                   <!-- points are spent as a discount at checkout; nothing converts them to wallet money -->
                   <button class="btn-redeem-point w-100" :disabled="!(points?.points > 0)" @click="goToCart">
-                    {{ points?.points > 0 ? 'Use points at checkout' : 'No points to use yet' }}
+                    {{ points?.points > 0 ? $t('ui.saversClub.usePointsAtCheckout') : $t('ui.saversClub.noPointsToUse') }}
                   </button>
                   <button type="button" class="points-activity-link" @click="scrollToPointsActivity">
-                    View points activity <i class="fa-solid fa-arrow-down ms-1" aria-hidden="true"></i>
+                    {{ $t('ui.saversClub.viewPointsActivity') }} <i class="fa-solid fa-arrow-down ms-1" aria-hidden="true"></i>
                   </button>
               </div>
           </div>
@@ -203,9 +202,9 @@
       -->
       <div v-if="showMembershipBox" ref="membershipSection" class="card-box-club p-0 mb-4 mt-3">
         <div class="section-header p-4">
-            <h6 class="mb-1 wallet-money">{{ shownPlan ? shownPlan.name + ' Membership' : 'Membership' }}</h6>
+            <h6 class="mb-1 wallet-money">{{ shownPlan ? $t('ui.saversClub.planMembership', { plan: shownPlan.name }) : $t('ui.saversClub.membership') }}</h6>
             <small class="wallet-topup">
-                {{ shownPlan && shownPlan.tagline ? shownPlan.tagline : 'Unlock exclusive benefits and special discounts' }}
+                {{ shownPlan && shownPlan.tagline ? shownPlan.tagline : $t('ui.saversClub.membershipTagline') }}
             </small>
         </div>
         <div class="p-4 premium-member-box">
@@ -224,40 +223,39 @@
             <div v-if="showMemberView" class="plan-box">
                 <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
                     <div>
-                        <strong>Current Plan: {{ membership.plan ? membership.plan.name : '' }}</strong>
+                        <strong>{{ $t('ui.saversClub.currentPlan', { plan: membership.plan ? membership.plan.name : '' }) }}</strong>
                         <span class="badge-active ms-2" :class="badgeTone">{{ membership.status_label.toUpperCase() }}</span><br>
                         <small class="text-muted">{{ membershipDateLine }}</small>
                         <small v-if="['past_due', 'unpaid'].includes(membership.status)" class="plan-alert">
-                          Your last payment did not go through. Update your card under Manage Subscription to keep your membership.
+                          {{ $t('ui.saversClub.paymentFailedNotice') }}
                         </small>
                     </div>
                     <div class="text-end">
-                        <h5 class="mb-0">{{ membership.source === 'admin' ? 'Free' : currencyIcon + money(membership.price) }}</h5>
-                        <small class="text-muted">{{ membership.source === 'admin' ? 'complimentary' : membership.interval_label }}</small>
+                        <h5 class="mb-0">{{ membership.source === 'admin' ? $t('ui.saversClub.free') : currencyIcon + money(membership.price) }}</h5>
+                        <small class="text-muted">{{ membership.source === 'admin' ? $t('ui.saversClub.complimentary') : membership.interval_label }}</small>
                     </div>
                 </div>
 
                 <div v-if="confirmingCancel" class="plan-confirm mt-3">
                     <p class="mb-2">
-                      Cancel your membership? Your benefits continue until
-                      {{ formatDate(membership.current_period_end) }} and you will not be charged again.
+                      {{ $t('ui.saversClub.cancelConfirm', { date: formatDate(membership.current_period_end) }) }}
                     </p>
                     <div class="plan-actions">
-                        <button type="button" class="btn-plan-cancel" :disabled="membershipBusy" @click="confirmingCancel = false">Keep membership</button>
+                        <button type="button" class="btn-plan-cancel" :disabled="membershipBusy" @click="confirmingCancel = false">{{ $t('ui.saversClub.keepMembership') }}</button>
                         <button type="button" class="btn-plan-danger" :disabled="membershipBusy" @click="cancelMembership">
-                          {{ membershipBusy ? 'Cancelling…' : 'Yes, cancel' }}
+                          {{ membershipBusy ? $t('ui.saversClub.cancelling') : $t('ui.saversClub.yesCancel') }}
                         </button>
                     </div>
                 </div>
                 <div v-else-if="membership.can_manage_billing || membership.can_resume || membership.can_cancel" class="plan-actions mt-3">
                     <button v-if="membership.can_resume" type="button" class="btn-Manage-Subscription" :disabled="membershipBusy" @click="resumeMembership">
-                        Keep my membership
+                        {{ $t('ui.saversClub.keepMyMembership') }}
                     </button>
                     <button v-else-if="membership.can_manage_billing" type="button" class="btn-Manage-Subscription" :disabled="membershipBusy" @click="toggleManage">
-                        {{ managing ? 'Close' : 'Manage Subscription' }}
+                        {{ managing ? $t('ui.saversClub.close') : $t('ui.saversClub.manageSubscription') }}
                     </button>
                     <button v-if="membership.can_cancel" type="button" class="btn-plan-cancel" :disabled="membershipBusy" @click="confirmingCancel = true; managing = false">
-                        Cancel membership
+                        {{ $t('ui.saversClub.cancelMembership') }}
                     </button>
                 </div>
 
@@ -265,14 +263,14 @@
                 <div v-if="managing && !confirmingCancel" class="manage-panel mt-3">
                     <div class="manage-row">
                         <div>
-                            <strong>Payment card</strong>
+                            <strong>{{ $t('ui.saversClub.paymentCard') }}</strong>
                             <small class="d-block text-muted">
-                                <template v-if="billingLoading && !billingInfo">Loading…</template>
+                                <template v-if="billingLoading && !billingInfo">{{ $t('ui.saversClub.loadingEllipsis') }}</template>
                                 <template v-else-if="billingInfo && billingInfo.card">{{ cardLabel(billingInfo.card) }}</template>
-                                <template v-else>No card on file</template>
+                                <template v-else>{{ $t('ui.saversClub.noCard') }}</template>
                             </small>
                         </div>
-                        <button v-if="!changingCard" type="button" class="btn-plan-cancel" @click="changingCard = true">Change card</button>
+                        <button v-if="!changingCard" type="button" class="btn-plan-cancel" @click="changingCard = true">{{ $t('ui.saversClub.changeCard') }}</button>
                     </div>
                     <div v-if="changingCard" class="manage-card-form mt-3">
                         <stripe-payment
@@ -286,28 +284,28 @@
                         />
                         <div class="plan-actions mt-3">
                             <button type="button" class="btn-Manage-Subscription" :disabled="cardSaving" @click="saveCard">
-                                {{ cardSaving ? 'Saving…' : 'Save card' }}
+                                {{ cardSaving ? $t('ui.saversClub.saving') : $t('ui.saversClub.saveCard') }}
                             </button>
-                            <button type="button" class="btn-plan-cancel" :disabled="cardSaving" @click="changingCard = false">Cancel</button>
+                            <button type="button" class="btn-plan-cancel" :disabled="cardSaving" @click="changingCard = false">{{ $t('ui.saversClub.cancel') }}</button>
                         </div>
                     </div>
                     <div class="manage-history">
                         <div class="history-head-row">
-                            <strong>Payment history</strong>
+                            <strong>{{ $t('ui.saversClub.paymentHistory') }}</strong>
                             <small v-if="billingInfo && billingInfo.pagination && billingInfo.pagination.total" class="text-muted">
-                                {{ billingInfo.pagination.from }}–{{ billingInfo.pagination.to }} of {{ billingInfo.pagination.total }}
+                                {{ $t('ui.saversClub.rangeOf', { from: billingInfo.pagination.from, to: billingInfo.pagination.to, total: billingInfo.pagination.total }) }}
                             </small>
                         </div>
-                        <p v-if="billingInfo && !billingInfo.invoices.length" class="text-muted small mb-0 mt-1">No payments yet.</p>
+                        <p v-if="billingInfo && !billingInfo.invoices.length" class="text-muted small mb-0 mt-1">{{ $t('ui.saversClub.noPayments') }}</p>
                         <!-- scrolls inside the panel; the header row stays put -->
                         <div v-else-if="billingInfo" ref="historyScroll" class="history-scroll" :class="{ 'is-loading': historyLoading }">
                             <table class="history-table">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th class="col-period">Period</th>
-                                        <th class="text-end">Amount</th>
-                                        <th class="text-end">Status</th>
+                                        <th>{{ $t('ui.saversClub.colDate') }}</th>
+                                        <th class="col-period">{{ $t('ui.saversClub.colPeriod') }}</th>
+                                        <th class="text-end">{{ $t('ui.saversClub.colAmount') }}</th>
+                                        <th class="text-end">{{ $t('ui.saversClub.colStatus') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -323,12 +321,12 @@
                         <div v-if="billingInfo && billingInfo.pagination && billingInfo.pagination.last_page > 1" class="history-pager">
                             <button type="button" class="pager-btn" :disabled="historyLoading || billingInfo.pagination.current_page <= 1"
                                     @click="loadHistoryPage(billingInfo.pagination.current_page - 1)">
-                                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Previous
+                                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i> {{ $t('ui.saversClub.previous') }}
                             </button>
-                            <span class="pager-text">Page {{ billingInfo.pagination.current_page }} of {{ billingInfo.pagination.last_page }}</span>
+                            <span class="pager-text">{{ $t('ui.saversClub.pageOf', { current: billingInfo.pagination.current_page, last: billingInfo.pagination.last_page }) }}</span>
                             <button type="button" class="pager-btn" :disabled="historyLoading || billingInfo.pagination.current_page >= billingInfo.pagination.last_page"
                                     @click="loadHistoryPage(billingInfo.pagination.current_page + 1)">
-                                Next <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                                {{ $t('ui.saversClub.next') }} <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
@@ -337,12 +335,12 @@
                 <!-- early access: the daily email of new products -->
                 <div v-if="membershipData.digest && membershipData.digest.available && !confirmingCancel" class="digest-row mt-3">
                     <div>
-                        <strong>New product emails</strong>
-                        <small class="d-block text-muted">An email whenever new products arrive, so you hear first.</small>
+                        <strong>{{ $t('ui.saversClub.newProductEmails') }}</strong>
+                        <small class="d-block text-muted">{{ $t('ui.saversClub.newProductEmailsHint') }}</small>
                     </div>
                     <button type="button" class="digest-switch" role="switch"
                             :aria-checked="membershipData.digest.enabled ? 'true' : 'false'"
-                            aria-label="New product emails" :disabled="membershipBusy" @click="toggleDigest">
+                            :aria-label="$t('ui.saversClub.newProductEmails')" :disabled="membershipBusy" @click="toggleDigest">
                         <span></span>
                     </button>
                 </div>
@@ -350,13 +348,13 @@
                 <!-- the same plan's other billing period -->
                 <div v-if="membership.switch_to && !confirmingCancel" class="plan-change mt-3">
                     <button type="button" class="plan-switch" :disabled="membershipBusy" @click="changeBilling">
-                        Switch to {{ membership.switch_to.interval === 'year' ? 'yearly' : 'monthly' }}
+                        {{ membership.switch_to.interval === 'year' ? $t('ui.saversClub.switchToYearly') : $t('ui.saversClub.switchToMonthly') }}
                         · {{ currencyIcon }}{{ money(membership.switch_to.price) }} {{ membership.switch_to.interval_label }}
-                        <span v-if="membership.switch_to.saving" class="billing-save">Save {{ membership.switch_to.saving }}%</span>
+                        <span v-if="membership.switch_to.saving" class="billing-save">{{ $t('ui.saversClub.savePercent', { n: membership.switch_to.saving }) }}</span>
                     </button>
                 </div>
                 <div v-if="membership.can_change_plan && otherPlans.length && !confirmingCancel" class="plan-change mt-3">
-                    <small class="text-muted">Switch plan:</small>
+                    <small class="text-muted">{{ $t('ui.saversClub.switchPlan') }}</small>
                     <button v-for="plan in otherPlans" :key="plan.id" type="button" class="plan-switch" :disabled="membershipBusy" @click="changePlan(plan)">
                         {{ plan.name }} · {{ currencyIcon }}{{ money(plan.price) }} {{ plan.interval_label }}
                     </button>
@@ -368,12 +366,12 @@
                 <p v-if="membershipEndedLine" class="text-muted small mb-3">{{ membershipEndedLine }}</p>
                 <div v-for="plan in plans" :key="plan.id" class="plan-box mb-3">
                     <!-- monthly or yearly, when the plan offers both -->
-                    <div v-if="plan.prices && plan.prices.length > 1" class="billing-toggle mb-3" role="radiogroup" aria-label="Billing">
+                    <div v-if="plan.prices && plan.prices.length > 1" class="billing-toggle mb-3" role="radiogroup" :aria-label="$t('ui.saversClub.billing')">
                         <button v-for="p in plan.prices" :key="p.interval" type="button" role="radio"
                                 :aria-checked="priceOption(plan).interval === p.interval ? 'true' : 'false'"
                                 @click="billing = p.interval">
-                            {{ p.interval === 'year' ? 'Yearly' : 'Monthly' }}
-                            <span v-if="p.interval === 'year' && plan.yearly_saving" class="billing-save">Save {{ plan.yearly_saving }}%</span>
+                            {{ p.interval === 'year' ? $t('ui.saversClub.yearly') : $t('ui.saversClub.monthly') }}
+                            <span v-if="p.interval === 'year' && plan.yearly_saving" class="billing-save">{{ $t('ui.saversClub.savePercent', { n: plan.yearly_saving }) }}</span>
                         </button>
                     </div>
                     <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
@@ -385,21 +383,20 @@
                             <h5 class="mb-0">{{ currencyIcon }}{{ money(priceOption(plan).price) }}</h5>
                             <small class="text-muted">{{ priceOption(plan).interval_label }}</small>
                             <small v-if="priceOption(plan).interval === 'year'" class="d-block text-muted per-month">
-                              {{ currencyIcon }}{{ money(priceOption(plan).per_month) }} a month
+                              {{ $t('ui.saversClub.perMonth', { amount: currencyIcon + money(priceOption(plan).per_month) }) }}
                             </small>
                         </div>
                     </div>
                     <div v-if="joiningPlanId !== plan.id" class="plan-actions mt-3">
                         <button type="button" class="btn-Manage-Subscription" :disabled="membershipBusy || !membershipData.available" @click="startJoin(plan)">
-                            {{ plan.trial_days > 0 ? 'Start free trial' : 'Join ' + plan.name + (priceOption(plan).interval === 'year' ? ' yearly' : '') }}
+                            {{ plan.trial_days > 0 ? $t('ui.saversClub.startFreeTrial') : $t(priceOption(plan).interval === 'year' ? 'ui.saversClub.joinPlanYearly' : 'ui.saversClub.joinPlan', { plan: plan.name }) }}
                         </button>
                     </div>
                     <!-- joining here, on Stripe's card form: the page never changes -->
                     <div v-else class="join-form mt-3">
-                        <p class="join-summary">
-                            <strong>{{ currencyIcon }}{{ money(priceOption(plan).price) }} today</strong>,
-                            then every {{ priceOption(plan).interval === 'year' ? 'year' : 'month' }} until you cancel.
-                        </p>
+                        <i18n :path="priceOption(plan).interval === 'year' ? 'ui.saversClub.joinSummaryYear' : 'ui.saversClub.joinSummaryMonth'" tag="p" class="join-summary">
+                            <template #today><strong>{{ $t('ui.saversClub.amountToday', { amount: currencyIcon + money(priceOption(plan).price) }) }}</strong></template>
+                        </i18n>
                         <stripe-payment
                             ref="joinCard"
                             inline
@@ -411,33 +408,33 @@
                         />
                         <div class="plan-actions mt-3">
                             <button type="button" class="btn-Manage-Subscription" :disabled="joinBusy" @click="payJoin">
-                                {{ joinBusy ? 'Processing…' : 'Pay ' + currencyIcon + money(priceOption(plan).price) + ' & join' }}
+                                {{ joinBusy ? $t('ui.saversClub.processingEllipsis') : $t('ui.saversClub.payAndJoin', { amount: currencyIcon + money(priceOption(plan).price) }) }}
                             </button>
-                            <button type="button" class="btn-plan-cancel" :disabled="joinBusy" @click="joiningPlanId = null">Cancel</button>
+                            <button type="button" class="btn-plan-cancel" :disabled="joinBusy" @click="joiningPlanId = null">{{ $t('ui.saversClub.cancel') }}</button>
                         </div>
                     </div>
                 </div>
-                <p v-if="!membershipData.available" class="text-muted small mb-0">Membership sign-up is not available right now.</p>
+                <p v-if="!membershipData.available" class="text-muted small mb-0">{{ $t('ui.saversClub.signupUnavailable') }}</p>
             </template>
         </div>
       </div>
       <div ref="transactionsSection" class="card-box-club p-0  mt-4 ">
         <div class=" d-flex justify-content-between align-items-center gap-2 p-4 txn-head">
             <div>
-                <h6 class="mb-1 wallet-money">Recent Transactions</h6>
+                <h6 class="mb-1 wallet-money">{{ $t('ui.saversClub.recentTransactions') }}</h6>
                 <!-- only wallet movements: a purchase paid by card never touches the wallet -->
-                <small class="text-muted">Money added to and spent from your wallet</small>
+                <small class="text-muted">{{ $t('ui.saversClub.transactionsHint') }}</small>
             </div>
             <!-- was a "Last 30 days" button that filtered nothing, then a fixed "Newest first" label -->
             <div class="list-controls">
-              <select v-model="txnType" class="list-select" aria-label="Show transactions" @change="reloadTransactions">
-                <option value="">All</option>
-                <option value="credit">Money in</option>
-                <option value="debit">Money out</option>
+              <select v-model="txnType" class="list-select" :aria-label="$t('ui.saversClub.showTransactions')" @change="reloadTransactions">
+                <option value="">{{ $t('ui.saversClub.all') }}</option>
+                <option value="credit">{{ $t('ui.saversClub.moneyIn') }}</option>
+                <option value="debit">{{ $t('ui.saversClub.moneyOut') }}</option>
               </select>
-              <select v-model="txnOrder" class="list-select" aria-label="Sort transactions" @change="reloadTransactions">
-                <option value="desc">Newest first</option>
-                <option value="asc">Oldest first</option>
+              <select v-model="txnOrder" class="list-select" :aria-label="$t('ui.saversClub.sortTransactions')" @change="reloadTransactions">
+                <option value="desc">{{ $t('ui.saversClub.newestFirst') }}</option>
+                <option value="asc">{{ $t('ui.saversClub.oldestFirst') }}</option>
               </select>
             </div>
         </div>
@@ -445,38 +442,38 @@
           <table class="table custom-table mb-0">
             <thead>
                 <tr class="recent-table">
-                    <th>DATE</th>
-                    <th>DESCRIPTION</th>
-                    <th>TYPE</th>
-                    <th>AMOUNT</th>
-                    <th>BALANCE</th>
+                    <th>{{ $t('ui.saversClub.thDate') }}</th>
+                    <th>{{ $t('ui.saversClub.thDescription') }}</th>
+                    <th>{{ $t('ui.saversClub.thType') }}</th>
+                    <th>{{ $t('ui.saversClub.thAmount') }}</th>
+                    <th>{{ $t('ui.saversClub.thBalance') }}</th>
                 </tr>
             </thead>
             <tbody :class="{ 'txn-loading': transactionsLoading }">
               <tr v-if="!transactions.length" class="txn-empty">
                 <td colspan="5">
-                  <template v-if="txnType === 'credit'">No money added to your wallet yet.</template>
-                  <template v-else-if="txnType === 'debit'">Nothing paid from your wallet yet.</template>
-                  <template v-else>No transactions yet. Top-ups, wallet payments and refunds will show here.</template>
+                  <template v-if="txnType === 'credit'">{{ $t('ui.saversClub.noMoneyAdded') }}</template>
+                  <template v-else-if="txnType === 'debit'">{{ $t('ui.saversClub.nothingPaid') }}</template>
+                  <template v-else>{{ $t('ui.saversClub.noTransactions') }}</template>
                 </td>
               </tr>
               <tr v-for="item in transactions" :key="item.id">
-                <td data-label="Date">{{ formatDateTime(item.created_at) }}</td>
-                <td data-label="Description" class="txn-desc">
+                <td :data-label="$t('ui.saversClub.colDate')">{{ formatDateTime(item.created_at) }}</td>
+                <td :data-label="$t('ui.saversClub.labelDescription')" class="txn-desc">
                   <nuxt-link v-if="item.order_id" :to="`/user/order/${item.order_id}`" class="txn-order-link">
                     {{ item.description }}
                   </nuxt-link>
                   <template v-else>{{ item.description || item.source }}</template>
                 </td>
-                <td data-label="Type">
+                <td :data-label="$t('ui.saversClub.labelType')">
                   <span :class="item.type === 'credit' ? 'badge credit' : 'badge debit'">
-                    {{ item.type.toUpperCase() }}
+                    {{ item.type === 'credit' ? $t('ui.saversClub.typeCredit') : $t('ui.saversClub.typeDebit') }}
                   </span>
                 </td>
-                <td data-label="Amount" class="txn-amount" :class="item.type === 'credit' ? 'text-success' : 'text-danger'">
+                <td :data-label="$t('ui.saversClub.colAmount')" class="txn-amount" :class="item.type === 'credit' ? 'text-success' : 'text-danger'">
                   {{ item.type === 'credit' ? '+' : '-' }}{{ currencyIcon }}{{ money(item.amount) }}
                 </td>
-                <td data-label="Balance">{{ currencyIcon }}{{ money(item.balance_after) }}</td>
+                <td :data-label="$t('ui.saversClub.labelBalance')">{{ currencyIcon }}{{ money(item.balance_after) }}</td>
               </tr>
             </tbody>
           </table>
@@ -492,7 +489,7 @@
               :disabled="!pagination.prev_page_url || transactionsLoading"
               @click="goToTransactionsPage(pagination.current_page - 1)"
             >
-              Prev
+              {{ $t('ui.saversClub.prev') }}
             </button>
             <!-- first, last and the pages either side of this one, not every page -->
             <template v-for="(page, i) in pageWindow">
@@ -512,7 +509,7 @@
               :disabled="!pagination.next_page_url || transactionsLoading"
               @click="goToTransactionsPage(pagination.current_page + 1)"
             >
-              Next
+              {{ $t('ui.saversClub.next') }}
             </button>
           </div>
         </div>
@@ -521,27 +518,27 @@
       <div ref="pointsActivitySection" class="card-box-club p-0 mt-4">
         <div class="d-flex justify-content-between align-items-center gap-2 p-4 txn-head">
             <div>
-                <h6 class="mb-1 wallet-money">Cherry Points Activity</h6>
-                <small class="text-muted">Points earned on delivered orders and used at checkout</small>
+                <h6 class="mb-1 wallet-money">{{ $t('ui.saversClub.pointsActivity') }}</h6>
+                <small class="text-muted">{{ $t('ui.saversClub.pointsActivityHint') }}</small>
             </div>
             <div class="list-controls">
-              <select v-model="pointsType" class="list-select" aria-label="Show points activity" @change="reloadPointsHistory">
-                <option value="">All</option>
-                <option value="credit">Earned</option>
-                <option value="debit">Used</option>
+              <select v-model="pointsType" class="list-select" :aria-label="$t('ui.saversClub.showPointsActivity')" @change="reloadPointsHistory">
+                <option value="">{{ $t('ui.saversClub.all') }}</option>
+                <option value="credit">{{ $t('ui.saversClub.earned') }}</option>
+                <option value="debit">{{ $t('ui.saversClub.used') }}</option>
               </select>
-              <select v-model="pointsOrder" class="list-select" aria-label="Sort points activity" @change="reloadPointsHistory">
-                <option value="desc">Newest first</option>
-                <option value="asc">Oldest first</option>
+              <select v-model="pointsOrder" class="list-select" :aria-label="$t('ui.saversClub.sortPointsActivity')" @change="reloadPointsHistory">
+                <option value="desc">{{ $t('ui.saversClub.newestFirst') }}</option>
+                <option value="asc">{{ $t('ui.saversClub.oldestFirst') }}</option>
               </select>
             </div>
         </div>
         <ul class="points-list" :class="{ 'txn-loading': pointsLoading }">
           <li v-if="!pointsHistory.length" class="points-empty">
-            <template v-if="pointsType === 'credit'">No points earned yet.</template>
-            <template v-else-if="pointsType === 'debit'">No points used yet.</template>
+            <template v-if="pointsType === 'credit'">{{ $t('ui.saversClub.noPointsEarned') }}</template>
+            <template v-else-if="pointsType === 'debit'">{{ $t('ui.saversClub.noPointsUsed') }}</template>
             <template v-else>
-              No points yet. You earn 1 point for every {{ currencyIcon }}1 you pay, once the order is delivered.
+              {{ $t('ui.saversClub.noPointsYet', { amount: currencyIcon + '1' }) }}
             </template>
           </li>
           <li v-for="row in pointsHistory" :key="row.id" class="points-row">
@@ -550,13 +547,13 @@
               <small class="text-muted">{{ formatDate(row.created_at) }}</small>
             </div>
             <span class="points-row-pts" :class="row.type === 'credit' ? 'text-success' : 'text-danger'">
-              {{ row.type === 'credit' ? '+' : '-' }}{{ Number(row.points).toLocaleString('en-IE') }} pts
+              {{ row.type === 'credit' ? '+' : '-' }}{{ $t('ui.saversClub.pts', { n: Number(row.points).toLocaleString('en-IE') }) }}
             </span>
           </li>
         </ul>
         <div v-if="pointsPagination.last_page > 1" class="d-flex justify-content-between align-items-center p-3 gap-2">
           <small class="text-muted">
-            Page {{ pointsPagination.current_page }} of {{ pointsPagination.last_page }}
+            {{ $t('ui.saversClub.pageOf', { current: pointsPagination.current_page, last: pointsPagination.last_page }) }}
           </small>
           <div class="d-flex align-items-center gap-2">
             <button
@@ -564,14 +561,14 @@
               :disabled="pointsPagination.current_page <= 1 || pointsLoading"
               @click="goToPointsPage(pointsPagination.current_page - 1)"
             >
-              Prev
+              {{ $t('ui.saversClub.prev') }}
             </button>
             <button
               class="page-btn"
               :disabled="pointsPagination.current_page >= pointsPagination.last_page || pointsLoading"
               @click="goToPointsPage(pointsPagination.current_page + 1)"
             >
-              Next
+              {{ $t('ui.saversClub.next') }}
             </button>
           </div>
         </div>
@@ -586,19 +583,18 @@
       <div class="card-box-club p-4 mt-4 mb-4">
         <div class="qp-head">
           <div>
-            <h6 class="mb-1 wallet-money">Use Your Points</h6>
+            <h6 class="mb-1 wallet-money">{{ $t('ui.saversClub.useYourPoints') }}</h6>
             <small class="text-muted">
-              Cherry Points work on anything in the shop: every 100 pts take {{ currencyIcon }}1 off at checkout.
-              Here is what yours can do, lowest price first.
+              {{ $t('ui.saversClub.useYourPointsHint', { amount: currencyIcon + '1' }) }}
             </small>
           </div>
           <span class="qp-balance">
-            <i class="fa-solid fa-coins me-1" aria-hidden="true"></i>{{ Number(userPoints).toLocaleString('en-IE') }} pts
+            <i class="fa-solid fa-coins me-1" aria-hidden="true"></i>{{ $t('ui.saversClub.pts', { n: Number(userPoints).toLocaleString('en-IE') }) }}
           </span>
         </div>
 
         <div v-if="!productLoading && !qualifyingProducts.length" class="qp-empty">
-          Nothing to show right now.
+          {{ $t('ui.saversClub.nothingToShow') }}
         </div>
 
         <div class="row g-3">
@@ -615,7 +611,7 @@
                   :alt="product.title"
                 />
                 <span class="qp-badge">
-                  {{ Number(product.required_points).toLocaleString('en-IE') }} pts = {{ currencyIcon }}{{ product.points_value }} off
+                  {{ $t('ui.saversClub.ptsOff', { n: Number(product.required_points).toLocaleString('en-IE'), amount: currencyIcon + product.points_value }) }}
                 </span>
               </nuxt-link>
 
@@ -625,9 +621,9 @@
                 <!-- the shop's own price (sales included), labelled for VAT like every other tile -->
                 <div class="qp-price">
                   <strong>{{ currencyIcon }}{{ product.price }}</strong>
-                  <small v-if="product.vat_side === 'inc'">Inc-VAT</small>
+                  <small v-if="product.vat_side === 'inc'">{{ $t('ui.saversClub.incVat') }}</small>
                   <small v-else-if="product.vat_side === 'ex'">
-                    Ex-VAT · {{ currencyIcon }}{{ product.price_inc_vat }} Inc-VAT
+                    {{ $t('ui.saversClub.exVatInc', { amount: currencyIcon + product.price_inc_vat }) }}
                   </small>
                 </div>
 
@@ -639,15 +635,15 @@
                 <p class="qp-status">
                   <template v-if="product.is_unlocked">
                     <i class="fa-solid fa-circle-check me-1" aria-hidden="true"></i>
-                    Ready: {{ currencyIcon }}{{ product.points_value }} off with your points
+                    {{ $t('ui.saversClub.readyOff', { amount: currencyIcon + product.points_value }) }}
                   </template>
                   <template v-else>
-                    {{ Number(product.points_needed).toLocaleString('en-IE') }} more pts for {{ currencyIcon }}{{ product.points_value }} off
+                    {{ $t('ui.saversClub.morePtsFor', { n: Number(product.points_needed).toLocaleString('en-IE'), amount: currencyIcon + product.points_value }) }}
                   </template>
                 </p>
 
                 <nuxt-link :to="productLink(product)" class="qp-view">
-                  View product <i class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i>
+                  {{ $t('ui.saversClub.viewProduct') }} <i class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i>
                 </nuxt-link>
               </div>
             </div>
@@ -668,40 +664,40 @@
 
         <div class="text-center mt-4" v-if="hasMoreProducts && qualifyingProducts.length">
           <button type="button" class="qp-more" @click="loadMoreProducts" :disabled="productLoading">
-            {{ productLoading ? 'Loading…' : 'Show more products' }}
+            {{ productLoading ? $t('ui.saversClub.loadingEllipsis') : $t('ui.saversClub.showMoreProducts') }}
           </button>
         </div>
       </div>
       <div class="row g-4">
         <div class="col-md-6">
           <div class="card-box-club p-4 h-100">
-            <h6 class="mb-4 wallet-money">How Cherry Points Work</h6>
+            <h6 class="mb-4 wallet-money">{{ $t('ui.saversClub.howItWorks') }}</h6>
             <div class="step-item d-flex mb-3">
                 <div class="step-circle">1</div>
                 <div>
-                    <strong>Earn Points</strong><br>
-                    <small class="text-muted">Get 1 point for every {{ currencyIcon }}1 you pay, added once your order is delivered</small>
+                    <strong>{{ $t('ui.saversClub.steps.earnTitle') }}</strong><br>
+                    <small class="text-muted">{{ $t('ui.saversClub.steps.earnText', { amount: currencyIcon + '1' }) }}</small>
                 </div>
             </div>
             <div class="step-item d-flex mb-3">
                 <div class="step-circle">2</div>
                 <div>
-                    <strong>Accumulate</strong><br>
-                    <small class="text-muted">Points never expire. A cancelled or refunded order takes its points back</small>
+                    <strong>{{ $t('ui.saversClub.steps.accumulateTitle') }}</strong><br>
+                    <small class="text-muted">{{ $t('ui.saversClub.steps.accumulateText') }}</small>
                 </div>
             </div>
             <div class="step-item d-flex mb-3">
                 <div class="step-circle">3</div>
                 <div>
-                    <strong>Redeem</strong><br>
-                    <small class="text-muted">Every 100 points take {{ currencyIcon }}1 off an order at checkout</small>
+                    <strong>{{ $t('ui.saversClub.steps.redeemTitle') }}</strong><br>
+                    <small class="text-muted">{{ $t('ui.saversClub.steps.redeemText', { amount: currencyIcon + '1' }) }}</small>
                 </div>
             </div>
             <div class="step-item d-flex">
                 <div class="step-circle">4</div>
                 <div>
-                    <strong>Shop</strong><br>
-                    <small class="text-muted">Tick "Use Cherry Points" on the payment step, and pay the rest by card or wallet</small>
+                    <strong>{{ $t('ui.saversClub.steps.shopTitle') }}</strong><br>
+                    <small class="text-muted">{{ $t('ui.saversClub.steps.shopText') }}</small>
                 </div>
             </div>
           </div>
@@ -709,39 +705,39 @@
         <div class="col-md-6">
           <div class="card-box-club p-4 h-100">
               <!-- the plan's own benefits (admin: Membership Plans); this list used to be fixed copy -->
-              <h6 class="mb-4 wallet-money">{{ shownPlan ? shownPlan.name + ' Benefits' : 'Membership Benefits' }}</h6>
+              <h6 class="mb-4 wallet-money">{{ shownPlan ? $t('ui.saversClub.planBenefits', { plan: shownPlan.name }) : $t('ui.saversClub.membershipBenefits') }}</h6>
               <div v-for="(b, i) in benefitList" :key="i" class="benefit-item">
                   <span class="check-icon"><i class="fa-solid fa-check" style="color: #Fff;"></i></span>
                   <span>{{ b.title }}<small v-if="b.subtitle" class="d-block text-muted">{{ b.subtitle }}</small></span>
               </div>
-              <p v-if="!benefitList.length" class="text-muted small mb-0">Membership benefits will be listed here when a plan is available.</p>
+              <p v-if="!benefitList.length" class="text-muted small mb-0">{{ $t('ui.saversClub.benefitsEmpty') }}</p>
           </div>
         </div>
       </div>
       <div class="card-box-club p-4 mb-4 mt-4">
-        <h6 class="mb-4 wallet-money">Frequently Asked Questions</h6>
+        <h6 class="mb-4 wallet-money">{{ $t('ui.saversClub.faq.title') }}</h6>
         <div class="faq-item">
-            <strong>How do I add money to my wallet?</strong>
+            <strong>{{ $t('ui.saversClub.faq.q1') }}</strong>
             <p>
-                You can add money using the quick amount buttons or enter a custom amount. Payment is processed instantly through secure payment gateway.
+                {{ $t('ui.saversClub.faq.a1') }}
             </p>
         </div>
         <div class="faq-item">
-            <strong>Can I withdraw money from my wallet?</strong>
+            <strong>{{ $t('ui.saversClub.faq.q2') }}</strong>
             <p>
-                Wallet balance can only be used for purchases on our platform. However, you can request a refund to your original payment method for returned orders.
+                {{ $t('ui.saversClub.faq.a2') }}
             </p>
         </div>
         <div class="faq-item">
-            <strong>Do Cherry Points expire?</strong>
+            <strong>{{ $t('ui.saversClub.faq.q3') }}</strong>
             <p>
-                No. Cherry Points do not expire. Points earned on an order that is later cancelled or refunded are taken back.
+                {{ $t('ui.saversClub.faq.a3') }}
             </p>
         </div>
         <div v-if="showMembershipBox" class="faq-item border-0">
-            <strong>Can I cancel my membership anytime?</strong>
+            <strong>{{ $t('ui.saversClub.faq.q4') }}</strong>
             <p>
-                Yes, you can cancel your membership at any time. You’ll continue to have access until the end of your current billing period.
+                {{ $t('ui.saversClub.faq.a4') }}
             </p>
         </div>
       </div>
@@ -769,7 +765,7 @@
     middleware: ['common-middleware', 'auth'],
     head() {
       return {
-        title: 'Savers Club',
+        title: this.$t('ui.saversClub.title'),
         meta: []
       }
     },
@@ -859,11 +855,11 @@
       },
       transactionRangeText() {
         const {from, to, total} = this.pagination
-        if (!total) return 'No transactions'
-        if (total === 1) return 'Showing 1 transaction'
+        if (!total) return this.$t('ui.saversClub.txnRange.none')
+        if (total === 1) return this.$t('ui.saversClub.txnRange.one')
         return from && to
-          ? `Showing ${from}–${to} of ${total} transactions`
-          : `Showing ${this.transactions.length} of ${total} transactions`
+          ? this.$t('ui.saversClub.txnRange.range', { from, to, total })
+          : this.$t('ui.saversClub.txnRange.count', { count: this.transactions.length, total })
       },
       pointsBalance() {
         return Math.max(0, parseInt(this.points?.points, 10) || 0)
@@ -881,19 +877,19 @@
       nextEuroText() {
         const need = 100 - (this.pointsBalance % 100)
         const first = this.pointsBalance < 100
-        return `${need} pts until your ${first ? 'first' : 'next'} ${this.currencyIcon}1 off`
+        return this.$t(first ? 'ui.saversClub.untilFirst' : 'ui.saversClub.untilNext', { n: need, amount: this.currencyIcon + '1' })
       },
       topupRangeText() {
-        return `Between ${this.currencyIcon}${this.topupMin} and ${this.currencyIcon}${this.topupMax.toLocaleString('en-IE')}`
+        return this.$t('ui.saversClub.topupRange', { min: this.currencyIcon + this.topupMin, max: this.currencyIcon + this.topupMax.toLocaleString('en-IE') })
       },
       // Empty when the custom amount is fine (or not being used).
       amountError() {
         if (!this.isCustom || this.customAmount === null || this.customAmount === '') return ''
         const n = Number(this.customAmount)
         if (!isFinite(n) || n < this.topupMin || n > this.topupMax) {
-          return `Enter an amount ${this.topupRangeText.toLowerCase()}`
+          return this.$t('ui.saversClub.amountRange', { min: this.currencyIcon + this.topupMin, max: this.currencyIcon + this.topupMax.toLocaleString('en-IE') })
         }
-        if (Math.abs(n * 100 - Math.round(n * 100)) > 1e-6) return 'Use at most two decimal places'
+        if (Math.abs(n * 100 - Math.round(n * 100)) > 1e-6) return this.$t('ui.saversClub.twoDecimals')
         return ''
       },
       // Page buttons to show: 1, the last, and two either side of this one.
@@ -948,12 +944,12 @@
         if (this.hasFreeShipping) {
           const rule = this.membership.plan.benefits.find(b => b.type === 'free_shipping')
           return Number(rule?.min_order) > 0
-            ? `On deliveries over ${this.currencyIcon}${this.money(rule.min_order)}`
-            : 'On every delivery'
+            ? this.$t('ui.saversClub.shipOver', { amount: this.currencyIcon + this.money(rule.min_order) })
+            : this.$t('ui.saversClub.shipEvery')
         }
         return this.plans.some(p => (p.benefits || []).some(b => b.type === 'free_shipping'))
-          ? 'With membership'
-          : 'Not included'
+          ? this.$t('ui.saversClub.shipWithMembership')
+          : this.$t('ui.saversClub.shipNotIncluded')
       },
       badgeTone() {
         const m = this.membership
@@ -967,19 +963,19 @@
         if (!m) return ''
         const end = this.formatDate(m.current_period_end)
         if (m.source === 'admin') {
-          return m.current_period_end ? `Your membership runs until ${end}` : 'Your membership has no end date'
+          return m.current_period_end ? this.$t('ui.saversClub.dateLine.runsUntil', { date: end }) : this.$t('ui.saversClub.dateLine.noEnd')
         }
         if (m.status === 'trialing' && !m.cancel_at_period_end) {
-          return `Free trial until ${this.formatDate(m.trial_ends_at || m.current_period_end)}, then ${this.currencyIcon}${this.money(m.price)} ${m.interval_label}`
+          return this.$t('ui.saversClub.dateLine.trial', { date: this.formatDate(m.trial_ends_at || m.current_period_end), price: this.currencyIcon + this.money(m.price), interval: m.interval_label })
         }
-        if (m.cancel_at_period_end) return `Your membership ends on ${end}`
-        if (m.status === 'unpaid') return 'Your membership is on hold until the payment is made'
-        return `Your membership renews on ${end}`
+        if (m.cancel_at_period_end) return this.$t('ui.saversClub.dateLine.ends', { date: end })
+        if (m.status === 'unpaid') return this.$t('ui.saversClub.dateLine.onHold')
+        return this.$t('ui.saversClub.dateLine.renews', { date: end })
       },
       membershipEndedLine() {
         const m = this.membership
         if (!m || this.showMemberView || !m.plan) return ''
-        return m.ended_at ? `Your ${m.plan.name} membership ended on ${this.formatDate(m.ended_at)}.` : ''
+        return m.ended_at ? this.$t('ui.saversClub.endedLine', { plan: m.plan.name, date: this.formatDate(m.ended_at) }) : ''
       },
       // voucher savings (user/savings) plus member discounts on orders that stand
       lifetimeSaved() {
@@ -993,8 +989,8 @@
         return this.profile?.account || null
       },
       accountTypeLabel() {
-        const labels = {personal: 'Personal', business: 'Business', trade: 'Trade'}
-        return labels[this.account?.account_type] || 'Personal'
+        const labels = {personal: this.$t('ui.saversClub.accountType.personal'), business: this.$t('ui.saversClub.accountType.business'), trade: this.$t('ui.saversClub.accountType.trade')}
+        return labels[this.account?.account_type] || labels.personal
       },
       /*
        * A second line only when there is something to say: a personal account
@@ -1004,18 +1000,18 @@
       accountStateLabel() {
         const a = this.account
         if (!a) return ''
-        if (a.status === 'suspended') return 'Account suspended'
-        if (a.status === 'rejected') return 'Account not accepted'
-        if (a.status === 'pending') return 'Awaiting review'
+        if (a.status === 'suspended') return this.$t('ui.saversClub.state.suspended')
+        if (a.status === 'rejected') return this.$t('ui.saversClub.state.rejected')
+        if (a.status === 'pending') return this.$t('ui.saversClub.state.pending')
         if (a.account_type === 'trade') {
           return {
-            approved: 'Trade pricing active',
-            rejected: 'Trade application not approved',
-            suspended: 'Trade pricing suspended',
-            pending: 'Trade application under review'
-          }[a.trade_status] || 'Trade application under review'
+            approved: this.$t('ui.saversClub.state.tradeApproved'),
+            rejected: this.$t('ui.saversClub.state.tradeRejected'),
+            suspended: this.$t('ui.saversClub.state.tradeSuspended'),
+            pending: this.$t('ui.saversClub.state.tradePending')
+          }[a.trade_status] || this.$t('ui.saversClub.state.tradePending')
         }
-        if (a.account_type === 'business' && a.has_business_pricing) return 'Business pricing active'
+        if (a.account_type === 'business' && a.has_business_pricing) return this.$t('ui.saversClub.state.businessPricing')
         return ''
       },
       // From the account itself, e.g. "Sept 2026". Hidden when unknown.
@@ -1056,7 +1052,7 @@
           setTimeout(() => URL.revokeObjectURL(url), 1000)
         } catch (e) {
           console.error(e)
-          this.setToastError('We could not prepare your statement. Please try again.')
+          this.setToastError(this.$t('ui.saversClub.toast.statementFailed'))
         } finally {
           this.downloadingStatement = false
         }
@@ -1070,7 +1066,7 @@
           await this.fetchTransactions(page)
         } catch (e) {
           console.error(e)
-          this.setToastError('We could not load those transactions. Please try again.')
+          this.setToastError(this.$t('ui.saversClub.toast.transactionsPageFailed'))
         } finally {
           this.transactionsLoading = false
         }
@@ -1180,7 +1176,7 @@
       async submitTopup() {
         try {
           if (!this.finalAmount || this.finalAmount <= 0 || this.amountError) {
-            this.setToastError(this.amountError || 'Choose or enter an amount to add')
+            this.setToastError(this.amountError || this.$t('ui.saversClub.toast.chooseAmount'))
             return
           }
 
@@ -1205,7 +1201,7 @@
 
           // SumUp's refusal comes back as a 200 with no id; it used to do nothing.
           if (!data?.id) {
-            this.setToastError('We could not start the payment. Please try again.')
+            this.setToastError(this.$t('ui.saversClub.toast.paymentStartFailed'))
             return
           }
 
@@ -1222,7 +1218,7 @@
 
         } catch (e) {
           console.error(e)
-          this.setToastError(e?.response?.data?.message || 'We could not start the payment. Please try again.')
+          this.setToastError(e?.response?.data?.message || this.$t('ui.saversClub.toast.paymentStartFailed'))
         } finally {
           this.processingPayment = false
         }
@@ -1285,7 +1281,7 @@
           await this.fetchTransactions(1)
         } catch (e) {
           console.error(e)
-          this.setToastError('We could not load your transactions. Please try again.')
+          this.setToastError(this.$t('ui.saversClub.toast.transactionsFailed'))
         } finally {
           this.transactionsLoading = false
         }
@@ -1296,7 +1292,7 @@
           await this.fetchPointsHistory(1)
         } catch (e) {
           console.error(e)
-          this.setToastError('We could not load your points activity. Please try again.')
+          this.setToastError(this.$t('ui.saversClub.toast.pointsFailed'))
         } finally {
           this.pointsLoading = false
         }
@@ -1308,7 +1304,7 @@
           await this.fetchPointsHistory(page)
         } catch (e) {
           console.error(e)
-          this.setToastError('We could not load your points activity. Please try again.')
+          this.setToastError(this.$t('ui.saversClub.toast.pointsFailed'))
         } finally {
           this.pointsLoading = false
         }
@@ -1331,21 +1327,21 @@
       async membershipPost(path, body = {}) {
         const { data } = await this.$axios.post(this.membershipUrl(path), body, { headers: this.authHeaders() })
         if (data?.status !== 200) {
-          throw new Error(data?.message || 'Something went wrong. Please try again.')
+          throw new Error(data?.message || this.$t('ui.saversClub.toast.generic'))
         }
         return data.data
       },
       async membershipGet(path) {
         const { data } = await this.$axios.get(this.membershipUrl(path), { headers: this.authHeaders() })
         if (data?.status !== 200) {
-          throw new Error(data?.message || 'Something went wrong. Please try again.')
+          throw new Error(data?.message || this.$t('ui.saversClub.toast.generic'))
         }
         return data.data
       },
       // ---- joining on this page: Stripe's card form, no redirect
       startJoin(plan) {
         if (!this.membershipData?.stripe_key) {
-          this.setToastError('Card payments are not available right now. Please try again later.')
+          this.setToastError(this.$t('ui.saversClub.toast.cardUnavailable'))
           return
         }
         this.joiningPlanId = plan.id
@@ -1366,7 +1362,7 @@
       // the card form hands over the card; the bank's challenge, if any, shows over the page
       async submitJoin(paymentMethod, runAction) {
         const plan = this.plans.find(p => p.id === this.joiningPlanId)
-        if (!plan) return { ok: false, message: 'This plan is not available.' }
+        if (!plan) return { ok: false, message: this.$t('ui.saversClub.toast.planUnavailable') }
         try {
           let result = await this.membershipPost('subscribe', {
             plan_id: plan.id,
@@ -1387,10 +1383,10 @@
         if (payload) this.membershipData = payload
         this.joiningPlanId = null
         if (payload?.processing) {
-          this.setToastMessage('Payment received. Your membership will show here in a moment.')
+          this.setToastMessage(this.$t('ui.saversClub.toast.paymentReceived'))
           setTimeout(() => this.fetchMembership(), 4000)
         } else {
-          this.setToastMessage(`Welcome to ${this.membership?.plan?.name || 'your membership'}!`)
+          this.setToastMessage(this.$t('ui.saversClub.toast.welcome', { plan: this.membership?.plan?.name || this.$t('ui.saversClub.toast.yourMembership') }))
         }
       },
       // ---- managing on this page: the card and the payments
@@ -1449,15 +1445,15 @@
       onCardSaved(result) {
         if (result?.payload) this.membershipData = result.payload
         this.changingCard = false
-        this.setToastMessage('Your new card will be used from your next payment.')
+        this.setToastMessage(this.$t('ui.saversClub.toast.cardSaved'))
         this.loadBilling()
       },
       cardLabel(card) {
-        const brand = card.brand ? card.brand.charAt(0).toUpperCase() + card.brand.slice(1) : 'Card'
-        return `${brand} •••• ${card.last4}, expires ${String(card.exp_month).padStart(2, '0')}/${String(card.exp_year).slice(-2)}`
+        const brand = card.brand ? card.brand.charAt(0).toUpperCase() + card.brand.slice(1) : this.$t('ui.saversClub.card')
+        return this.$t('ui.saversClub.cardLabel', { brand, last4: card.last4, expiry: `${String(card.exp_month).padStart(2, '0')}/${String(card.exp_year).slice(-2)}` })
       },
       invoiceLabel(status) {
-        return { paid: 'Paid', open: 'Due', uncollectible: 'Failed' }[status] || status
+        return { paid: this.$t('ui.saversClub.invoice.paid'), open: this.$t('ui.saversClub.invoice.open'), uncollectible: this.$t('ui.saversClub.invoice.uncollectible') }[status] || status
       },
       async membershipAction(path, body, success) {
         if (this.membershipBusy) return
@@ -1473,16 +1469,15 @@
         }
       },
       cancelMembership() {
-        return this.membershipAction('cancel', {}, () => `Cancelled. Your benefits continue until ${this.formatDate(this.membership?.current_period_end)}.`)
+        return this.membershipAction('cancel', {}, () => this.$t('ui.saversClub.toast.cancelled', { date: this.formatDate(this.membership?.current_period_end) }))
       },
       resumeMembership() {
-        return this.membershipAction('resume', {}, 'Your membership will continue.')
+        return this.membershipAction('resume', {}, this.$t('ui.saversClub.toast.resumed'))
       },
       changePlan(plan) {
-        const ok = window.confirm(`Switch to ${plan.name} at ${this.currencyIcon}${this.money(plan.price)} ${plan.interval_label}? ` +
-          'The change is immediate; unused time on your current plan is credited on your next bill.')
+        const ok = window.confirm(this.$t('ui.saversClub.confirm.switchPlan', { plan: plan.name, price: `${this.currencyIcon}${this.money(plan.price)} ${plan.interval_label}` }))
         if (!ok) return
-        return this.membershipAction('change', { plan_id: plan.id }, `You are now on ${plan.name}.`)
+        return this.membershipAction('change', { plan_id: plan.id }, this.$t('ui.saversClub.toast.nowOnPlan', { plan: plan.name }))
       },
       // the price shown for a plan: the chosen period when offered, else its first
       priceOption(plan) {
@@ -1493,23 +1488,24 @@
       toggleDigest() {
         const enabled = !this.membershipData?.digest?.enabled
         return this.membershipAction('digest', { enabled },
-          enabled ? 'We will email you when new products arrive.' : 'New product emails turned off.')
+          enabled ? this.$t('ui.saversClub.toast.digestOn') : this.$t('ui.saversClub.toast.digestOff'))
       },
       changeBilling() {
         const to = this.membership?.switch_to
         if (!to) return
         const price = `${this.currencyIcon}${this.money(to.price)} ${to.interval_label}`
         const ok = window.confirm(to.interval === 'year'
-          ? `Switch to yearly billing at ${price}? You are charged today, less the unused part of this month.`
-          : `Switch to monthly billing at ${price}? The unused part of your year is credited against your bills.`)
+          ? this.$t('ui.saversClub.confirm.yearly', { price })
+          : this.$t('ui.saversClub.confirm.monthly', { price }))
         if (!ok) return
         return this.membershipAction('change', { interval: to.interval },
-          `You are now billed ${to.interval === 'year' ? 'yearly' : 'monthly'}.`)
+          to.interval === 'year' ? this.$t('ui.saversClub.toast.billedYearly') : this.$t('ui.saversClub.toast.billedMonthly'))
       },
       billedText(plan, option = null) {
         const every = (option ? option.interval_label : plan.interval_label).replace(/^per /, 'every ')
-        const trial = Number(plan.trial_days) > 0 ? `${plan.trial_days}-day free trial, then billed ${every}` : `Billed ${every}`
-        return `${trial}. Cancel anytime.`
+        return Number(plan.trial_days) > 0
+          ? this.$t('ui.saversClub.billedTrial', { days: plan.trial_days, every })
+          : this.$t('ui.saversClub.billed', { every })
       },
       isFaIcon(icon) {
         return /^fa[-\s]/.test(String(icon || '').trim())

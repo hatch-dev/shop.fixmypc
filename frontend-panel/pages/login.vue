@@ -33,7 +33,7 @@
             for="login-email"
           >
 
-            Email address
+            {{ $t('ui.loginPage.emailLabel') }}
 
             <span class="auth-label-required">
               *
@@ -59,7 +59,7 @@
             v-if="emailInvalid"
             class="auth-error"
           >
-            Enter the email address on your account.
+            {{ $t('ui.loginPage.emailOnAccount') }}
           </small>
 
         </div>
@@ -69,7 +69,7 @@
 
           <label class="auth-label">
 
-            Password
+            {{ $t('ui.loginPage.passwordLabel') }}
 
             <span class="auth-label-required">
               *
@@ -88,7 +88,7 @@
             v-if="passwordInvalid"
             class="auth-error"
           >
-            Enter your password.
+            {{ $t('ui.loginPage.passwordRequired') }}
           </small>
 
         </div>
@@ -105,7 +105,7 @@
 
             <span class="auth-custom-checkbox" />
 
-            Keep me signed in
+            {{ $t('ui.loginPage.keepSignedIn') }}
 
           </label>
 
@@ -113,7 +113,7 @@
             to="/forgot-password"
             class="auth-forgot-link"
           >
-            Forgot password?
+            {{ $t('ui.loginPage.forgotPassword') }}
           </nuxt-link>
 
         </div>
@@ -123,15 +123,15 @@
           class="auth-btn-primary"
           :fetching-data="formSubmitting"
           :loading-text="$t('login.loggingIn')"
-          :text="'Sign in'"
+          :text="$t('ui.loginPage.signIn')"
         >
-          Sign in
+          {{ $t('ui.loginPage.signIn') }}
         </ajax-button>
 
       </form>
 
       <div class="auth-divider">
-        or
+        {{ $t('ui.loginPage.or') }}
       </div>
 
       <div class="auth-btn-stack">
@@ -141,7 +141,7 @@
           class="auth-btn-ghost"
           @click="goToScreen('code')"
         >
-          Email me a sign-in code
+          {{ $t('ui.loginPage.emailMeCode') }}
         </button>
 
         <button
@@ -149,7 +149,7 @@
           class="auth-btn-ghost"
           @click="continueAsGuest"
         >
-          Check out as a guest
+          {{ $t('ui.loginPage.guestCheckout') }}
         </button>
 
       </div>
@@ -183,8 +183,8 @@
         class="auth-lede"
       >
         {{ challengeMethod === 'sms'
-          ? 'We texted a 6-digit code to your mobile.'
-          : 'Open your authenticator app and enter the 6-digit code it shows.' }}
+          ? $t('ui.loginPage.smsCodeSent')
+          : $t('ui.loginPage.appCodePrompt') }}
       </p>
 
       <form @submit.prevent="verifyTwoFactor">
@@ -192,7 +192,7 @@
         <div class="auth-form-group">
 
           <label class="auth-label">
-            Your code
+            {{ $t('ui.loginPage.yourCode') }}
             <span class="auth-label-required">*</span>
           </label>
 
@@ -211,9 +211,9 @@
           class="auth-btn-primary"
           :fetching-data="verifyingCode"
           :loading-text="$t('login.loggingIn')"
-          :text="'Sign in'"
+          :text="$t('ui.loginPage.signIn')"
         >
-          Sign in
+          {{ $t('ui.loginPage.signIn') }}
         </ajax-button>
 
       </form>
@@ -225,7 +225,7 @@
           class="auth-btn-ghost"
           @click="useRecoveryCode = !useRecoveryCode"
         >
-          {{ useRecoveryCode ? 'Enter a 6-digit code instead' : 'Use a recovery code' }}
+          {{ useRecoveryCode ? $t('ui.loginPage.useSixDigitCode') : $t('ui.loginPage.useRecoveryCode') }}
         </button>
 
         <button
@@ -233,7 +233,7 @@
           class="auth-btn-ghost"
           @click="goToScreen('signin')"
         >
-          Cancel
+          {{ $t('ui.loginPage.cancel') }}
         </button>
 
       </div>
@@ -243,7 +243,7 @@
         class="auth-form-group auth-recovery"
       >
         <label class="auth-label" for="recovery-code">
-          Recovery code
+          {{ $t('ui.loginPage.recoveryCode') }}
         </label>
         <input
           id="recovery-code"
@@ -253,7 +253,7 @@
           autocomplete="one-time-code"
         >
         <p class="auth-hint">
-          One of the codes you saved when you turned two-factor on. Each works once.
+          {{ $t('ui.loginPage.recoveryHint') }}
         </p>
       </div>
 
@@ -292,7 +292,7 @@
             for="code-email"
           >
 
-            Email address
+            {{ $t('ui.loginPage.emailLabel') }}
 
             <span class="auth-label-required">
               *
@@ -318,7 +318,7 @@
             v-if="!emailValid && hasCodeError"
             class="auth-error"
           >
-            Enter a valid email address.
+            {{ $t('ui.loginPage.emailInvalid') }}
           </small>
 
         </div>
@@ -326,10 +326,10 @@
         <ajax-button
           class="auth-btn-primary"
           :fetching-data="sendingCode"
-          :loading-text="'Sending...'"
-          :text="'Send my code'"
+          :loading-text="$t('ui.loginPage.sending')"
+          :text="$t('ui.loginPage.sendMyCode')"
         >
-          Send my code
+          {{ $t('ui.loginPage.sendMyCode') }}
         </ajax-button>
 
       </form>
@@ -342,16 +342,21 @@
 
         <div class="auth-note auth-note-go">
           <template v-if="codeAccepted">{{ successMessage }}</template>
-          <template v-else>
-            Code sent to <b>{{ email }}</b>. It expires in {{ codeExpiryMinutes }} minutes.
-          </template>
+          <i18n
+            v-else
+            path="ui.loginPage.codeSentNote"
+            tag="span"
+          >
+            <template #email><b>{{ email }}</b></template>
+            <template #minutes>{{ codeExpiryMinutes }}</template>
+          </i18n>
         </div>
 
         <div class="auth-form-group">
 
           <label class="auth-label">
 
-            Enter your code
+            {{ $t('ui.loginPage.enterYourCode') }}
 
             <span class="auth-label-required">
               *
@@ -374,9 +379,9 @@
           class="auth-btn-primary"
           :fetching-data="verifyingCode"
           :loading-text="$t('login.loggingIn')"
-          :text="'Sign in'"
+          :text="$t('ui.loginPage.signIn')"
         >
-          Sign in
+          {{ $t('ui.loginPage.signIn') }}
         </ajax-button>
 
         <div class="auth-btn-stack auth-btn-stack-spaced">
@@ -387,7 +392,7 @@
             :disabled="sendingCode"
             @click="sendCode"
           >
-            {{ sendingCode ? 'Sending...' : 'Send a new code' }}
+            {{ sendingCode ? $t('ui.loginPage.sending') : $t('ui.loginPage.sendNewCode') }}
           </button>
 
           <button
@@ -395,7 +400,7 @@
             class="auth-btn-ghost"
             @click="useAnotherEmail"
           >
-            Use a different email
+            {{ $t('ui.loginPage.useDifferentEmail') }}
           </button>
 
         </div>
@@ -582,7 +587,7 @@
             this.codeSent = true
             this.code = ''
             this.codeExpiryMinutes = data.data?.expires_in_minutes || 10
-            this.setToastMessage(`We sent a code to ${this.email}`)
+            this.setToastMessage(this.$t('ui.loginPage.toastCodeSent', { email: this.email }))
           } else {
             this.errors = data?.data?.form || [data?.message]
           }
@@ -621,7 +626,7 @@
           if (data?.status === 200) {
             this.hasCodeError = false
             this.errors = []
-            await this.completeSignIn(data.data, 'Code accepted. Signing you in…')
+            await this.completeSignIn(data.data, this.$t('ui.loginPage.codeAccepted'))
           } else {
             this.errors = data?.data?.form || [data?.message]
             this.resetCode()
@@ -729,7 +734,7 @@
           if (data?.status === 200) {
             this.hasCodeError = false
             this.errors = []
-            await this.completeSignIn(data.data, 'Code accepted. Signing you in…')
+            await this.completeSignIn(data.data, this.$t('ui.loginPage.codeAccepted'))
           } else {
             this.errors = data?.data?.form || [data?.message]
             this.resetCode()

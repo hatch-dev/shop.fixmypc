@@ -41,7 +41,7 @@ export default {
          */
         const message = Array.isArray(data?.data?.form)
           ? data.data.form.join(', ')
-          : (data?.message || 'Payment could not be confirmed')
+          : (data?.message || this.$t('ui.priceHelper.paymentNotConfirmed'))
 
         this.errorText = message
         this.$emit('error', message)

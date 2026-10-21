@@ -1,5 +1,5 @@
 <template>
-  <nav aria-label="breadcrumb">
+  <nav :aria-label="$t('ui.breadcrumbUi.aria.breadcrumb')">
     <ol
       class="breadcrumb"
       itemscope

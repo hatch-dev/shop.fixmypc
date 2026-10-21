@@ -29,7 +29,7 @@
                           stroke-linejoin="round" />
                       </svg>
                     </span>
-                    <span>Verified</span>
+                    <span>{{ $t('ui.productReviewUi.verified') }}</span>
                   </div>
                 </div>
 
@@ -43,7 +43,7 @@
 
                 <div class="review-footer">
                   <div class="review-user">
-                    {{ userName(value) || 'Anonymous' }}
+                    {{ userName(value) || $t('ui.productReviewUi.anonymous') }}
                     <span>{{ value.created }}</span>
                   </div>
 
@@ -61,9 +61,7 @@
 
         <div class="review-summary">
         <strong>{{ avgRating }} / 5</strong>
-        Rated based on
-        <strong>{{ calculateRating.total }} reviews</strong>.
-        Showing our 5 star reviews.
+        <i18n path="ui.productReviewUi.ratedBasedOn" tag="span"><template #reviews><strong>{{ $t('ui.productReviewUi.reviewsCount', { count: calculateRating.total }) }}</strong></template></i18n>
       </div>
 
         <div class="p_detail_review" data-glide-el="controls">
@@ -90,7 +88,7 @@
 
     </template>
     <p v-else>
-      No reviews found
+      {{ $t('ui.productReviewUi.noReviews') }}
     </p>
   </div>
 </template>

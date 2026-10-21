@@ -5,11 +5,11 @@
         <!-- a declined card: say so, and offer a fresh attempt -->
         <div v-if="declined" class="pay-declined" role="alert">
             <span class="pay-declined-icon" aria-hidden="true"><i class="fa-solid fa-credit-card"></i></span>
-            <h2 class="pay-declined-title">Payment declined</h2>
+            <h2 class="pay-declined-title">{{ $t('ui.topupCheckout.declinedTitle') }}</h2>
             <p class="pay-declined-text">
-                Your card was not charged. Check the card details, or try a different card.
+                {{ $t('ui.topupCheckout.declinedText') }}
             </p>
-            <nuxt-link :to="retryLink" class="pay-declined-btn">Try again</nuxt-link>
+            <nuxt-link :to="retryLink" class="pay-declined-btn">{{ $t('ui.topupCheckout.tryAgain') }}</nuxt-link>
         </div>
     </div>
 </template>
@@ -45,7 +45,7 @@ export default {
             }
 
             if (Date.now() - startedAt > 10000) {
-                this.setToastError('The payment form could not be loaded. Please refresh the page.')
+                this.setToastError(this.$t('ui.topupCheckout.formLoadFailed'))
                 return
             }
 
@@ -74,7 +74,7 @@ export default {
 
                     if (type === 'fail' || (type === 'success' && status && status !== 'PAID')) {
                         this.declined = true
-                        this.setToastError('Your card was declined, so nothing was charged.')
+                        this.setToastError(this.$t('ui.topupCheckout.cardDeclined'))
                         return false
                     }
 
@@ -87,7 +87,7 @@ export default {
                     }
 
                     if (type === 'error') {
-                        this.setToastError('Payment failed. Please try again.')
+                        this.setToastError(this.$t('ui.topupCheckout.paymentFailed'))
                         return false;
                     }
                 }
@@ -107,12 +107,12 @@ export default {
                 const {data} = await this.$axios.post(`${baseUrl}api/v1/user/purchase-gift-voucher/confirm`, {
                     checkout_id: checkoutId
                 })
-                this.setToastMessage(data?.message || 'Gift card bought')
+                this.setToastMessage(data?.message || this.$t('ui.topupCheckout.giftCardBought'))
                 setTimeout(() => this.$router.push('/user/vouchers'), 750)
             } catch (e) {
                 console.error(e)
                 this.setToastError(e?.response?.data?.message
-                    || 'We could not confirm this payment. If your card was charged, please contact us.')
+                    || this.$t('ui.topupCheckout.confirmFailed'))
             } finally {
                 this.confirming = false
             }
@@ -141,7 +141,7 @@ export default {
                         }
                     }
                 )
-                this.setToastMessage('Wallet topped up successfully')
+                this.setToastMessage(this.$t('ui.topupCheckout.toppedUp'))
                 setTimeout(() => {
                     // back to the page the top-up started from
                     this.$router.push(this.$route.query.from === 'savers-club' ? '/user/savers-club' : '/user/dashboard')
@@ -150,7 +150,7 @@ export default {
                 // Used to be console-only: a refused top-up looked like nothing happened.
                 console.error(e)
                 this.setToastError(e?.response?.data?.message
-                    || 'We could not confirm this payment. If your card was charged, please contact us.')
+                    || this.$t('ui.topupCheckout.confirmFailed'))
             } finally {
                 this.confirming = false
             }

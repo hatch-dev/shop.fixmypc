@@ -14,15 +14,15 @@
             >
           </nuxt-link>
 
-          <h6 class="footer-brand-title">Fanatic Customer Service.</h6>
+          <h6 class="footer-brand-title">{{ $t('ui.footerUi.brandTitle') }}</h6>
 
           <p class="footer-open">
             <span class="footer-open-dot" aria-hidden="true"></span>
-            Open 7 days
+            {{ $t('ui.footerUi.open7Days') }}
           </p>
 
           <p class="footer-desc">
-            {{ site_setting?.footer_description || 'We aim to get your device back within 24 hours.' }}
+            {{ site_setting?.footer_description || $t('ui.footerUi.defaultDescription') }}
           </p>
 
         </div>
@@ -105,7 +105,7 @@
 
       <!-- Copyright, payment marks and credit share one rule -->
       <div class="footer-bottom">
-        <div class="footer-copy">© 2026 FixMyPc. All Rights Reserved</div>
+        <div class="footer-copy">{{ $t('ui.footerUi.copyright', { year: 2026, brand: 'FixMyPc' }) }}</div>
 
         <div class="payment-icons" v-if="payment && payment.length">
           <a
@@ -126,7 +126,7 @@
           </a>
         </div>
 
-        <div class="footer-credit">Designed by exyctech</div>
+        <div class="footer-credit">{{ $t('ui.footerUi.designedBy', { name: 'exyctech' }) }}</div>
       </div>
     </div>
   </div>

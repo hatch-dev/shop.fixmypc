@@ -3,9 +3,9 @@
   <div class="twofa-panel">
 
     <div class="twofa-head">
-      <h6 class="mb-1">Two-Factor Authentication</h6>
+      <h6 class="mb-1">{{ $t('ui.twoFactorPanel.title') }}</h6>
       <p class="small text-muted mb-0">
-        A second step at sign-in, so your password on its own is not enough.
+        {{ $t('ui.twoFactorPanel.lede') }}
       </p>
     </div>
 
@@ -15,7 +15,7 @@
 
     <!-- ── loading ── -->
     <div v-if="loading" class="twofa-loading">
-      Checking your security settings…
+      {{ $t('ui.twoFactorPanel.loading') }}
     </div>
 
     <!-- ══ idle: current state and what can be done about it ══ -->
@@ -28,7 +28,7 @@
         </span>
 
         <span class="twofa-status-text">
-          <strong>{{ enabled ? 'Two-factor is on' : 'Two-factor is off' }}</strong>
+          <strong>{{ enabled ? $t('ui.twoFactorPanel.isOn') : $t('ui.twoFactorPanel.isOff') }}</strong>
           <small>{{ statusLine }}</small>
         </span>
 
@@ -39,7 +39,7 @@
         registration should be reminded, not nagged into a dead end.
       -->
       <p v-if="!enabled" class="twofa-hint">
-        Your account works normally without it. Turning it on takes about a minute.
+        {{ $t('ui.twoFactorPanel.hint') }}
       </p>
 
       <!--
@@ -50,11 +50,11 @@
       <div v-if="hasPhone" class="twofa-phone">
 
         <span class="twofa-phone-text">
-          <strong>Mobile number</strong>
+          <strong>{{ $t('ui.twoFactorPanel.mobileNumber') }}</strong>
           <small>
             {{ phoneVerified
-              ? `${phoneHint} — confirmed`
-              : `${phoneHint} — not confirmed yet` }}
+              ? $t('ui.twoFactorPanel.phoneConfirmed', { phone: phoneHint })
+              : $t('ui.twoFactorPanel.phoneNotConfirmed', { phone: phoneHint }) }}
           </small>
         </span>
 
@@ -65,7 +65,7 @@
           :disabled="submitting"
           @click="startPhoneVerify"
         >
-          Confirm it
+          {{ $t('ui.twoFactorPanel.confirmIt') }}
         </button>
 
       </div>
@@ -79,7 +79,7 @@
             class="tf-btn tf-btn-primary"
             @click="startAuthenticator"
           >
-            Set up authenticator app
+            {{ $t('ui.twoFactorPanel.setUpApp') }}
           </button>
 
           <!--
@@ -92,7 +92,7 @@
             class="tf-btn tf-btn-ghost"
             @click="startSms"
           >
-            Use text message
+            {{ $t('ui.twoFactorPanel.useSms') }}
           </button>
 
         </template>
@@ -104,7 +104,7 @@
             class="tf-btn tf-btn-ghost"
             @click="startAuthenticator"
           >
-            {{ method === 'app' ? 'Set up a new device' : 'Switch to an authenticator app' }}
+            {{ method === 'app' ? $t('ui.twoFactorPanel.newDevice') : $t('ui.twoFactorPanel.switchToApp') }}
           </button>
 
           <button
@@ -113,7 +113,7 @@
             class="tf-btn tf-btn-ghost"
             @click="startSms"
           >
-            Switch to text message
+            {{ $t('ui.twoFactorPanel.switchToSms') }}
           </button>
 
           <button
@@ -121,7 +121,7 @@
             class="tf-btn tf-btn-danger"
             @click="screen = 'disable'"
           >
-            Turn off
+            {{ $t('ui.twoFactorPanel.turnOff') }}
           </button>
 
         </template>
@@ -134,12 +134,11 @@
     <template v-else-if="screen === 'app'">
 
       <button type="button" class="twofa-back" @click="cancel">
-        <span aria-hidden="true">&larr;</span> Back
+        <span aria-hidden="true">&larr;</span> {{ $t('ui.twoFactorPanel.back') }}
       </button>
 
       <p class="small mb-3">
-        Scan this in Google Authenticator, Microsoft Authenticator or 1Password,
-        then enter the 6 digits it shows.
+        {{ $t('ui.twoFactorPanel.scanInstructions') }}
       </p>
 
       <div class="twofa-qr-row">
@@ -148,15 +147,15 @@
           v-if="qrDataUrl"
           class="twofa-qr"
           :src="qrDataUrl"
-          alt="QR code for your authenticator app"
+          :alt="$t('ui.twoFactorPanel.qrAlt')"
         >
         <div v-else class="twofa-qr twofa-qr-loading" />
 
         <div class="twofa-secret">
-          <span class="small text-muted">Can't scan it? Enter this key by hand:</span>
+          <span class="small text-muted">{{ $t('ui.twoFactorPanel.cantScan') }}</span>
           <code>{{ secretDisplay }}</code>
           <button type="button" class="twofa-copy" @click="copySecret">
-            {{ secretCopied ? 'Copied' : 'Copy key' }}
+            {{ secretCopied ? $t('ui.twoFactorPanel.copied') : $t('ui.twoFactorPanel.copyKey') }}
           </button>
         </div>
 
@@ -173,7 +172,7 @@
         class="tf-btn tf-btn-primary mt-2"
         type="button"
         :fetching-data="submitting"
-        text="Turn on two-factor"
+        :text="$t('ui.twoFactorPanel.turnOn')"
         @clicked="confirmAuthenticator"
       />
 
@@ -183,13 +182,12 @@
     <template v-else-if="screen === 'sms'">
 
       <button type="button" class="twofa-back" @click="cancel">
-        <span aria-hidden="true">&larr;</span> Back
+        <span aria-hidden="true">&larr;</span> {{ $t('ui.twoFactorPanel.back') }}
       </button>
 
-      <p class="small mb-3">
-        We sent a 6-digit code to <strong>{{ phoneHint }}</strong>.
-        It expires in a few minutes.
-      </p>
+      <i18n path="ui.twoFactorPanel.smsSent" tag="p" class="small mb-3">
+        <template #phone><strong>{{ phoneHint }}</strong></template>
+      </i18n>
 
       <otp-input
         :value="code"
@@ -204,7 +202,7 @@
           class="tf-btn tf-btn-primary"
           type="button"
           :fetching-data="submitting"
-          text="Turn on two-factor"
+          :text="$t('ui.twoFactorPanel.turnOn')"
           @clicked="confirmSms"
         />
 
@@ -214,7 +212,7 @@
           :disabled="submitting || resendWait > 0"
           @click="startSms"
         >
-          {{ resendWait > 0 ? `Resend in ${resendWait}s` : 'Send a new code' }}
+          {{ resendWait > 0 ? $t('ui.twoFactorPanel.resendIn', { seconds: resendWait }) : $t('ui.twoFactorPanel.sendNewCode') }}
         </button>
 
       </div>
@@ -225,13 +223,12 @@
     <template v-else-if="screen === 'phone'">
 
       <button type="button" class="twofa-back" @click="cancel">
-        <span aria-hidden="true">&larr;</span> Back
+        <span aria-hidden="true">&larr;</span> {{ $t('ui.twoFactorPanel.back') }}
       </button>
 
-      <p class="small mb-3">
-        We sent a 6-digit code to <strong>{{ phoneHint }}</strong>.
-        Enter it to confirm this is your number.
-      </p>
+      <i18n path="ui.twoFactorPanel.phoneSent" tag="p" class="small mb-3">
+        <template #phone><strong>{{ phoneHint }}</strong></template>
+      </i18n>
 
       <otp-input
         :value="code"
@@ -246,7 +243,7 @@
           class="tf-btn tf-btn-primary"
           type="button"
           :fetching-data="submitting"
-          text="Confirm number"
+          :text="$t('ui.twoFactorPanel.confirmNumber')"
           @clicked="confirmPhone"
         />
 
@@ -256,7 +253,7 @@
           :disabled="submitting || resendWait > 0"
           @click="startPhoneVerify"
         >
-          {{ resendWait > 0 ? `Resend in ${resendWait}s` : 'Send a new code' }}
+          {{ resendWait > 0 ? $t('ui.twoFactorPanel.resendIn', { seconds: resendWait }) : $t('ui.twoFactorPanel.sendNewCode') }}
         </button>
 
       </div>
@@ -271,14 +268,13 @@
           <i class="fa-solid fa-shield-halved" />
         </span>
         <span class="twofa-status-text">
-          <strong>Two-factor is on</strong>
-          <small>Save these recovery codes somewhere safe.</small>
+          <strong>{{ $t('ui.twoFactorPanel.isOn') }}</strong>
+          <small>{{ $t('ui.twoFactorPanel.saveCodes') }}</small>
         </span>
       </div>
 
       <p class="small text-muted">
-        Each one signs you in once if you lose your phone. This is the only
-        time they are shown.
+        {{ $t('ui.twoFactorPanel.codesHelp') }}
       </p>
 
       <ul class="twofa-recovery">
@@ -288,11 +284,11 @@
       <div class="twofa-actions">
 
         <button type="button" class="tf-btn tf-btn-ghost" @click="copyRecovery">
-          {{ recoveryCopied ? 'Copied' : 'Copy codes' }}
+          {{ recoveryCopied ? $t('ui.twoFactorPanel.copied') : $t('ui.twoFactorPanel.copyCodes') }}
         </button>
 
         <button type="button" class="tf-btn tf-btn-primary" @click="doneWithRecovery">
-          I've saved them
+          {{ $t('ui.twoFactorPanel.savedThem') }}
         </button>
 
       </div>
@@ -303,12 +299,11 @@
     <template v-else-if="screen === 'disable'">
 
       <button type="button" class="twofa-back" @click="cancel">
-        <span aria-hidden="true">&larr;</span> Back
+        <span aria-hidden="true">&larr;</span> {{ $t('ui.twoFactorPanel.back') }}
       </button>
 
       <p class="small mb-3">
-        Enter your password to turn two-factor off. Your account will be
-        protected by your password alone.
+        {{ $t('ui.twoFactorPanel.disableHelp') }}
       </p>
 
       <password-field :value="password" @change="password = $event" />
@@ -317,7 +312,7 @@
         class="tf-btn tf-btn-danger mt-2"
         type="button"
         :fetching-data="submitting"
-        text="Turn off two-factor"
+        :text="$t('ui.twoFactorPanel.turnOffTwoFactor')"
         @clicked="disable"
       />
 
@@ -377,12 +372,12 @@
       statusLine() {
 
         if (!this.enabled) {
-          return 'Anyone with your password can sign in.'
+          return this.$t('ui.twoFactorPanel.statusOff')
         }
 
         return this.method === 'sms'
-          ? `We text a code to ${this.phoneHint || 'your mobile'} at each sign-in.`
-          : 'Your authenticator app generates a code at each sign-in.'
+          ? this.$t('ui.twoFactorPanel.statusSms', { phone: this.phoneHint || this.$t('ui.twoFactorPanel.yourMobile') })
+          : this.$t('ui.twoFactorPanel.statusApp')
       }
     },
 
@@ -464,7 +459,7 @@
           }
 
         } catch (e) {
-          this.errors = ['We could not start the setup. Try again.']
+          this.errors = [this.$t('ui.twoFactorPanel.errors.startFailed')]
           this.screen = 'idle'
         }
       },
@@ -537,7 +532,7 @@
           }
 
         } catch (e) {
-          this.errors = ['We could not send that text. Use an authenticator app instead.']
+          this.errors = [this.$t('ui.twoFactorPanel.errors.smsUseApp')]
           this.screen = 'idle'
         } finally {
           this.submitting = false
@@ -618,7 +613,7 @@
           }
 
         } catch (e) {
-          this.errors = ['We could not send that text. Try again later.']
+          this.errors = [this.$t('ui.twoFactorPanel.errors.smsLater')]
           this.screen = 'idle'
         } finally {
           this.submitting = false
@@ -642,7 +637,7 @@
             this.phoneVerified = true
             this.code = ''
             this.screen = 'idle'
-            this.setToastMessage('Mobile number confirmed.')
+            this.setToastMessage(this.$t('ui.twoFactorPanel.toast.phoneConfirmed'))
           } else {
             this.rejectCode()
             this.errors = [data?.message]
@@ -673,7 +668,7 @@
       async disable() {
 
         if (!this.password || this.submitting) {
-          this.errors = ['Enter your password.']
+          this.errors = [this.$t('ui.twoFactorPanel.errors.enterPassword')]
           return
         }
 
@@ -689,14 +684,14 @@
             this.method = null
             this.password = ''
             this.screen = 'idle'
-            this.setToastMessage('Two-factor authentication is off.')
+            this.setToastMessage(this.$t('ui.twoFactorPanel.toast.off'))
             this.$emit('changed', {enabled: false, method: null})
           } else {
-            this.errors = [data?.message || 'That password is not right.']
+            this.errors = [data?.message || this.$t('ui.twoFactorPanel.errors.wrongPassword')]
           }
 
         } catch (e) {
-          this.errors = ['We could not turn it off. Try again.']
+          this.errors = [this.$t('ui.twoFactorPanel.errors.disableFailed')]
         } finally {
           this.submitting = false
         }

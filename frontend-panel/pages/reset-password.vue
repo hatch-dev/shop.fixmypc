@@ -7,7 +7,7 @@
       v-if="checking"
       class="auth-note"
     >
-      Checking your link…
+      {{ $t('ui.resetPasswordPage.checking') }}
     </div>
 
     <!-- link no good -->
@@ -22,7 +22,7 @@
           to="/forgot-password"
           class="auth-btn-ghost auth-btn-link"
         >
-          Send a new link
+          {{ $t('ui.resetPasswordPage.sendNewLink') }}
         </nuxt-link>
       </div>
 
@@ -41,10 +41,9 @@
           <path d="M92.9795 92.4615L104.744 104L132.979 74" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
           <circle cx="175.56" cy="128.58" r="6.0803" stroke="#33319A" stroke-width="3"/>
         </svg>
-        <h2>Password changed</h2>
+        <h2>{{ $t('ui.resetPasswordPage.doneTitle') }}</h2>
         <p>
-          You can sign in with your new password. We signed out any other
-          devices that were using the old one.
+          {{ $t('ui.resetPasswordPage.doneText') }}
         </p>
       </div>
 
@@ -52,7 +51,7 @@
         to="/login"
         class="auth-btn-primary auth-btn-link"
       >
-        Sign in
+        {{ $t('ui.resetPasswordPage.signIn') }}
       </nuxt-link>
 
     </template>
@@ -82,13 +81,18 @@
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
         </span>
-        <span>Setting a new password for <b>{{ email }}</b></span>
+        <i18n
+          path="ui.resetPasswordPage.settingFor"
+          tag="span"
+        >
+          <template #email><b>{{ email }}</b></template>
+        </i18n>
       </div>
 
       <div class="auth-form-group">
 
         <label class="auth-label">
-          New password
+          {{ $t('ui.resetPasswordPage.newPassword') }}
           <span class="auth-label-required">*</span>
         </label>
 
@@ -111,7 +115,7 @@
           v-if="fieldBad('password')"
           class="auth-error"
         >
-          Use at least 10 characters, with a capital letter and a number.
+          {{ $t('ui.resetPasswordPage.passwordRule') }}
         </small>
 
       </div>
@@ -119,7 +123,7 @@
       <div class="auth-form-group">
 
         <label class="auth-label">
-          Confirm password
+          {{ $t('ui.resetPasswordPage.confirmPassword') }}
           <span class="auth-label-required">*</span>
         </label>
 
@@ -133,7 +137,7 @@
           v-if="fieldBad('confirm')"
           class="auth-error"
         >
-          Passwords don't match.
+          {{ $t('ui.resetPasswordPage.passwordsMismatch') }}
         </small>
 
       </div>
@@ -141,10 +145,10 @@
       <ajax-button
         class="auth-btn-primary"
         :fetching-data="submitting"
-        :loading-text="'Saving...'"
-        :text="'Save new password'"
+        :loading-text="$t('ui.resetPasswordPage.saving')"
+        :text="$t('ui.resetPasswordPage.save')"
       >
-        Save new password
+        {{ $t('ui.resetPasswordPage.save') }}
       </ajax-button>
 
     </form>
@@ -178,7 +182,7 @@
         submitting: false,
         checking: true,
         tokenValid: false,
-        tokenError: 'This reset link has expired or has already been used.',
+        tokenError: this.$t('ui.resetPasswordPage.linkExpired'),
         done: false
       }
     },
@@ -209,11 +213,11 @@
 
       passwordHint() {
         return [
-          'Use 10+ characters with a number and a capital letter.',
-          'Weak — add a capital letter and a number.',
-          'Getting there — add a number.',
-          'Good password.',
-          'Strong password.'
+          this.$t('ui.resetPasswordPage.strength.s0'),
+          this.$t('ui.resetPasswordPage.strength.s1'),
+          this.$t('ui.resetPasswordPage.strength.s2'),
+          this.$t('ui.resetPasswordPage.strength.s3'),
+          this.$t('ui.resetPasswordPage.strength.s4')
         ][this.passwordScore]
       },
 
@@ -246,7 +250,7 @@
         if (!this.token || !this.email) {
           this.checking = false
           this.tokenValid = false
-          this.tokenError = 'This reset link is missing information. Ask for a new one.'
+          this.tokenError = this.$t('ui.resetPasswordPage.linkIncomplete')
           return
         }
 

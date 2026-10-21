@@ -26,7 +26,7 @@
           class="auth-label"
           for="fp-email"
         >
-          Email address
+          {{ $t('ui.forgotPasswordPage.emailLabel') }}
           <span class="auth-label-required">*</span>
         </label>
 
@@ -44,7 +44,7 @@
           v-if="emailInvalid"
           class="auth-error"
         >
-          Enter a valid email address.
+          {{ $t('ui.forgotPasswordPage.emailInvalid') }}
         </small>
 
       </div>
@@ -52,10 +52,10 @@
       <ajax-button
         class="auth-btn-primary"
         :fetching-data="submitting"
-        :loading-text="'Sending...'"
-        :text="'Send reset link'"
+        :loading-text="$t('ui.forgotPasswordPage.sending')"
+        :text="$t('ui.forgotPasswordPage.sendLink')"
       >
-        Send reset link
+        {{ $t('ui.forgotPasswordPage.sendLink') }}
       </ajax-button>
 
     </form>
@@ -63,13 +63,17 @@
     <!-- ─────────── LINK ON ITS WAY ─────────── -->
     <div v-else>
 
-      <div class="auth-note auth-note-go">
-        We sent a reset link to <b>{{ email }}</b>. It’s valid for
-        {{ expiryMinutes }} minutes and can only be used once.
-      </div>
+      <i18n
+        path="ui.forgotPasswordPage.sentNote"
+        tag="div"
+        class="auth-note auth-note-go"
+      >
+        <template #email><b>{{ email }}</b></template>
+        <template #minutes>{{ expiryMinutes }}</template>
+      </i18n>
 
       <p class="auth-hint auth-hint-spaced">
-        Nothing in your inbox after a minute? Check spam, or send it again.
+        {{ $t('ui.forgotPasswordPage.nothingInInbox') }}
       </p>
 
       <div class="auth-btn-stack">
@@ -80,7 +84,7 @@
           :disabled="submitting"
           @click="sendLink"
         >
-          {{ submitting ? 'Sending...' : 'Send it again' }}
+          {{ submitting ? $t('ui.forgotPasswordPage.sending') : $t('ui.forgotPasswordPage.sendAgain') }}
         </button>
 
         <button
@@ -88,7 +92,7 @@
           class="auth-btn-ghost"
           @click="useAnotherEmail"
         >
-          Use a different email
+          {{ $t('ui.forgotPasswordPage.useDifferentEmail') }}
         </button>
 
       </div>
@@ -169,7 +173,7 @@
             this.showErrors = false
             this.expiryMinutes = data.data?.expires_in_minutes || 60
             this.sent = true
-            this.setToastMessage(`Reset link sent to ${this.email}`)
+            this.setToastMessage(this.$t('ui.forgotPasswordPage.toastSent', { email: this.email }))
           } else {
             this.errors = data?.data?.form || [data?.message]
           }

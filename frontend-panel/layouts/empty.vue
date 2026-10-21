@@ -35,7 +35,7 @@
           to="/login"
           class="auth-back"
         >
-          <span aria-hidden="true">&larr;</span> Back to sign in
+          <span aria-hidden="true">&larr;</span> {{ $t('ui.emptyLayout.backToSignIn') }}
         </nuxt-link>
 
         <h1
@@ -61,29 +61,29 @@
           class="auth-foot"
         >
           <template v-if="routeName === 'login'">
-            New to FixMyPC?
+            {{ $t('ui.emptyLayout.newTo', { brand: 'FixMyPC' }) }}
             <nuxt-link
               to="/register"
               class="auth-foot-link"
             >
-              Create an account
+              {{ $t('ui.emptyLayout.createAccount') }}
             </nuxt-link>
           </template>
           <template v-else-if="routeName === 'register'">
-            Already registered?
+            {{ $t('ui.emptyLayout.alreadyRegistered') }}
             <nuxt-link
               to="/login"
               class="auth-foot-link"
             >
-              Sign in
+              {{ $t('ui.emptyLayout.signIn') }}
             </nuxt-link>
           </template>
         </p>
 
         <div class="auth-powered">
-          <span>Powered by</span>
+          <span>{{ $t('ui.emptyLayout.poweredBy') }}</span>
           <span class="auth-powered-logo">
-            <img :src="require('~/assets/images/logo-excytech.png')" alt="Excytech Logo">
+            <img :src="require('~/assets/images/logo-excytech.png')" :alt="$t('ui.emptyLayout.poweredByLogo', { name: 'Excytech' })">
           </span>
         </div>
 
@@ -130,12 +130,12 @@
 
         if (path.includes('login')) {
           if (step === 'code') {
-            return 'Sign in with a code'
+            return this.$t('ui.emptyLayout.titleCode')
           }
           if (step === '2fa') {
-            return 'Enter your security code'
+            return this.$t('ui.emptyLayout.title2fa')
           }
-          return 'Sign in to your account'
+          return this.$t('ui.emptyLayout.titleLogin')
         }
         /*
          * Register is a wizard whose heading depends on the step and the
@@ -145,10 +145,10 @@
           return ''
         }
         if (path.includes('reset-password')) {
-          return 'Set a new password'
+          return this.$t('ui.emptyLayout.titleReset')
         }
         if (path.includes('forgot-password')) {
-          return 'Reset your password'
+          return this.$t('ui.emptyLayout.titleForgot')
         }
       },
       pageDescription() {
@@ -160,20 +160,20 @@
         }
 
         if (path.includes('login')) {
-          if (step === 'code') return 'We’ll email you a 6-digit code. No password needed.'
+          if (step === 'code') return this.$t('ui.emptyLayout.ledeCode')
           // The 2FA screen explains its own method, so no lede here.
           if (step === '2fa') return ''
-          return 'Track repairs, reorder parts and check out faster.'
+          return this.$t('ui.emptyLayout.ledeLogin')
         }
 
         if (path.includes('register'))
           return ''
 
         if (path.includes('reset-password'))
-          return 'Choose a password you don’t use anywhere else.'
+          return this.$t('ui.emptyLayout.ledeReset')
 
         if (path.includes('forgot-password'))
-          return `Enter your email and we’ll send a reset link valid for 60 minutes.`
+          return this.$t('ui.emptyLayout.ledeForgot', { minutes: 60 })
       },
       /*
        * The prototype puts "← Back to sign in" above the heading on every

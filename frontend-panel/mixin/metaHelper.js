@@ -11,7 +11,9 @@ export default {
       return {
         title: meta_title,
         htmlAttrs: {
-          lang: 'en'
+          // the chosen storefront language, for screen readers, fonts and browser
+          // translation. Direction stays on body.rtl, which the stylesheets mirror.
+          lang: this.$store?.state?.language?.currentLanguage?.code || 'en'
         },
         meta: [
           {charset: 'utf-8'},

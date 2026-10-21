@@ -768,6 +768,9 @@ class OrderReturns
                 'type_label' => __('lang.return_type_' . $r->type, [], $lang),
                 'status' => $r->status,
                 'status_label' => __('lang.return_status_' . $r->status, [], $lang),
+                // Return progress and refund progress, separately (OrderState).
+                'return_key' => OrderState::returnKey($r->status),
+                'refund_key' => OrderState::caseRefundKey($r),
                 'replacement_order' => $replacement ? ['id' => $replacement->id, 'order' => $replacement->order] : null,
                 'amount_charged' => $r->status === OrderReturn::EXCHANGED ? $r->amount_charged : null,
                 'reason_label' => __('lang.return_reason_' . $r->reason, [], $lang),

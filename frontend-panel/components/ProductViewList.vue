@@ -22,9 +22,9 @@
       </nuxt-link>
 
       <!-- "SKU: N/A" was printed for every product without one -->
-      <span v-if="product.sku" class="pvl-sku">SKU {{ product.sku }}</span>
+      <span v-if="product.sku" class="pvl-sku">{{ $t('ui.productViewListUi.sku', { sku: product.sku }) }}</span>
 
-      <span class="pvl-rating" :aria-label="`Rated ${Math.floor(product.rating || 0)} out of 5`">
+      <span class="pvl-rating" :aria-label="$t('ui.productViewListUi.ratedOutOf5', { rating: Math.floor(product.rating || 0) })">
         <span class="pvl-stars" aria-hidden="true">{{ stars }}</span>
         <span class="pvl-reviews">({{ product.review_count || 0 }})</span>
       </span>
@@ -55,10 +55,10 @@
         @click="addProductToCart"
       >
         <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
-        Add to cart
+        {{ $t('ui.productViewListUi.addToCart') }}
       </button>
       <span v-else class="pvl-btn pvl-btn-out" aria-disabled="true">
-        Out of stock
+        {{ $t('ui.productViewListUi.outOfStock') }}
       </span>
 
       <!--
@@ -69,12 +69,12 @@
         type="button"
         class="pvl-btn pvl-btn-remove"
         :disabled="removing"
-        :aria-label="`Remove ${product.title}`"
-        :title="type === 'wishlist' ? 'Remove from wishlist' : 'Remove'"
+        :aria-label="$t('ui.productViewListUi.removeProduct', { name: product.title })"
+        :title="type === 'wishlist' ? $t('ui.productViewListUi.removeFromWishlist') : $t('ui.productViewListUi.remove')"
         @click="wishListAction"
       >
         <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
-        <span class="pvl-remove-label">Remove</span>
+        <span class="pvl-remove-label">{{ $t('ui.productViewListUi.remove') }}</span>
       </button>
     </div>
   </article>
@@ -125,9 +125,9 @@ export default {
       return '★'.repeat(rating) + '☆'.repeat(5 - rating)
     },
     stockText() {
-      if (this.productInventory?.quantity > 10) return 'In Stock'
-      if (this.productInventory?.quantity > 0) return 'Low Stock'
-      return 'Out of Stock'
+      if (this.productInventory?.quantity > 10) return this.$t('ui.productViewListUi.inStock')
+      if (this.productInventory?.quantity > 0) return this.$t('ui.productViewListUi.lowStock')
+      return this.$t('ui.productViewListUi.outOfStockTitle')
     },
     stockClass() {
       if (this.productInventory?.quantity > 10) return 'stock in'

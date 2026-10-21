@@ -9,7 +9,7 @@
     >
       <button
         class="compare-btn"
-        aria-label="compare"
+        :aria-label="$t('ui.comparedTileUi.aria.compare')"
         :title="$t('product.removeCompare')"
         @click.prevent="removeFromCompared"
       >

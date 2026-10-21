@@ -31,7 +31,7 @@
             v-if="reducedPercent"
             class="badge-discount"
           >
-            {{ reducedPercent }}% off
+            {{ $t('ui.searchedPorductTileUi.percentOff', { percent: reducedPercent }) }}
           </span>
         </div>
       </div>

@@ -15,7 +15,7 @@
       />
     </template>
     <div v-else class="no-products">
-      No products found
+      {{ $t('ui.embedCategory.noProducts') }}
     </div>
   </div>
 </template>

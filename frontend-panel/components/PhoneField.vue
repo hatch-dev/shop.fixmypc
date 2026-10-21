@@ -13,7 +13,7 @@
       <button
         type="button"
         class="pf-country"
-        :aria-label="`Country: ${selected.name}. Change`"
+        :aria-label="$t('ui.phoneField.countryLabel', { name: selected.name })"
         aria-haspopup="listbox"
         :aria-expanded="pickerOpen ? 'true' : 'false'"
         @click="togglePicker"
@@ -61,7 +61,7 @@
           ref="search"
           v-model.trim="query"
           type="text"
-          placeholder="Search country or code"
+          :placeholder="$t('ui.phoneField.searchPlaceholder')"
           @keydown.esc="closePicker"
           @keydown.enter.prevent="pickFirst"
         >
@@ -91,7 +91,7 @@
           v-if="!filtered.length"
           class="pf-empty"
         >
-          No country matches “{{ query }}”.
+          {{ $t('ui.phoneField.noMatch', { query: query }) }}
         </p>
 
       </div>
@@ -184,7 +184,7 @@ export default {
 
     selected() {
       return this.countries.find(i => i.code === this.country)
-        || {code: this.defaultCountry, dial: '+353', name: 'Republic of Ireland'}
+        || {code: this.defaultCountry, dial: '+353', name: this.$t('ui.phoneField.defaultCountryName')}
     },
 
     filtered() {

@@ -4,7 +4,7 @@
       {{ $t('listingLayout.price') }}
       <button
         type="button"
-        aria-label="submit"
+        :aria-label="$t('ui.filterPriceUi.aria.submit')"
         :disabled="!maxPrice && !minPrice"
         @click.prevent="anyPrice"
       >
@@ -36,7 +36,7 @@
       <button
         class="btn btn-ink btn-sm"
         @click.prevent="filterPrice"
-        aria-label="submit"
+        :aria-label="$t('ui.filterPriceUi.aria.submit')"
       >
         {{ $t('listingLayout.go') }}
       </button>

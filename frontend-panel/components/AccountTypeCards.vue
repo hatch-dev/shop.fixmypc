@@ -8,7 +8,7 @@
         v-show="showNav && page > 0"
         type="button"
         class="atc-arrow atc-arrow-prev"
-        aria-label="Previous account type"
+        :aria-label="$t('ui.accountTypeCards.previous')"
         @click="go(page - 1)"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -44,7 +44,7 @@
               v-if="type.key === selected"
               class="tc-current"
             >
-              Current choice
+              {{ $t('ui.accountTypeCards.currentChoice') }}
             </span>
             <span
               v-else-if="type.badge"
@@ -86,7 +86,7 @@
         v-show="showNav && page < lastPage"
         type="button"
         class="atc-arrow atc-arrow-next"
-        aria-label="Next account type"
+        :aria-label="$t('ui.accountTypeCards.next')"
         @click="go(page + 1)"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
@@ -104,7 +104,7 @@
         type="button"
         class="atc-dot"
         :class="{ on: index === page }"
-        :aria-label="`Show ${type.name}`"
+        :aria-label="$t('ui.accountTypeCards.show', { name: type.name })"
         @click="go(index)"
       />
     </div>
@@ -133,39 +133,39 @@ export default {
       types: [
         {
           key: 'personal',
-          name: 'Personal',
-          desc: 'Home laptops, phones and consoles.',
+          name: this.$t('ui.accountTypeCards.personal.name'),
+          desc: this.$t('ui.accountTypeCards.personal.desc'),
           points: [
-            'Track your repair tickets',
-            'Saved delivery address',
-            'Card or PayPal at checkout'
+            this.$t('ui.accountTypeCards.personal.point1'),
+            this.$t('ui.accountTypeCards.personal.point2'),
+            this.$t('ui.accountTypeCards.personal.point3')
           ],
-          foot: 'Retail prices inc. VAT',
+          foot: this.$t('ui.accountTypeCards.personal.foot'),
           icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>'
         },
         {
           key: 'business',
-          name: 'Business',
-          desc: 'Offices, schools and practices buying for their own use.',
+          name: this.$t('ui.accountTypeCards.business.name'),
+          desc: this.$t('ui.accountTypeCards.business.desc'),
           points: [
-            'VAT invoices and PO references',
-            'Apply for a 30-day credit account',
-            'Multiple sites and named contacts'
+            this.$t('ui.accountTypeCards.business.point1'),
+            this.$t('ui.accountTypeCards.business.point2'),
+            this.$t('ui.accountTypeCards.business.point3')
           ],
-          foot: 'Ex-VAT invoicing',
+          foot: this.$t('ui.accountTypeCards.business.foot'),
           icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-4 7 4v13"/><path d="M10 21v-5h4v5"/></svg>'
         },
         {
           key: 'trade',
-          name: 'Trade',
-          badge: 'Approval needed',
-          desc: 'Repair shops and resellers buying parts to fit or resell.',
+          name: this.$t('ui.accountTypeCards.trade.name'),
+          badge: this.$t('ui.accountTypeCards.trade.badge'),
+          desc: this.$t('ui.accountTypeCards.trade.desc'),
           points: [
-            'Trade price list, ex-VAT',
-            'Bulk parts and RMA handling',
-            'Order at retail prices while we review'
+            this.$t('ui.accountTypeCards.trade.point1'),
+            this.$t('ui.accountTypeCards.trade.point2'),
+            this.$t('ui.accountTypeCards.trade.point3')
           ],
-          foot: 'Reviewed within one working day',
+          foot: this.$t('ui.accountTypeCards.trade.foot'),
           icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"/></svg>'
         }
       ]

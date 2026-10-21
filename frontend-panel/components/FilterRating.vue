@@ -5,7 +5,7 @@
       <button
         type="button"
         :disabled="!rating"
-        aria-label="submit"
+        :aria-label="$t('ui.filterRatingUi.aria.submit')"
         @click.prevent="filterRating(0)"
       >
         {{ $t('listingLayout.clear') }}

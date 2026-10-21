@@ -1,5 +1,5 @@
 <template>
-  <nav class="m-tabs" aria-label="Primary">
+  <nav class="m-tabs" :aria-label="$t('ui.mobileTabBar.primaryAria')">
     <nuxt-link to="/" class="m-tab" :class="{ on: isHome }">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

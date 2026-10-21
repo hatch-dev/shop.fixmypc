@@ -146,8 +146,8 @@
 
             <div class="order-box d-flex justify-content-between align-items-center mb-4">
                 <div class="small-text-order">
-                    <strong>Order No:</strong> #{{ ordered?.order }}<br>
-                    <strong>Order Date:</strong> {{ ordered?.created }}<br>
+                    <strong>{{ $t('ui.orderDetail.orderNo') }}</strong> #{{ ordered?.order }}<br>
+                    <strong>{{ $t('ui.orderDetail.orderDate') }}</strong> {{ ordered?.created }}<br>
                     <!--
                         The reference the customer's finance department needs
                         to match this to their own paperwork. Captured at
@@ -155,7 +155,7 @@
                         confirmation and on the invoice.
                     -->
                     <template v-if="ordered?.purchase_order_number">
-                        <strong>PO Number:</strong> {{ ordered.purchase_order_number }}<br>
+                        <strong>{{ $t('ui.orderDetail.poNumberColon') }}</strong> {{ ordered.purchase_order_number }}<br>
                     </template>
                 </div>
                 <pay-button
@@ -175,7 +175,7 @@
                 </button>
 
                 <button v-if="!isDelivered && !cancelledByShop"
-                    aria-label="submit"
+                    :aria-label="$t('ui.orderDetail.submitAria')"
                     class="btn manage-btn plr-30 plr-sm-15"
                     @click="cancelPopup = true"
                   >
@@ -191,26 +191,26 @@
                 receipt that has already been sent.
             -->
             <div v-if="isBusinessOrder" class="account-box mb-4">
-                <div class="section-title-billing">Account</div>
+                <div class="section-title-billing">{{ $t('ui.orderDetail.account') }}</div>
                 <ul class="account-facts">
                     <li>
-                        <span class="fact-label">Account Type</span>
+                        <span class="fact-label">{{ $t('ui.orderDetail.accountType') }}</span>
                         <span class="fact-value">{{ accountTypeLabel }}</span>
                     </li>
                     <li v-if="ordered?.company_name">
-                        <span class="fact-label">Company</span>
+                        <span class="fact-label">{{ $t('ui.orderDetail.company') }}</span>
                         <span class="fact-value">{{ ordered.company_name }}</span>
                     </li>
                     <li v-if="ordered?.vat_number">
-                        <span class="fact-label">VAT Number</span>
+                        <span class="fact-label">{{ $t('ui.orderDetail.vatNumber') }}</span>
                         <span class="fact-value">{{ ordered.vat_number }}</span>
                     </li>
                     <li v-if="ordered?.cro_number">
-                        <span class="fact-label">Company Reg. No.</span>
+                        <span class="fact-label">{{ $t('ui.orderDetail.companyRegNo') }}</span>
                         <span class="fact-value">{{ ordered.cro_number }}</span>
                     </li>
                     <li v-if="ordered?.purchase_order_number">
-                        <span class="fact-label">PO Number</span>
+                        <span class="fact-label">{{ $t('ui.orderDetail.poNumber') }}</span>
                         <span class="fact-value">{{ ordered.purchase_order_number }}</span>
                     </li>
                 </ul>
@@ -229,7 +229,7 @@
                         order-complete page.
                     -->
                     <template v-if="isCollection">
-                        <div class="section-title-billing">Contact Details</div>
+                        <div class="section-title-billing">{{ $t('ui.orderDetail.contactDetails') }}</div>
                         <ul class="billing-address">
                             <li>{{ contact.name }}</li>
                             <li v-if="contact.phone">{{ contact.phone }}</li>
@@ -238,7 +238,7 @@
                     </template>
 
                     <template v-else>
-                        <div class="section-title-billing">Billing Address</div>
+                        <div class="section-title-billing">{{ $t('ui.orderDetail.billingAddress') }}</div>
                         <ul class="billing-address">
                             <li>{{ ordered?.address?.name }}</li>
                             <li>
@@ -270,7 +270,7 @@
                         coming to, and nothing is being delivered at all.
                     -->
                     <div class="section-title-billing">
-                        {{ isCollection ? 'Collect From' : 'Shipping Address' }}
+                        {{ isCollection ? $t('ui.orderDetail.collectFrom') : $t('ui.orderDetail.shippingAddress') }}
                     </div>
                     <ul class="billing-address">
                         <li>
@@ -291,10 +291,10 @@
                         <li>{{ shippingPlace?.pickup_phone }}</li>
 
                         <li v-if="isCollection">
-                            We'll email you when it's ready to collect
+                            {{ $t('ui.orderDetail.emailWhenReady') }}
                         </li>
                         <li v-else-if="shippingPlace?.day_needed">
-                            Delivery in {{ shippingPlace.day_needed }} days
+                            {{ $t('ui.orderDetail.deliveryInDays', { days: shippingPlace.day_needed }) }}
                         </li>
                     </ul>
                 </div>
@@ -303,25 +303,25 @@
             <!-- Payment -->
             <div class="row mb-4 payment-info">
                 <div class="col-md-6 small-text">
-                    <div class="section-title-billing">Payment Information</div>
+                    <div class="section-title-billing">{{ $t('ui.orderDetail.paymentInformation') }}</div>
                 <div class="d-flex gap-2">
                     <!-- The order's own total, the same figure the summary
                          below prints. -->
-                    <h6>Payment Amount:</h6> <span class="text-success fw-bold"> {{ money(ordered?.calculations?.total) }}</span>
+                    <h6>{{ $t('ui.orderDetail.paymentAmount') }}</h6> <span class="text-success fw-bold"> {{ money(ordered?.calculations?.total) }}</span>
                 </div>
                 <div class="d-flex gap-2 mt-2">
-                    <h6>Payment Method:</h6>   <span class="payment-method"><i :class="['fa-solid', paymentMethodIcon, 'me-1']"></i>{{ paymentMethodLabel }}</span>
+                    <h6>{{ $t('ui.orderDetail.paymentMethod') }}</h6>   <span class="payment-method"><i :class="['fa-solid', paymentMethodIcon, 'me-1']"></i>{{ paymentMethodLabel }}</span>
                 </div>
                 </div>
 
                 <div class="col-md-6 text-end small-text">
                 <div class="d-flex justify-content-end gap-2">
-                    <h6 class="mt-1">Payment Status: </h6><span class="status-badge"  :style="{
+                    <h6 class="mt-1">{{ $t('ui.orderDetail.paymentStatus') }} </h6><span class="status-badge"  :style="{
                         background: paymentBadge.color
                     }">{{ paymentBadge.label }}</span><br>
                 </div>
                     <div class="mt-3">
-                    <h6> Payment Transaction ID: </h6><strong class="payment-id"> {{ ordered?.trans_id || 'N/A' }}</strong><br>
+                    <h6> {{ $t('ui.orderDetail.transactionId') }} </h6><strong class="payment-id"> {{ ordered?.trans_id || $t('ui.orderDetail.na') }}</strong><br>
                 </div>
                 
                 </div>
@@ -336,7 +336,7 @@
                     <div class="circle">
                     {{ orderStatusStep > 1 ? '✓' : '1' }}
                     </div>
-                    <div class="step-label">Order Placed</div>
+                    <div class="step-label">{{ $t('ui.orderDetail.steps.placed') }}</div>
                 </div>
 
                 <!-- Step 2 -->
@@ -345,7 +345,7 @@
                     <div class="circle">
                     {{ orderStatusStep > 2 ? '✓' : '2' }}
                     </div>
-                    <div class="step-label">Order Processing</div>
+                    <div class="step-label">{{ $t('ui.orderDetail.steps.processing') }}</div>
                 </div>
 
                 <!-- Step 3 -->
@@ -354,7 +354,7 @@
                     <div class="circle">
                     {{ orderStatusStep > 3 ? '✓' : '3' }}
                     </div>
-                    <div class="step-label">On Delivery</div>
+                    <div class="step-label">{{ $t('ui.orderDetail.steps.onDelivery') }}</div>
                 </div>
 
                 <!-- Step 4 -->
@@ -363,7 +363,7 @@
                     <div class="circle">
                     {{ orderStatusStep > 4 ? '✓' : '4' }}
                     </div>
-                    <div class="step-label">Delivery</div>
+                    <div class="step-label">{{ $t('ui.orderDetail.steps.delivery') }}</div>
                 </div>
 
                 </div>
@@ -376,25 +376,25 @@
             -->
             <div v-if="parcel" class="parcel-box mb-4">
                 <div class="parcel-head">
-                    <h3 class="parcel-title">Your parcel</h3>
+                    <h3 class="parcel-title">{{ $t('ui.orderDetail.yourParcel') }}</h3>
                     <span class="parcel-pill" :class="`parcel-pill-${parcelTone}`">{{ parcel.status }}</span>
                 </div>
 
                 <dl class="parcel-facts">
                     <div>
-                        <dt>Courier</dt>
+                        <dt>{{ $t('ui.orderDetail.courier') }}</dt>
                         <dd>{{ parcel.courier }}</dd>
                     </div>
                     <div>
-                        <dt>Tracking number</dt>
+                        <dt>{{ $t('ui.orderDetail.trackingNumber') }}</dt>
                         <dd class="parcel-number">{{ parcel.tracking_number }}</dd>
                     </div>
                     <div v-if="parcel.detail && parcel.detail !== parcel.status">
-                        <dt>Latest</dt>
+                        <dt>{{ $t('ui.orderDetail.latest') }}</dt>
                         <dd>{{ parcel.detail }}</dd>
                     </div>
                     <div v-if="parcel.expected_delivery">
-                        <dt>Courier estimate</dt>
+                        <dt>{{ $t('ui.orderDetail.courierEstimate') }}</dt>
                         <dd>{{ parcelDate(parcel.expected_delivery) }}</dd>
                     </div>
                 </dl>
@@ -405,10 +405,10 @@
 
                 <div class="parcel-actions">
                     <a v-if="ordered.parcel_track_url" :href="ordered.parcel_track_url" class="parcel-btn parcel-btn-primary">
-                        Track parcel
+                        {{ $t('ui.orderDetail.trackParcel') }}
                     </a>
                     <a v-if="parcel.url" :href="parcel.url" target="_blank" rel="noopener noreferrer" class="parcel-btn">
-                        {{ parcel.courier }} website
+                        {{ $t('ui.orderDetail.courierWebsite', { courier: parcel.courier }) }}
                     </a>
                 </div>
             </div>
@@ -440,6 +440,11 @@
                         <span class="parcel-number return-rma">{{ ret.rma_number }}</span>
                         <span v-if="ret.type === 'exchange'" class="return-type">{{ ret.type_label }}</span>
                         <span class="parcel-pill" :class="`parcel-pill-${returnTone(ret.status)}`">{{ ret.status_label }}</span>
+                        <!-- the refund is its own fact: "Refund pending" until the money has actually gone back -->
+                        <span v-if="ret.refund_key" class="parcel-pill return-refund-pill"
+                          :class="`parcel-pill-${{ completed: 'good', failed: 'bad' }[ret.refund_key] || 'warn'}`">
+                          {{ $t('myOrders.refund.' + ret.refund_key) }}
+                        </span>
                     </div>
                     <dl class="parcel-facts">
                         <div>
@@ -533,7 +538,7 @@
               <div class="d-flex product-thanks-media">
                 <img
                   :src="productImage(item)"
-                  :alt="item.product?.title || 'Product'"
+                  :alt="item.product?.title || $t('ui.orderDetail.productAlt')"
                   class="ordered-product-image"
                   @error="onImageError"
                 >
@@ -552,15 +557,15 @@
                   </span>
 
                   <span v-if="item?.updated_inventory?.sku" class="product-model fw-normal d-block">
-                    SKU: {{ item.updated_inventory.sku }}
+                    {{ $t('ui.orderDetail.sku', { sku: item.updated_inventory.sku }) }}
                   </span>
 
                   <span class="fw-semibold mobile-quantity d-block mt-1">
-                    Quantity: {{ item.quantity }}
+                    {{ $t('ui.orderDetail.quantity', { qty: item.quantity }) }}
                   </span>
 
                   <span v-if="item.bundle_offer > 0" class="product-model fw-normal d-block">
-                    Includes {{ item.bundle_offer }} free
+                    {{ $t('ui.orderDetail.includesFree', { count: item.bundle_offer }) }}
                   </span>
                 </div>
               </div>
@@ -577,9 +582,9 @@
                 -->
                 <div class="d-flex justify-content-end price-box-thanku">
                   <p>
-                    Unit Price:
+                    {{ $t('ui.orderDetail.unitPrice') }}
                     <span class="fw-bold">
-                      {{ money(line.unit) }}<small v-if="line.exTag" class="fw-normal"> Ex-VAT</small>
+                      {{ money(line.unit) }}<small v-if="line.exTag" class="fw-normal"> {{ $t('ui.orderDetail.exVat') }}</small>
                       <s v-if="line.discount > 0" class="unit-was">{{ money(line.unitList) }}</s>
                     </span>
                   </p>
@@ -587,14 +592,14 @@
 
                 <div class="d-flex justify-content-end price-box-thanku">
                   <p>
-                    Original Price:
+                    {{ $t('ui.orderDetail.originalPrice') }}
                     <span class="fw-bold">{{ money(line.list) }}</span>
                   </p>
                 </div>
 
                 <div v-if="line.discount > 0" class="d-flex justify-content-end price-box-thanku">
                   <p>
-                    Product Discount:
+                    {{ $t('ui.orderDetail.productDiscount') }}
                     <span class="fw-bold text-success">- {{ money(line.discount) }}</span>
                   </p>
                 </div>
@@ -608,7 +613,7 @@
 
                 <div class="d-flex justify-content-end price-box-thanku line-subtotal">
                   <p>
-                    Subtotal{{ line.totalTag }}:
+                    {{ $t('ui.orderDetail.subtotal', { tag: line.totalTag }) }}
                     <span class="fw-bold">{{ money(line.total) }}</span>
                   </p>
                 </div>
@@ -641,19 +646,19 @@
                 is inside it rather than counted twice.
               -->
               <div class="summary-row">
-                <span>Products{{ orderGoods.tag }}</span>
+                <span>{{ $t('ui.orderDetail.products', { tag: orderGoods.tag }) }}</span>
                 <span>{{ money(orderGoods.list) }}</span>
               </div>
 
               <div v-if="Number(orderGoods.discount) > 0" class="summary-row">
-                <span>Discount</span>
+                <span>{{ $t('ui.orderDetail.discount') }}</span>
                 <span class="text-success">-{{ money(orderGoods.discount) }}</span>
               </div>
 
               <div class="summary-rule"></div>
 
               <div class="summary-row">
-                <span>Net Products{{ orderGoods.tag }}</span>
+                <span>{{ $t('ui.orderDetail.netProducts', { tag: orderGoods.tag }) }}</span>
                 <span>{{ money(orderGoods.net) }}</span>
               </div>
 
@@ -663,33 +668,33 @@
               -->
               <template v-if="orderIsNet">
                 <div v-for="row in orderVatRows" :key="row.label" class="summary-row">
-                  <span>VAT ({{ row.label }})</span>
+                  <span>{{ $t('ui.orderDetail.vatRate', { rate: row.label }) }}</span>
                   <span>+ {{ money(row.vat) }}</span>
                 </div>
               </template>
               <div v-else-if="orderHasVat" class="summary-row summary-row-sub">
                 <span>
-                  VAT included in products<template v-if="orderVatRows.length === 1"> ({{ orderVatRows[0].label }})</template>
+                  {{ $t('ui.orderDetail.vatIncluded') }}<template v-if="orderVatRows.length === 1"> ({{ orderVatRows[0].label }})</template>
                 </span>
                 <span>{{ money(orderCalc.vat) }}</span>
               </div>
 
               <div v-if="showRow('Flash Discount')" class="summary-row">
-                <span>Flash Discount</span>
+                <span>{{ $t('ui.orderDetail.flashDiscount') }}</span>
                 <span class="text-success">
                   - {{ money(ordered?.calculations?.flash_discount) }}
                 </span>
               </div>
 
               <div v-if="showRow('Bundle Saving')" class="summary-row">
-                <span>Bundle Saving</span>
+                <span>{{ $t('ui.orderDetail.bundleSaving') }}</span>
                 <span class="text-success">
                   - {{ money(ordered?.calculations?.bundle_discount) }}
                 </span>
               </div>
 
               <div v-if="showRow('Voucher Discount')" class="summary-row">
-                <span>Voucher Discount</span>
+                <span>{{ $t('ui.orderDetail.voucherDiscount') }}</span>
                 <span class="text-success">
                   - {{ money(ordered?.calculations?.voucher) }}
                 </span>
@@ -701,14 +706,14 @@
                 even if the group is renamed later.
               -->
               <div v-if="showRow('Loyalty Discount')" class="summary-row">
-                <span>{{ ordered?.calculations?.loyalty_label || 'Loyalty Discount' }}</span>
+                <span>{{ ordered?.calculations?.loyalty_label || $t('ui.orderDetail.loyaltyDiscount') }}</span>
                 <span class="text-success">
                   - {{ money(ordered?.calculations?.loyalty_discount) }}
                 </span>
               </div>
 
               <div v-if="showRow('Points')" class="summary-row">
-                <span>Cherry Points</span>
+                <span>{{ $t('ui.orderDetail.cherryPoints') }}</span>
                 <span class="text-success">
                   - {{ money(ordered?.calculations?.points_discount) }}
                 </span>
@@ -719,24 +724,24 @@
                 and free shipping look the same and only one is good news.
               -->
               <div class="summary-row">
-                <span>Shipping</span>
-                <span v-if="!(Number(ordered?.calculations?.shipping) > 0)" class="text-success">FREE</span>
+                <span>{{ $t('ui.orderDetail.shipping') }}</span>
+                <span v-if="!(Number(ordered?.calculations?.shipping) > 0)" class="text-success">{{ $t('ui.orderDetail.free') }}</span>
                 <span v-else>{{ money(ordered?.calculations?.shipping) }}</span>
               </div>
 
               <div class="summary-row total-row">
-                <span>Total{{ orderGrossTag }}</span>
+                <span>{{ $t('ui.orderDetail.total', { tag: orderGrossTag }) }}</span>
                 <span>{{ money(ordered?.calculations?.total) }}</span>
               </div>
 
               <!-- A split payment: how the total was paid. -->
               <template v-if="Number(ordered?.calculations?.wallet_paid) > 0">
                 <div class="summary-row">
-                  <span>Paid from wallet</span>
+                  <span>{{ $t('ui.orderDetail.paidFromWallet') }}</span>
                   <span class="text-success">- {{ money(ordered?.calculations?.wallet_paid) }}</span>
                 </div>
                 <div class="summary-row">
-                  <span>Paid by your chosen method</span>
+                  <span>{{ $t('ui.orderDetail.paidByChosenMethod') }}</span>
                   <span>{{ money(ordered?.calculations?.amount_due) }}</span>
                 </div>
               </template>
@@ -791,7 +796,7 @@
     middleware: ['common-middleware'],
     head() {
       return {
-        title: 'Order',
+        title: this.$t('ui.orderDetail.pageTitle'),
         meta: []
       }
     },
@@ -863,17 +868,17 @@
       paymentMethodLabel() {
         const map = {
             1: 'Razorpay',
-            2: 'Cash on Delivery',
+            2: this.$t('ui.orderDetail.methods.cod'),
             3: 'Stripe',
             4: 'PayPal',
             5: 'Flutterwave',
             6: 'Iyzico',
-            7: 'Bank Transfer',
+            7: this.$t('ui.orderDetail.methods.bank'),
             8: 'Payfast',
-            9: 'Credit / Debit Card (SumUp)'
+            9: this.$t('ui.orderDetail.methods.card')
         }
 
-        return map[this.ordered?.order_method] || 'N/A'
+        return map[this.ordered?.order_method] || this.$t('ui.orderDetail.na')
       },
       orderId() {
         return parseInt(this.$route.params.id)
@@ -922,10 +927,10 @@
        */
       accountTypeLabel() {
         return {
-          business: 'Business',
-          trade: 'Trade',
-          personal: 'Personal'
-        }[this.ordered?.account_type] || 'Personal'
+          business: this.$t('ui.orderDetail.accountTypes.business'),
+          trade: this.$t('ui.orderDetail.accountTypes.trade'),
+          personal: this.$t('ui.orderDetail.accountTypes.personal')
+        }[this.ordered?.account_type] || this.$t('ui.orderDetail.accountTypes.personal')
       },
       shippingPlace() {
         return this.ordered?.ordered_products?.[0]?.shipping_place
@@ -1039,7 +1044,7 @@
         return Number(this.ordered?.calculations?.loyalty_discount || 0)
       },
       loyaltyLabel() {
-        return this.ordered?.calculations?.loyalty_label || 'Loyalty Discount'
+        return this.ordered?.calculations?.loyalty_label || this.$t('ui.orderDetail.loyaltyDiscount')
       },
       pointsDiscount() {
         return Number(this.ordered?.calculations?.points_discount || 0)
@@ -1862,6 +1867,7 @@ ul.account-facts {
 .return-row-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .return-rma { font-weight: 600; font-size: 15px; }
 .return-row-head .parcel-pill { margin-left: auto; }
+.return-row-head .parcel-pill + .return-refund-pill { margin-left: 0; }
 .return-items { grid-column: 1 / -1; }
 .return-item { display: block; font-weight: 500; }
 .return-type { font-size: 12px; font-weight: 600; color: #33319A; background: #EBEBFF; border-radius: 999px; padding: 2px 10px; }

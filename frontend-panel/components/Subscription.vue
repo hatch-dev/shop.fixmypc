@@ -1,9 +1,9 @@
 <template>
   <div class="row align-items-center subscription-panel">
     <div class="col-lg-6">
-      <h4 class="subscription-text">Free Monthly Newsletter</h4>
+      <h4 class="subscription-text">{{ $t('ui.subscription.title') }}</h4>
       <p class="small text-light subscription-description">
-        Subscribe to our newsletter for all the latest news and cool tips and tricks to keep your mobile devices safe & secure. We promise we never spam, and you can unsubscribe easily.
+        {{ $t('ui.subscription.description') }}
       </p>
     </div>
     <div class="col-lg-6">
@@ -21,9 +21,9 @@
             class="btn btn-primary"
             :disabled="formSubmitting"
           >
-            <span v-if="formSubmitting">Loading...</span>
+            <span v-if="formSubmitting">{{ $t('ui.subscription.loading') }}</span>
             <span v-else>
-              Subscribe <i class="bi bi-arrow-right"></i>
+              {{ $t('ui.subscription.subscribe') }} <i class="bi bi-arrow-right"></i>
             </span>
           </button>
         </div>

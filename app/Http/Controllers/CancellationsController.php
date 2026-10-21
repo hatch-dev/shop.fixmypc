@@ -130,22 +130,28 @@ class CancellationsController extends \App\Models\Helper\ControllerHelper
                  * stock, reverses the loyalty points and frees the voucher
                  * redemption, none of which used to happen (QA audit ORD-01).
                  */
-                $refunded = Config::get('constants.orderStatus.REFUNDED');
+                /*
+                 * The order stays CANCELLED (2026-10-21). This used to move it
+                 * to REFUNDED, which made a refund look like an order status:
+                 * the customer's Cancelled tab listed it as "Refunded" and the
+                 * admin's Cancelled chip lost it. The refund is the
+                 * cancellation row's own fact (refunded, refunded_amount,
+                 * refund_reference); the history gets a note.
+                 *
+                 * Stock, points and vouchers were released when it was
+                 * cancelled; restoreStockAndRewards() is a no-op then, and
+                 * still releases a legacy order that only carries the flag.
+                 */
+                $order->restoreStockAndRewards();
 
-                if (Order::canTransition($order->status, $refunded)) {
-                    $order->restoreStockAndRewards();
-
-                    Order::where('id', $order->id)->update(['status' => $refunded]);
-
-                    OrderStatusHistory::create([
-                        'order_id' => $order->id,
-                        'from_status' => (int)$order->status,
-                        'to_status' => $refunded,
-                        'changed_by' => optional($this->user)->id,
-                        'changed_by_type' => 'admin',
-                        'note' => 'Refund ' . $result['reference']
-                    ]);
-                }
+                OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'from_status' => (int)$order->status,
+                    'to_status' => (int)$order->status,
+                    'changed_by' => optional($this->user)->id,
+                    'changed_by_type' => 'admin',
+                    'note' => 'Refunded ' . number_format($amount, 2) . ' (' . $result['reference'] . ')'
+                ]);
             });
 
             /*

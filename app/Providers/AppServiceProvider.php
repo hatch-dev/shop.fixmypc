@@ -19,7 +19,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        // A translated column reads as the original when no translation exists.
+        \Illuminate\Database\Connection::resolverFor('mysql', function ($pdo, $database, $prefix, $config) {
+            return new \App\Database\TranslationFallbackMySqlConnection($pdo, $database, $prefix, $config);
+        });
     }
 
     /**

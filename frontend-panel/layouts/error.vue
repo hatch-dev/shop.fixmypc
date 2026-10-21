@@ -5,7 +5,7 @@
       <div class="img-wrap mb-sm-20 mlr-xs-auto">
         <img
           src="~/assets/images/error.png"
-          alt="Error image"
+          :alt="$t('ui.errorLayout.errorImage')"
           height="50"
           width="50"
         >
@@ -21,7 +21,7 @@
         <h4 class="mb-30">
           {{ $t('error.try') }}
           <button
-            aria-label="submit"
+            :aria-label="$t('ui.errorLayout.submitAria')"
             class="outline-btn plr-25 mlr-5"
             @click.prevent="reload"
           >
@@ -67,7 +67,7 @@
         return this.error && this.error?.statusCode || 500
       },
       message() {
-        return this.error?.message || 'Something went wrong'
+        return this.error?.message || this.$t('ui.errorLayout.somethingWrong')
       },
       ...mapGetters('language', ['currentLanguage']),
     },

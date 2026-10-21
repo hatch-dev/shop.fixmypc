@@ -169,6 +169,13 @@
             <span class="ov-label">{{ $t('fSale.pMethod') }}</span>
             <span class="ov-value">{{ paymentTypes[result.order_method] || $t('prod.na') }}</span>
           </div>
+          <div v-if="result.state && result.state.refund" class="ov-item">
+            <span class="ov-label">Refund</span>
+            <span class="ov-value" :class="{ 'color-success': ['completed', 'partial'].includes(result.state.refund.key), 'color-danger': result.state.refund.key === 'failed' }">
+              {{ { pending: 'Pending', processing: 'Processing', completed: 'Refunded', partial: 'Partly refunded', failed: 'Failed' }[result.state.refund.key] }}
+              <template v-if="result.state.refund.amount">· {{ priceFormatting(result.state.refund.amount) }}</template>
+            </span>
+          </div>
           <div class="ov-item">
             <span class="ov-label">{{ $t('fSale.pStatus') }}</span>
             <span class="ov-value" :class="paymentDone ? 'color-success' : 'color-danger'">
@@ -1409,6 +1416,8 @@
        * undefined entry threw and took the page down; now they name themselves.
        */
       statusLabel() {
+        // A legacy order the old cancellation refund moved to 8 is still a cancelled order.
+        if (this.result?.state?.order === 'cancelled') return this.$t('index.orderCan')
         return this.statusTitle(this.result?.status)
       },
       statusVariant() {

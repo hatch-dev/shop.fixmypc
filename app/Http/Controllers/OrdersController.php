@@ -24,6 +24,7 @@ use App\Models\Helper\MailHelper;
 use App\Models\Helper\OrderEmailDispatcher;
 use App\Models\Helper\OrderEmailEvent;
 use App\Models\Helper\OrderMailer;
+use App\Models\Helper\OrderState;
 use App\Models\Helper\OrderSummary;
 use App\Models\Helper\Response;
 use App\Models\Helper\WalletSplit;
@@ -529,11 +530,18 @@ class OrdersController extends ControllerHelper
                  * cancellation by staff or the unpaid-transfer sweep moves the
                  * status and leaves the flag at 0, and the chip hid them all.
                  */
+                /*
+                 * ...and since 2026-10-21 one rule with the customer's
+                 * Cancelled tab (OrderState), which also finds the orders the
+                 * old cancellation refund had moved on to "Refunded".
+                 */
                 if (in_array('cancelled', $chips, true)) {
-                    $query = $query->where(function ($q) {
-                        $q->where('cancelled', 1)
-                            ->orWhere('status', Config::get('constants.orderStatus.CANCELLED'));
-                    });
+                    $query = $query->whereRaw(OrderState::cancelledSql('orders'));
+                }
+
+                // Return or exchange cases, returned orders, and cancelled orders with money owed or sent back.
+                if (in_array('returns', $chips, true)) {
+                    $query = $query->whereRaw(OrderState::returnsSql('orders'));
                 }
             }
 
@@ -621,6 +629,9 @@ class OrdersController extends ControllerHelper
 
             $inventories = OrderSummary::inventoriesFor($data->pluck('id'));
 
+            // Order, return and refund status per row, in three queries for the page.
+            $states = OrderState::describeMany($data->getCollection());
+
             $orderIds = [];
 
             foreach ($data as $item) {
@@ -651,6 +662,7 @@ class OrdersController extends ControllerHelper
                  * beside it to no purpose.
                  */
                 $item['customer'] = $this->customerSummary($item);
+                $item['state'] = $states[$item->id] ?? null;
 
                 unset($item['user']);
 
@@ -943,6 +955,9 @@ class OrdersController extends ControllerHelper
             // AfterShip never holds up opening an order.
             $order['shipment_allowed'] = in_array((int)$order->status, ShipmentTracking::shippableStatuses(), true)
                 && !ShipmentTracking::isCollection($order);
+
+            // Order, return and refund status, each its own fact (OrderState).
+            $order['state'] = OrderState::forOrder($order);
 
             unset($order['user']);
 
@@ -1994,91 +2009,104 @@ class OrdersController extends ControllerHelper
 
                 // Return cases, as the customer may see them (ownership checked above).
                 $order['returns'] = \App\Models\Helper\OrderReturns::forCustomer($order, $lang);
+                // Order, return and refund status, each its own fact.
+                $order['state'] = OrderState::forOrder($order);
 
                 return response()->json(new Response($request->token, $order));
 
             } else {
 
-
+                /*
+                 * My Orders.
+                 *
+                 * Whose orders first, as a condition of its own. The filters
+                 * below used to be chained with bare orWhere() and the owner
+                 * was added after them, so `paid=1&unpaid=1` read as
+                 * "paid, OR (unpaid AND this customer)" and listed other
+                 * customers' paid orders. Each filter is now its own group.
+                 */
                 $query = Order::query();
+
+                if ($request->user('user')) {
+                    $query->where('orders.user_id', $request->user('user')->id);
+                } else if ($request->user_token) {
+                    $query->where('orders.user_token', $request->user_token);
+                } else {
+                    return response()->json(Validation::errorLang($lang));
+                }
+
+                if ($request->cancelled) {
+                    $query->where('cancelled', $request->cancelled);
+                }
+
+                $paid = (bool)$request->paid;
+                $unpaid = (bool)$request->unpaid;
+                if ($paid xor $unpaid) {
+                    $query->where('payment_done', $paid ? 1 : 0);
+                }
+
+                $methods = [];
+                if ($request->card_payment) {
+                    $methods = [Config::get('constants.paymentMethod.RAZORPAY'), Config::get('constants.paymentMethod.STRIPE'),
+                        Config::get('constants.paymentMethod.SUMUP')];
+                }
+                if ($request->cash_on_delivery) {
+                    $methods[] = Config::get('constants.paymentMethod.CASH_ON_DELIVERY');
+                }
+                if ($methods) {
+                    $query->whereIn('order_method', $methods);
+                }
+
+                // Search by order number; "#ORD..." as printed works as well.
+                $q = ltrim(trim((string)$request->q), '#');
+                if ($q !== '') {
+                    $query->where('orders.order', 'LIKE', '%' . addcslashes($q, '%_\\') . '%');
+                }
+
+                // Every tab's count over the same customer and search, before the tab narrows it.
+                $counts = OrderState::counts($query);
+
+                $tab = in_array($request->tab, OrderState::TABS, true) ? $request->tab : 'all';
+                OrderState::applyTab($query, $tab);
+
                 if ($lang) {
-                    $query = $query->with(['ordered_products.product' => function ($query) use ($lang) {
+                    $query->with(['ordered_products.product' => function ($query) use ($lang) {
 
                         $query->leftJoin('product_langs as pl', function ($join) use ($lang) {
                             $join->on('pl.product_id', '=', 'products.id');
                             $join->where('pl.lang', $lang);
                         })
-                            ->select('products.id', 'pl.title', 'products.slug', 'products.image', 'products.selling',
-                                'products.offered', 'products.shipping_rule_id', 'products.bundle_deal_id', 'pl.unit');
-
-
+                            // COALESCE: an untranslated product kept its name blank.
+                            ->select('products.id', DB::raw('COALESCE(pl.title, products.title) as title'), 'products.slug',
+                                'products.image', 'products.selling', 'products.offered', 'products.shipping_rule_id',
+                                'products.bundle_deal_id', DB::raw('COALESCE(pl.unit, products.unit) as unit'));
                     }]);
                 } else {
-                    $query = $query->with('ordered_products.product');
+                    $query->with('ordered_products.product');
                 }
 
                 // Each line's delivery time, so My Orders can show a real estimate
                 // instead of "Soon" (the detail branch already loads it).
-                $query = $query->with('ordered_products.shipping_place');
+                $query->with('ordered_products.shipping_place');
 
-                $query = $query->orderBy('created_at', 'DESC');
-
-                if ($request->cancelled) {
-                    $query = $query->where('cancelled', $request->cancelled);
-                }
-
-                if ($request->paid) {
-                    $query = $query->where('payment_done', 1);
-
-                    if ($request->unpaid) {
-                        $query = $query->orWhere('payment_done', 0);
-                    }
-                } else if ($request->unpaid) {
-                    $query = $query->where('payment_done', 0);
-                }
-
-                if ($request->card_payment) {
-                    $query = $query
-                        ->where('order_method', Config::get('constants.paymentMethod.RAZORPAY'))
-                        ->orWhere('order_method', Config::get('constants.paymentMethod.STRIPE'));
-
-                    if ($request->cash_on_delivery) {
-                        $query = $query->orWhere('order_method', Config::get('constants.paymentMethod.CASH_ON_DELIVERY'));
-                    }
-
-                } else if ($request->cash_on_delivery) {
-                    $query = $query->where('order_method', Config::get('constants.paymentMethod.CASH_ON_DELIVERY'));
-                }
-
-
-                if ($request->user('user')) {
-
-                    $query = $query->where('user_id', $request->user('user')->id);
-
-                } else if ($request->user_token) {
-
-                    $query = $query->where('user_token', $request->user_token);
-
-                } else {
-
-                    return response()->json(Validation::errorLang($lang));
-                }
-
+                $query->orderBy('orders.created_at', 'DESC')->orderBy('orders.id', 'DESC');
 
                 $data = $query->paginate(Config::get('constants.frontend.PAGINATION'));
 
-                if ($request->time_zone) {
-                    foreach ($data as $item) {
+                // Order, return and refund status, each its own fact (OrderState).
+                $states = OrderState::describeMany($data->getCollection());
 
-                        $item['created'] = Utils::formatDate(Utils::convertTimeToUSERzone($item->created_at, $request->time_zone));
-                    }
-                } else {
-                    foreach ($data as $item) {
-
-                        $item['created'] = Utils::formatDate($item->created_at);
-                    }
+                foreach ($data as $item) {
+                    $item['created'] = $request->time_zone
+                        ? Utils::formatDate(Utils::convertTimeToUSERzone($item->created_at, $request->time_zone))
+                        : Utils::formatDate($item->created_at);
+                    $item['state'] = $states[$item->id] ?? null;
                 }
-                return response()->json(new Response($request->token, $data));
+
+                return response()->json(new Response($request->token, array_merge($data->toArray(), [
+                    'tab' => $tab,
+                    'counts' => $counts,
+                ])));
             }
 
         } catch (\Exception $ex) {

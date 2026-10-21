@@ -21,7 +21,7 @@
                 :rows="4"
                 :panels="2"
                 heading
-                label="Loading your dashboard"
+                :label="$t('ui.userDashboard.loading')"
             />
 
             <div v-else class="dash">
@@ -37,33 +37,33 @@
                             <p class="dash-hello">{{ greeting }},</p>
                             <h1 class="username">{{ firstName }}</h1>
                             <p class="dash-sub">
-                                Here's what's happening with your account today.
+                                {{ $t('ui.userDashboard.subtitle') }}
                             </p>
                         </div>
 
                         <!-- Real session data, or the line is not shown at all. -->
                         <p v-if="lastLoginLabel" class="last-login">
-                            Last login
+                            {{ $t('ui.userDashboard.lastLogin') }}
                             <strong>{{ lastLoginLabel }}</strong>
                         </p>
                     </div>
 
-                    <nav class="dash-quick" aria-label="Quick links">
+                    <nav class="dash-quick" :aria-label="$t('ui.userDashboard.quickLinks')">
                         <nuxt-link to="/user/orders" class="dash-chip">
                             <span class="dash-chip-ico" aria-hidden="true"><i class="fa-solid fa-bag-shopping"></i></span>
-                            <span class="dash-chip-label"><span class="lbl-long">My orders</span><span class="lbl-short">Orders</span></span>
+                            <span class="dash-chip-label"><span class="lbl-long">{{ $t('ui.userDashboard.quick.ordersLong') }}</span><span class="lbl-short">{{ $t('ui.userDashboard.quick.ordersShort') }}</span></span>
                         </nuxt-link>
                         <nuxt-link :to="trackLink" class="dash-chip">
                             <span class="dash-chip-ico" aria-hidden="true"><i class="fa-solid fa-truck-fast"></i></span>
-                            <span class="dash-chip-label"><span class="lbl-long">Track order</span><span class="lbl-short">Track</span></span>
+                            <span class="dash-chip-label"><span class="lbl-long">{{ $t('ui.userDashboard.quick.trackLong') }}</span><span class="lbl-short">{{ $t('ui.userDashboard.quick.trackShort') }}</span></span>
                         </nuxt-link>
                         <nuxt-link to="/user/wishlists" class="dash-chip">
                             <span class="dash-chip-ico" aria-hidden="true"><i class="fa-solid fa-heart"></i></span>
-                            <span class="dash-chip-label"><span class="lbl-long">Wishlist</span><span class="lbl-short">Wishlist</span></span>
+                            <span class="dash-chip-label"><span class="lbl-long">{{ $t('ui.userDashboard.quick.wishlistLong') }}</span><span class="lbl-short">{{ $t('ui.userDashboard.quick.wishlistShort') }}</span></span>
                         </nuxt-link>
                         <nuxt-link to="/user/addresses" class="dash-chip">
                             <span class="dash-chip-ico" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></span>
-                            <span class="dash-chip-label"><span class="lbl-long">Addresses</span><span class="lbl-short">Address</span></span>
+                            <span class="dash-chip-label"><span class="lbl-long">{{ $t('ui.userDashboard.quick.addressesLong') }}</span><span class="lbl-short">{{ $t('ui.userDashboard.quick.addressesShort') }}</span></span>
                         </nuxt-link>
                     </nav>
                 </header>
@@ -84,7 +84,7 @@
                     :class="`acct-${accountTone}`"
                 >
                     <div class="acct-head">
-                        <span class="acct-type">{{ accountTypeLabel }} account</span>
+                        <span class="acct-type">{{ $t('ui.userDashboard.account.typeAccount', { type: accountTypeLabel }) }}</span>
                         <span class="acct-tag" :class="`acct-tag-${accountTone}`">
                             {{ accountStateLabel }}
                         </span>
@@ -98,35 +98,35 @@
                         v-if="account?.trade_review_note"
                         class="acct-note"
                     >
-                        <strong>Note from us:</strong> {{ account.trade_review_note }}
+                        <strong>{{ $t('ui.userDashboard.account.noteFromUs') }}</strong> {{ account.trade_review_note }}
                     </p>
 
                     <p
                         v-else-if="account?.status_note"
                         class="acct-note"
                     >
-                        <strong>Note from us:</strong> {{ account.status_note }}
+                        <strong>{{ $t('ui.userDashboard.account.noteFromUs') }}</strong> {{ account.status_note }}
                     </p>
 
                     <dl v-if="businessProfile" class="acct-facts">
                         <div v-if="businessProfile.company_name">
-                            <dt>Company</dt>
+                            <dt>{{ $t('ui.userDashboard.account.company') }}</dt>
                             <dd>{{ businessProfile.company_name }}</dd>
                         </div>
                         <div v-if="businessProfile.vat_number">
-                            <dt>VAT number</dt>
+                            <dt>{{ $t('ui.userDashboard.account.vatNumber') }}</dt>
                             <dd>{{ businessProfile.vat_number }}</dd>
                         </div>
                         <div v-if="businessProfile.cro_number">
-                            <dt>Company reg. number</dt>
+                            <dt>{{ $t('ui.userDashboard.account.companyReg') }}</dt>
                             <dd>{{ businessProfile.cro_number }}</dd>
                         </div>
                         <div v-if="businessProfile.sector || businessProfile.trade">
-                            <dt>{{ account?.account_type === 'trade' ? 'Trade' : 'Sector' }}</dt>
+                            <dt>{{ account?.account_type === 'trade' ? $t('ui.userDashboard.account.trade') : $t('ui.userDashboard.account.sector') }}</dt>
                             <dd>{{ businessProfile.trade || businessProfile.sector }}</dd>
                         </div>
                         <div v-if="businessProfile.billing_address" class="acct-wide">
-                            <dt>Business address</dt>
+                            <dt>{{ $t('ui.userDashboard.account.businessAddress') }}</dt>
                             <dd>{{ businessProfile.billing_address }}</dd>
                         </div>
                     </dl>
@@ -136,8 +136,7 @@
                       live, never merely because the account says "business".
                     -->
                     <p v-if="account?.has_business_pricing" class="acct-entitled">
-                        Your account pricing is active. Quantity break prices are shown
-                        on each product and applied automatically in your basket.
+                        {{ $t('ui.userDashboard.account.pricingActive') }}
                     </p>
 
                     <nuxt-link
@@ -145,7 +144,7 @@
                         to="/user/profile#upgrade"
                         class="acct-upgrade-link"
                     >
-                        Trade account: apply or check your application
+                        {{ $t('ui.userDashboard.account.tradeApply') }}
                         <i class="fa-solid fa-arrow-right" aria-hidden="true" />
                     </nuxt-link>
                 </section>
@@ -160,8 +159,8 @@
                     class="acct-upgrade-prompt"
                 >
                     <span>
-                        <strong>Buying for a business or a trade?</strong>
-                        Upgrade your account for business pricing, VAT invoices and more.
+                        <strong>{{ $t('ui.userDashboard.account.upgradeTitle') }}</strong>
+                        {{ $t('ui.userDashboard.account.upgradeText') }}
                     </span>
                     <i class="fa-solid fa-arrow-right" aria-hidden="true" />
                 </nuxt-link>
@@ -172,13 +171,13 @@
                     <!-- Recent order -->
                     <div class="stat-card stat-card-order">
                         <div class="stat-body">
-                            <p class="stat-label">Recent Order</p>
+                            <p class="stat-label">{{ $t('ui.userDashboard.recentOrder') }}</p>
                             <h2
                                 class="stat-value stat-value-order"
                                 :title="latestOrder ? `#${latestOrder.order}` : null"
                             >
                                 <template v-if="latestOrder">#{{ latestOrder.order }}</template>
-                                <template v-else>No orders yet</template>
+                                <template v-else>{{ $t('ui.userDashboard.noOrdersYet') }}</template>
                             </h2>
 
                             <span
@@ -195,10 +194,10 @@
                                     :to="`/user/order/${latestOrder.id}`"
                                     class="link-action"
                                 >
-                                    View order
+                                    {{ $t('ui.userDashboard.viewOrder') }}
                                 </nuxt-link>
                                 <nuxt-link v-else to="/" class="link-action">
-                                    Start shopping
+                                    {{ $t('ui.userDashboard.startShopping') }}
                                 </nuxt-link>
                             </div>
                         </div>
@@ -209,18 +208,18 @@
                     <!-- Wallet -->
                     <div class="stat-card stat-card-wallet">
                         <div class="stat-body">
-                            <p class="stat-label">Wallet Balance</p>
+                            <p class="stat-label">{{ $t('ui.userDashboard.walletBalance') }}</p>
                             <h2 class="stat-value">&euro;{{ Number(wallet?.balance || 0).toFixed(2) }}</h2>
                             <span class="stat-meta">
-                                + &euro;{{ Number(wallet?.pending || 0).toFixed(2) }} pending
+                                + {{ $t('ui.userDashboard.pending', { amount: '€' + Number(wallet?.pending || 0).toFixed(2) }) }}
                             </span>
 
                             <div class="stat-actions">
                                 <button type="button" class="btn-top-up" @click="openTopup">
-                                    Top Up
+                                    {{ $t('ui.userDashboard.topUp') }}
                                 </button>
                                 <button type="button" class="btn-history" @click="openHistory">
-                                    History
+                                    {{ $t('ui.userDashboard.history') }}
                                 </button>
                             </div>
                         </div>
@@ -231,15 +230,15 @@
                     <!-- Points -->
                     <div class="stat-card stat-card-points">
                         <div class="stat-body">
-                            <p class="stat-label">Cherry Points</p>
-                            <h2 class="stat-value">{{ points?.points || 0 }} pts</h2>
+                            <p class="stat-label">{{ $t('ui.userDashboard.cherryPoints') }}</p>
+                            <h2 class="stat-value">{{ $t('ui.userDashboard.pts', { count: points?.points || 0 }) }}</h2>
                             <span class="stat-meta">
-                                Value: &euro;{{ Number(points?.value || 0).toFixed(2) }}
+                                {{ $t('ui.userDashboard.pointsValue', { amount: '€' + Number(points?.value || 0).toFixed(2) }) }}
                             </span>
 
                             <div class="stat-actions">
                                 <nuxt-link to="/user/orders" class="link-action">
-                                    Earned on delivery
+                                    {{ $t('ui.userDashboard.earnedOnDelivery') }}
                                 </nuxt-link>
                             </div>
                         </div>
@@ -251,8 +250,8 @@
                 <!-- Recent orders -->
                 <section class="panel mt-4">
                     <div class="panel-head">
-                        <h2 class="panel-title">Recent Orders</h2>
-                        <nuxt-link to="/user/orders" class="link-action">View All Orders</nuxt-link>
+                        <h2 class="panel-title">{{ $t('ui.userDashboard.recentOrders') }}</h2>
+                        <nuxt-link to="/user/orders" class="link-action">{{ $t('ui.userDashboard.viewAllOrders') }}</nuxt-link>
                     </div>
 
                     <!--
@@ -264,31 +263,31 @@
                         <table class="orders-table">
                             <thead>
                                 <tr>
-                                    <th scope="col">Order ID</th>
-                                    <th scope="col">Date</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">Total</th>
-                                    <th scope="col" class="ta-right">Action</th>
+                                    <th scope="col">{{ $t('ui.userDashboard.col.orderId') }}</th>
+                                    <th scope="col">{{ $t('ui.userDashboard.col.date') }}</th>
+                                    <th scope="col">{{ $t('ui.userDashboard.col.status') }}</th>
+                                    <th scope="col">{{ $t('ui.userDashboard.col.total') }}</th>
+                                    <th scope="col" class="ta-right">{{ $t('ui.userDashboard.col.action') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="order in recentOrders" :key="order.id">
-                                    <td data-label="Order ID" class="order-ref">#{{ order.order }}</td>
-                                    <td data-label="Date">{{ formatDate(order.created) }}</td>
-                                    <td data-label="Status">
+                                    <td :data-label="$t('ui.userDashboard.col.orderId')" class="order-ref">#{{ order.order }}</td>
+                                    <td :data-label="$t('ui.userDashboard.col.date')">{{ formatDate(order.created) }}</td>
+                                    <td :data-label="$t('ui.userDashboard.col.status')">
                                         <span class="status" :class="orderStatusClass(order)">
                                             {{ orderStatusLabel(order) }}
                                         </span>
                                     </td>
-                                    <td data-label="Total">&euro;{{ Number(order.total_amount || 0).toFixed(2) }}</td>
-                                    <td data-label="Action" class="ta-right">
+                                    <td :data-label="$t('ui.userDashboard.col.total')">&euro;{{ Number(order.total_amount || 0).toFixed(2) }}</td>
+                                    <td :data-label="$t('ui.userDashboard.col.action')" class="ta-right">
                                         <nuxt-link
                                             :to="`/user/order/${order.id}`"
                                             class="icon-link"
-                                            :aria-label="`View order ${order.order}`"
+                                            :aria-label="$t('ui.userDashboard.viewOrderAria', { order: order.order })"
                                         >
                                             <i class="fa-solid fa-eye" aria-hidden="true"></i>
-                                            <span class="icon-link-text">View</span>
+                                            <span class="icon-link-text">{{ $t('ui.userDashboard.view') }}</span>
                                         </nuxt-link>
                                     </td>
                                 </tr>
@@ -307,7 +306,7 @@
                             <nuxt-link
                                 :to="`/user/order/${order.id}`"
                                 class="order-item"
-                                :aria-label="`Order ${order.order}, ${orderStatusLabel(order)}, ${formatDate(order.created)}, total €${Number(order.total_amount || 0).toFixed(2)}`"
+                                :aria-label="$t('ui.userDashboard.orderItemAria', { order: order.order, status: orderStatusLabel(order), date: formatDate(order.created), total: '€' + Number(order.total_amount || 0).toFixed(2) })"
                             >
                                 <span class="order-item-ico" :class="`order-ico-${orderStatusClass(order)}`" aria-hidden="true">
                                     <i class="fa-solid fa-box"></i>
@@ -333,8 +332,8 @@
                     <!-- A table of headings with no rows under it explains nothing. -->
                     <div v-else class="empty-state">
                         <i class="fa-solid fa-box-open" aria-hidden="true"></i>
-                        <p>You have not placed an order yet.</p>
-                        <nuxt-link to="/" class="btn-top-up">Browse products</nuxt-link>
+                        <p>{{ $t('ui.userDashboard.noOrdersText') }}</p>
+                        <nuxt-link to="/" class="btn-top-up">{{ $t('ui.userDashboard.browseProducts') }}</nuxt-link>
                     </div>
                 </section>
 
@@ -343,10 +342,10 @@
                     <!-- Default shipping address -->
                     <section class="panel">
                         <div class="panel-head">
-                            <h2 class="panel-title">Default Shipping Address</h2>
+                            <h2 class="panel-title">{{ $t('ui.userDashboard.defaultAddress') }}</h2>
                             <nuxt-link to="/user/addresses" class="link-action">
                                 <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-                                Edit
+                                {{ $t('ui.userDashboard.edit') }}
                             </nuxt-link>
                         </div>
 
@@ -357,20 +356,20 @@
                             <div class="media-body">
                                 <strong>{{ defaultAddress.name }}</strong>
                                 <p class="muted-text" v-html="formatAddress(defaultAddress)" />
-                                <p class="muted-text mb-0">Tel: {{ defaultAddress.phone }}</p>
+                                <p class="muted-text mb-0">{{ $t('ui.userDashboard.tel', { phone: defaultAddress.phone }) }}</p>
                             </div>
                         </div>
 
                         <div v-else class="empty-state empty-state-sm">
                             <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
-                            <p>No delivery address saved yet.</p>
-                            <nuxt-link to="/user/addresses" class="btn-top-up">Add an address</nuxt-link>
+                            <p>{{ $t('ui.userDashboard.noAddress') }}</p>
+                            <nuxt-link to="/user/addresses" class="btn-top-up">{{ $t('ui.userDashboard.addAddress') }}</nuxt-link>
                         </div>
                     </section>
 
                     <!-- Account security -->
                     <section class="panel">
-                        <h2 class="panel-title panel-title-solo">Account Security</h2>
+                        <h2 class="panel-title panel-title-solo">{{ $t('ui.userDashboard.security.title') }}</h2>
 
                         <div class="security-item">
                             <div class="media-row">
@@ -378,14 +377,14 @@
                                     <i class="fa-solid fa-lock"></i>
                                 </div>
                                 <div class="media-body">
-                                    <strong>Password</strong>
+                                    <strong>{{ $t('ui.userDashboard.security.password') }}</strong>
                                     <!--
                                       "Last changed 3 months ago" used to sit here
                                       for every customer. Nothing in the schema
                                       records when a password was changed, so there
                                       is no honest value to show.
                                     -->
-                                    <span class="muted-text">Change your sign-in password</span>
+                                    <span class="muted-text">{{ $t('ui.userDashboard.security.passwordSub') }}</span>
                                 </div>
                             </div>
                             <button
@@ -393,7 +392,7 @@
                                 class="shipping-update"
                                 @click="$router.push({ path: '/user/profile', hash: '#password' })"
                             >
-                                Update
+                                {{ $t('ui.userDashboard.security.update') }}
                             </button>
                         </div>
 
@@ -403,7 +402,7 @@
                                     <i class="fa-solid fa-envelope"></i>
                                 </div>
                                 <div class="media-body">
-                                    <strong>Email Preference</strong>
+                                    <strong>{{ $t('ui.userDashboard.security.emailPref') }}</strong>
                                     <span class="muted-text">{{ newsletterLabel }}</span>
                                 </div>
                             </div>
@@ -412,7 +411,7 @@
                                 class="shipping-update"
                                 @click="$router.push({ path: '/user/profile', hash: '#preferences' })"
                             >
-                                Manage
+                                {{ $t('ui.userDashboard.security.manage') }}
                             </button>
                         </div>
                     </section>
@@ -425,13 +424,13 @@
                 class="topup-modal-overlay"
                 role="dialog"
                 aria-modal="true"
-                aria-label="Top up wallet"
+                :aria-label="$t('ui.userDashboard.topupAria')"
                 @click.self="closeTopup"
             >
                 <div class="topup-modal">
                     <div class="panel-head">
-                        <h2 class="panel-title">Top Up Wallet</h2>
-                        <button type="button" class="modal-close" aria-label="Close" @click="closeTopup">
+                        <h2 class="panel-title">{{ $t('ui.userDashboard.topupTitle') }}</h2>
+                        <button type="button" class="modal-close" :aria-label="$t('ui.userDashboard.close')" @click="closeTopup">
                             <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                         </button>
                     </div>
@@ -451,12 +450,12 @@
                             :class="['preset-btn', isCustom ? 'active' : '']"
                             @click="selectCustom"
                         >
-                            Custom
+                            {{ $t('ui.userDashboard.custom') }}
                         </button>
                     </div>
 
                     <div v-if="isCustom" class="custom-amount">
-                        <label class="input-label" for="topup-amount">Enter Amount</label>
+                        <label class="input-label" for="topup-amount">{{ $t('ui.userDashboard.enterAmount') }}</label>
                         <input
                             id="topup-amount"
                             ref="topupAmount"
@@ -465,13 +464,13 @@
                             min="0"
                             v-model="customAmount"
                             class="form-control custom-input"
-                            placeholder="e.g. 75.50"
+                            :placeholder="$t('ui.userDashboard.amountPlaceholder')"
                         />
                     </div>
 
                     <div class="modal-actions">
                         <button type="button" class="btn-history" @click="closeTopup">
-                            Cancel
+                            {{ $t('ui.userDashboard.cancel') }}
                         </button>
                         <button
                             type="button"
@@ -479,8 +478,8 @@
                             :disabled="!finalAmount || processingPayment"
                             @click="submitTopup"
                         >
-                            <span v-if="processingPayment">Processing</span>
-                            <span v-else>Pay &euro;{{ Number(finalAmount || 0).toFixed(2) }}</span>
+                            <span v-if="processingPayment">{{ $t('ui.userDashboard.processing') }}</span>
+                            <span v-else>{{ $t('ui.userDashboard.pay', { amount: '€' + Number(finalAmount || 0).toFixed(2) }) }}</span>
                         </button>
                     </div>
                 </div>
@@ -492,16 +491,16 @@
                 class="topup-modal-overlay"
                 role="dialog"
                 aria-modal="true"
-                aria-label="Wallet history"
+                :aria-label="$t('ui.userDashboard.historyAria')"
                 @click.self="showHistoryModal = false"
             >
                 <div class="topup-modal topup-modal-wide">
                     <div class="panel-head">
-                        <h2 class="panel-title">Wallet History</h2>
+                        <h2 class="panel-title">{{ $t('ui.userDashboard.historyTitle') }}</h2>
                         <button
                             type="button"
                             class="modal-close"
-                            aria-label="Close"
+                            :aria-label="$t('ui.userDashboard.close')"
                             @click="showHistoryModal = false"
                         >
                             <i class="fa-solid fa-xmark" aria-hidden="true"></i>
@@ -512,26 +511,26 @@
                         <table class="orders-table">
                             <thead>
                                 <tr>
-                                    <th scope="col">Date</th>
-                                    <th scope="col">Type</th>
-                                    <th scope="col">Amount</th>
-                                    <th scope="col">Status</th>
+                                    <th scope="col">{{ $t('ui.userDashboard.col.date') }}</th>
+                                    <th scope="col">{{ $t('ui.userDashboard.col.type') }}</th>
+                                    <th scope="col">{{ $t('ui.userDashboard.col.amount') }}</th>
+                                    <th scope="col">{{ $t('ui.userDashboard.col.status') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="item in walletHistory" :key="item.id">
-                                    <td data-label="Date">{{ formatDate(item.created_at) }}</td>
-                                    <td data-label="Type">
+                                    <td :data-label="$t('ui.userDashboard.col.date')">{{ formatDate(item.created_at) }}</td>
+                                    <td :data-label="$t('ui.userDashboard.col.type')">
                                         <span :class="item.type === 'credit' ? 'text-success' : 'text-danger'">
-                                            {{ item.type === 'credit' ? 'Credit' : 'Debit' }}
+                                            {{ item.type === 'credit' ? $t('ui.userDashboard.credit') : $t('ui.userDashboard.debit') }}
                                         </span>
                                     </td>
-                                    <td data-label="Amount">
+                                    <td :data-label="$t('ui.userDashboard.col.amount')">
                                         <span :class="item.type === 'credit' ? 'text-success' : 'text-danger'">
                                             {{ item.type === 'credit' ? '+' : '-' }}&euro;{{ Number(item.amount || 0).toFixed(2) }}
                                         </span>
                                     </td>
-                                    <td data-label="Status">
+                                    <td :data-label="$t('ui.userDashboard.col.status')">
                                         <span class="status" :class="`wallet-${item.status}`">
                                             {{ item.status }}
                                         </span>
@@ -543,7 +542,7 @@
 
                     <div v-else class="empty-state empty-state-sm">
                         <i class="fa-solid fa-receipt" aria-hidden="true"></i>
-                        <p>No transactions yet.</p>
+                        <p>{{ $t('ui.userDashboard.noTransactions') }}</p>
                     </div>
 
                     <div v-if="walletHistory.length" class="pager">
@@ -553,11 +552,11 @@
                             :disabled="!pagination.prev_page_url"
                             @click="fetchWalletHistory(pagination.current_page - 1)"
                         >
-                            Prev
+                            {{ $t('ui.userDashboard.prev') }}
                         </button>
 
                         <span class="pager-info">
-                            Page {{ pagination.current_page }} of {{ pagination.last_page }}
+                            {{ $t('ui.userDashboard.pageOf', { page: pagination.current_page, total: pagination.last_page }) }}
                         </span>
 
                         <button
@@ -566,7 +565,7 @@
                             :disabled="!pagination.next_page_url"
                             @click="fetchWalletHistory(pagination.current_page + 1)"
                         >
-                            Next
+                            {{ $t('ui.userDashboard.next') }}
                         </button>
                     </div>
                 </div>
@@ -583,7 +582,7 @@ import AccountSkeleton from '~/components/AccountSkeleton'
 export default {
     head() {
       return {
-        title: 'Dashboard',
+        title: this.$t('ui.userDashboard.headTitle'),
         meta: []
       }
     },
@@ -653,8 +652,8 @@ export default {
       },
 
       accountTypeLabel() {
-        const labels = {personal: 'Personal', business: 'Business', trade: 'Trade'}
-        return labels[this.account?.account_type] || 'Personal'
+        const labels = {personal: this.$t('ui.userDashboard.types.personal'), business: this.$t('ui.userDashboard.types.business'), trade: this.$t('ui.userDashboard.types.trade')}
+        return labels[this.account?.account_type] || this.$t('ui.userDashboard.types.personal')
       },
 
       /*
@@ -665,25 +664,25 @@ export default {
       accountStateLabel() {
         const status = this.account?.status
 
-        if (status === 'suspended') return 'Suspended'
-        if (status === 'rejected') return 'Not accepted'
-        if (status === 'pending') return 'Awaiting review'
+        if (status === 'suspended') return this.$t('ui.userDashboard.state.suspended')
+        if (status === 'rejected') return this.$t('ui.userDashboard.state.notAccepted')
+        if (status === 'pending') return this.$t('ui.userDashboard.state.awaitingReview')
 
         if (this.account?.account_type === 'trade') {
           const trade = {
-            approved: 'Trade pricing active',
-            rejected: 'Application not approved',
-            suspended: 'Trade pricing suspended',
-            pending: 'Application under review'
+            approved: this.$t('ui.userDashboard.state.tradeActive'),
+            rejected: this.$t('ui.userDashboard.state.appNotApproved'),
+            suspended: this.$t('ui.userDashboard.state.tradeSuspended'),
+            pending: this.$t('ui.userDashboard.state.appUnderReview')
           }
-          return trade[this.account?.trade_status] || 'Application under review'
+          return trade[this.account?.trade_status] || this.$t('ui.userDashboard.state.appUnderReview')
         }
 
         if (this.account?.account_type === 'business') {
-          return this.account?.has_business_pricing ? 'Business pricing active' : 'Active'
+          return this.account?.has_business_pricing ? this.$t('ui.userDashboard.state.businessActive') : this.$t('ui.userDashboard.state.active')
         }
 
-        return 'Active'
+        return this.$t('ui.userDashboard.state.active')
       },
 
       // Drives the panel colour only.
@@ -716,14 +715,14 @@ export default {
       },
       firstName() {
         const name = (this.profile?.name || '').trim()
-        return name ? name.split(/\s+/)[0] : 'there'
+        return name ? name.split(/\s+/)[0] : this.$t('ui.userDashboard.nameFallback')
       },
       // By the customer's own clock, not the server's.
       greeting() {
         const hour = new Date().getHours()
-        if (hour < 12) return 'Good morning'
-        if (hour < 18) return 'Good afternoon'
-        return 'Good evening'
+        if (hour < 12) return this.$t('ui.userDashboard.greeting.morning')
+        if (hour < 18) return this.$t('ui.userDashboard.greeting.afternoon')
+        return this.$t('ui.userDashboard.greeting.evening')
       },
       trackLink() {
         return this.latestOrder
@@ -761,7 +760,7 @@ export default {
         const isToday = when.toDateString() === new Date().toDateString()
 
         return isToday
-          ? `Today, ${time}`
+          ? this.$t('ui.userDashboard.todayAt', { time })
           : `${when.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}, ${time}`
       },
       /*
@@ -777,8 +776,8 @@ export default {
         const value = this.profile?.pref_email_offers
 
         return value === true || parseInt(value) === 1
-          ? 'Subscribed to offers and news'
-          : 'Not subscribed to offers'
+          ? this.$t('ui.userDashboard.newsletter.on')
+          : this.$t('ui.userDashboard.newsletter.off')
       },
     },
     components: {
@@ -860,7 +859,7 @@ export default {
         async submitTopup() {
             try {
                 if (!this.finalAmount || this.finalAmount <= 0) {
-                    this.setToastError('Enter an amount above zero')
+                    this.setToastError(this.$t('ui.userDashboard.toast.amountAboveZero'))
                     return
                 }
 
@@ -885,7 +884,7 @@ export default {
 
                 // SumUp's refusal comes back as a 200 with no id; it used to do nothing.
                 if (!data?.id) {
-                    this.setToastError('We could not start the payment. Please try again.')
+                    this.setToastError(this.$t('ui.userDashboard.toast.paymentStartFailed'))
                     return
                 }
 
@@ -900,7 +899,7 @@ export default {
 
             } catch (e) {
                 console.error(e)
-                this.setToastError('We could not start the payment. Please try again.')
+                this.setToastError(this.$t('ui.userDashboard.toast.paymentStartFailed'))
             } finally {
                 this.processingPayment = false
             }
@@ -1053,13 +1052,13 @@ export default {
          */
         orderStatusLabel(order) {
             if (parseInt(order?.cancelled) === 1) {
-                return 'Cancelled'
+                return this.$t('ui.userDashboard.status.cancelled')
             }
 
             const code = parseInt(order?.status)
-            const closed = {6: 'Cancelled', 7: 'Returned', 8: 'Refunded'}
+            const closed = {6: this.$t('ui.userDashboard.status.cancelled'), 7: this.$t('ui.userDashboard.status.returned'), 8: this.$t('ui.userDashboard.status.refunded')}
 
-            return closed[code] || this.orderStatus[code]?.title || 'Pending'
+            return closed[code] || this.orderStatus[code]?.title || this.$t('ui.userDashboard.status.pending')
         },
         async fetchOrders() {
             try {

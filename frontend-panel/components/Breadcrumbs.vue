@@ -25,7 +25,7 @@ export default {
       const pathArray = this.$route.path.split('/').filter(p => p)
 
       const crumbs = [
-        { name: 'Home', path: '/' }
+        { name: this.$t('ui.breadcrumbs.home'), path: '/' }
       ]
 
       pathArray.forEach((segment, index) => {
@@ -42,7 +42,12 @@ export default {
   },
 
   methods: {
+    // a known page segment has a translated name; anything else is shown as it reads in the URL
     formatName(text) {
+      const key = `ui.breadcrumbs.${text}`
+      if (this.$te(key)) {
+        return this.$t(key)
+      }
       return text
         .replace(/-/g, ' ')
         .replace(/\b\w/g, l => l.toUpperCase())

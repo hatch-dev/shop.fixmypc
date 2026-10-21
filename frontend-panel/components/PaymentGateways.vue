@@ -77,14 +77,14 @@
             made at checkout.
           -->
           <p v-if="readonly" class="payment-note">
-            You'll choose how to pay at checkout.
+            {{ $t('ui.paymentGateways.chooseAtCheckout') }}
           </p>
 
           <div
             class="payment-options mt-10"
             :class="{ 'is-readonly': readonly }"
             :role="readonly ? 'list' : 'radiogroup'"
-            :aria-label="readonly ? 'Payment methods we accept' : 'Payment method'"
+            :aria-label="readonly ? $t('ui.paymentGateways.methodsWeAccept') : $t('ui.paymentGateways.paymentMethod')"
             @click.capture="onOptionClick"
           >
 
@@ -101,11 +101,9 @@
                 v-model="usePoints"
               >
               <span class="payment-body">
-                <span class="payment-title">Use Cherry Points</span>
+                <span class="payment-title">{{ $t('ui.paymentGateways.useCherryPoints') }}</span>
                 <span class="payment-sub">
-                  {{ points.points }} pts
-                  ({{ currencyIcon }}{{ points.value }})
-                  available
+                  {{ $t('ui.paymentGateways.pointsAvailable', { points: points.points, value: currencyIcon + points.value }) }}
                 </span>
               </span>
               <span class="payment-logo" aria-hidden="true">⭐</span>
@@ -129,13 +127,13 @@
                 v-model="useWallet"
               >
               <span class="payment-body">
-                <span class="payment-title">Use my wallet balance</span>
+                <span class="payment-title">{{ $t('ui.paymentGateways.useWallet') }}</span>
                 <span class="payment-sub">
                   <template v-if="useWallet">
-                    {{ money(walletApplied) }} from your wallet &middot; {{ money(finalPayableAmount) }} left to pay with the method below
+                    {{ $t('ui.paymentGateways.walletSplitOn', { applied: money(walletApplied), left: money(finalPayableAmount) }) }}
                   </template>
                   <template v-else>
-                    {{ money(walletBalance) }} available &mdash; pay part of this order from it
+                    {{ $t('ui.paymentGateways.walletSplitOff', { balance: money(walletBalance) }) }}
                   </template>
                 </span>
               </span>
@@ -161,8 +159,8 @@
                 v-model="paymentType"
               >
               <span class="payment-body">
-                <span class="payment-title">Credit / Debit Card</span>
-                <span class="payment-sub">Visa, Mastercard or Amex, secured by {{ cardMethod === orderMethods.STRIPE ? 'Stripe' : 'SumUp' }}.</span>
+                <span class="payment-title">{{ $t('ui.paymentGateways.card') }}</span>
+                <span class="payment-sub">{{ $t('ui.paymentGateways.cardSub', { provider: cardMethod === orderMethods.STRIPE ? 'Stripe' : 'SumUp' }) }}</span>
               </span>
               <span class="payment-logo payment-cards" aria-hidden="true">
                 <span class="card-chip card-visa">VISA</span>
@@ -207,8 +205,8 @@
                 v-model="paymentType"
               >
               <span class="payment-body">
-                <span class="payment-title">Cash</span>
-                <span class="payment-sub">Pay when you collect or receive your order.</span>
+                <span class="payment-title">{{ $t('ui.paymentGateways.cash') }}</span>
+                <span class="payment-sub">{{ $t('ui.paymentGateways.cashSub') }}</span>
               </span>
               <span class="payment-logo" aria-hidden="true">
                 <i class="fa-solid fa-money-bill-1"></i>
@@ -232,8 +230,8 @@
                 v-model="paymentType"
               >
               <span class="payment-body">
-                <span class="payment-title">Bank Transfer</span>
-                <span class="payment-sub">Pay via direct bank transfer.</span>
+                <span class="payment-title">{{ $t('ui.paymentGateways.bank') }}</span>
+                <span class="payment-sub">{{ $t('ui.paymentGateways.bankSub') }}</span>
               </span>
               <span class="payment-logo" aria-hidden="true">
                 <i class="fa-solid fa-building-columns"></i>
@@ -263,9 +261,9 @@
                 v-model="paymentType"
               >
               <span class="payment-body">
-                <span class="payment-title">Wallet</span>
+                <span class="payment-title">{{ $t('ui.paymentGateways.wallet') }}</span>
                 <span class="payment-sub">
-                  Balance {{ currencyIcon }}{{ walletBalance }}<template v-if="!readonly && !walletCovers && walletSplitOffered"> — not enough for the whole order; use it with another method above</template><template v-else-if="!readonly && !walletCovers"> — not enough for this order</template>
+                  {{ $t('ui.paymentGateways.balance', { amount: currencyIcon + walletBalance }) }}<template v-if="!readonly && !walletCovers && walletSplitOffered"> — {{ $t('ui.paymentGateways.notEnoughSplit') }}</template><template v-else-if="!readonly && !walletCovers"> — {{ $t('ui.paymentGateways.notEnough') }}</template>
                 </span>
               </span>
               <span class="payment-logo" aria-hidden="true">
@@ -582,7 +580,7 @@
                 :disabled="cannotPlaceOrder || walletBalance < baseAmount"
                 :text="walletBalance >= baseAmount 
                   ? paymentBtnText 
-                  : 'Insufficient Wallet Balance'"
+                  : $t('ui.paymentGateways.insufficientBtn')"
                 @clicked="payWithWallet"
               />
             </div>
@@ -598,7 +596,7 @@
               type="button"
               :fetching-data="false"
               :disabled="true"
-              text="Choose a payment method"
+              :text="$t('ui.paymentGateways.chooseMethod')"
             />
 
             <div
@@ -817,7 +815,7 @@
         this.paymentType = null
 
         this.setToastMessage(
-          'Cash is only available on Collection Store orders, so please choose another way to pay.'
+          this.$t('ui.paymentGateways.cashCollectionOnly')
         )
       },
       payFastForm() {
@@ -941,13 +939,13 @@
         let disabled = this.cannotPlaceOrder
 
         if (!type) {
-          text = 'Choose a payment method'
+          text = this.$t('ui.paymentGateways.chooseMethod')
           disabled = true
         } else if (type === m.CASH_ON_DELIVERY || type === m.BANK) {
           text = this.$t('checkout.confirmOrder')
         } else if (type === m.WALLET) {
           const covers = this.walletBalance >= this.baseAmount
-          text = covers ? this.paymentBtnText : 'Insufficient Wallet Balance'
+          text = covers ? this.paymentBtnText : this.$t('ui.paymentGateways.insufficientBtn')
           disabled = this.cannotPlaceOrder || !covers
         }
 
@@ -1123,7 +1121,7 @@
           this.placingOrder = true
 
           if (this.walletBalance < this.baseAmount) {
-            this.setToastError('Insufficient wallet balance')
+            this.setToastError(this.$t('ui.paymentGateways.insufficientToast'))
             return
           }
 
@@ -1139,7 +1137,7 @@
 
         } catch (e) {
           console.log('Wallet error:', e)
-          this.reportPaymentFailure('Wallet payment failed')
+          this.reportPaymentFailure(this.$t('ui.paymentGateways.walletFailed'))
         } finally {
           this.placingOrder = false
         }
@@ -1275,7 +1273,7 @@
           }
         }catch (e) {
           console.log(e.message)
-          this.reportPaymentFailure('Payment initialization failed')
+          this.reportPaymentFailure(this.$t('ui.paymentGateways.initFailed'))
         }finally {
           this.placingOrder = false
         }
@@ -1296,13 +1294,13 @@
             this.orderMethods.BANK
           )
 
-          this.setToastMessage("Order placed. Please complete bank transfer.")
+          this.setToastMessage(this.$t('ui.paymentGateways.bankPlaced'))
 
           this.$router.push('/user/order/bank/' + orderId)
 
         } catch (e) {
           console.log("BANK ERROR:", e)
-          this.reportPaymentFailure("Bank payment failed")
+          this.reportPaymentFailure(this.$t('ui.paymentGateways.bankFailed'))
         } finally {
           this.placingOrder = false
         }
@@ -1443,11 +1441,11 @@
         try {
           const data = await this.confirmOrder({payment_intent: paymentIntent})
           if (!data?.id) {
-            return {ok: false, message: 'Your order could not be placed. You have not been charged.'}
+            return {ok: false, message: this.$t('ui.paymentGateways.notPlacedNotCharged')}
           }
           return {ok: true, orderId: data.id}
         } catch (e) {
-          return {ok: false, message: (e?.message || 'Your order could not be placed.') + ' You have not been charged.'}
+          return {ok: false, message: this.$t('ui.paymentGateways.reasonNotCharged', { reason: e?.message || this.$t('ui.paymentGateways.notPlaced') })}
         }
       },
       stripeClosed(orderId) {
@@ -1496,7 +1494,7 @@
           this.paymentType = null
 
           this.setToastError(
-            'Cash is only available on Collection Store orders. Please choose another way to pay.'
+            this.$t('ui.paymentGateways.cashCollectionOnly2')
           )
 
           return
@@ -1640,7 +1638,7 @@
           }
         })
 
-        return messages.length ? messages : ['We could not place this order.']
+        return messages.length ? messages : [this.$t('ui.paymentGateways.couldNotPlace')]
       },
       async placeOrder(extra = {}) {
         return new Promise(((resolve, reject) => {
@@ -1759,7 +1757,7 @@
                         this.$emit('field-error', res?.data || {})
                       }
 
-                      reject(new Error(this.orderError?.[0] || 'Order refused'))
+                      reject(new Error(this.orderError?.[0] || this.$t('ui.paymentGateways.orderRefused')))
                     }
                   })
               })

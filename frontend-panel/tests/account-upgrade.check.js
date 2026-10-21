@@ -10,6 +10,7 @@
 const fs = require('fs')
 const path = require('path')
 const compiler = require('vue-template-compiler')
+const { withI18n, installI18n } = require('./i18n-en')
 
 const sfc = compiler.parseComponent(
   fs.readFileSync(path.join(__dirname, '..', 'pages', 'user', 'profile.vue'), 'utf8')
@@ -55,7 +56,7 @@ const check = (name, ok) => { console.log((ok ? '  PASS  ' : '  FAIL  ') + name)
  * every method bound, so methods see computeds the way Vue would give them.
  */
 function makeVm(profile, upgrade, api = {}) {
-  const vm = Object.assign(options.data.call({}), {
+  const vm = Object.assign(options.data.call(withI18n({})), {
     profile,
     upgrade,
     langCode: 'en',
@@ -74,6 +75,7 @@ function makeVm(profile, upgrade, api = {}) {
     async postRequest(args) { vm.posted.push(args); return api.post(args) },
     getCartByUser() { vm.cartRefreshed++; return Promise.resolve() }
   })
+  withI18n(vm)
   Object.keys(C).forEach(k => {
     if (typeof C[k] === 'function') Object.defineProperty(vm, k, {get: () => C[k].call(vm), configurable: true})
   })

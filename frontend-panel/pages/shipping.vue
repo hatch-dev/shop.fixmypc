@@ -19,7 +19,7 @@
                    <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h11v10H3zM14 9h4l3 3.5V16h-7" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7" cy="17.5" r="1.8" fill="#fff" stroke="currentColor" stroke-width="1.6"/><circle cx="17.5" cy="17.5" r="1.8" fill="#fff" stroke="currentColor" stroke-width="1.6"/></svg>
                  </span>
                  <div class="cart-sec-heading">
-                   <h2 id="ship-sec-method-title" class="cart-sec-title">Delivery or Collection?</h2>
+                   <h2 id="ship-sec-method-title" class="cart-sec-title">{{ $t('ui.shippingPage.methodTitle') }}</h2>
                    <p v-if="productSummary.length" class="cart-sec-sub">
                      {{ productSummary.map(item => item.text).join(', ') }}
                    </p>
@@ -30,7 +30,7 @@
                    id="delivery-options"
                    class="ship-choices"
                    role="radiogroup"
-                   aria-label="Delivery or collection"
+                   :aria-label="$t('ui.shippingPage.methodAria')"
                  >
                    <div
                      :class="['ship-choice', { active: deliveryType === 'delivery' }]"
@@ -43,8 +43,8 @@
                    >
                      <span class="ship-choice-mark" aria-hidden="true"></span>
                      <span class="ship-choice-body">
-                       <span class="ship-choice-title">Send by Post</span>
-                       <span class="ship-choice-sub">Tracked delivery to your address.</span>
+                       <span class="ship-choice-title">{{ $t('ui.shippingPage.sendByPost') }}</span>
+                       <span class="ship-choice-sub">{{ $t('ui.shippingPage.sendByPostSub') }}</span>
                      </span>
                      <span class="ship-choice-ico" aria-hidden="true">
                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 6h11v10H3zM14 9h4l3 3.5V16h-7" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="7" cy="17.5" r="1.8" fill="#fff" stroke="currentColor" stroke-width="1.5"/><circle cx="17.5" cy="17.5" r="1.8" fill="#fff" stroke="currentColor" stroke-width="1.5"/></svg>
@@ -62,8 +62,8 @@
                    >
                      <span class="ship-choice-mark" aria-hidden="true"></span>
                      <span class="ship-choice-body">
-                       <span class="ship-choice-title">Collection in Store <span v-if="collectionFree" class="ship-choice-free">Free</span></span>
-                       <span class="ship-choice-sub">Pick it up from our store; we&rsquo;ll email you when it&rsquo;s ready.</span>
+                       <span class="ship-choice-title">{{ $t('ui.shippingPage.collectionInStore') }} <span v-if="collectionFree" class="ship-choice-free">{{ $t('ui.shippingPage.free') }}</span></span>
+                       <span class="ship-choice-sub">{{ $t('ui.shippingPage.collectionInStoreSub') }}</span>
                      </span>
                      <span class="ship-choice-ico" aria-hidden="true">
                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 9.5 5.5 4h13L20 9.5M4 9.5h16M4 9.5V20h16V9.5M9.5 20v-5h5v5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
@@ -78,8 +78,8 @@
                   <div v-if="isCollection" class="pickup">
                     <template v-if="collectionPoints.length">
                       <p class="pickup-heading">
-                        {{ collectionPoints.length > 1 ? 'Choose a collection store' : 'Your collection store' }}
-                        <span v-if="collectionPoints.length > 1" class="pickup-count">{{ collectionPoints.length }} stores</span>
+                        {{ collectionPoints.length > 1 ? $t('ui.shippingPage.chooseStore') : $t('ui.shippingPage.yourStore') }}
+                        <span v-if="collectionPoints.length > 1" class="pickup-count">{{ $t('ui.shippingPage.storeCount', { count: collectionPoints.length }) }}</span>
                       </p>
 
                       <!--
@@ -91,7 +91,7 @@
                       <div
                         class="pickup-list"
                         :role="collectionPoints.length > 1 ? 'radiogroup' : null"
-                        aria-label="Collection store"
+                        :aria-label="$t('ui.shippingPage.storeAria')"
                       >
                         <component
                           :is="collectionPoints.length > 1 ? 'label' : 'div'"
@@ -121,7 +121,7 @@
                             <span class="pickup-top">
                               <span class="pickup-name">{{ point.name }}</span>
                               <span class="pickup-price" :class="{ 'is-free': point.free }">
-                                {{ point.free ? 'Free' : point.priceLabel }}
+                                {{ point.free ? $t('ui.shippingPage.free') : point.priceLabel }}
                               </span>
                             </span>
 
@@ -146,8 +146,8 @@
                                 rel="noopener noreferrer"
                               >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.6" stroke="currentColor" stroke-width="1.7"/></svg>
-                                Get directions
-                                <span class="visually-hidden">(opens in a new tab)</span>
+                                {{ $t('ui.shippingPage.getDirections') }}
+                                <span class="visually-hidden">{{ $t('ui.shippingPage.opensNewTab') }}</span>
                               </a>
                             </span>
                           </span>
@@ -155,7 +155,7 @@
                       </div>
 
                       <p class="pickup-note">
-                        We&rsquo;ll email you when your order is ready to collect. Bring your order number.
+                        {{ $t('ui.shippingPage.pickupNote') }}
                       </p>
                     </template>
 
@@ -165,8 +165,7 @@
                       pickup address there is nothing to show.
                     -->
                     <p v-else class="collection-point-missing">
-                      We will confirm the collection address with you by email once your
-                      order is ready. Call {{ supportPhone }} if you need it sooner.
+                      {{ setting && setting.phone ? $t('ui.shippingPage.collectionMissingCall', { phone: supportPhone }) : $t('ui.shippingPage.collectionMissingCallUs') }}
                     </p>
                   </div>
                </div>
@@ -183,8 +182,8 @@
                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9.5" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg>
                  </span>
                  <div class="cart-sec-heading">
-                   <h2 id="ship-sec-address-title" class="cart-sec-title">Delivery Address</h2>
-                   <p class="cart-sec-sub">Choose where we should send your order.</p>
+                   <h2 id="ship-sec-address-title" class="cart-sec-title">{{ $t('ui.shippingPage.deliveryAddress') }}</h2>
+                   <p class="cart-sec-sub">{{ $t('ui.shippingPage.deliveryAddressSub') }}</p>
                  </div>
                </div>
                <div class="cart-sec-body">
@@ -204,7 +203,7 @@
                  >
                    <p class="ship-restricted-title">{{ undeliverableMessage }}</p>
                    <p class="ship-undeliverable-hint">
-                     Choose or add an address in a country we deliver to, or collect in store.
+                     {{ $t('ui.shippingPage.undeliverableHint') }}
                    </p>
                  </div>
                </div>
@@ -223,8 +222,7 @@
                role="alert"
              >
                <p class="ship-restricted-title">
-                 {{ restrictedLines.length === 1 ? 'This item' : 'These items' }}
-                 {{ isCollection ? 'cannot be collected' : `cannot be sent to ${quote.country_name}` }}:
+                 {{ isCollection ? $tc('ui.shippingPage.restrictedCollect', restrictedLines.length) : $tc('ui.shippingPage.restrictedSend', restrictedLines.length, { country: quote.country_name }) }}
                </p>
                <ul class="ship-restricted-list">
                  <li v-for="line in restrictedLines" :key="line.id">
@@ -234,7 +232,7 @@
                      role="button"
                      class="ship-restricted-remove"
                      @click.prevent="removeFromOrder(line.id)"
-                   >Remove from this order</a>
+                   >{{ $t('ui.shippingPage.removeFromOrder') }}</a>
                  </li>
                </ul>
              </div>
@@ -257,8 +255,8 @@
                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c1.2-4 4.2-6 8-6s6.8 2 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                  </span>
                  <div class="cart-sec-heading">
-                   <h2 id="ship-sec-contact-title" class="cart-sec-title">Contact Details</h2>
-                   <p class="cart-sec-sub">We&rsquo;ll use these to let you know when your order is ready to collect.</p>
+                   <h2 id="ship-sec-contact-title" class="cart-sec-title">{{ $t('ui.shippingPage.contactDetails') }}</h2>
+                   <p class="cart-sec-sub">{{ $t('ui.shippingPage.contactDetailsSub') }}</p>
                  </div>
                </div>
                <div class="cart-sec-body">
@@ -266,37 +264,37 @@
                       <div v-if="isLoggedIn" class="collection-contact-summary">
                         <strong>{{ contactDetails.name }}</strong>
                         <span>{{ contactDetails.email }}</span>
-                        <span v-if="contactDetails.phone">tel: {{ contactDetails.phone }}</span>
+                        <span v-if="contactDetails.phone">{{ $t('ui.shippingPage.telPrefix', { phone: contactDetails.phone }) }}</span>
                       </div>
 
                       <form v-else class="address-form" @submit.prevent>
                         <div class="address-form-grid">
                           <div class="address-field">
-                            <label for="collection-name">Full Name</label>
+                            <label for="collection-name">{{ $t('ui.shippingPage.fullName') }}</label>
                             <input
                               id="collection-name"
                               v-model="contactDetails.name"
                               type="text"
                               class="address-input"
-                              placeholder="Enter name"
+                              :placeholder="$t('ui.shippingPage.enterName')"
                               :class="{ 'field-invalid': hasContactErrors && !contactDetails.name.trim() }"
                             >
                           </div>
 
                           <div class="address-field">
-                            <label for="collection-email">Email Address</label>
+                            <label for="collection-email">{{ $t('ui.shippingPage.emailAddress') }}</label>
                             <input
                               id="collection-email"
                               v-model="contactDetails.email"
                               type="email"
                               class="address-input"
-                              placeholder="Enter email"
+                              :placeholder="$t('ui.shippingPage.enterEmail')"
                               :class="{ 'field-invalid': hasContactErrors && !isValidEmail(contactDetails.email) }"
                             >
                           </div>
 
                           <div class="address-field">
-                            <label for="collection-phone">Contact Number</label>
+                            <label for="collection-phone">{{ $t('ui.shippingPage.contactNumber') }}</label>
                             <input
                               id="collection-phone"
                               v-model="contactDetails.phone"
@@ -323,10 +321,10 @@
                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="5" width="19" height="14" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 10h19" stroke="currentColor" stroke-width="1.8"/></svg>
                  </span>
                  <div class="cart-sec-heading">
-                   <h2 id="ship-sec-payment-title" class="cart-sec-title">Payment Method</h2>
+                   <h2 id="ship-sec-payment-title" class="cart-sec-title">{{ $t('ui.shippingPage.paymentMethod') }}</h2>
                    <p class="cart-sec-sub">
                      <svg class="cart-sec-lock" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3" stroke="currentColor" stroke-width="1.8"/></svg>
-                     Methods we accept &mdash; you&rsquo;ll choose one on the next step.
+                     {{ $t('ui.shippingPage.paymentMethodSub') }}
                    </p>
                  </div>
                </div>
@@ -542,12 +540,12 @@
         }
 
         if (!this.deliveryType) {
-          return 'Choose whether to have your order posted to you or to collect it in store.'
+          return this.$t('ui.shippingPage.blockChooseMethod')
         }
 
         if (this.isCollection) {
           if (!this.contactValid) {
-            return 'Add your name, email and phone number so we can tell you when your order is ready to collect.'
+            return this.$t('ui.shippingPage.blockContact')
           }
         } else if (!this.currentAddresses) {
           /*
@@ -557,9 +555,9 @@
            */
           return null
         } else if (!this.currentAddresses.length) {
-          return 'Add a delivery address before you continue to payment.'
+          return this.$t('ui.shippingPage.blockAddAddress')
         } else if (!this.selectedCurrentAddress) {
-          return 'Select the delivery address for this order before you continue to payment.'
+          return this.$t('ui.shippingPage.blockSelectAddress')
         }
 
         // Items that cannot go to this address, or nowhere to deliver to.

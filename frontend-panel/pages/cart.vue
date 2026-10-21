@@ -10,9 +10,9 @@
           the list it empties.
         -->
         <div class="cart-page-head">
-          <h1 class="cart-page-title">Shopping Cart</h1>
+          <h1 class="cart-page-title">{{ $t('ui.cartPage.title') }}</h1>
           <span v-if="hasLines" class="cart-count">
-            ({{ cartProducts.length }} {{ cartProducts.length === 1 ? 'item' : 'items' }})
+            ({{ $tc('ui.cartPage.itemCount', cartProducts.length, { count: cartProducts.length }) }})
           </span>
 
           <button
@@ -26,7 +26,7 @@
               <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"
                 stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            Clear Cart
+            {{ $t('ui.cartPage.clearCart') }}
           </button>
         </div>
 
@@ -48,7 +48,7 @@
                     <circle cx="12" cy="16.4" r="1.15" fill="currentColor"/>
                   </svg>
                 </span>
-                <h6 class="cart-error-title">We could not load your basket</h6>
+                <h6 class="cart-error-title">{{ $t('ui.cartPage.loadErrorTitle') }}</h6>
                 <p class="cart-error-text">{{ cartError }}</p>
                 <button
                   type="button"
@@ -56,7 +56,7 @@
                   :disabled="ajaxing"
                   @click="fetchingData()"
                 >
-                  {{ ajaxing ? 'Trying again…' : 'Try again' }}
+                  {{ ajaxing ? $t('ui.cartPage.tryingAgain') : $t('ui.cartPage.tryAgain') }}
                 </button>
               </div>
 
@@ -69,12 +69,12 @@
                     <circle cx="17" cy="20" r="1.4" fill="currentColor"/>
                   </svg>
                 </span>
-                <h6 class="cart-empty-title">No items in your cart yet</h6>
+                <h6 class="cart-empty-title">{{ $t('ui.cartPage.emptyTitle') }}</h6>
                 <p class="cart-empty-text">
-                  Anything you add will show up here, ready for checkout.
+                  {{ $t('ui.cartPage.emptyText') }}
                 </p>
                 <button type="button" class="cart-empty-btn" @click="goToShopping">
-                  Start Shopping
+                  {{ $t('ui.cartPage.startShopping') }}
                 </button>
               </div>
 
@@ -113,7 +113,7 @@
                   @change="allSelected ? deselectAllItems() : selectAllItems()"
                 >
                 <span class="cart-bulk-box"></span>
-                Select All ({{ cartProducts.length }})
+                {{ $t('ui.cartPage.selectAll', { count: cartProducts.length }) }}
               </label>
 
               <span class="cart-bulk-sep"></span>
@@ -124,7 +124,7 @@
                   <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span class="cart-bulk-label">Remove<span class="cart-bulk-word">&nbsp;Selected</span></span>
+                <span class="cart-bulk-label">{{ $t('ui.cartPage.remove') }}<span class="cart-bulk-word">&nbsp;{{ $t('ui.cartPage.removeSelectedSuffix') }}</span></span>
               </button>
 
               <button type="button" class="cart-bulk-btn" :disabled="!checkedCount || bulkBusy"
@@ -133,7 +133,7 @@
                   <path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 1 0-7.1 7.1l8.8 8.8 8.8-8.8a5 5 0 0 0 0-7.1Z"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span class="cart-bulk-label">Save<span class="cart-bulk-word">&nbsp;for Later</span></span>
+                <span class="cart-bulk-label">{{ $t('ui.cartPage.save') }}<span class="cart-bulk-word">&nbsp;{{ $t('ui.cartPage.saveForLaterSuffix') }}</span></span>
               </button>
             </div>
 
@@ -186,8 +186,8 @@
                   <path d="M12 8S10.5 3.5 8 3.5a2.5 2.5 0 0 0 0 5M12 8s1.5-4.5 4-4.5a2.5 2.5 0 0 1 0 5"
                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                You might also like
-                <a href="#" class="cart-fbt-seeall" @click.prevent="goToShopping">See all</a>
+                {{ $t('ui.cartPage.youMightAlsoLike') }}
+                <a href="#" class="cart-fbt-seeall" @click.prevent="goToShopping">{{ $t('ui.cartPage.seeAll') }}</a>
               </h5>
 
               <div class="cart-fbt-grid">
@@ -220,7 +220,7 @@
                     v-else
                     class="cart-fbt-add"
                     :disabled="addingToCart === item.id || item.addedToCart"
-                    :aria-label="`Add ${item.title} to cart`"
+                    :aria-label="$t('ui.cartPage.addItemToCart', { title: item.title })"
                     @click="addBundleItem(item)"
                   >
                     <svg v-if="!item.addedToCart" width="15" height="15" viewBox="0 0 24 24" fill="none"
@@ -230,24 +230,24 @@
                       <path d="M2 3h3l2.6 12.2h10.6L21 7H6.2" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    <span v-if="item.addedToCart">&#10003; Added</span>
-                    <span v-else-if="addingToCart === item.id">Adding&hellip;</span>
-                    <span v-else>Add to cart</span>
+                    <span v-if="item.addedToCart">&#10003; {{ $t('ui.cartPage.added') }}</span>
+                    <span v-else-if="addingToCart === item.id">{{ $t('ui.cartPage.adding') }}</span>
+                    <span v-else>{{ $t('ui.cartPage.addToCart') }}</span>
                   </button>
                 </div>
               </div>
 
               <div v-if="bundleSavings > 0" class="cart-bundle-bar">
                 <div class="cart-bundle-copy">
-                  <strong>Add Frequently Bought Together</strong>
-                  <span>Save €{{ bundleSavings.toFixed(2) }} on this bundle</span>
+                  <strong>{{ $t('ui.cartPage.addFbt') }}</strong>
+                  <span>{{ $t('ui.cartPage.bundleSave', { amount: '€' + bundleSavings.toFixed(2) }) }}</span>
                 </div>
                 <button
                   class="cart-bundle-btn"
                   :disabled="addingBundle || !bundleRemaining.length"
                   @click="addWholeBundle"
                 >
-                  {{ addingBundle ? 'Adding…' : 'Add Bundle' }}
+                  {{ addingBundle ? $t('ui.cartPage.adding') : $t('ui.cartPage.addBundle') }}
                 </button>
               </div>
             </div>
@@ -272,8 +272,8 @@
                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9.5" r="2.5" stroke="currentColor" stroke-width="1.8"/></svg>
                </span>
                <div class="cart-sec-heading">
-                 <h2 id="cart-sec-address-title" class="cart-sec-title">Delivery Address</h2>
-                 <p class="cart-sec-sub">Your saved addresses. You&rsquo;ll choose where to send this order at checkout.</p>
+                 <h2 id="cart-sec-address-title" class="cart-sec-title">{{ $t('ui.cartPage.deliveryAddress') }}</h2>
+                 <p class="cart-sec-sub">{{ $t('ui.cartPage.deliveryAddressHint') }}</p>
                </div>
              </div>
              <div class="cart-sec-body">
@@ -297,10 +297,10 @@
                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="5" width="19" height="14" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 10h19" stroke="currentColor" stroke-width="1.8"/></svg>
                </span>
                <div class="cart-sec-heading">
-                 <h2 id="cart-sec-payment-title" class="cart-sec-title">Payment Method</h2>
+                 <h2 id="cart-sec-payment-title" class="cart-sec-title">{{ $t('ui.cartPage.paymentMethod') }}</h2>
                  <p class="cart-sec-sub">
                    <svg class="cart-sec-lock" viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3" stroke="currentColor" stroke-width="1.8"/></svg>
-                   Methods we accept &mdash; you&rsquo;ll choose one at checkout.
+                   {{ $t('ui.cartPage.paymentMethodHint') }}
                  </p>
                </div>
              </div>
@@ -361,7 +361,7 @@
                 <button
                   type="button"
                   class="login-prompt-close"
-                  aria-label="Close"
+                  :aria-label="$t('ui.cartPage.close')"
                   @click="closeLoginPrompt"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -381,19 +381,18 @@
                 </span>
 
                 <h3 id="login-prompt-title" class="login-prompt-title">
-                  Login required
+                  {{ $t('ui.cartPage.loginRequired') }}
                 </h3>
                 <p class="login-prompt-text">
-                  Please log in to continue. We will take you straight to
-                  checkout once you are signed in.
+                  {{ $t('ui.cartPage.loginRequiredText') }}
                 </p>
 
                 <div class="login-prompt-actions">
                   <button ref="loginPromptPrimary" type="button" class="login-prompt-primary" @click="goToLogin">
-                    Login
+                    {{ $t('ui.cartPage.login') }}
                   </button>
                   <button type="button" class="login-prompt-secondary" @click="goToRegister">
-                    Create an account
+                    {{ $t('ui.cartPage.createAccount') }}
                   </button>
                 </div>
 
@@ -403,7 +402,7 @@
                   class="login-prompt-guest"
                   @click="continueAsGuest"
                 >
-                  Continue as guest
+                  {{ $t('ui.cartPage.continueAsGuest') }}
                 </button>
               </div>
             </div>
@@ -469,7 +468,7 @@
                             class="original-price strike-through"
                           />
                           <span class="discount-percent">
-                            {{ getDiscountPercent(product) }}% OFF
+                            {{ $t('ui.cartPage.percentOff', { percent: getDiscountPercent(product) }) }}
                           </span>
                         </template>
                         
@@ -1213,7 +1212,7 @@
             })
             removed++
           } catch (e) {
-            this.setToastError(e?.message || 'Could not remove an item')
+            this.setToastError(e?.message || this.$t('ui.cartPage.removeItemError'))
             break
           }
         }
@@ -1223,7 +1222,7 @@
 
       async clearCart() {
         if (this.bulkBusy || this.cartEmpty) return
-        if (!confirm('Remove everything from your cart?')) return
+        if (!confirm(this.$t('ui.cartPage.clearCartConfirm'))) return
 
         this.bulkBusy = true
 
@@ -1231,7 +1230,7 @@
           const ids = this.cartProducts.map(obj => obj.id)
           const removed = await this.removeLines(ids)
 
-          if (removed) this.setToastMessage('Cart cleared')
+          if (removed) this.setToastMessage(this.$t('ui.cartPage.cartCleared'))
 
           await this.fetchingData()
         } finally {
@@ -1241,7 +1240,7 @@
 
       async removeSelected() {
         if (this.bulkBusy || !this.checkedCount) return
-        if (!confirm(`Remove ${this.checkedCount} selected item${this.checkedCount === 1 ? '' : 's'}?`)) return
+        if (!confirm(this.$tc('ui.cartPage.removeSelectedConfirm', this.checkedCount, { count: this.checkedCount }))) return
 
         this.bulkBusy = true
 
@@ -1250,7 +1249,7 @@
           const removed = await this.removeLines(ids)
 
           if (removed) {
-            this.setToastMessage(`Removed ${removed} item${removed === 1 ? '' : 's'}`)
+            this.setToastMessage(this.$tc('ui.cartPage.removedCount', removed, { count: removed }))
           }
 
           await this.fetchingData()
@@ -1283,19 +1282,19 @@
               })
 
               if (data?.status !== 200) {
-                this.setToastError(data?.message || 'Could not save an item')
+                this.setToastError(data?.message || this.$t('ui.cartPage.saveItemError'))
                 break
               }
 
               saved++
             } catch (e) {
-              this.setToastError(e?.message || 'Could not save an item')
+              this.setToastError(e?.message || this.$t('ui.cartPage.saveItemError'))
               break
             }
           }
 
           if (saved) {
-            this.setToastMessage(`Moved ${saved} item${saved === 1 ? '' : 's'} to Save for later`)
+            this.setToastMessage(this.$tc('ui.cartPage.movedToSaved', saved, { count: saved }))
           }
 
           await this.fetchingData()
@@ -1358,7 +1357,7 @@
             return this.fetchingData({ retry: false })
           }
 
-          this.cartError = e?.message || 'We could not load your basket.'
+          this.cartError = e?.message || this.$t('ui.cartPage.loadError')
         }
 
 

@@ -32,7 +32,7 @@
                   </span>
                     <button
                       v-if="!!!ordered.cancelled"
-                      aria-label="submit"
+                      :aria-label="$t('ui.orderedProduct.submitAria')"
                       class="link-color"
                       @click.prevent="$emit('rate-now', cart.product.id)">
                       {{ $t('ratePopup.rateNow') }}

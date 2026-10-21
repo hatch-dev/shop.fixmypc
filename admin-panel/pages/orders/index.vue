@@ -178,7 +178,20 @@
               cancelled, returned or refunded order read `.title` off undefined
               and took the whole list down with a TypeError.
             -->
-            <td>{{ statusTitle(item.status) }}</td>
+            <!--
+              Order, return and refund status apart (OrderState): a cancelled
+              order that was refunded shows both, and a delivered order with
+              a return in progress still reads Delivered.
+            -->
+            <td class="mn-w-120x">
+              <span class="state-pill" :class="'is-' + orderTone(item)">{{ orderStateLabel(item) }}</span>
+              <span v-if="item.state && item.state.return" class="state-pill is-warn" :class="{ 'is-good': item.state.return.key === 'completed', 'is-muted': ['rejected', 'withdrawn'].includes(item.state.return.key) }">
+                {{ item.state.return.type === 'exchange' ? 'Exchange' : 'Return' }}: {{ returnLabels[item.state.return.key] || item.state.return.key }}
+              </span>
+              <span v-if="item.state && item.state.refund" class="state-pill" :class="'is-' + ({ completed: 'good', partial: 'good', failed: 'bad' }[item.state.refund.key] || 'warn')">
+                {{ refundLabels[item.state.refund.key] }}
+              </span>
+            </td>
             <td class="mn-w-80x">{{ paymentTypes[item.order_method] }}</td>
             <td
               :class="{'color-success': parseInt(item.payment_done) === status.PUBLIC}"
@@ -253,10 +266,22 @@
           created_at: { title: this.$t('category.date') },
         },
         checkedFilter:[],
+        returnLabels: {
+          requested: 'To review', approved: 'Awaiting return', item_received: 'Received', awaiting_payment: 'Awaiting payment',
+          completed: 'Completed', rejected: 'Rejected', withdrawn: 'Withdrawn'
+        },
+        refundLabels: {
+          pending: 'Refund pending', processing: 'Refund processing', completed: 'Refunded', partial: 'Partly refunded', failed: 'Refund failed'
+        },
         filterOptions:[
           {
             key: 'cancelled',
             title: this.$t('index.orderCan')
+          },
+          {
+            // return/exchange cases, returned orders, and cancelled orders with money owed or sent back
+            key: 'returns',
+            title: 'Returns & refunds'
           },
           {
             key: 'cash_on_delivery',
@@ -415,6 +440,17 @@
        * util.orderStatus only maps 1-5. Cancelled, returned and refunded are
        * statuses orders genuinely reach.
        */
+      // The order's own status from OrderState; the raw number for an older API answer.
+      orderStateLabel(item) {
+        const key = item?.state?.order
+        if (!key) return this.statusTitle(item.status)
+        if (key === 'processing' || key === 'shipped') return this.statusTitle(item.status)
+        return { delivered: this.statusTitle(item.status), cancelled: this.$t('index.orderCan'),
+          returned: this.$t('fSale.returned'), refunded: this.$t('fSale.refUp') }[key]
+      },
+      orderTone(item) {
+        return { cancelled: 'bad', delivered: 'good', shipped: 'ship', returned: 'muted', refunded: 'muted' }[item?.state?.order] || 'info'
+      },
       statusTitle(status) {
         const key = parseInt(status)
 
@@ -441,6 +477,13 @@
 </script>
 
 <style scoped>
+  /* order / return / refund status pills (OrderState) */
+  .state-pill { display: inline-block; margin: 1px 4px 1px 0; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; background: #eef2ff; color: #33319a; }
+  .state-pill.is-good { background: #ecfdf3; color: #027a48; }
+  .state-pill.is-bad { background: #fef3f2; color: #b42318; }
+  .state-pill.is-warn { background: #fffaeb; color: #b54708; }
+  .state-pill.is-ship { background: #f4ebff; color: #6941c6; }
+  .state-pill.is-muted { background: #f2f4f7; color: #475467; }
 .orders-toolbar__row {
   display: flex;
   align-items: center;

@@ -22,7 +22,7 @@
       class="glide-nav"
       >
       <button
-        aria-label="prev"
+        :aria-label="$t('ui.imageSliderUi.aria.previous')"
         class="prev-btn"
         data-glide-dir="|<"
       >
@@ -32,7 +32,7 @@
       </button>
       <button
         class="next-btn"
-        aria-label="next"
+        :aria-label="$t('ui.imageSliderUi.aria.next')"
         data-glide-dir="|>"
       >
         <i

@@ -4,9 +4,9 @@
 
     <div class="container-fluid">
       <div class="pay-head">
-        <h1 class="pay-title">Complete your payment</h1>
+        <h1 class="pay-title">{{ $t('ui.paymentPage.title') }}</h1>
         <div class="order-id">
-          Order ID:
+          {{ $t('ui.paymentPage.orderId') }}
           <span class="ordr-nmbr">#{{ orderId }}</span>
         </div>
       </div>
@@ -15,7 +15,7 @@
         <!-- ORDER ITEMS -->
         <section class="pay-card pay-items">
           <header class="card-head">
-            <h2 class="card-title">Your Order</h2>
+            <h2 class="card-title">{{ $t('ui.paymentPage.yourOrder') }}</h2>
             <span class="item-count">{{ itemCountLabel }}</span>
           </header>
 
@@ -44,9 +44,9 @@
         <!-- PAYMENT -->
         <section class="pay-card pay-method-card">
           <header class="card-head">
-            <h2 class="card-title">Payment Method</h2>
+            <h2 class="card-title">{{ $t('ui.paymentPage.paymentMethod') }}</h2>
             <span class="amount-due" v-if="orderTotal > 0">
-              <span class="amount-due-label">Amount to pay</span>
+              <span class="amount-due-label">{{ $t('ui.paymentPage.amountToPay') }}</span>
               <price-format :price="orderTotal" :decimals="2" />
             </span>
           </header>
@@ -63,7 +63,7 @@
                 <i class="fa-solid fa-credit-card"></i>
               </span>
               <span class="method-body">
-                <span class="method-name">Card</span>
+                <span class="method-name">{{ $t('ui.paymentPage.card') }}</span>
                 <span class="method-hint">Visa, Mastercard, Maestro</span>
               </span>
               <span class="method-check"></span>
@@ -90,13 +90,13 @@
           <div class="form-group">
             <div v-if="sdkLoading" class="form-loading">
               <spinner :radius="34" />
-              <p class="form-loading-text">Loading the secure card form…</p>
+              <p class="form-loading-text">{{ $t('ui.paymentPage.loadingForm') }}</p>
             </div>
 
             <div v-else-if="sdkError" class="form-failed">
               <p class="form-failed-text">{{ sdkError }}</p>
               <button type="button" class="pay-overlay-dismiss" @click="loadSumupScript">
-                Try again
+                {{ $t('ui.paymentPage.tryAgain') }}
               </button>
             </div>
 
@@ -113,7 +113,7 @@
                 d="M3.375 3.375V4.5H7.125V3.375C7.125 2.33906 6.28594 1.5 5.25 1.5C4.21406 1.5 3.375 2.33906 3.375 3.375V3.375M1.875 4.5V3.375C1.875 1.51172 3.38672 0 5.25 0C7.11328 0 8.625 1.51172 8.625 3.375V4.5H9C9.82734 4.5 10.5 5.17266 10.5 6V10.5C10.5 11.3273 9.82734 12 9 12H1.5C0.672656 12 0 11.3273 0 10.5V6C0 5.17266 0.672656 4.5 1.5 4.5H1.875V4.5"
                 fill="#6B7280" />
             </svg>
-            Your card details are encrypted and handled by SumUp. We never store them.
+            {{ $t('ui.paymentPage.sumupNote') }}
           </p>
         </section>
       </div>
@@ -129,7 +129,7 @@
       <div class="pay-overlay-box">
         <spinner :radius="56" />
         <h3 class="pay-overlay-title">{{ overlayTitle }}</h3>
-        <p class="pay-overlay-note">Please do not close or refresh this page.</p>
+        <p class="pay-overlay-note">{{ $t('ui.paymentPage.doNotClose') }}</p>
 
         <!--
           Only ever offered while we are waiting on the gateway, never while
@@ -144,7 +144,7 @@
           class="pay-overlay-dismiss"
           @click="stopGatewayWait"
         >
-          Back to card details
+          {{ $t('ui.paymentPage.backToCard') }}
         </button>
       </div>
     </div>
@@ -171,7 +171,7 @@ export default {
         },
         selectedPayment: 'card',
         orderTotal: 0,
-        confirmingText: 'Confirming your payment…',
+        confirmingText: this.$t('ui.paymentPage.confirming'),
         gatewayWaiting: false,
         gatewayError: null,
         gatewayErrorCode: null,
@@ -251,7 +251,7 @@ export default {
         overlayTitle() {
             return this.placingOrder
                 ? this.confirmingText
-                : 'Contacting your bank…'
+                : this.$t('ui.paymentPage.contactingBank')
         },
         canDismissOverlay() {
             return this.gatewayWaiting && !this.placingOrder && this.overlayEscape
@@ -260,7 +260,7 @@ export default {
             const count = this.selectedProducts.reduce((sum, cart) => {
                 return sum + (parseInt(cart?.quantity) || 0)
             }, 0)
-            return count === 1 ? '1 item' : count + ' items'
+            return this.$tc('ui.paymentPage.itemCount', count, { count })
         },
         orderId() {
             return this.$route.query.checkoutReference || 'N/A'
@@ -399,7 +399,7 @@ export default {
 
             if (!this.$route.query.checkoutId) {
                 this.sdkLoading = false
-                this.sdkError = 'This payment session has expired. Please go back to checkout and start again.'
+                this.sdkError = this.$t('ui.paymentPage.sessionExpired')
                 return
             }
 
@@ -415,7 +415,7 @@ export default {
             } catch (e) {
                 console.error('SumUp SDK never became available', e)
                 this.sdkLoading = false
-                this.sdkError = 'We could not load the secure card form. Check your connection and try again.'
+                this.sdkError = this.$t('ui.paymentPage.loadFailed')
             }
         },
         waitForSumup(timeout = 15000) {
@@ -449,7 +449,7 @@ export default {
             const checkoutId = this.$route.query.checkoutId
 
             if (!checkoutId) {
-                this.sdkError = 'This payment session has expired. Please go back to checkout and start again.'
+                this.sdkError = this.$t('ui.paymentPage.sessionExpired')
                 return
             }
 
@@ -485,7 +485,7 @@ export default {
                         this.stopGatewayWait()
                         this.setGatewayError(
                             body,
-                            'Please check the card details and try again.'
+                            this.$t('ui.paymentPage.checkCard')
                         )
                         return false
                     }
@@ -494,7 +494,7 @@ export default {
                         this.stopGatewayWait()
                         this.setGatewayError(
                             body,
-                            'Your payment could not be completed. Your card has not been charged.'
+                            this.$t('ui.paymentPage.notCompletedNotCharged')
                         )
                         this.setToastError(this.gatewayError)
                         return false
@@ -520,13 +520,13 @@ export default {
         },
         async confirmOrder(orderId, transactionId) {
             if (!this.checkedProduct.length) {
-                this.setToastError('No products found')
+                this.setToastError(this.$t('ui.paymentPage.noProducts'))
                 this.placingOrder = false
                 return
             }
             try {
                 this.placingOrder = true
-                this.confirmingText = 'Creating your order…'
+                this.confirmingText = this.$t('ui.paymentPage.creatingOrder')
                 const params = []
                 this.checkedProduct.forEach(async (obj) => {
 
@@ -596,7 +596,7 @@ export default {
                 if (res.status !== 200) {
                     const refusal = Array.isArray(res?.data?.form)
                         ? res.data.form.join(', ')
-                        : (res?.message || 'Your payment could not be completed.')
+                        : (res?.message || this.$t('ui.paymentPage.notCompleted'))
 
                     console.error('Order refused after payment', res)
 
@@ -632,7 +632,7 @@ export default {
                      * the order stayed payment_done = 0 with no transaction id
                      * even though the card had been charged.
                      */
-                    this.confirmingText = 'Confirming your payment…'
+                    this.confirmingText = this.$t('ui.paymentPage.confirming')
 
                     let confirmed = await this.paymentDoneFn(
                         res.data.id,
@@ -682,9 +682,9 @@ export default {
                         })
 
                         this.setToastError(
-                            'Your payment went through, but we could not confirm it against your order'
-                            + (reason ? ' (' + reason + ')' : '')
-                            + '. Our team has been notified.'
+                            reason
+                                ? this.$t('ui.paymentPage.confirmFailedReason', { reason })
+                                : this.$t('ui.paymentPage.confirmFailed')
                         )
                     }
 

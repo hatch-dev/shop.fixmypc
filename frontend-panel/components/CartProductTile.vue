@@ -37,7 +37,7 @@
             <div class="cart-line-tags">
             <span v-if="variantLabel" class="cart-variant">{{ variantLabel }}</span>
             <span v-if="isBackorder" class="badge-secondary">
-              Back Order
+              {{ $t('ui.cartProductTileUi.backOrder') }}
             </span>
             <!--
               Which convention this line is priced on, said once and nowhere
@@ -78,7 +78,7 @@
                 <price-format :price="originalPrice" />
               </span>
               <span v-if="discountAmount > 0" class="save-text">
-                Save {{ currencyIcon }}{{ discountAmount.toFixed(2) }}
+                {{ $t('ui.cartProductTileUi.save', { amount: (currencyIcon || '') + discountAmount.toFixed(2) }) }}
               </span>
             </div>
 
@@ -102,7 +102,7 @@
             </p>
 
             <a href="#" class="small-text" @click.prevent="saveForLaterAction">
-              Save for later
+              {{ $t('ui.cartProductTileUi.saveForLater') }}
             </a>
             <form v-if="isShipping && currentAddresses.length && isSingleShipping" class="mt-10">
               <p v-if="!currentShipRule" class="error">{{ noShipMessage }}</p>
@@ -164,7 +164,7 @@
             line show both sides. The headline stays the price charged.
           -->
           <div class="cart-line-total">
-            <span class="cart-line-total-label">Line Total</span>
+            <span class="cart-line-total-label">{{ $t('ui.cartProductTileUi.lineTotal') }}</span>
 
             <span class="cart-line-total-calc">
               <price-format :price="displayPrice" /> &times; {{ productQuantity }}
@@ -178,20 +178,20 @@
             </span>
 
             <span v-if="lineIncVat !== null" class="cart-line-total-inc">
-              <price-format :price="lineIncVat" :decimals="2" /> Inc-VAT
+              <price-format :price="lineIncVat" :decimals="2" /> {{ $t('ui.cartProductTileUi.incVat') }}
             </span>
             <span v-else-if="lineExVat !== null" class="cart-line-total-inc">
-              <price-format :price="lineExVat" :decimals="2" /> Ex-VAT
+              <price-format :price="lineExVat" :decimals="2" /> {{ $t('ui.cartProductTileUi.exVat') }}
             </span>
           </div>
           <div class="delete-and-check">
-            <button type="button" class="line-icon-btn delete-icon-btn" aria-label="Remove item" @click="deleting">
+            <button type="button" class="line-icon-btn delete-icon-btn" :aria-label="$t('ui.cartProductTileUi.removeItem')" @click="deleting">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"
                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
-            <button type="button" class="line-icon-btn save-icon-btn" aria-label="Save for later"
+            <button type="button" class="line-icon-btn save-icon-btn" :aria-label="$t('ui.cartProductTileUi.saveForLater')"
               @click.prevent="saveForLaterAction">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
@@ -576,7 +576,7 @@ export default {
         const {data} = await this.$axios.post(`${baseUrl}api/v1/user/save-for-later/action`, payload)
 
         if (data?.status !== 200) {
-          this.setToastError(data?.message || 'Could not save this item')
+          this.setToastError(data?.message || this.$t('ui.cartProductTileUi.saveError'))
           return
         }
 
@@ -586,7 +586,7 @@ export default {
 
         this.$emit('saved-for-later')
 
-        this.setToastMessage('Moved to Save for later');
+        this.setToastMessage(this.$t('ui.cartProductTileUi.movedToSaved'));
       } catch (e) {
         this.setToastError(e.message)
       }

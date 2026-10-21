@@ -2,7 +2,7 @@
 
   <aside
     class="auth-stage"
-    aria-label="Offers"
+    :aria-label="$t('ui.authSidebarSlider.offers')"
   >
 
     <!-- Branded placeholder: shown until an admin adds a banner, and behind
@@ -98,7 +98,7 @@
         type="button"
         class="auth-stage-tick"
         :class="{ on: currentSlide === index }"
-        :aria-label="`Slide ${index + 1}`"
+        :aria-label="$t('ui.authSidebarSlider.slide', { n: index + 1 })"
         @click="switchToSlide(index)"
       />
 

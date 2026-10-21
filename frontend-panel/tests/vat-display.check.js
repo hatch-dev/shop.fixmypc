@@ -23,6 +23,7 @@ const path = require('path')
 const fs = require('fs')
 
 const ROOT = path.resolve(__dirname, '..')
+const { withI18n, installI18n } = require('./i18n-en')
 const NM = path.join(ROOT, 'node_modules')
 
 const babel = require(path.join(NM, '@babel/core'))
@@ -47,13 +48,13 @@ const helper = loadEsm(path.join(ROOT, 'mixin/productPriceHelper.js'), 'productP
 
 /* Call a computed with nothing but the product on `this`. */
 function withProduct(name, product) {
-  return helper.computed[name].call({
+  return helper.computed[name].call(withI18n({
     product,
     computed: helper.computed,
     get hasVatSplit() {
       return helper.computed.hasVatSplit.call(this)
     },
-  })
+  }))
 }
 
 /* The three shapes ListingPrices::decorate actually emits. */
@@ -147,7 +148,7 @@ console.log('\nbasket + checkout line')
  * product's - a basket can hold one of each convention.
  */
 function cartDetail(cart) {
-  return helper.computed.cartVatDetail.call({ cart })
+  return helper.computed.cartVatDetail.call(withI18n({ cart }))
 }
 
 check('an ex-VAT cart line states its gross figure and the VAT added', () => {

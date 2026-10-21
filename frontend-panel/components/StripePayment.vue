@@ -22,15 +22,15 @@
               <svg width="11" height="12" viewBox="0 0 11 12" aria-hidden="true">
                 <path :d="lockPath" fill="currentColor"/>
               </svg>
-              Secure checkout
+              {{ $t('ui.stripePaymentUi.secureCheckout') }}
             </p>
-            <h2 id="sp-title" class="sp-title">Pay by card</h2>
-            <p v-if="orderNumber" class="sp-order">Order #{{ orderNumber }}</p>
+            <h2 id="sp-title" class="sp-title">{{ $t('ui.stripePaymentUi.payByCard') }}</h2>
+            <p v-if="orderNumber" class="sp-order">{{ $t('ui.stripePaymentUi.orderNumber', { number: orderNumber }) }}</p>
           </div>
           <button
             type="button"
             class="sp-close"
-            aria-label="Close"
+            :aria-label="$t('ui.stripePaymentUi.close')"
             :disabled="submitting"
             @click="close"
           >
@@ -41,7 +41,7 @@
         </header>
 
         <div v-if="!inline" class="sp-amount">
-          <span class="sp-amount-label">Amount to pay</span>
+          <span class="sp-amount-label">{{ $t('ui.stripePaymentUi.amountToPay') }}</span>
           <price-format class="sp-amount-value" :price="amount" :decimals="2"/>
         </div>
 
@@ -57,7 +57,7 @@
 
           <div v-if="loadError" class="sp-alert" role="alert">
             <span>{{ loadError }}</span>
-            <button type="button" class="sp-link" @click="load">Try again</button>
+            <button type="button" class="sp-link" @click="load">{{ $t('ui.stripePaymentUi.tryAgain') }}</button>
           </div>
 
           <!--
@@ -87,23 +87,22 @@
             <svg v-else width="13" height="14" viewBox="0 0 11 12" aria-hidden="true">
               <path :d="lockPath" fill="currentColor"/>
             </svg>
-            <span>{{ submitting ? 'Processing payment…' : payBtnText }}</span>
+            <span>{{ submitting ? $t('ui.stripePaymentUi.processing') : payBtnText }}</span>
           </button>
 
           <p class="sp-note">
-            Your card details are encrypted and processed by Stripe.
-            We never see or store them.
+            {{ $t('ui.stripePaymentUi.encryptedNote') }}
           </p>
 
           <div class="sp-trust" aria-hidden="true">
-            <span class="sp-powered">Powered by <b>stripe</b></span>
+            <i18n path="ui.stripePaymentUi.poweredBy" tag="span" class="sp-powered"><template #brand><b>stripe</b></template></i18n>
           </div>
         </footer>
         <p v-else class="sp-inline-note">
           <svg width="11" height="12" viewBox="0 0 11 12" aria-hidden="true">
             <path :d="lockPath" fill="currentColor"/>
           </svg>
-          <span>Encrypted and processed by <b>Stripe</b>. We never see or store your card details.</span>
+          <i18n path="ui.stripePaymentUi.inlineNote" tag="span"><template #brand><b>Stripe</b></template></i18n>
         </p>
       </div>
     </div>
@@ -224,7 +223,7 @@
           this.mountElement()
         } catch (e) {
           this.loading = false
-          this.loadError = 'The secure card form could not be loaded. Check your connection and try again.'
+          this.loadError = this.$t('ui.stripePaymentUi.loadFailedRetry')
         }
       },
       mountElement() {
@@ -281,7 +280,7 @@
         })
         element.on('loaderror', (event) => {
           this.loading = false
-          this.loadError = event?.error?.message || 'The secure card form could not be loaded.'
+          this.loadError = event?.error?.message || this.$t('ui.stripePaymentUi.loadFailed')
         })
         element.on('change', () => {
           if (this.errorText) this.errorText = ''
@@ -318,7 +317,7 @@
               return action
             })
             if (result && result.ok === false) {
-              this.errorText = result.message || 'Your card could not be used. Please try another card.'
+              this.errorText = result.message || this.$t('ui.stripePaymentUi.cardUnusable')
               return
             }
             this.$emit('success', result)
@@ -342,7 +341,7 @@
 
           await this.paymentDoneFn(this.orderId, action.paymentIntent.id, this.orderMethods.STRIPE)
         } catch (e) {
-          this.errorText = e?.message || 'Payment could not be confirmed'
+          this.errorText = e?.message || this.$t('ui.stripePaymentUi.notConfirmed')
         } finally {
           this.submitting = false
           this.paymentElement?.update({readOnly: false})
@@ -362,7 +361,7 @@
         }
 
         if (auth.status !== 'authorised') {
-          this.errorText = auth.message || 'Your card was not authorised. Please try another card.'
+          this.errorText = auth.message || this.$t('ui.stripePaymentUi.notAuthorised')
           if (auth.intent) this.release(auth.intent)
           return
         }
@@ -370,7 +369,7 @@
         const placed = await this.placeOrder(auth.intent)
         if (!placed?.ok) {
           // The server released the hold with its refusal; this is a backstop.
-          this.errorText = placed?.message || 'Your order could not be placed. You have not been charged.'
+          this.errorText = placed?.message || this.$t('ui.stripePaymentUi.notPlaced')
           this.release(auth.intent)
           return
         }
@@ -396,7 +395,7 @@
           if (res?.status === 200) return res.data
           return {status: 'failed', message: res?.message}
         } catch (e) {
-          return {status: 'failed', message: 'The card payment could not be started. Please try again.'}
+          return {status: 'failed', message: this.$t('ui.stripePaymentUi.notStarted')}
         }
       },
       release(intent) {

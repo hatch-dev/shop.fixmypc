@@ -24,7 +24,7 @@
         </slot>
         <button
           class="right-btn close-btn pos-static no-shadow"
-          aria-label="submit"
+          :aria-label="$t('ui.popOver.submitAria')"
           @click.prevent="closePopOver"
         >
           <i

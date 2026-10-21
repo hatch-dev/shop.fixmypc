@@ -11,7 +11,7 @@
     <div class="c_slider__wrapper" >
       <div class="c_slider__nav" >
         <button 
-          aria-label="submit"
+          :aria-label="$t('ui.productsDynamicUi.aria.submit')"
           class="prev-btn clear-height"
           @click.prevent="change(-1)"
         >
@@ -20,7 +20,7 @@
           />
         </button>
         <button
-          aria-label="submit"
+          :aria-label="$t('ui.productsDynamicUi.aria.submit')"
           class="next-btn clear-height"
           @click.prevent="change(1)"
         >

@@ -57,7 +57,7 @@
             ref="fileInput"
           >
           <button
-            aria-label="submit"
+            :aria-label="$t('ui.ratePopupUi.aria.submit')"
             class="outline-btn plr-20"
             @click="$refs.fileInput.click()"
           >
@@ -78,7 +78,7 @@
             v-for="(val, index) in imageFiles"
           >
             <button
-              aria-label="close"
+              :aria-label="$t('ui.ratePopupUi.aria.close')"
               class="close-btn"
               @click="deleteImg(index)"
             >
@@ -103,7 +103,7 @@
     <template v-slot:pop-footer>
       <div class="flex j-end gap-10">
         <button
-          aria-label="submit"
+          :aria-label="$t('ui.ratePopupUi.aria.submit')"
           class="outline-btn plr-30 plr-sm-15"
           @click.prevent="$emit('close')"
         >

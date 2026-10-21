@@ -1,5 +1,12 @@
 import Vue from 'vue'
 import Service from '@/services/service.js'
+
+// Customer-facing text in the selected language; the English stands in before the app is up.
+const translate = (key, english) => {
+  const i18n = typeof window !== 'undefined' && window.$nuxt && window.$nuxt.$i18n
+
+  return i18n && i18n.te(key) ? i18n.t(key) : english
+}
 // import util from '@/mixin/util.js'
 
 /*
@@ -58,7 +65,7 @@ function cartRefusalMessage (data) {
     }
   }
 
-  return data?.message || 'We could not update your basket.'
+  return data?.message || translate('ui.priceHelper.basketUpdateFailed', 'We could not update your basket.')
 }
 
 const state = () => ({
@@ -454,7 +461,7 @@ const actions = {
          */
         throw {
           statusCode: null,
-          message: 'Your basket could not be loaded. Please try again.'
+          message: translate('ui.priceHelper.basketLoadFailed', 'Your basket could not be loaded. Please try again.')
         }
       }
 
@@ -488,7 +495,7 @@ const actions = {
        */
       const message = data?.message
         || (Array.isArray(data?.data?.form) ? data.data.form.join(', ') : null)
-        || 'Your basket could not be loaded. Please try again.'
+        || translate('ui.priceHelper.basketLoadFailed', 'Your basket could not be loaded. Please try again.')
 
       // Thrown for the same reason as the guard above: a returned rejection
       // would leave the catch, and the pending flag, untouched.
@@ -511,7 +518,7 @@ const actions = {
       commit('SET_PRICES_ERROR',
         isOurs && e.message
           ? e.message
-          : 'Your basket could not be loaded. Please try again.')
+          : translate('ui.priceHelper.basketLoadFailed', 'Your basket could not be loaded. Please try again.'))
 
       throw e
     }

@@ -14,10 +14,10 @@
           before any order had been fetched.
         -->
         <account-skeleton
-          v-if="fetchingOrderData"
+          v-if="fetchingOrderData && !orderedList"
           :rows="4"
           heading
-          label="Loading your orders"
+          :label="$t('myOrders.loading')"
         />
 
         <div v-else class="orders-wrapper">
@@ -26,73 +26,94 @@
           <header class="ord-head">
             <div class="ord-head-top">
               <div>
-                <h1 class="ord-title">My Orders</h1>
-                <p class="ord-sub">View and manage your recent orders.</p>
+                <h1 class="ord-title">{{ $t('myOrders.title') }}</h1>
+                <p class="ord-sub">{{ $t('myOrders.sub') }}</p>
               </div>
 
               <label class="ord-search">
                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                <span class="sr-only">Search by order number</span>
+                <span class="sr-only">{{ $t('myOrders.searchLabel') }}</span>
                 <input
-                  v-model.trim="search"
+                  v-model.trim="searchText"
                   type="search"
-                  placeholder="Search by order number"
+                  :placeholder="$t('myOrders.searchLabel')"
                   autocomplete="off"
+                  @input="searchChanged"
                 >
               </label>
             </div>
 
             <!--
-              Pills that scroll sideways on a phone. They used to wrap onto a
-              second line, which read as two separate rows of filters.
+              Pills that scroll sideways on a phone. The counts come from the
+              server over every page of orders (OrderState), not from the one
+              page the browser holds, so they match what each tab lists.
             -->
-            <div class="ord-tabs" role="tablist" aria-label="Filter orders by status">
+            <div class="ord-tabs" role="tablist" :aria-label="$t('myOrders.tabsLabel')">
               <button
                 v-for="tab in tabs"
-                :key="tab.key"
+                :key="tab"
                 type="button"
                 role="tab"
                 class="ord-tab"
-                :class="{ active: activeTab === tab.key }"
-                :aria-selected="activeTab === tab.key ? 'true' : 'false'"
-                @click="activeTab = tab.key"
+                :class="{ active: activeTab === tab }"
+                :aria-selected="activeTab === tab ? 'true' : 'false'"
+                @click="selectTab(tab)"
               >
-                {{ tab.label }}
-                <span class="ord-tab-count">{{ countByStatus(tab.key) }}</span>
+                {{ $t('myOrders.tabs.' + tab) }}
+                <span class="ord-tab-count">{{ counts[tab] || 0 }}</span>
               </button>
             </div>
           </header>
 
-          <div v-if="filteredOrders.length" class="ord-list">
+          <div v-if="loadError" class="ord-empty" role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <p class="ord-empty-title">{{ $t('myOrders.loadFailed') }}</p>
+            <button type="button" class="ord-btn ord-btn-ghost" @click="fetchingData">{{ $t('myOrders.retry') }}</button>
+          </div>
+
+          <div v-else-if="currentOrders.length" class="ord-list" :class="{ 'is-loading': fetchingOrderData }" :aria-busy="fetchingOrderData ? 'true' : 'false'">
             <article
-              v-for="order in filteredOrders"
+              v-for="order in currentOrders"
               :key="order.id"
               class="ord-card"
             >
-              <!-- number, status, and the three facts -->
+              <!-- number, statuses, and the three facts -->
               <header class="ord-card-head">
                 <div class="ord-card-id">
-                  <span class="ord-kicker">Order</span>
+                  <span class="ord-kicker">{{ $t('myOrders.order') }}</span>
                   <nuxt-link :to="`/user/order/${order.id}`" class="ord-number">
                     #{{ order.order }}
                   </nuxt-link>
                 </div>
 
-                <span class="ord-pill" :class="`ord-pill-${statusInfo(order).tone}`">
-                  {{ statusInfo(order).label }}
-                </span>
+                <!--
+                  Order, return and refund status are separate facts, so each
+                  has its own badge: a cancelled order that was refunded shows
+                  both, a delivered order with a return stays "Delivered".
+                -->
+                <div class="ord-badges">
+                  <span class="ord-pill" :class="`ord-pill-${statusInfo(order).tone}`">
+                    {{ statusInfo(order).label }}
+                  </span>
+                  <span v-if="returnInfo(order)" class="ord-pill" :class="`ord-pill-${returnInfo(order).tone}`">
+                    {{ returnInfo(order).label }}
+                  </span>
+                  <span v-if="refundInfo(order)" class="ord-pill" :class="`ord-pill-${refundInfo(order).tone}`">
+                    {{ refundInfo(order).label }}
+                  </span>
+                </div>
 
                 <dl class="ord-facts">
                   <div>
-                    <dt>Placed</dt>
+                    <dt>{{ $t('myOrders.placed') }}</dt>
                     <dd :title="order.created">{{ placedDate(order) }}</dd>
                   </div>
                   <div>
-                    <dt>Total</dt>
-                    <dd class="ord-total">&euro;{{ Number(order.total_amount || 0).toFixed(2) }}</dd>
+                    <dt>{{ $t('myOrders.total') }}</dt>
+                    <dd class="ord-total">{{ money(order.total_amount) }}</dd>
                   </div>
                   <div>
-                    <dt>{{ isCollection(order) ? 'Fulfilment' : 'Ship to' }}</dt>
+                    <dt>{{ isCollection(order) ? $t('myOrders.fulfilment') : $t('myOrders.shipTo') }}</dt>
                     <dd>{{ shipLabel(order) }}</dd>
                   </div>
                 </dl>
@@ -113,32 +134,30 @@
                     <nuxt-link :to="productLink(item.product)" class="ord-item-img">
                       <lazy-image
                         :data-src="thumbImageURL(item.product)"
-                        :title="item.product.title"
-                        :alt="item.product.title"
+                        :title="item.product && item.product.title"
+                        :alt="item.product && item.product.title"
                       />
                     </nuxt-link>
 
                     <div class="ord-item-text">
                       <nuxt-link :to="productLink(item.product)" class="ord-item-title">
-                        {{ item.product.title }}
+                        {{ item.product && item.product.title }}
                       </nuxt-link>
                       <span class="ord-item-meta">
-                        Qty {{ item.quantity }}
-                        <span aria-hidden="true">·</span>
-                        &euro;{{ Number(item.selling || 0).toFixed(2) }} each
+                        {{ $t('myOrders.qtyEach', { qty: item.quantity, price: money(item.selling) }) }}
                       </span>
                     </div>
                   </li>
                 </ul>
 
                 <!--
-                  Five steps with the current one marked. On a phone only the
-                  current step is named; five labels at 10px did not fit.
+                  Five steps with the current one marked, for an order still
+                  on its way. On a phone only the current step is named.
                 -->
                 <ol
-                  v-if="statusInfo(order).step"
+                  v-if="statusInfo(order).step && !statusInfo(order).delivered"
                   class="ord-steps"
-                  :aria-label="`Progress: step ${statusInfo(order).step} of 5, ${statusInfo(order).label}`"
+                  :aria-label="$t('myOrders.progress', { step: statusInfo(order).step, label: statusInfo(order).label })"
                 >
                   <li
                     v-for="(label, i) in stepLabels(order)"
@@ -159,7 +178,7 @@
                 <div class="ord-links">
                   <nuxt-link :to="`/user/order/${order.id}`" class="ord-link">
                     <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
-                    View details
+                    {{ $t('myOrders.viewDetails') }}
                   </nuxt-link>
                   <a
                     :href="`/user/order/${order.id}`"
@@ -168,22 +187,18 @@
                     @click.prevent="openInvoice(order)"
                   >
                     <i class="fa-solid fa-file-invoice" aria-hidden="true"></i>
-                    {{ invoiceLoading === order.id ? 'Opening…' : 'Invoice' }}
+                    {{ invoiceLoading === order.id ? $t('myOrders.opening') : $t('myOrders.invoice') }}
                   </a>
                 </div>
 
                 <div class="ord-actions">
-                  <!--
-                    "Buy Again" had no handler and did nothing. It now opens
-                    the product, or the order when there is more than one.
-                  -->
                   <button
                     v-if="statusInfo(order).closed || statusInfo(order).delivered"
                     type="button"
                     class="ord-btn ord-btn-primary"
                     @click="buyAgain(order)"
                   >
-                    Buy again
+                    {{ $t('myOrders.buyAgain') }}
                   </button>
 
                   <template v-else>
@@ -193,15 +208,17 @@
                       @click="goToTrack(order)"
                     >
                       <i class="fa-solid fa-truck-fast" aria-hidden="true"></i>
-                      Track
+                      {{ $t('myOrders.track') }}
                     </button>
 
+                    <!-- Only while the shop can still stop it: cancelOrder refuses anything past Pending. -->
                     <button
+                      v-if="canCancel(order)"
                       type="button"
                       class="ord-btn ord-btn-ghost"
                       @click="openCancelPopup(order)"
                     >
-                      Cancel order
+                      {{ $t('myOrders.cancelOrder') }}
                     </button>
                   </template>
                 </div>
@@ -209,19 +226,30 @@
             </article>
           </div>
 
+          <div v-else-if="fetchingOrderData" class="ord-empty" aria-busy="true">
+            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+            <p class="ord-sub">{{ $t('myOrders.loading') }}</p>
+          </div>
+
           <div v-else class="ord-empty">
             <i class="fa-solid fa-box-open" aria-hidden="true"></i>
-            <template v-if="(currentOrders || []).length">
-              <p class="ord-empty-title">No orders match</p>
-              <p class="ord-sub">Try another filter or clear the search.</p>
-              <button type="button" class="ord-btn ord-btn-ghost" @click="search = ''; activeTab = 'all'">
-                Show all orders
+            <template v-if="searchText">
+              <p class="ord-empty-title">{{ $t('myOrders.noMatch') }}</p>
+              <p class="ord-sub">{{ $t('myOrders.noMatchSub') }}</p>
+              <button type="button" class="ord-btn ord-btn-ghost" @click="clearFilters">
+                {{ $t('myOrders.showAll') }}
+              </button>
+            </template>
+            <template v-else-if="activeTab !== 'all' && counts.all">
+              <p class="ord-empty-title">{{ $t('myOrders.empty.' + activeTab) }}</p>
+              <button type="button" class="ord-btn ord-btn-ghost" @click="clearFilters">
+                {{ $t('myOrders.showAll') }}
               </button>
             </template>
             <template v-else>
-              <p class="ord-empty-title">You have not placed an order yet</p>
-              <p class="ord-sub">Everything you buy will be listed here.</p>
-              <nuxt-link to="/" class="ord-btn ord-btn-primary">Start shopping</nuxt-link>
+              <p class="ord-empty-title">{{ $t('myOrders.noneTitle') }}</p>
+              <p class="ord-sub">{{ $t('myOrders.noneSub') }}</p>
+              <nuxt-link to="/" class="ord-btn ord-btn-primary">{{ $t('myOrders.startShopping') }}</nuxt-link>
             </template>
           </div>
         </div>
@@ -399,8 +427,10 @@
         </transition>
 
         <div class="flow-hidden">
+          <!-- keyed: a new tab or search starts its own paging from the URL -->
           <pagination
             v-if="!changedSelectedOrder"
+            :key="paginationKey"
             ref="orderPagination"
             :total-page="totalPage"
             @fetching-data="fetchingData"
@@ -430,11 +460,14 @@
   import global from '~/mixin/global'
   import OrderCancelPopup from "~/components/OrderCancelPopup"
 
+  // The tabs, in order; the server (OrderState::TABS) decides what each holds.
+  const TABS = ['all', 'processing', 'shipped', 'delivered', 'cancelled', 'returns']
+
   export default {
     middleware: ['common-middleware'],
     head() {
       return {
-        title: 'Orders',
+        title: this.$t('myOrders.title'),
         meta: []
       }
     },
@@ -446,22 +479,25 @@
         selectedOrderId: null,
         payNowOrder: null,
         deactivate: true,
-        // True until the first fetch settles; see the skeleton in the template.
         fetchingOrderData: true,
+        loadError: false,
         changedSelectedOrder: false,
         rateProductId: 0,
         rateOrderId: 0,
         orderParams: {},
         orders: [],
-        search: '',
-        activeTab: 'all',
-        tabs: [
-          { key: 'all', label: 'All Orders' },
-          { key: 'processing', label: 'Processing' },
-          { key: 'shipped', label: 'Shipped' },
-          { key: 'delivered', label: 'Delivered' },
-          { key: 'cancelled', label: 'Cancelled' }
-        ]
+        tabs: TABS,
+        activeTab: TABS.includes(this.$route.query.tab) ? this.$route.query.tab : 'all',
+        /*
+         * The search box. Not routeParamHelper's `search`, which
+         * settingRouteParam() resets from the URL on every fetch: the box was
+         * wiped before its text could reach the server, so search only ever
+         * filtered the one page already loaded.
+         */
+        searchText: this.$route.query.q || '',
+        searchTimer: null,
+        // the newest request: an older answer that lands later is ignored
+        requestSeq: 0
       }
     },
     watch: {},
@@ -480,31 +516,27 @@
     },
     mixins: [util, metaHelper, routeParamHelper, global],
     computed: {
-      filteredOrders() {
-        let data = this.currentOrders || []
-        if (this.activeTab !== 'all') {
-          data = data.filter(order => this.matchesTab(order, this.activeTab))
-        }
-
-        if (this.search) {
-          // "#2026..." as it is printed works as well as the bare number
-          const q = this.search.replace(/^#/, '').toLowerCase()
-          data = data.filter(o => String(o.order || '').toLowerCase().includes(q))
-        }
-
-        return data
-      },
       totalPage() {
         return this.orderedList?.last_page
       },
+      // Only the answer for the tab on screen: never another tab's orders.
       currentOrders() {
-        return this.orderedList?.data
+        return this.orderedList && this.orderedList.tab === this.activeTab ? (this.orderedList.data || []) : []
+      },
+      counts() {
+        return this.orderedList?.counts || {}
+      },
+      paginationKey() {
+        return this.activeTab + '|' + this.searchText
       },
       ...mapGetters('language', ['langCode']),
       ...mapGetters('order', ['orderedList']),
-      ...mapGetters('common', ['currencyIcon', 'setting'])
+      ...mapGetters('common', ['currencyIcon', 'currencyPosition', 'setting'])
     },
     methods: {
+      money(value) {
+        return this.priceFormat(this.currencyPosition, this.currencyIcon, Number(value || 0).toFixed(2), this.setting, 2)
+      },
       /*
        * "Invoice" was href="#". The PDF is the one the order confirmation
        * email attaches, served by /api/v1/user/order/{id}/invoice to the
@@ -548,78 +580,120 @@
 
         } catch (e) {
           if (tab && !tab.closed) tab.close()
-          this.setToastError('We could not open the invoice just now. Please try again.')
+          this.setToastError(this.$t('myOrders.invoiceFailed'))
         } finally {
           this.invoiceLoading = null
         }
       },
       /*
-       * One reading of an order's state for the whole page.
+       * The order's own status, from the server's state (OrderState).
        *
-       * orderStatus only knows 1-5, and the template read
-       * orderStatus[order.status].title directly in six places, so a
-       * returned (7), refunded (8) or status-6 cancelled order threw and
-       * took the list down. A cancelled order can also keep its old status
-       * and carry the cancelled flag instead.
+       * Cancelled is an order status; Refunded is a refund status. This used
+       * to put every "closed" status (6 Cancelled, 7 Returned, 8 Refunded)
+       * under Cancelled, and a refund moved a cancelled order to 8, so the
+       * Cancelled tab showed "Refunded". Each fact now has its own badge.
        */
       statusInfo(order) {
-        const code = parseInt(order?.status)
+        const st = order?.state || {}
+        const key = st.order || 'processing'
+        const collect = this.isCollection(order)
 
-        if (parseInt(order?.cancelled) === 1 || code === 6) {
-          return {label: 'Cancelled', tone: 'bad', closed: true}
+        switch (key) {
+          case 'cancelled':
+            return {key, label: this.$t('myOrders.status.cancelled'), tone: 'bad', closed: true}
+          case 'returned':
+            return {key, label: this.$t('myOrders.status.returned'), tone: 'muted', closed: true}
+          case 'refunded':
+            return {key, label: this.$t('myOrders.status.refunded'), tone: 'muted', closed: true}
+          case 'delivered':
+            return {key, label: this.$t(collect ? 'myOrders.status.collected' : 'myOrders.status.delivered'), tone: 'good', delivered: true, step: 5}
+          case 'shipped':
+            return {key, label: this.stepLabels(order)[(st.step || 4) - 1], tone: 'ship', step: st.step || 4}
+          default:
+            return {key: 'processing', label: this.stepLabels(order)[(st.step || 1) - 1] || this.$t('myOrders.status.processing'), tone: 'info', step: st.step || 1}
         }
-        if (code === 7) return {label: 'Returned', tone: 'bad', closed: true}
-        if (code === 8) return {label: 'Refunded', tone: 'bad', closed: true}
-        if (code === 5) {
-          return {label: this.isCollection(order) ? 'Collected' : 'Delivered', tone: 'good', delivered: true}
-        }
+      },
+      // The latest return or exchange on the order, if there is one.
+      returnInfo(order) {
+        const r = order?.state?.return
+        if (!r) return null
 
-        return {label: this.orderStatus[code]?.title || 'Pending', tone: 'info', step: code >= 1 && code <= 4 ? code : 1}
+        const tone = {completed: 'good', rejected: 'bad', withdrawn: 'muted'}[r.key] || 'warn'
+        const kind = this.$t(r.type === 'exchange' ? 'myOrders.exchangeKind' : 'myOrders.returnKind')
+
+        return {key: r.key, tone, label: `${kind}: ${this.$t('myOrders.return.' + r.key)}`}
+      },
+      // Money owed or sent back, only as the server's records say.
+      refundInfo(order) {
+        const r = order?.state?.refund
+        if (!r) return null
+
+        const tone = {completed: 'good', partial: 'good', failed: 'bad'}[r.key] || 'warn'
+
+        return {key: r.key, tone, label: this.$t('myOrders.refund.' + r.key), amount: r.amount}
       },
       // Date only: the time made the column too wide on a phone and is on the order page.
       placedDate(order) {
         const d = new Date(order?.created_at)
         return isNaN(d.getTime())
           ? order?.created
-          : d.toLocaleDateString('en-IE', {day: 'numeric', month: 'short', year: 'numeric'})
+          : d.toLocaleDateString(this.langCode || 'en-IE', {day: 'numeric', month: 'short', year: 'numeric'})
       },
       // Every line on an order shares one fulfilment type; 2 is collection.
       isCollection(order) {
         return parseInt(order?.ordered_products?.[0]?.shipping_type) === 2
       },
       shipLabel(order) {
-        if (this.isCollection(order)) return 'Click & Collect'
+        if (this.isCollection(order)) return this.$t('myOrders.clickCollect')
         return order?.shipping_name || order?.contact_name || '—'
       },
       stepLabels(order) {
-        return ['Placed', 'Confirmed', 'Picked up', 'On the way', this.isCollection(order) ? 'Collected' : 'Delivered']
+        return ['placed', 'confirmed', 'pickedUp', 'onTheWay', this.isCollection(order) ? 'collected' : 'delivered']
+          .map(k => this.$t('myOrders.steps.' + k))
+      },
+      canCancel(order) {
+        return parseInt(order?.status) === 1 && order?.state?.order === 'processing'
       },
       /*
-       * The line under the status. "Estimated Delivery: Soon" was printed for
-       * every order: deliveryText compared the numeric status with the
-       * string 'delivered', so it never said anything else. The estimate is
-       * the placed date plus the slowest line's delivery time, the same rule
-       * the tracking page uses, and a missed date says so.
+       * The line under the badges. For a closed order or one with a return,
+       * what is happening with it; otherwise the delivery estimate (placed
+       * date plus the slowest line's delivery time, as the tracking page does).
        */
       etaInfo(order) {
         const info = this.statusInfo(order)
+        const ret = order?.state?.return
+        const refund = order?.state?.refund
+        const amount = refund && refund.amount ? this.money(refund.amount) : null
         const collect = this.isCollection(order)
+        const t = (k, p) => this.$t('myOrders.msg.' + k, p)
 
-        if (info.closed) {
-          const text = {
-            Cancelled: 'This order was cancelled.',
-            Returned: 'This order was returned.',
-            Refunded: 'This order has been refunded.'
-          }[info.label]
-          return {tone: 'bad', icon: 'fa-circle-xmark', html: text}
+        if (info.key === 'cancelled') {
+          if (refund && refund.key === 'completed') return {tone: 'good', icon: 'fa-circle-check', html: amount ? t('cancelledRefundedAmount', {amount}) : t('cancelledRefunded')}
+          if (refund && refund.key === 'failed') return {tone: 'bad', icon: 'fa-circle-exclamation', html: t('cancelledRefundFailed')}
+          if (refund) return {tone: 'warn', icon: 'fa-hourglass-half', html: t('cancelledRefundPending')}
+          return {tone: 'bad', icon: 'fa-circle-xmark', html: t('cancelled')}
         }
 
-        if (info.delivered) {
-          return {
-            tone: 'good',
-            icon: 'fa-circle-check',
-            html: collect ? 'You collected this order.' : 'This order has been delivered.'
+        if (refund && refund.key === 'failed') return {tone: 'bad', icon: 'fa-circle-exclamation', html: t('refundFailed')}
+        if (refund && refund.key === 'processing') return {tone: 'warn', icon: 'fa-hourglass-half', html: t('refundProcessing')}
+
+        if (ret) {
+          if (ret.key === 'requested') return {tone: 'warn', icon: 'fa-hourglass-half', html: t('returnRequested')}
+          if (ret.key === 'approved') return {tone: 'warn', icon: 'fa-box', html: t('returnApproved', {rma: ret.rma_number})}
+          if (ret.key === 'item_received') return {tone: 'warn', icon: 'fa-hourglass-half', html: t('returnReceived')}
+          if (ret.key === 'awaiting_payment') return {tone: 'warn', icon: 'fa-credit-card', html: t('exchangePayment')}
+          if (ret.key === 'rejected') return {tone: 'bad', icon: 'fa-circle-xmark', html: t('returnRejected')}
+          if (ret.key === 'completed' && refund && ['completed', 'partial'].includes(refund.key)) {
+            return {tone: 'good', icon: 'fa-circle-check', html: amount ? t('returnRefundedAmount', {amount}) : t('returnRefunded')}
           }
+          if (ret.key === 'completed' && ret.type === 'exchange') return {tone: 'good', icon: 'fa-circle-check', html: t('exchangeDone')}
+        }
+
+        if (info.key === 'returned') return {tone: 'muted', icon: 'fa-rotate-left', html: t('returned')}
+        if (info.key === 'refunded') return {tone: 'good', icon: 'fa-circle-check', html: t('refunded')}
+
+        if (info.delivered) {
+          return {tone: 'good', icon: 'fa-circle-check', html: collect ? t('collected') : t('delivered')}
         }
 
         const days = Math.max(1, ...(order?.ordered_products || [])
@@ -627,22 +701,22 @@
         const placed = new Date(order?.created_at)
 
         if (isNaN(placed.getTime())) {
-          return {tone: 'info', icon: 'fa-clock', html: collect ? 'We will tell you when it is ready.' : 'On its way to you soon.'}
+          return {tone: 'info', icon: 'fa-clock', html: collect ? t('collectSoon') : t('soon')}
         }
 
         const due = new Date(placed.getFullYear(), placed.getMonth(), placed.getDate() + days)
         const today = new Date()
         today.setHours(0, 0, 0, 0)
-        const when = due.toLocaleDateString('en-IE', {weekday: 'short', day: 'numeric', month: 'short'})
+        const when = `<strong>${due.toLocaleDateString(this.langCode || 'en-IE', {weekday: 'short', day: 'numeric', month: 'short'})}</strong>`
 
         if (due < today) {
-          return {tone: 'warn', icon: 'fa-triangle-exclamation', html: `Running late: it was due <strong>${when}</strong>`}
+          return {tone: 'warn', icon: 'fa-triangle-exclamation', html: t('late', {when})}
         }
 
         return {
           tone: 'info',
           icon: collect ? 'fa-store' : 'fa-truck-fast',
-          html: `${collect ? 'Ready to collect by' : 'Arriving by'} <strong>${when}</strong>`
+          html: collect ? t('readyBy', {when}) : t('arriving', {when})
         }
       },
       // One product: open it. Several: the order, where each one links.
@@ -672,45 +746,31 @@
         this.selectedOrderId = order.id
         this.cancelPopup = true
       },
-      countByStatus(status) {
-        const data = this.currentOrders || []
-        return status === 'all' ? data.length : data.filter(o => this.matchesTab(o, status)).length
+      // A tab, or a new search, starts again at page 1; both live in the URL.
+      setQuery(changes) {
+        const query = {...this.$route.query, ...changes, page: 1}
+        Object.keys(query).forEach(k => { if (query[k] === '' || query[k] === null || query[k] === undefined) delete query[k] })
+        if (query.tab === 'all') delete query.tab
+        return this.$router.replace({query}).catch(() => {})
       },
-      /*
-       * Which tab an order belongs to. Cancelled covers returned and
-       * refunded too (statuses 6-8, or the cancelled flag): those used to
-       * fall into no tab at all, and the count missed them.
-       */
-      matchesTab(order, tab) {
-        const info = this.statusInfo(order)
-
-        if (tab === 'all') return true
-        if (tab === 'cancelled') return !!info.closed
-        if (info.closed) return false
-        if (tab === 'delivered') return !!info.delivered
-        if (tab === 'processing') return [1, 2].includes(info.step)
-        if (tab === 'shipped') return [3, 4].includes(info.step)
-        return false
+      async selectTab(tab) {
+        if (tab === this.activeTab) return
+        this.activeTab = tab
+        await this.setQuery({tab})
+        this.fetchingData()
       },
-      progressWidth(status) {
-        const map = {
-          'Pending': '20%',
-          'Confirmed': '40%',
-          'Picked up': '60%',
-          'On the way': '80%',
-          'Delivered': '100%'
-        }
-        return map[status] || '10%'
+      searchChanged() {
+        clearTimeout(this.searchTimer)
+        this.searchTimer = setTimeout(async () => {
+          await this.setQuery({q: this.searchText})
+          this.fetchingData()
+        }, 350)
       },
-      deliveryText(order) {
-        if (order.status === 'delivered') {
-          return 'Delivered'
-        }
-        return 'Soon'
-      },
-      cancelOrder(order) {
-        // call API
-        console.log('Cancel order', order.id)
+      async clearFilters() {
+        this.searchText = ''
+        this.activeTab = 'all'
+        await this.setQuery({q: null, tab: null})
+        this.fetchingData()
       },
       async generateParam() {
         this.changedSelectedOrder = true
@@ -723,35 +783,48 @@
       loadData() {
         this.$refs.orderPagination.routeParam()
       },
+      /*
+       * The server does the filtering, the counting and the paging (tab, q,
+       * page). Requests are numbered so that switching tabs quickly never
+       * leaves an older tab's answer on screen.
+       */
       async fetchingData() {
+        const seq = ++this.requestSeq
         this.fetchingOrderData = true
-        setTimeout(async () => {
-          try {
-            this.settingRouteParam()
-            const params = {
-              ...{
-                time_zone: this.timeZone,
-                order_by: this.orderBy,
-                type: this.orderByType,
-                page: this.page,
-                q: this.search,
-                user_token: await this.getUserToken(),
-              },
-              ...this.$refs.orderTab?.generateParam()
-            }
-            const data = await this.getOrderByUser({
-              payload: params,
-              lang: this.langCode
-            })
-            if (data?.status !== 200) {
-              this.hasError(data)
-            }
-          } catch (e) {
-            return this.$nuxt.error(e)
+        this.loadError = false
+
+        try {
+          this.settingRouteParam()
+          const data = await this.getOrderByUser({
+            payload: {
+              time_zone: this.timeZone,
+              order_by: this.orderBy,
+              type: this.orderByType,
+              page: this.page,
+              tab: this.activeTab,
+              q: this.searchText,
+              user_token: await this.getUserToken(),
+            },
+            lang: this.langCode
+          })
+
+          if (seq !== this.requestSeq) return
+
+          if (data?.status !== 200) {
+            this.loadError = true
+            this.hasError(data)
+          } else if (this.orderedList && this.orderedList.tab !== this.activeTab) {
+            // an older request's answer was committed last: ask again for this tab
+            return this.fetchingData()
           }
+        } catch (e) {
+          if (seq === this.requestSeq) this.loadError = true
+        }
+
+        if (seq === this.requestSeq) {
           this.changedSelectedOrder = false
           this.fetchingOrderData = false
-        }, 100)
+        }
       },
       ...mapActions('user', ['getUserToken']),
       ...mapActions('common', ['setToastError']),
@@ -760,7 +833,10 @@
 
     async mounted(){
       await this.fetchingData()
-        window.scrollTo(0,0);
+      window.scrollTo(0,0);
+    },
+    beforeDestroy() {
+      clearTimeout(this.searchTimer)
     },
     async asyncData({store, error, $auth}) {
       try {
@@ -1020,6 +1096,23 @@
 .ord-pill-info { background: #EBEBFF; color: var(--brand); }
 .ord-pill-good { background: #E6F6EC; color: #1E7E34; }
 .ord-pill-bad  { background: #FDECEA; color: #C82333; }
+.ord-pill-warn { background: #FFF4DB; color: #B45309; }
+.ord-pill-ship { background: #F1EAFE; color: #6D28D9; }
+.ord-pill-muted { background: #F0F0F6; color: #4B5563; }
+
+/* order, return and refund status side by side; they wrap on a phone */
+.ord-badges {
+  grid-area: pill;
+  justify-self: end;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.ord-badges .ord-pill { grid-area: auto; justify-self: auto; }
+.ord-eta-muted { background: #F5F5F8; }
+.ord-eta-muted i { color: #4B5563; }
+.ord-list.is-loading { opacity: .55; pointer-events: none; transition: opacity .15s; }
 
 .ord-facts {
   grid-area: facts;

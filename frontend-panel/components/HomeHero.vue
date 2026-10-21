@@ -41,7 +41,7 @@
                       <img
                         :id="generateElemId(index)"
                         class="full-dimen"
-                        alt="Slider image"
+                        :alt="$t('ui.homeHeroUi.sliderImage')"
                         :data-source="imageURL(value)"
                         height="100"
                         width="100"
@@ -56,7 +56,7 @@
           <img
             class="full-dimen placeholder-img"
             :class="{'img-loaded': imgLoaded}"
-            alt="Slider image"
+            :alt="$t('ui.homeHeroUi.sliderImage')"
             height="100"
             width="100"
             :src="imageURL(slider.main[0])"
@@ -81,7 +81,7 @@
               :src="imageURL(slider.right_top)"
               height="100"
               width="100"
-              alt="Slider image"
+              :alt="$t('ui.homeHeroUi.sliderImage')"
             />
           </template>
         </nuxt-link>
@@ -98,7 +98,7 @@
               :src="imageURL(slider.right_bottom)"
               height="100"
               width="100"
-              alt="Slider image"
+              :alt="$t('ui.homeHeroUi.sliderImage')"
             />
           </template>
         </nuxt-link>

@@ -34,7 +34,7 @@
 
         <div class="ip-head">
           <h3 class="ip-title">{{ title }}</h3>
-          <button type="button" class="ip-close" aria-label="Close" @click.stop="close(true)">
+          <button type="button" class="ip-close" :aria-label="$t('ui.infoPopoverUi.aria.close')" @click.stop="close(true)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
             </svg>

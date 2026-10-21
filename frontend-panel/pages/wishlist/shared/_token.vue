@@ -6,7 +6,7 @@
       page. It shows the products and the owner's first name only; prices
       are the viewer's own, the same as the product page would show them.
     -->
-    <div v-if="loading" class="sw-grid" aria-busy="true" aria-label="Loading wishlist">
+    <div v-if="loading" class="sw-grid" aria-busy="true" :aria-label="$t('ui.sharedWishlist.loading')">
       <skeleton-product
         v-for="index in 8"
         :key="`sk-${index}`"
@@ -15,26 +15,26 @@
 
     <div v-else-if="notFound" class="sw-empty">
       <i class="fa-regular fa-heart" aria-hidden="true"></i>
-      <h1 class="sw-title">This wishlist is no longer shared</h1>
-      <p class="sw-sub">The link may have been switched off by its owner, or it was copied incorrectly.</p>
-      <nuxt-link to="/" class="sw-btn">Continue shopping</nuxt-link>
+      <h1 class="sw-title">{{ $t('ui.sharedWishlist.notSharedTitle') }}</h1>
+      <p class="sw-sub">{{ $t('ui.sharedWishlist.notSharedText') }}</p>
+      <nuxt-link to="/" class="sw-btn">{{ $t('ui.sharedWishlist.continueShopping') }}</nuxt-link>
     </div>
 
     <template v-else>
       <header class="sw-head">
         <div>
-          <p class="sw-kicker">Shared wishlist</p>
-          <h1 class="sw-title">{{ owner ? `${owner}'s wishlist` : 'A shared wishlist' }}</h1>
+          <p class="sw-kicker">{{ $t('ui.sharedWishlist.kicker') }}</p>
+          <h1 class="sw-title">{{ owner ? $t('ui.sharedWishlist.ownersWishlist', { name: owner }) : $t('ui.sharedWishlist.aSharedWishlist') }}</h1>
           <p class="sw-sub">
-            {{ total }} {{ total === 1 ? 'item' : 'items' }} picked out on FixMyPC.
-            Prices and stock are live, so they may differ from when these were saved.
+            {{ $tc('ui.sharedWishlist.pickedOut', total, { count: total }) }}
+            {{ $t('ui.sharedWishlist.liveNote') }}
           </p>
         </div>
       </header>
 
       <div v-if="!items.length" class="sw-empty sw-empty-inline">
-        <p class="sw-sub">There is nothing on this wishlist right now.</p>
-        <nuxt-link to="/" class="sw-btn">Browse the shop</nuxt-link>
+        <p class="sw-sub">{{ $t('ui.sharedWishlist.emptyText') }}</p>
+        <nuxt-link to="/" class="sw-btn">{{ $t('ui.sharedWishlist.browseShop') }}</nuxt-link>
       </div>
 
       <!--
@@ -62,16 +62,16 @@
           :disabled="page <= 1 || loading"
           @click="load(page - 1)"
         >
-          Previous
+          {{ $t('ui.sharedWishlist.previous') }}
         </button>
-        <span class="sw-sub">Page {{ page }} of {{ lastPage }}</span>
+        <span class="sw-sub">{{ $t('ui.sharedWishlist.pageOf', { page: page, last: lastPage }) }}</span>
         <button
           type="button"
           class="sw-btn sw-btn-ghost"
           :disabled="page >= lastPage || loading"
           @click="load(page + 1)"
         >
-          Next
+          {{ $t('ui.sharedWishlist.next') }}
         </button>
       </div>
     </template>
@@ -89,7 +89,7 @@
     mixins: [util, global],
     head() {
       return {
-        title: this.owner ? `${this.owner}'s wishlist` : 'Shared wishlist',
+        title: this.owner ? this.$t('ui.sharedWishlist.ownersWishlist', { name: this.owner }) : this.$t('ui.sharedWishlist.kicker'),
         // A private link: keep it out of search results.
         meta: [{hid: 'robots', name: 'robots', content: 'noindex, nofollow'}]
       }

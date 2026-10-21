@@ -11,7 +11,7 @@
         <div class="circle">
           {{ currentStep > 1 ? '✓' : '1' }}
         </div>
-        <div class="step-label">Cart</div>
+        <div class="step-label">{{ $t('ui.navigationStep.cart') }}</div>
       </div>
 
       <!-- Step 2 -->
@@ -23,7 +23,7 @@
         <div class="circle">
           {{ currentStep > 2 ? '✓' : '2' }}
         </div>
-        <div class="step-label">Details</div>
+        <div class="step-label">{{ $t('ui.navigationStep.details') }}</div>
       </div>
 
       <!-- Step 3 -->
@@ -35,7 +35,7 @@
         <div class="circle">
           {{ currentStep > 3 ? '✓' : '3' }}
         </div>
-        <div class="step-label">Payment</div>
+        <div class="step-label">{{ $t('ui.navigationStep.payment') }}</div>
       </div>
 
       <!-- Step 4 -->
@@ -47,7 +47,7 @@
         <div class="circle">
           {{ currentStep > 4 ? '✓' : '4' }}
         </div>
-        <div class="step-label">Complete</div>
+        <div class="step-label">{{ $t('ui.navigationStep.complete') }}</div>
       </div>
 
     </div>

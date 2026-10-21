@@ -2,7 +2,7 @@
   <div class="">
     <button
       class="btn manage-btn"
-      aria-label="submit"
+      :aria-label="$t('ui.payButtonUi.submit')"
       @click.prevent="payNow = true"
     >
       {{ $t('checkout.payNow') }}

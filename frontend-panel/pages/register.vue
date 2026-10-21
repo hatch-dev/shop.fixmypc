@@ -22,7 +22,7 @@
         to="/login"
         class="auth-back"
       >
-        <span aria-hidden="true">&larr;</span> Back to sign in
+        <span aria-hidden="true">&larr;</span> {{ $t('ui.registerPage.backToSignIn') }}
       </nuxt-link>
 
       <auth-steps
@@ -30,10 +30,9 @@
         current="type"
       />
 
-      <h1 class="auth-h1">What kind of account?</h1>
+      <h1 class="auth-h1">{{ $t('ui.registerPage.typeTitle') }}</h1>
       <p class="auth-lede">
-        This sets your pricing, how we invoice you and what we need to ask for
-        next. You can change it later by talking to us.
+        {{ $t('ui.registerPage.typeLede') }}
       </p>
 
       <account-type-cards
@@ -44,12 +43,12 @@
       <!-- Hidden on shorter windows: "← Back to sign in" sits directly above
            the heading, so this repeat is what tips the step into scrolling. -->
       <p class="auth-foot auth-foot-duplicate">
-        Already registered?
+        {{ $t('ui.registerPage.alreadyRegistered') }}
         <nuxt-link
           to="/login"
           class="auth-foot-link"
         >
-          Sign in
+          {{ $t('ui.registerPage.signIn') }}
         </nuxt-link>
       </p>
 
@@ -63,7 +62,7 @@
         class="auth-back"
         @click="goToStep('type')"
       >
-        <span aria-hidden="true">&larr;</span> Change account type
+        <span aria-hidden="true">&larr;</span> {{ $t('ui.registerPage.changeAccountType') }}
       </button>
 
       <auth-steps
@@ -93,7 +92,7 @@
           class="auth-chosen-change"
           @click="goToStep('type')"
         >
-          Change
+          {{ $t('ui.registerPage.change') }}
         </button>
 
       </div>
@@ -103,7 +102,7 @@
         <!-- ── who you are ── -->
         <div class="auth-form-group">
           <label class="auth-label" for="su-name">
-            Full name <span class="auth-label-required">*</span>
+            {{ $t('ui.registerPage.fullName') }} <span class="auth-label-required">*</span>
           </label>
           <input
             id="su-name"
@@ -111,23 +110,23 @@
             class="auth-input"
             :class="{ invalid: fieldBad('name') }"
             autocomplete="name"
-            placeholder="Enter your full name"
+            :placeholder="$t('ui.registerPage.fullNamePlaceholder')"
           >
           <small v-if="fieldBad('name')" class="auth-error">
-            Enter your full name.
+            {{ $t('ui.registerPage.fullNameRequired') }}
           </small>
         </div>
 
         <!-- ── business only ── -->
         <template v-if="accountType === 'business'">
 
-          <h2 class="auth-sub-head">Your business</h2>
+          <h2 class="auth-sub-head">{{ $t('ui.registerPage.business.heading') }}</h2>
 
           <div class="auth-row">
 
             <div class="auth-form-group">
               <label class="auth-label" for="bz-company">
-                Company name <span class="auth-label-required">*</span>
+                {{ $t('ui.registerPage.business.companyName') }} <span class="auth-label-required">*</span>
               </label>
               <input
                 id="bz-company"
@@ -135,16 +134,16 @@
                 class="auth-input"
                 :class="{ invalid: fieldBad('company_name') }"
                 autocomplete="organization"
-                placeholder="Registered or trading name"
+                :placeholder="$t('ui.registerPage.business.companyNamePlaceholder')"
               >
               <small v-if="fieldBad('company_name')" class="auth-error">
-                Enter the company name.
+                {{ $t('ui.registerPage.business.companyNameRequired') }}
               </small>
             </div>
 
             <div class="auth-form-group">
               <label class="auth-label" for="bz-sector">
-                What does the business do? <span class="auth-label-required">*</span>
+                {{ $t('ui.registerPage.business.sector') }} <span class="auth-label-required">*</span>
               </label>
               <select
                 id="bz-sector"
@@ -152,11 +151,11 @@
                 class="auth-input"
                 :class="{ invalid: fieldBad('sector') }"
               >
-                <option value="">Choose one</option>
-                <option v-for="i in sectors" :key="i">{{ i }}</option>
+                <option value="">{{ $t('ui.registerPage.chooseOne') }}</option>
+                <option v-for="(i, n) in sectors" :key="i" :value="i">{{ optionLabel('sectors', n, i) }}</option>
               </select>
               <small v-if="fieldBad('sector')" class="auth-error">
-                Pick the closest match.
+                {{ $t('ui.registerPage.pickClosest') }}
               </small>
             </div>
 
@@ -164,7 +163,7 @@
 
           <div class="auth-row">
             <div class="auth-form-group">
-              <label class="auth-label" for="bz-vat">VAT number</label>
+              <label class="auth-label" for="bz-vat">{{ $t('ui.registerPage.vatNumber') }}</label>
               <input
                 id="bz-vat"
                 v-model.trim="form.vat_number"
@@ -173,11 +172,11 @@
                 placeholder="IE1234567FA"
               >
               <small v-if="fieldBad('vat_number')" class="auth-error">
-                Use IE + 7 digits + 1–2 letters.
+                {{ $t('ui.registerPage.business.vatFormat') }}
               </small>
             </div>
             <div class="auth-form-group">
-              <label class="auth-label" for="bz-cro">CRO number</label>
+              <label class="auth-label" for="bz-cro">{{ $t('ui.registerPage.croNumber') }}</label>
               <input
                 id="bz-cro"
                 v-model.trim="form.cro_number"
@@ -189,34 +188,33 @@
 
           <div class="auth-form-group">
             <label class="auth-label" for="bz-billing">
-              Billing address <span class="auth-label-required">*</span>
+              {{ $t('ui.registerPage.business.billingAddress') }} <span class="auth-label-required">*</span>
             </label>
             <textarea
               id="bz-billing"
               v-model.trim="form.billing_address"
               class="auth-input auth-textarea"
               :class="{ invalid: fieldBad('billing_address') }"
-              placeholder="Street, town, county, Eircode"
+              :placeholder="$t('ui.registerPage.addressPlaceholder')"
             />
             <small v-if="fieldBad('billing_address')" class="auth-error">
-              We need a billing address for VAT invoices.
+              {{ $t('ui.registerPage.business.billingAddressRequired') }}
             </small>
           </div>
 
           <label class="auth-checkbox-label">
             <input v-model="form.requires_po" type="checkbox">
             <span class="auth-custom-checkbox" />
-            <span>Our invoices need a PO number on them.</span>
+            <span>{{ $t('ui.registerPage.business.requiresPo') }}</span>
           </label>
 
           <label class="auth-checkbox-label">
             <input v-model="form.credit_application" type="checkbox">
             <span class="auth-custom-checkbox" />
             <span>
-              Apply for a 30-day credit account.
+              {{ $t('ui.registerPage.business.creditApplication') }}
               <small class="auth-hint">
-                Reviewed after your email is confirmed. Card and bank transfer
-                work straight away.
+                {{ $t('ui.registerPage.business.creditHint') }}
               </small>
             </span>
           </label>
@@ -226,19 +224,17 @@
         <!-- ── trade only ── -->
         <template v-else-if="accountType === 'trade'">
 
-          <h2 class="auth-sub-head">Your trade account</h2>
+          <h2 class="auth-sub-head">{{ $t('ui.registerPage.trade.heading') }}</h2>
 
           <div class="auth-note auth-note-warn">
-            Trade pricing is reviewed by a person. You can order at retail prices
-            as soon as your email is confirmed, and ex-VAT trade prices switch on
-            once we approve you.
+            {{ $t('ui.registerPage.trade.reviewNote') }}
           </div>
 
           <div class="auth-row">
 
             <div class="auth-form-group">
               <label class="auth-label" for="td-trading">
-                Trading name <span class="auth-label-required">*</span>
+                {{ $t('ui.registerPage.trade.tradingName') }} <span class="auth-label-required">*</span>
               </label>
               <input
                 id="td-trading"
@@ -246,16 +242,16 @@
                 class="auth-input"
                 :class="{ invalid: fieldBad('company_name') }"
                 autocomplete="organization"
-                placeholder="Shop or company name"
+                :placeholder="$t('ui.registerPage.trade.tradingNamePlaceholder')"
               >
               <small v-if="fieldBad('company_name')" class="auth-error">
-                Enter your trading name.
+                {{ $t('ui.registerPage.trade.tradingNameRequired') }}
               </small>
             </div>
 
             <div class="auth-form-group">
               <label class="auth-label" for="td-trade">
-                Trade <span class="auth-label-required">*</span>
+                {{ $t('ui.registerPage.trade.trade') }} <span class="auth-label-required">*</span>
               </label>
               <select
                 id="td-trade"
@@ -263,11 +259,11 @@
                 class="auth-input"
                 :class="{ invalid: fieldBad('trade') }"
               >
-                <option value="">Choose one</option>
-                <option v-for="i in trades" :key="i">{{ i }}</option>
+                <option value="">{{ $t('ui.registerPage.chooseOne') }}</option>
+                <option v-for="(i, n) in trades" :key="i" :value="i">{{ optionLabel('trades', n, i) }}</option>
               </select>
               <small v-if="fieldBad('trade')" class="auth-error">
-                Pick the closest match.
+                {{ $t('ui.registerPage.pickClosest') }}
               </small>
             </div>
 
@@ -276,7 +272,7 @@
           <div class="auth-row">
             <div class="auth-form-group">
               <label class="auth-label" for="td-vat">
-                VAT number <span class="auth-label-required">*</span>
+                {{ $t('ui.registerPage.vatNumber') }} <span class="auth-label-required">*</span>
               </label>
               <input
                 id="td-vat"
@@ -286,11 +282,11 @@
                 placeholder="IE1234567FA"
               >
               <small v-if="fieldBad('vat_number')" class="auth-error">
-                Trade accounts need a valid IE VAT number.
+                {{ $t('ui.registerPage.trade.vatRequired') }}
               </small>
             </div>
             <div class="auth-form-group">
-              <label class="auth-label" for="td-cro">CRO number</label>
+              <label class="auth-label" for="td-cro">{{ $t('ui.registerPage.croNumber') }}</label>
               <input
                 id="td-cro"
                 v-model.trim="form.cro_number"
@@ -302,24 +298,24 @@
 
           <div class="auth-form-group">
             <label class="auth-label" for="td-address">
-              Business address <span class="auth-label-required">*</span>
+              {{ $t('ui.registerPage.trade.businessAddress') }} <span class="auth-label-required">*</span>
             </label>
             <textarea
               id="td-address"
               v-model.trim="form.billing_address"
               class="auth-input auth-textarea"
               :class="{ invalid: fieldBad('billing_address') }"
-              placeholder="Street, town, county, Eircode"
+              :placeholder="$t('ui.registerPage.addressPlaceholder')"
             />
             <small v-if="fieldBad('billing_address')" class="auth-error">
-              Enter the trading address.
+              {{ $t('ui.registerPage.trade.businessAddressRequired') }}
             </small>
           </div>
 
           <div class="auth-row">
             <div class="auth-form-group">
               <label class="auth-label" for="td-spend">
-                Expected monthly spend <span class="auth-label-required">*</span>
+                {{ $t('ui.registerPage.trade.expectedSpend') }} <span class="auth-label-required">*</span>
               </label>
               <select
                 id="td-spend"
@@ -327,15 +323,15 @@
                 class="auth-input"
                 :class="{ invalid: fieldBad('expected_spend') }"
               >
-                <option value="">Choose one</option>
-                <option v-for="i in spends" :key="i">{{ i }}</option>
+                <option value="">{{ $t('ui.registerPage.chooseOne') }}</option>
+                <option v-for="(i, n) in spends" :key="i" :value="i">{{ optionLabel('spends', n, i) }}</option>
               </select>
               <small v-if="fieldBad('expected_spend')" class="auth-error">
-                Give us a rough band.
+                {{ $t('ui.registerPage.trade.expectedSpendRequired') }}
               </small>
             </div>
             <div class="auth-form-group">
-              <label class="auth-label" for="td-web">Website or social page</label>
+              <label class="auth-label" for="td-web">{{ $t('ui.registerPage.trade.website') }}</label>
               <input
                 id="td-web"
                 v-model.trim="form.website"
@@ -349,25 +345,24 @@
             <input v-model="form.resale_confirmed" type="checkbox">
             <span class="auth-custom-checkbox" />
             <span>
-              I confirm parts bought on this account are fitted or resold as part
-              of a business, not for personal use.
+              {{ $t('ui.registerPage.trade.resaleConfirm') }}
               <span class="auth-label-required">*</span>
             </span>
           </label>
           <small v-if="fieldBad('resale_confirmed')" class="auth-error">
-            Trade accounts need this confirmation.
+            {{ $t('ui.registerPage.trade.resaleRequired') }}
           </small>
 
         </template>
 
         <!-- ── contact + password ── -->
-        <h2 class="auth-sub-head">How you sign in</h2>
+        <h2 class="auth-sub-head">{{ $t('ui.registerPage.signInHeading') }}</h2>
 
         <div class="auth-row">
 
           <div class="auth-form-group">
             <label class="auth-label" for="su-email">
-              Email address <span class="auth-label-required">*</span>
+              {{ $t('ui.registerPage.email') }} <span class="auth-label-required">*</span>
             </label>
             <input
               id="su-email"
@@ -379,15 +374,15 @@
               placeholder="you@example.ie"
               @input="clearServerFieldError('email')"
             >
-            <p class="auth-hint">We send your confirmation code here.</p>
+            <p class="auth-hint">{{ $t('ui.registerPage.emailHint') }}</p>
             <small v-if="fieldBad('email')" class="auth-error">
-              {{ fieldMessage('email', 'Enter a valid email address.') }}
+              {{ fieldMessage('email', $t('ui.registerPage.emailInvalid')) }}
             </small>
           </div>
 
           <div class="auth-form-group">
             <label class="auth-label" for="su-phone">
-              Mobile number <span class="auth-label-required">*</span>
+              {{ $t('ui.registerPage.mobile') }} <span class="auth-label-required">*</span>
             </label>
             <phone-field
               :value="form.phone"
@@ -396,7 +391,7 @@
               @change="onPhoneChange"
             />
             <p class="auth-hint">
-              For repair and order updates, and SMS security codes.
+              {{ $t('ui.registerPage.mobileHint') }}
             </p>
             <small v-if="fieldBad('phone')" class="auth-error">
               {{ fieldMessage('phone', phoneError) }}
@@ -409,7 +404,7 @@
 
           <div class="auth-form-group">
             <label class="auth-label">
-              Password <span class="auth-label-required">*</span>
+              {{ $t('ui.registerPage.password') }} <span class="auth-label-required">*</span>
             </label>
             <auth-password-field
               :value="form.password"
@@ -421,13 +416,13 @@
             </div>
             <p class="auth-hint">{{ passwordHint }}</p>
             <small v-if="fieldBad('password')" class="auth-error">
-              Use at least 10 characters, with a capital letter and a number.
+              {{ $t('ui.registerPage.passwordRule') }}
             </small>
           </div>
 
           <div class="auth-form-group">
             <label class="auth-label">
-              Confirm password <span class="auth-label-required">*</span>
+              {{ $t('ui.registerPage.confirmPassword') }} <span class="auth-label-required">*</span>
             </label>
             <auth-password-field
               :value="form.confirmPassword"
@@ -435,14 +430,14 @@
               @change="form.confirmPassword = $event"
             />
             <small v-if="fieldBad('confirmPassword')" class="auth-error">
-              Passwords don't match.
+              {{ $t('ui.registerPage.passwordsMismatch') }}
             </small>
           </div>
 
         </div>
 
         <!-- ── preferences ── -->
-        <h2 class="auth-sub-head">Staying in touch</h2>
+        <h2 class="auth-sub-head">{{ $t('ui.registerPage.prefs.heading') }}</h2>
 
         <div class="auth-prefs">
 
@@ -450,9 +445,9 @@
             <input v-model="form.pref_email_offers" type="checkbox">
             <span class="auth-custom-checkbox" />
             <span>
-              <b>Offers by email</b>
+              <b>{{ $t('ui.registerPage.prefs.emailOffers') }}</b>
               <small class="auth-hint">
-                Repair deals, price drops and seasonal offers. Roughly twice a month.
+                {{ $t('ui.registerPage.prefs.emailOffersHint') }}
               </small>
             </span>
           </label>
@@ -461,9 +456,9 @@
             <input v-model="form.pref_sms_offers" type="checkbox">
             <span class="auth-custom-checkbox" />
             <span>
-              <b>Offers by text</b>
+              <b>{{ $t('ui.registerPage.prefs.smsOffers') }}</b>
               <small class="auth-hint">
-                Short notice only — flash offers and stock arrivals.
+                {{ $t('ui.registerPage.prefs.smsOffersHint') }}
               </small>
             </span>
           </label>
@@ -472,9 +467,9 @@
             <input v-model="form.pref_recommendations" type="checkbox">
             <span class="auth-custom-checkbox" />
             <span>
-              <b>Recommendations for my devices</b>
+              <b>{{ $t('ui.registerPage.prefs.recommendations') }}</b>
               <small class="auth-hint">
-                Suggested upgrades and parts based on what you've bought or had repaired.
+                {{ $t('ui.registerPage.prefs.recommendationsHint') }}
               </small>
             </span>
           </label>
@@ -486,9 +481,9 @@
             <input v-model="form.pref_trade_list" type="checkbox">
             <span class="auth-custom-checkbox" />
             <span>
-              <b>Trade price list and stock file</b>
+              <b>{{ $t('ui.registerPage.prefs.tradeList') }}</b>
               <small class="auth-hint">
-                Monthly ex-VAT price list and weekly stock updates.
+                {{ $t('ui.registerPage.prefs.tradeListHint') }}
               </small>
             </span>
           </label>
@@ -496,41 +491,44 @@
         </div>
 
         <p class="auth-hint auth-hint-spaced">
-          You can change any of these in Account → Preferences, or unsubscribe
-          from any message we send.
+          {{ $t('ui.registerPage.prefs.changeLater') }}
         </p>
 
         <label class="auth-checkbox-label">
           <input v-model="form.terms" type="checkbox">
           <span class="auth-custom-checkbox" />
           <span>
-            I agree to the
-            <a
-              class="privacy-policy"
-              href="#"
-              @click.prevent="openPrivacy"
-            >privacy notice</a>.
+            <i18n
+              path="ui.registerPage.agreeTo"
+              tag="span"
+            >
+              <template #link><a
+                class="privacy-policy"
+                href="#"
+                @click.prevent="openPrivacy"
+              >{{ $t('ui.registerPage.privacyNoticeLink') }}</a></template>
+            </i18n>
             <span class="auth-label-required">*</span>
           </span>
         </label>
         <small v-if="fieldBad('terms')" class="auth-error">
-          Tick the box to continue.
+          {{ $t('ui.registerPage.termsRequired') }}
         </small>
 
         <ajax-button
           class="auth-btn-primary auth-btn-spaced"
           :fetching-data="submitting"
-          :loading-text="'Creating account...'"
-          :text="'Create account'"
+          :loading-text="$t('ui.registerPage.creatingAccount')"
+          :text="$t('ui.registerPage.createAccount')"
         >
-          Create account
+          {{ $t('ui.registerPage.createAccount') }}
         </ajax-button>
 
       </form>
 
       <p class="auth-foot">
-        Already registered?
-        <nuxt-link to="/login" class="auth-foot-link">Sign in</nuxt-link>
+        {{ $t('ui.registerPage.alreadyRegistered') }}
+        <nuxt-link to="/login" class="auth-foot-link">{{ $t('ui.registerPage.signIn') }}</nuxt-link>
       </p>
 
     </section>
@@ -543,16 +541,20 @@
         current="verify"
       />
 
-      <h1 class="auth-h1">Confirm your email</h1>
-      <p class="auth-lede">
-        We sent a 6-digit code to <b>{{ form.email }}</b>. Enter it below.
-      </p>
+      <h1 class="auth-h1">{{ $t('ui.registerPage.verify.title') }}</h1>
+      <i18n
+        path="ui.registerPage.verify.lede"
+        tag="p"
+        class="auth-lede"
+      >
+        <template #email><b>{{ form.email }}</b></template>
+      </i18n>
 
       <form @submit.prevent="submitVerify">
 
         <div class="auth-form-group">
           <label class="auth-label">
-            Activation code <span class="auth-label-required">*</span>
+            {{ $t('ui.registerPage.verify.code') }} <span class="auth-label-required">*</span>
           </label>
           <otp-input
             ref="otp"
@@ -562,17 +564,17 @@
             @complete="submitVerify"
           />
           <small v-if="codeInvalid" class="auth-error">
-            That code has expired or doesn't match. Send a new one.
+            {{ $t('ui.registerPage.verify.codeInvalid') }}
           </small>
         </div>
 
         <ajax-button
           class="auth-btn-primary"
           :fetching-data="submitting"
-          :loading-text="'Confirming...'"
-          :text="'Confirm email'"
+          :loading-text="$t('ui.registerPage.verify.confirming')"
+          :text="$t('ui.registerPage.verify.confirm')"
         >
-          Confirm email
+          {{ $t('ui.registerPage.verify.confirm') }}
         </ajax-button>
 
       </form>
@@ -584,21 +586,24 @@
           :disabled="submitting"
           @click="resendCode"
         >
-          Send a new code
+          {{ $t('ui.registerPage.sendNewCode') }}
         </button>
         <button
           type="button"
           class="auth-btn-ghost"
           @click="goToStep('details')"
         >
-          Use a different email
+          {{ $t('ui.registerPage.verify.differentEmail') }}
         </button>
       </div>
 
-      <div class="auth-note auth-note-warn auth-note-spaced">
-        Nothing in your inbox after a minute? Check spam, or add
-        <b>{{ supportEmail }}</b> to your contacts.
-      </div>
+      <i18n
+        path="ui.registerPage.verify.nothingInInbox"
+        tag="div"
+        class="auth-note auth-note-warn auth-note-spaced"
+      >
+        <template #email><b>{{ supportEmail }}</b></template>
+      </i18n>
 
     </section>
 
@@ -613,10 +618,9 @@
       <!-- 4a · choose a method -->
       <template v-if="securityScreen === 'choose'">
 
-        <h1 class="auth-h1">Add a second step at sign-in</h1>
+        <h1 class="auth-h1">{{ $t('ui.registerPage.security.title') }}</h1>
         <p class="auth-lede">
-          Two-factor authentication stops anyone using your password on its own.
-          It takes about a minute to set up.
+          {{ $t('ui.registerPage.security.lede') }}
         </p>
 
         <div class="auth-pick-methods">
@@ -631,12 +635,11 @@
             </span>
             <span>
               <b>
-                Authenticator app
-                <span class="auth-pill">Recommended</span>
+                {{ $t('ui.registerPage.security.app') }}
+                <span class="auth-pill">{{ $t('ui.registerPage.security.recommended') }}</span>
               </b>
               <span>
-                Google Authenticator, Microsoft Authenticator or 1Password.
-                Works without signal.
+                {{ $t('ui.registerPage.security.appHint') }}
               </span>
             </span>
           </button>
@@ -656,8 +659,8 @@
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>
             </span>
             <span>
-              <b>Text message</b>
-              <span>We text a 6-digit code to your mobile each time you sign in.</span>
+              <b>{{ $t('ui.registerPage.security.sms') }}</b>
+              <span>{{ $t('ui.registerPage.security.smsHint') }}</span>
             </span>
           </button>
 
@@ -668,10 +671,10 @@
           class="auth-btn-ghost"
           @click="finish"
         >
-          Skip for now
+          {{ $t('ui.registerPage.security.skip') }}
         </button>
         <p class="auth-hint auth-hint-centered">
-          You can turn this on later in Account → Security.
+          {{ $t('ui.registerPage.security.later') }}
         </p>
 
       </template>
@@ -684,12 +687,12 @@
           class="auth-back"
           @click="securityScreen = 'choose'"
         >
-          <span aria-hidden="true">&larr;</span> Choose a different method
+          <span aria-hidden="true">&larr;</span> {{ $t('ui.registerPage.security.differentMethod') }}
         </button>
 
-        <h1 class="auth-h1">Set up your authenticator app</h1>
+        <h1 class="auth-h1">{{ $t('ui.registerPage.security.appTitle') }}</h1>
         <p class="auth-lede">
-          Scan this code in your authenticator app, then enter the 6 digits it shows.
+          {{ $t('ui.registerPage.security.appLede') }}
         </p>
 
         <div class="auth-qr-row">
@@ -698,19 +701,19 @@
             v-if="qrDataUrl"
             class="auth-qr"
             :src="qrDataUrl"
-            alt="QR code for your authenticator app"
+            :alt="$t('ui.registerPage.security.qrAlt')"
           >
           <div v-else class="auth-qr auth-qr-loading" />
 
           <div class="auth-qr-side">
-            <p class="auth-hint">Can't scan? Enter this key by hand:</p>
+            <p class="auth-hint">{{ $t('ui.registerPage.security.cantScan') }}</p>
             <div class="auth-secret">{{ secretDisplay }}</div>
             <button
               type="button"
               class="auth-btn-ghost auth-btn-sm"
               @click="copySecret"
             >
-              {{ secretCopied ? 'Copied' : 'Copy key' }}
+              {{ secretCopied ? $t('ui.registerPage.security.copied') : $t('ui.registerPage.security.copyKey') }}
             </button>
           </div>
 
@@ -720,7 +723,7 @@
 
           <div class="auth-form-group">
             <label class="auth-label">
-              Code from your app <span class="auth-label-required">*</span>
+              {{ $t('ui.registerPage.security.appCode') }} <span class="auth-label-required">*</span>
             </label>
             <otp-input
               ref="otp"
@@ -730,17 +733,17 @@
               @complete="confirmAuthenticator"
             />
             <small v-if="codeInvalid" class="auth-error">
-              That code isn't right. Check your app and try again.
+              {{ $t('ui.registerPage.security.appCodeInvalid') }}
             </small>
           </div>
 
           <ajax-button
             class="auth-btn-primary"
             :fetching-data="submitting"
-            :loading-text="'Turning on...'"
-            :text="'Turn on two-factor'"
+            :loading-text="$t('ui.registerPage.security.turningOn')"
+            :text="$t('ui.registerPage.security.turnOn')"
           >
-            Turn on two-factor
+            {{ $t('ui.registerPage.security.turnOn') }}
           </ajax-button>
 
         </form>
@@ -755,19 +758,23 @@
           class="auth-back"
           @click="securityScreen = 'choose'"
         >
-          <span aria-hidden="true">&larr;</span> Choose a different method
+          <span aria-hidden="true">&larr;</span> {{ $t('ui.registerPage.security.differentMethod') }}
         </button>
 
-        <h1 class="auth-h1">Set up codes by text</h1>
-        <p class="auth-lede">
-          We sent a 6-digit code to <b>{{ phoneHint }}</b>. Enter it to switch this on.
-        </p>
+        <h1 class="auth-h1">{{ $t('ui.registerPage.security.smsTitle') }}</h1>
+        <i18n
+          path="ui.registerPage.security.smsLede"
+          tag="p"
+          class="auth-lede"
+        >
+          <template #phone><b>{{ phoneHint }}</b></template>
+        </i18n>
 
         <form @submit.prevent="confirmSms">
 
           <div class="auth-form-group">
             <label class="auth-label">
-              Code from the text <span class="auth-label-required">*</span>
+              {{ $t('ui.registerPage.security.smsCode') }} <span class="auth-label-required">*</span>
             </label>
             <otp-input
               ref="otp"
@@ -777,17 +784,17 @@
               @complete="confirmSms"
             />
             <small v-if="codeInvalid" class="auth-error">
-              That code isn't right. Try again or send a new one.
+              {{ $t('ui.registerPage.security.smsCodeInvalid') }}
             </small>
           </div>
 
           <ajax-button
             class="auth-btn-primary"
             :fetching-data="submitting"
-            :loading-text="'Turning on...'"
-            :text="'Turn on two-factor'"
+            :loading-text="$t('ui.registerPage.security.turningOn')"
+            :text="$t('ui.registerPage.security.turnOn')"
           >
-            Turn on two-factor
+            {{ $t('ui.registerPage.security.turnOn') }}
           </ajax-button>
 
         </form>
@@ -799,7 +806,7 @@
             :disabled="submitting"
             @click="startSms"
           >
-            Send a new code
+            {{ $t('ui.registerPage.sendNewCode') }}
           </button>
         </div>
 
@@ -808,10 +815,9 @@
       <!-- 4d · recovery codes -->
       <template v-else-if="securityScreen === 'recovery'">
 
-        <h1 class="auth-h1">Save your recovery codes</h1>
+        <h1 class="auth-h1">{{ $t('ui.registerPage.security.recoveryTitle') }}</h1>
         <p class="auth-lede">
-          If you lose your phone, each of these signs you in once. Keep them
-          somewhere safe — you won't see them again.
+          {{ $t('ui.registerPage.security.recoveryLede') }}
         </p>
 
         <div class="auth-codes">
@@ -829,7 +835,7 @@
             class="auth-btn-ghost"
             @click="copyRecovery"
           >
-            {{ recoveryCopied ? 'Copied' : 'Copy codes' }}
+            {{ recoveryCopied ? $t('ui.registerPage.security.copied') : $t('ui.registerPage.security.copyCodes') }}
           </button>
         </div>
 
@@ -837,7 +843,7 @@
           class="auth-btn-primary auth-btn-spaced"
           @click="finish"
         >
-          I've saved them — finish
+          {{ $t('ui.registerPage.security.savedFinish') }}
         </button>
 
       </template>
@@ -865,7 +871,7 @@
         class="auth-btn-primary"
         @click="goShopping"
       >
-        Start shopping
+        {{ $t('ui.registerPage.done.startShopping') }}
       </button>
 
     </section>
@@ -886,14 +892,14 @@
 
           <header class="privacy-head">
             <div>
-              <span class="privacy-eyebrow">Legal</span>
-              <h2 id="privacy-title">Privacy notice</h2>
+              <span class="privacy-eyebrow">{{ $t('ui.registerPage.privacy.eyebrow') }}</span>
+              <h2 id="privacy-title">{{ $t('ui.registerPage.privacy.title') }}</h2>
             </div>
             <button
               ref="privacyClose"
               type="button"
               class="privacy-close"
-              aria-label="Close"
+              :aria-label="$t('ui.registerPage.privacy.close')"
               @click="closePrivacy"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -912,8 +918,7 @@
               v-else
               class="privacy-empty"
             >
-              The privacy notice hasn’t been published yet. Ask us for a copy at
-              <a :href="`mailto:${supportEmail}`">{{ supportEmail }}</a>.
+              <i18n path="ui.registerPage.privacy.empty" tag="span"><template #email><a :href="`mailto:${supportEmail}`">{{ supportEmail }}</a></template></i18n>
             </p>
 
           </div>
@@ -924,7 +929,7 @@
               class="privacy-accept"
               @click="acceptPrivacy"
             >
-              I understand
+              {{ $t('ui.registerPage.privacy.accept') }}
             </button>
           </footer>
 
@@ -995,25 +1000,15 @@
   /** Human labels, for the warning shown before a switch drops an answer. */
   const FIELD_LABELS = COMPANY_FIELD_LABELS
 
-  const TYPE_COPY = {
-    personal: {
-      label: 'Personal account',
-      foot: 'Retail prices inc. VAT · ready straight away',
-      title: 'Create your personal account',
-      lede: 'Retail pricing inc. VAT, with your repair tickets and orders in one place.'
-    },
-    business: {
-      label: 'Business account',
-      foot: 'Ex-VAT invoicing · credit on application',
-      title: 'Create your business account',
-      lede: 'VAT invoices, PO references and an optional 30-day credit account.'
-    },
-    trade: {
-      label: 'Trade account',
-      foot: 'Trade pricing · reviewed within one working day',
-      title: 'Create your trade account',
-      lede: 'Order at retail prices straight away; trade pricing switches on once we approve you.'
-    }
+  /*
+   * A field's label in the current language, falling back to the shared
+   * English one. Takes the component rather than using `this` so the
+   * wizard test, which calls the methods on a plain object, still works.
+   */
+  function fieldLabel(vm, name) {
+    const key = `ui.registerPage.fieldLabels.${name}`
+
+    return vm && vm.$te && vm.$te(key) ? vm.$t(key) : (FIELD_LABELS[name] || name)
   }
 
   export default {
@@ -1084,10 +1079,10 @@
         showPrivacyPopup: false,
         privacyPolicy: null,
         wizardSteps: [
-          {key: 'type', label: 'Type'},
-          {key: 'details', label: 'Details'},
-          {key: 'verify', label: 'Verify'},
-          {key: 'security', label: 'Security'}
+          {key: 'type', label: this.$t('ui.registerPage.steps.type')},
+          {key: 'details', label: this.$t('ui.registerPage.steps.details')},
+          {key: 'verify', label: this.$t('ui.registerPage.steps.verify')},
+          {key: 'security', label: this.$t('ui.registerPage.steps.security')}
         ],
         sectors: SECTORS,
         trades: TRADES,
@@ -1124,33 +1119,57 @@
         return ['personal', 'business', 'trade'].includes(type) ? type : ''
       },
 
+      /* Wording for each account type, in the current language. */
+      typeCopy() {
+        return {
+        personal: {
+          label: this.$t('ui.registerPage.types.personal.label'),
+          foot: this.$t('ui.registerPage.types.personal.foot'),
+          title: this.$t('ui.registerPage.types.personal.title'),
+          lede: this.$t('ui.registerPage.types.personal.lede')
+        },
+        business: {
+          label: this.$t('ui.registerPage.types.business.label'),
+          foot: this.$t('ui.registerPage.types.business.foot'),
+          title: this.$t('ui.registerPage.types.business.title'),
+          lede: this.$t('ui.registerPage.types.business.lede')
+        },
+        trade: {
+          label: this.$t('ui.registerPage.types.trade.label'),
+          foot: this.$t('ui.registerPage.types.trade.foot'),
+          title: this.$t('ui.registerPage.types.trade.title'),
+          lede: this.$t('ui.registerPage.types.trade.lede')
+        }
+        }
+      },
+
       chosenLabel() {
-        return TYPE_COPY[this.accountType].label
+        return this.typeCopy[this.accountType].label
       },
 
       chosenFoot() {
-        return TYPE_COPY[this.accountType].foot
+        return this.typeCopy[this.accountType].foot
       },
 
       detailsTitle() {
-        return TYPE_COPY[this.accountType].title
+        return this.typeCopy[this.accountType].title
       },
 
       detailsLede() {
-        return TYPE_COPY[this.accountType].lede
+        return this.typeCopy[this.accountType].lede
       },
 
       doneTitle() {
-        return this.twoFactorOn ? "You're all set" : 'Welcome to FixMyPC'
+        return this.twoFactorOn ? this.$t('ui.registerPage.done.allSet') : this.$t('ui.registerPage.done.welcome')
       },
 
       doneLede() {
 
         if (this.accountType === 'trade') {
-          return 'Your account is ready at retail prices. We’ll email you once your trade application is approved.'
+          return this.$t('ui.registerPage.done.tradeLede')
         }
 
-        return 'Your account is ready. We put your basket back the way you left it.'
+        return this.$t('ui.registerPage.done.lede')
       },
 
       supportEmail() {
@@ -1173,11 +1192,11 @@
 
       passwordHint() {
         return [
-          'Use 10+ characters with a number and a capital letter.',
-          'Weak — add a capital letter and a number.',
-          'Getting there — add a number.',
-          'Good password.',
-          'Strong password.'
+          this.$t('ui.registerPage.strength.s0'),
+          this.$t('ui.registerPage.strength.s1'),
+          this.$t('ui.registerPage.strength.s2'),
+          this.$t('ui.registerPage.strength.s3'),
+          this.$t('ui.registerPage.strength.s4')
         ][this.passwordScore]
       },
 
@@ -1193,8 +1212,8 @@
 
       phoneError() {
         return this.phoneTouched && !this.phoneValid
-          ? "That number doesn't look right for the country you picked."
-          : 'Enter a mobile number we can text.'
+          ? this.$t('ui.registerPage.phoneWrongCountry')
+          : this.$t('ui.registerPage.phoneRequired')
       },
 
       /* Fields that fail validation right now, keyed by name. */
@@ -1290,7 +1309,7 @@
             const value = this.form[name]
             return typeof value === 'boolean' ? value : !!value
           })
-          .map(name => FIELD_LABELS[name] || name)
+          .map(name => fieldLabel(this, name))
       },
 
       /*
@@ -1307,10 +1326,9 @@
 
           if (stranded.length) {
 
-            const warning = 'Changing your account type means these answers will '
-              + 'no longer be part of your registration:\n\n  · '
+            const warning = this.$t('ui.registerPage.switchWarning.intro') + '\n\n  · '
               + stranded.join('\n  · ')
-              + '\n\nThey are kept in case you switch back. Do you want to continue?'
+              + '\n\n' + this.$t('ui.registerPage.switchWarning.outro')
 
             if (!window.confirm(warning)) {
               return
@@ -1373,6 +1391,21 @@
         if (this.serverFieldErrors[name]) {
           this.$delete(this.serverFieldErrors, name)
         }
+      },
+
+      /*
+       * Display text for a sector / trade / spend choice. The option's value
+       * stays the shared English string the API expects; only the label is
+       * translated, and only while the English message still matches that
+       * string - if the list in accountFields.js changes, the old translation
+       * is not shown against the wrong choice.
+       */
+      optionLabel(group, index, value) {
+        const key = `ui.registerPage.options.${group}.o${index}`
+
+        return this.$te(key, 'en') && this.$t(key, 'en') === value
+          ? this.$t(key)
+          : value
       },
 
       isValidVat(value) {
@@ -1547,7 +1580,7 @@
           if (data?.status === 200) {
             this.code = ''
             this.codeInvalid = false
-            this.setToastMessage(`We sent a new code to ${this.form.email}`)
+            this.setToastMessage(this.$t('ui.registerPage.toastNewCode', { email: this.form.email }))
           } else {
             this.errors = data?.data?.form || [data?.message]
           }
@@ -1581,7 +1614,7 @@
           }
 
         } catch (e) {
-          this.errors = ['We could not start the setup. Try again.']
+          this.errors = [this.$t('ui.registerPage.security.setupFailed')]
           this.securityScreen = 'choose'
         }
       },
@@ -1670,7 +1703,7 @@
           }
 
         } catch (e) {
-          this.errors = ['We could not send that text. Try an authenticator app instead.']
+          this.errors = [this.$t('ui.registerPage.security.smsFailed')]
           this.securityScreen = 'choose'
         } finally {
           this.submitting = false

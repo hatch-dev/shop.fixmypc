@@ -47,10 +47,10 @@
         -->
         <div class="price-vat" v-if="vatSplit && !vatSplit.inclusive">
           <span class="price-vat-alt">
-            Inc-VAT
+            {{ $t('ui.detailRightUi.incVat') }}
             <price-format :price="vatSplit.inc" />
             <span class="price-vat-amount">
-              (VAT {{ vatRateLabel }} <price-format :price="vatSplit.vat" />)
+              ({{ $t('ui.detailRightUi.vatRate', { rate: vatRateLabel }) }} <price-format :price="vatSplit.vat" />)
             </span>
           </span>
         </div>
@@ -58,7 +58,7 @@
           v-if="selectedVoucher"
           class="voucher-save-text"
         >
-          You save
+          {{ $t('ui.detailRightUi.youSave') }}
           <price-format
             :price="voucherDiscount"
           />
@@ -68,7 +68,7 @@
           <div class="pos-rel lh-30 z-7 inline ">
             <button
               class="semi-bold clear-height mt-10"
-              aria-label="submit"
+              :aria-label="$t('ui.detailRightUi.aria.submit')"
               @click.prevent="pricePopOver = !pricePopOver"
               data-ignore="price-pop-over"
             >
@@ -142,8 +142,8 @@
               <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>
             </svg>
             <span>
-              <b>Sold only in {{ sellCountryNames }}</b>
-              <template v-if="notSoldHere"> &mdash; cannot be shipped to {{ countryLabel(visitorCountry) }}</template>
+              <b>{{ $t('ui.detailRightUi.soldOnlyIn', { countries: sellCountryNames }) }}</b>
+              <template v-if="notSoldHere"> &mdash; {{ $t('ui.detailRightUi.cannotShipTo', { country: countryLabel(visitorCountry) }) }}</template>
             </span>
           </div>
 
@@ -164,7 +164,7 @@
               <circle cx="7" cy="18" r="1.7"/>
               <circle cx="17.5" cy="18" r="1.7"/>
             </svg>
-            <span>Delivery cost is worked out from your address at checkout</span>
+            <span>{{ $t('ui.detailRightUi.deliveryAtCheckout') }}</span>
           </div>
 
           <div v-else class="bb-deliv-row">
@@ -252,7 +252,7 @@
         <div class="pos-rel inline">
           <button
             class="clear-height ml--7-5 mtb-10 f-10 semi-bold flex color-deep"
-            aria-label="submit"
+            :aria-label="$t('ui.detailRightUi.aria.submit')"
             @click.prevent="secureTrans = !secureTrans"
             data-ignore="secure-trans"
           >

@@ -5,7 +5,7 @@
 
             <!-- HEADER -->
             <div class="d-flex justify-content-between mb-3">
-            <h6 class="fw-bold fs-5 cart-color">Added to Your Cart</h6>
+            <h6 class="fw-bold fs-5 cart-color">{{ $t('ui.cartDrawer.title') }}</h6>
             <i class="fa-solid fa-xmark" @click="$emit('close')" style="cursor:pointer"></i>
             </div>
 
@@ -23,10 +23,10 @@
                     <div class="my-3">
                         <strong class="cart-color">{{ item?.flash_product?.title }}</strong>
                         <p class="small-text mb-0">
-                          Price: <span class="cart-color">€ {{ item?.upsell_price }}</span>
+                          {{ $t('ui.cartDrawer.price') }} <span class="cart-color">€ {{ item?.upsell_price }}</span>
                         </p>
                         <p class="small-text">
-                        Qty: <span class="cart-color">{{ item.quantity }}</span>
+                        {{ $t('ui.cartDrawer.qty') }} <span class="cart-color">{{ item.quantity }}</span>
                         </p>
                     </div>
                 </div>
@@ -34,20 +34,20 @@
 
 
             <div class="mt-auto text-center pt-3" style="border-top: 1px solid #E9E9F4;">
-                <strong>Sub Total: €{{ totalPrice }}</strong>
+                <strong>{{ $t('ui.cartDrawer.subTotal', { amount: '€' + totalPrice }) }}</strong>
                 <!-- BUTTONS -->
                 <button 
                     class="btn btn-primary-custom w-100 mt-3 rounded-5"
                     @click="goToCart"
                 >
-                    View Basket
+                    {{ $t('ui.cartDrawer.viewBasket') }}
                 </button>
 
                 <button 
                     class="btn btn-green w-100 mt-3 rounded-5"
                     @click="$emit('close')"
                 >
-                    Continue Shopping
+                    {{ $t('ui.cartDrawer.continueShopping') }}
                 </button>
             </div>
             
