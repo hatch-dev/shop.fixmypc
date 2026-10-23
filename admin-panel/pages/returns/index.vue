@@ -3,19 +3,19 @@
 
     <div v-if="stats" class="rt-stats">
       <div class="rt-stat" :class="{alert: stats.requested > 0}">
-        <span>To review</span><strong>{{ stats.requested }}</strong><small>asked for by customers</small>
+        <span>{{ $t('pages.returns.toReview') }}</span><strong>{{ stats.requested }}</strong><small>{{ $t('pages.returns.askedByCustomers') }}</small>
       </div>
       <div class="rt-stat" :class="{alert: stats.awaiting_return > 0}">
-        <span>Awaiting return</span><strong>{{ stats.awaiting_return }}</strong><small>parcel not arrived yet</small>
+        <span>{{ $t('pages.returns.statusAwaitingReturn') }}</span><strong>{{ stats.awaiting_return }}</strong><small>{{ $t('pages.returns.parcelNotArrived') }}</small>
       </div>
       <div class="rt-stat" :class="{alert: stats.received > 0}">
-        <span>To refund</span><strong>{{ stats.received }}</strong><small>received, not yet refunded</small>
+        <span>{{ $t('pages.returns.toRefund') }}</span><strong>{{ stats.received }}</strong><small>{{ $t('pages.returns.receivedNotRefunded') }}</small>
       </div>
       <div class="rt-stat" :class="{bad: stats.refunding > 0}">
-        <span>Stuck refunding</span><strong>{{ stats.refunding }}</strong><small>check before refunding again</small>
+        <span>{{ $t('pages.returns.stuckRefunding') }}</span><strong>{{ stats.refunding }}</strong><small>{{ $t('pages.returns.checkBeforeRefunding') }}</small>
       </div>
       <div class="rt-stat">
-        <span>Refunded</span><strong>{{ currencyIcon }}{{ money(stats.refunded_total) }}</strong><small>by returns, all time</small>
+        <span>{{ $t('pages.returns.refunded') }}</span><strong>{{ currencyIcon }}{{ money(stats.refunded_total) }}</strong><small>{{ $t('pages.returns.byReturnsAllTime') }}</small>
       </div>
     </div>
 
@@ -23,26 +23,26 @@
       ref="listPage"
       list-api="getOrderReturns"
       route-name="returns"
-      name="Returns"
+      :name="$t('pages.returns.returns')"
       gate="order"
       :add-button="false"
       :order-options="orderOptions"
     >
       <template v-slot:extra-filters>
         <div class="rt-filters">
-          <select v-model="status" aria-label="Status" @change="applyFilters">
-            <option value="">All returns</option>
-            <option value="open">Open</option>
-            <option value="requested">To review</option>
-            <option value="awaiting_payment">Awaiting payment</option>
-            <option value="awaiting_return">Awaiting return</option>
-            <option value="received">Received</option>
-            <option value="refunding">Refunding</option>
-            <option value="refunded">Refunded</option>
-            <option value="closed">Closed</option>
-            <option value="rejected">Rejected</option>
-            <option value="cancelled">Cancelled by customer</option>
-            <option value="exchanged">Exchanged</option>
+          <select v-model="status" :aria-label="$t('pages.returns.status')" @change="applyFilters">
+            <option value="">{{ $t('pages.returns.allReturns') }}</option>
+            <option value="open">{{ $t('pages.returns.filterOpen') }}</option>
+            <option value="requested">{{ $t('pages.returns.toReview') }}</option>
+            <option value="awaiting_payment">{{ $t('pages.returns.statusAwaitingPayment') }}</option>
+            <option value="awaiting_return">{{ $t('pages.returns.statusAwaitingReturn') }}</option>
+            <option value="received">{{ $t('pages.returns.statusReceived') }}</option>
+            <option value="refunding">{{ $t('pages.returns.statusRefunding') }}</option>
+            <option value="refunded">{{ $t('pages.returns.statusRefunded') }}</option>
+            <option value="closed">{{ $t('pages.returns.statusClosed') }}</option>
+            <option value="rejected">{{ $t('pages.returns.statusRejected') }}</option>
+            <option value="cancelled">{{ $t('pages.returns.cancelledByCustomer') }}</option>
+            <option value="exchanged">{{ $t('pages.returns.statusExchanged') }}</option>
           </select>
         </div>
       </template>
@@ -50,14 +50,14 @@
       <template v-slot:table="{list, from}">
         <tr class="lite-bold">
           <th class="w-50x mx-w-50x">#</th>
-          <th>Return</th>
-          <th>Type</th>
-          <th>Order</th>
-          <th>Customer</th>
-          <th>Reason</th>
-          <th>Units</th>
-          <th>Status</th>
-          <th>Refund</th>
+          <th>{{ $t('pages.returns.returnHeading') }}</th>
+          <th>{{ $t('pages.returns.type') }}</th>
+          <th>{{ $t('pages.returns.order') }}</th>
+          <th>{{ $t('pages.returns.customer') }}</th>
+          <th>{{ $t('pages.returns.reason') }}</th>
+          <th>{{ $t('pages.returns.units') }}</th>
+          <th>{{ $t('pages.returns.status') }}</th>
+          <th>{{ $t('pages.returns.refund') }}</th>
           <th>&nbsp;</th>
         </tr>
 
@@ -67,10 +67,10 @@
             <nuxt-link class="link" :to="`/returns/${value.id}`"><h5>{{ value.rma_number }}</h5></nuxt-link>
             <span class="sub-note">{{ formatDate(value.created_at) }}</span>
           </td>
-          <td>{{ value.type === 'exchange' ? 'Exchange' : 'Return' }}</td>
+          <td>{{ value.type === 'exchange' ? $t('pages.returns.exchange') : $t('pages.returns.returnHeading') }}</td>
           <td><nuxt-link class="link" :to="`/orders/${value.order_id}`">#{{ value.order_number }}</nuxt-link></td>
           <td>
-            {{ value.customer || 'Guest' }}
+            {{ value.customer || $t('pages.returns.guest') }}
             <span class="sub-note">{{ value.customer_email }}</span>
           </td>
           <td>{{ value.reason_label }}</td>
@@ -80,12 +80,12 @@
             <template v-if="value.refund_amount !== null">{{ currencyIcon }}{{ money(value.refund_amount) }}</template>
             <span v-else class="sub-note">—</span>
           </td>
-          <td><button class="lite-btn" @click.prevent="$router.push(`/returns/${value.id}`)">Open</button></td>
+          <td><button class="lite-btn" @click.prevent="$router.push(`/returns/${value.id}`)">{{ $t('pages.returns.open') }}</button></td>
         </tr>
       </template>
     </list-page>
 
-    <p class="rt-hint">To start a return or an exchange, open the order and choose <strong>Start a return</strong>.</p>
+    <p class="rt-hint">{{ $t('pages.returns.startHintBefore') }} <strong>{{ $t('pages.returns.startReturn') }}</strong>.</p>
   </div>
 </template>
 
@@ -105,7 +105,7 @@ export default {
       stats: null,
       status: this.$route.query.status || '',
       orderOptions: {
-        created_at: { title: 'Date' }
+        created_at: { title: this.$t('pages.returns.date') }
       }
     }
   },
@@ -123,7 +123,7 @@ export default {
     },
     formatDate(value) {
       const d = new Date(String(value).replace(' ', 'T'))
-      return isNaN(d.getTime()) ? value : d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' })
+      return isNaN(d.getTime()) ? value : d.toLocaleDateString(this.$i18n?.locale || 'en', { day: 'numeric', month: 'short', year: 'numeric' })
     },
     pillClass(status) {
       return {

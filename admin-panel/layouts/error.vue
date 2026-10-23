@@ -6,7 +6,7 @@
       <div class="img-wrap mb-sm-20 mlr-xs-auto">
         <img
           src="~/assets/images/error.png"
-          alt="Error image"
+          :alt="$t('cmp.error.errorImageAlt')"
           height="50"
           width="50"
         >

@@ -19,8 +19,8 @@
         <th class="w-50x mx-w-50x">#</th>
         <th>{{ $t('user.name') }}</th>
         <th>{{ $t('fSale.email') }}</th>
-        <th>Account</th>
-        <th>Status</th>
+        <th>{{ $t('pages.registeredUsers.colAccount') }}</th>
+        <th>{{ $t('pages.registeredUsers.colStatus') }}</th>
         <th>{{ $t('user.verified') }}</th>
         <th>{{ $t('category.created') }}</th>
         <th />
@@ -35,8 +35,8 @@
           <input type="checkbox" :value="value.id" v-model="cbList">
         </td>
         <td class="w-50x mx-w-50x">{{ from + index }}</td>
-        <td><span class="mx-w-300x">{{ getDataFromObject(value, 'name', 'n/a') }}</span></td>
-        <td><span class="mx-w-300x">{{ getDataFromObject(value, 'email', 'n/a') }}</span></td>
+        <td><span class="mx-w-300x">{{ getDataFromObject(value, 'name', $t('pages.registeredUsers.notAvailable')) }}</span></td>
+        <td><span class="mx-w-300x">{{ getDataFromObject(value, 'email', $t('pages.registeredUsers.notAvailable')) }}</span></td>
 
         <!--
           Account type, and underneath it the company the account registered.
@@ -82,7 +82,7 @@
             :to="'/registered-users/' + value.id"
             class="lite-btn view-btn"
           >
-            View
+            {{ $t('pages.registeredUsers.view') }}
           </nuxt-link>
 
           <!--
@@ -97,7 +97,7 @@
             :disabled="saving === value.id"
             @click.prevent="changeStatus(value, 'suspended')"
           >
-            Suspend
+            {{ $t('pages.registeredUsers.suspend') }}
           </button>
 
           <button
@@ -106,7 +106,7 @@
             :disabled="saving === value.id"
             @click.prevent="changeStatus(value, 'active')"
           >
-            Reactivate
+            {{ $t('pages.registeredUsers.reactivate') }}
           </button>
 
           <button
@@ -161,10 +161,10 @@
 
       typeLabel(value) {
         return {
-          personal: 'Personal',
-          business: 'Business',
-          trade: 'Trade'
-        }[this.accountOf(value).account_type] || 'Personal'
+          personal: this.$t('pages.registeredUsers.typePersonal'),
+          business: this.$t('pages.registeredUsers.typeBusiness'),
+          trade: this.$t('pages.registeredUsers.typeTrade')
+        }[this.accountOf(value).account_type] || this.$t('pages.registeredUsers.typePersonal')
       },
 
       isActive(value) {
@@ -180,11 +180,11 @@
 
       statusLabel(value) {
         return {
-          active: 'Active',
-          suspended: 'Suspended',
-          pending: 'Pending',
-          rejected: 'Rejected'
-        }[this.accountOf(value).status] || 'Active'
+          active: this.$t('pages.registeredUsers.statusActive'),
+          suspended: this.$t('pages.registeredUsers.statusSuspended'),
+          pending: this.$t('pages.registeredUsers.statusPending'),
+          rejected: this.$t('pages.registeredUsers.statusRejected')
+        }[this.accountOf(value).status] || this.$t('pages.registeredUsers.statusActive')
       },
 
       // The trade decision, or the state of the company-details check, for the
@@ -194,18 +194,18 @@
 
         if (account.account_type === 'trade') {
           return {
-            approved: 'Trade approved',
-            rejected: 'Trade rejected',
-            suspended: 'Trade suspended',
-            pending: 'Trade pending'
-          }[account.trade_status] || 'Trade pending'
+            approved: this.$t('pages.registeredUsers.tradeApproved'),
+            rejected: this.$t('pages.registeredUsers.tradeRejected'),
+            suspended: this.$t('pages.registeredUsers.tradeSuspended'),
+            pending: this.$t('pages.registeredUsers.tradePending')
+          }[account.trade_status] || this.$t('pages.registeredUsers.tradePending')
         }
 
         if (account.account_type === 'business') {
           return {
-            pending: 'Details unchecked',
-            verified: 'Details verified',
-            rejected: 'Details rejected'
+            pending: this.$t('pages.registeredUsers.detailsUnchecked'),
+            verified: this.$t('pages.registeredUsers.detailsVerified'),
+            rejected: this.$t('pages.registeredUsers.detailsRejected')
           }[account.verification_status] || ''
         }
 
@@ -223,8 +223,8 @@
       async changeStatus(value, status) {
 
         const wording = status === 'suspended'
-          ? 'Suspend this account? They will be able to sign in and see past orders, but not place new ones.'
-          : 'Reactivate this account?'
+          ? this.$t('pages.registeredUsers.suspendConfirm')
+          : this.$t('pages.registeredUsers.reactivateConfirm')
 
         if (!confirm(wording)) {
           return
@@ -254,7 +254,7 @@
 
         } catch (e) {
           this.$store.dispatch('ui/setToastError',
-            e?.message || this.$t('error.err') || 'Unable to update this account')
+            e?.message || this.$t('error.err') || this.$t('pages.registeredUsers.updateFailed'))
         } finally {
           this.saving = null
         }

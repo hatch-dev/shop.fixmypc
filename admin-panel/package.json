@@ -15,7 +15,8 @@
     "start": "nuxt start",
     "generate": "nuxt generate",
     "check:flash-discount": "node tests/flash-discount.check.js",
-    "check:bundle-order-rows": "node tests/bundle-order-rows.check.js"
+    "check:bundle-order-rows": "node tests/bundle-order-rows.check.js",
+    "check:i18n-keys": "node tests/i18n-keys.check.js"
   },
   "dependencies": {
     "@casl/ability": "^5.4.4",

@@ -36,7 +36,7 @@
       -->
       <div class="dply-felx j-left mb-20 mb-sm-15">
           <span class="mr-15">
-            Card payments handled by
+            {{ $t('cmp.PaymentSetting.cardHandledBy') }}
           </span>
 
         <dropdown
@@ -50,7 +50,7 @@
           v-else
           class="card-gateway-none"
         >
-          No card payments. Tick SumUp or Stripe below to take cards.
+          {{ $t('cmp.PaymentSetting.noCardPayments') }}
         </span>
       </div>
     </div>
@@ -93,7 +93,7 @@
       aria-describedby="gateway-off-note"
     >
       <p id="gateway-off-note" class="gateway-off-note">
-        Not available for this store
+        {{ $t('cmp.PaymentSetting.notAvailable') }}
       </p>
 
       <paypal
@@ -203,7 +203,7 @@
         // behind it, so it is offered once.
         defaultMethodDrop: {
           '2': {title: this.$t('fSale.cod')},
-          '3': {title: 'Credit / Debit Card'},
+          '3': {title: this.$t('cmp.PaymentSetting.creditDebitCard')},
           '7': {title: this.$t('title.bt')},
         }
       }

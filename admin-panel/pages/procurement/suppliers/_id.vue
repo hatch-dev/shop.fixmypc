@@ -5,7 +5,7 @@
     set-api="setSupplier"
     get-api="getSupplier"
     route-name="procurement/suppliers"
-    name="Supplier"
+    :name="$t('pages.procurementSuppliers.supplier')"
     :validation-keys="['name','email','country','phone','address','categories']"
     :validation-labels="validationLabels"
     :result="result"
@@ -15,21 +15,21 @@
 
       <section class="form-section">
         <header class="section-head">
-          <h3>Contact</h3>
-          <p>How we reach this supplier when an order needs sourcing.</p>
+          <h3>{{ $t('pages.procurementSuppliers.contact') }}</h3>
+          <p>{{ $t('pages.procurementSuppliers.contactIntro') }}</p>
         </header>
 
         <div class="field-grid">
 
           <!-- Name -->
           <div class="field" data-field="name">
-            <label for="sup-name">Name <span class="req">*</span></label>
+            <label for="sup-name">{{ $t('pages.procurementSuppliers.name') }} <span class="req">*</span></label>
             <input
               id="sup-name"
               type="text"
               v-model.trim="result.name"
               maxlength="255"
-              placeholder="Company or contact name"
+              :placeholder="$t('pages.procurementSuppliers.namePlaceholder')"
               :class="{ invalid: problem('name', fieldErrors) }"
               @blur="touch('name')"
             >
@@ -40,7 +40,7 @@
 
           <!-- Email -->
           <div class="field" data-field="email">
-            <label for="sup-email">Email <span class="req">*</span></label>
+            <label for="sup-email">{{ $t('pages.procurementSuppliers.email') }} <span class="req">*</span></label>
             <input
               id="sup-email"
               type="email"
@@ -57,7 +57,7 @@
 
           <!-- Country -->
           <div class="field" data-field="country">
-            <label>Country <span class="req">*</span></label>
+            <label>{{ $t('pages.procurementSuppliers.country') }} <span class="req">*</span></label>
             <multiselect
               v-model="selectedCountry"
               :options="countryOptions"
@@ -68,7 +68,7 @@
               :max-height="280"
               track-by="iso"
               label="search"
-              placeholder="Search for a country"
+              :placeholder="$t('pages.procurementSuppliers.countryPlaceholder')"
               select-label=""
               selected-label=""
               deselect-label=""
@@ -100,7 +100,7 @@
                 <span class="country-name">{{ option.name }}</span>
                 <span class="dial">{{ option.dial }}</span>
               </template>
-              <template #noResult>No country matches that.</template>
+              <template #noResult>{{ $t('pages.procurementSuppliers.noCountryMatch') }}</template>
             </multiselect>
             <span class="error" v-if="problem('country', fieldErrors)">
               {{ problem('country', fieldErrors) }}
@@ -109,7 +109,7 @@
 
           <!-- Phone -->
           <div class="field" data-field="phone">
-            <label for="sup-phone">Phone <span class="req">*</span></label>
+            <label for="sup-phone">{{ $t('pages.procurementSuppliers.phone') }} <span class="req">*</span></label>
             <div class="phone-row" :class="{ invalid: problem('phone', fieldErrors), disabled: !selectedCountry }">
               <span class="phone-prefix">
                 <img
@@ -136,19 +136,19 @@
               {{ problem('phone', fieldErrors) }}
             </span>
             <span class="hint" v-else>
-              {{ selectedCountry ? phoneHint : 'Choose a country first.' }}
+              {{ selectedCountry ? phoneHint : $t('pages.procurementSuppliers.chooseCountryFirst') }}
             </span>
           </div>
 
           <!-- Address -->
           <div class="field field--wide" data-field="address">
-            <label for="sup-address">Address <span class="req">*</span></label>
+            <label for="sup-address">{{ $t('pages.procurementSuppliers.address') }} <span class="req">*</span></label>
             <textarea
               id="sup-address"
               v-model.trim="result.address"
               maxlength="2000"
               rows="3"
-              placeholder="Street, town, country"
+              :placeholder="$t('pages.procurementSuppliers.addressPlaceholder')"
               :class="{ invalid: problem('address', fieldErrors) }"
               @blur="touch('address')"
             ></textarea>
@@ -168,19 +168,16 @@
 
       <section class="form-section">
         <header class="section-head">
-          <h3>Coverage</h3>
-          <p>
-            Which categories this supplier can source. An order line is offered
-            to every supplier covering one of its categories.
-          </p>
+          <h3>{{ $t('pages.procurementSuppliers.coverage') }}</h3>
+          <p>{{ $t('pages.procurementSuppliers.coverageIntro') }}</p>
         </header>
 
         <div class="field-grid">
           <div class="field field--wide" data-field="categories">
             <label>
-              Categories <span class="req">*</span>
+              {{ $t('pages.procurementSuppliers.categories') }} <span class="req">*</span>
               <span class="count-badge" v-if="selectedCategories.length">
-                {{ selectedCategories.length }} selected
+                {{ $t('pages.procurementSuppliers.selectedCount', { count: selectedCategories.length }) }}
               </span>
             </label>
             <multiselect
@@ -193,22 +190,21 @@
               :loading="loadingCategories"
               track-by="id"
               label="title"
-              placeholder="Search and select categories"
+              :placeholder="$t('pages.procurementSuppliers.categoriesPlaceholder')"
               select-label=""
               selected-label=""
-              deselect-label="Remove"
+              :deselect-label="$t('pages.procurementSuppliers.remove')"
               class="category-multiselect"
               :class="{ invalid: problem('categories', fieldErrors) }"
               @close="touch('categories')"
             >
-              <template #noResult>No category matches that.</template>
+              <template #noResult>{{ $t('pages.procurementSuppliers.noCategoryMatch') }}</template>
             </multiselect>
             <span class="error" v-if="problem('categories', fieldErrors)">
               {{ problem('categories', fieldErrors) }}
             </span>
             <span class="hint" v-else>
-              Top-level categories only — a supplier covering one is asked about
-              everything under it.
+              {{ $t('pages.procurementSuppliers.categoriesHint') }}
             </span>
           </div>
         </div>
@@ -265,12 +261,12 @@ export default {
       touched: {},
 
       validationLabels: {
-        name: 'Name',
-        email: 'Email',
-        country: 'Country',
-        phone: 'Phone',
-        address: 'Address',
-        categories: 'Categories'
+        name: this.$t('pages.procurementSuppliers.name'),
+        email: this.$t('pages.procurementSuppliers.email'),
+        country: this.$t('pages.procurementSuppliers.country'),
+        phone: this.$t('pages.procurementSuppliers.phone'),
+        address: this.$t('pages.procurementSuppliers.address'),
+        categories: this.$t('pages.procurementSuppliers.categories')
       },
 
       result: {
@@ -353,8 +349,8 @@ export default {
       const [min, max] = this.phoneRange
 
       return min === max
-        ? `${min} digits, without the leading zero.`
-        : `${min} to ${max} digits, without the leading zero.`
+        ? this.$t('pages.procurementSuppliers.phoneHintExact', { min })
+        : this.$t('pages.procurementSuppliers.phoneHintRange', { min, max })
     },
 
     // Warn before the box stops accepting characters, not after.
@@ -498,34 +494,34 @@ export default {
 
       switch (field) {
         case 'name':
-          if (!text) return 'Enter a name.'
-          if (text.length < 2) return 'Give the supplier a name of at least 2 characters.'
+          if (!text) return this.$t('pages.procurementSuppliers.errNameRequired')
+          if (text.length < 2) return this.$t('pages.procurementSuppliers.errNameShort')
           return ''
 
         case 'email':
-          if (!text) return 'Enter an email address.'
+          if (!text) return this.$t('pages.procurementSuppliers.errEmailRequired')
           // Deliberately loose: the server decides deliverability, and a
           // strict pattern here only rejects addresses that are in fact real.
           if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(text)) {
-            return 'That does not look like an email address.'
+            return this.$t('pages.procurementSuppliers.errEmailInvalid')
           }
           return ''
 
         case 'country':
-          return this.selectedCountry ? '' : 'Choose a country.'
+          return this.selectedCountry ? '' : this.$t('pages.procurementSuppliers.errCountryRequired')
 
         case 'phone':
           return this.phoneProblem()
 
         case 'address':
-          if (!text) return 'Enter an address.'
-          if (text.length < 5) return 'Give an address of at least 5 characters.'
+          if (!text) return this.$t('pages.procurementSuppliers.errAddressRequired')
+          if (text.length < 5) return this.$t('pages.procurementSuppliers.errAddressShort')
           return ''
 
         case 'categories':
           return (this.result.categories || []).length
             ? ''
-            : 'Choose at least one category.'
+            : this.$t('pages.procurementSuppliers.errCategoriesRequired')
 
         default:
           return ''
@@ -539,7 +535,7 @@ export default {
      */
     phoneProblem() {
       if (!this.selectedCountry) {
-        return 'Choose a country first.'
+        return this.$t('pages.procurementSuppliers.chooseCountryFirst')
       }
 
       const national = String(this.result.phone || '')
@@ -547,23 +543,22 @@ export default {
         .replace(/^0+/, '')
 
       if (!national) {
-        return 'Enter a phone number.'
+        return this.$t('pages.procurementSuppliers.errPhoneRequired')
       }
 
       const [min, max] = this.phoneRange
 
       if (national.length < min || national.length > max) {
-        const expected = min === max ? `${min} digits` : `${min} to ${max} digits`
-
-        return `That is ${national.length} digits. A number in `
-          + `${this.selectedCountry.name} is ${expected}, without the leading zero.`
+        return min === max
+          ? this.$t('pages.procurementSuppliers.errPhoneLengthExact', { length: national.length, country: this.selectedCountry.name, min })
+          : this.$t('pages.procurementSuppliers.errPhoneLengthRange', { length: national.length, country: this.selectedCountry.name, min, max })
       }
 
       const dialDigits = this.selectedCountry.dial.replace(/[^0-9]/g, '').length
 
       // E.164 allows 15 digits in total, country code included.
       if (dialDigits + national.length > 15) {
-        return 'That number is too long to dial internationally.'
+        return this.$t('pages.procurementSuppliers.errPhoneTooLong')
       }
 
       return ''

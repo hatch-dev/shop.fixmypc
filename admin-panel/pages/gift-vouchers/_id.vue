@@ -4,7 +4,7 @@
     set-api="setGiftVoucher"
     get-api="getGiftVoucher"
     route-name="gift-vouchers"
-    :name="'Gift Card Design'"
+    :name="$t('pages.giftVouchers.listName')"
     :validation-keys="['title', 'min_quantity', 'max_quantity']"
     :result="result"
     gate="gift_voucher"
@@ -20,36 +20,36 @@
         <div class="gv-section-head">
           <span class="gv-step">1</span>
           <div>
-            <h3 class="gv-section-title">Details</h3>
-            <p class="gv-section-sub">What customers see on the card in the shop.</p>
+            <h3 class="gv-section-title">{{ $t('pages.giftVouchers.detailsTitle') }}</h3>
+            <p class="gv-section-sub">{{ $t('pages.giftVouchers.detailsSub') }}</p>
           </div>
         </div>
 
         <div class="input-wrapper" data-field="title">
-          <label for="gv-title">Title</label>
+          <label for="gv-title">{{ $t('pages.giftVouchers.titleLabel') }}</label>
           <input
             id="gv-title"
             v-model="result.title"
             type="text"
             maxlength="255"
-            placeholder="e.g. Birthday Gift Card"
+            :placeholder="$t('pages.giftVouchers.titlePlaceholder')"
             :class="{invalid: !result.title && hasError}"
           >
           <div class="gv-field-foot">
-            <span v-if="!result.title && hasError" class="error">Give the design a title.</span>
+            <span v-if="!result.title && hasError" class="error">{{ $t('pages.giftVouchers.titleRequired') }}</span>
             <field-error v-else :messages="fieldErrors && fieldErrors.title" />
             <span class="gv-count">{{ (result.title || '').length }}/255</span>
           </div>
         </div>
 
         <div class="input-wrapper" data-field="description">
-          <label for="gv-desc">Description <span class="gv-optional">optional</span></label>
+          <label for="gv-desc">{{ $t('pages.giftVouchers.descriptionLabel') }} <span class="gv-optional">{{ $t('pages.giftVouchers.optional') }}</span></label>
           <textarea
             id="gv-desc"
             v-model="result.description"
             rows="3"
             maxlength="500"
-            placeholder="A short line, e.g. The perfect present for any occasion."
+            :placeholder="$t('pages.giftVouchers.descriptionPlaceholder')"
           ></textarea>
           <div class="gv-field-foot">
             <field-error :messages="fieldErrors && fieldErrors.description" />
@@ -64,27 +64,27 @@
         <div class="gv-section-head">
           <span class="gv-step">2</span>
           <div>
-            <h3 class="gv-section-title">Values customers can choose</h3>
-            <p class="gv-section-sub">Each value is one card. Shown smallest first; up to 12.</p>
+            <h3 class="gv-section-title">{{ $t('pages.giftVouchers.valuesTitle') }}</h3>
+            <p class="gv-section-sub">{{ $t('pages.giftVouchers.valuesSub') }}</p>
           </div>
         </div>
 
-        <ul v-if="sortedAmounts.length" class="gv-chips" aria-label="Values">
+        <ul v-if="sortedAmounts.length" class="gv-chips" :aria-label="$t('pages.giftVouchers.valuesAria')">
           <li v-for="amt in sortedAmounts" :key="amt" class="gv-chip">
             <span>{{ currencyIcon }}{{ formatAmount(amt) }}</span>
             <button
               type="button"
               class="gv-chip-x"
-              :aria-label="`Remove ${currencyIcon}${formatAmount(amt)}`"
+              :aria-label="$t('pages.giftVouchers.removeAmountAria', { amount: currencyIcon + formatAmount(amt) })"
               :disabled="sortedAmounts.length === 1"
-              :title="sortedAmounts.length === 1 ? 'A design needs at least one value' : 'Remove'"
+              :title="sortedAmounts.length === 1 ? $t('pages.giftVouchers.needOneValue') : $t('pages.giftVouchers.remove')"
               @click="removeAmount(amt)"
             >
               <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
           </li>
         </ul>
-        <p v-else class="gv-empty">No values yet. Add at least one.</p>
+        <p v-else class="gv-empty">{{ $t('pages.giftVouchers.noValues') }}</p>
 
         <div class="gv-add-row">
           <div class="gv-money">
@@ -96,19 +96,19 @@
               max="5000"
               step="0.01"
               inputmode="decimal"
-              placeholder="Add a value"
-              aria-label="New value"
+              :placeholder="$t('pages.giftVouchers.addValuePlaceholder')"
+              :aria-label="$t('pages.giftVouchers.newValueAria')"
               @keydown.enter.prevent="addAmount()"
             >
           </div>
           <button type="button" class="gv-btn gv-btn-primary" :disabled="!canAdd" @click="addAmount()">
-            <i class="fa-solid fa-plus" aria-hidden="true"></i> Add
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> {{ $t('pages.giftVouchers.add') }}
           </button>
         </div>
         <p v-if="amountHint" class="gv-hint gv-hint-warn">{{ amountHint }}</p>
 
         <div v-if="presets.length" class="gv-presets">
-          <span class="gv-presets-label">Quick add</span>
+          <span class="gv-presets-label">{{ $t('pages.giftVouchers.quickAdd') }}</span>
           <button
             v-for="p in presets"
             :key="p"
@@ -129,39 +129,39 @@
         <div class="gv-section-head">
           <span class="gv-step">3</span>
           <div>
-            <h3 class="gv-section-title">Cards per purchase</h3>
-            <p class="gv-section-sub">How many a customer can buy in one go.</p>
+            <h3 class="gv-section-title">{{ $t('pages.giftVouchers.qtyTitle') }}</h3>
+            <p class="gv-section-sub">{{ $t('pages.giftVouchers.qtySub') }}</p>
           </div>
         </div>
 
         <div class="gv-qty-grid">
           <div class="input-wrapper" data-field="min_quantity">
-            <label>Minimum</label>
+            <label>{{ $t('pages.giftVouchers.minimum') }}</label>
             <div class="gv-stepper" :class="{invalid: minInvalid && hasError}">
-              <button type="button" aria-label="Decrease minimum" :disabled="result.min_quantity <= 1" @click="step('min_quantity', -1)">−</button>
-              <input v-model.number="result.min_quantity" type="number" min="1" max="100" aria-label="Minimum cards">
-              <button type="button" aria-label="Increase minimum" :disabled="result.min_quantity >= result.max_quantity" @click="step('min_quantity', 1)">+</button>
+              <button type="button" :aria-label="$t('pages.giftVouchers.decreaseMin')" :disabled="result.min_quantity <= 1" @click="step('min_quantity', -1)">−</button>
+              <input v-model.number="result.min_quantity" type="number" min="1" max="100" :aria-label="$t('pages.giftVouchers.minimumCards')">
+              <button type="button" :aria-label="$t('pages.giftVouchers.increaseMin')" :disabled="result.min_quantity >= result.max_quantity" @click="step('min_quantity', 1)">+</button>
             </div>
           </div>
 
           <div class="input-wrapper" data-field="max_quantity">
-            <label>Maximum</label>
+            <label>{{ $t('pages.giftVouchers.maximum') }}</label>
             <div class="gv-stepper" :class="{invalid: isMaxInvalid && hasError}">
-              <button type="button" aria-label="Decrease maximum" :disabled="result.max_quantity <= result.min_quantity" @click="step('max_quantity', -1)">−</button>
-              <input v-model.number="result.max_quantity" type="number" min="1" max="100" aria-label="Maximum cards">
-              <button type="button" aria-label="Increase maximum" :disabled="result.max_quantity >= 100" @click="step('max_quantity', 1)">+</button>
+              <button type="button" :aria-label="$t('pages.giftVouchers.decreaseMax')" :disabled="result.max_quantity <= result.min_quantity" @click="step('max_quantity', -1)">−</button>
+              <input v-model.number="result.max_quantity" type="number" min="1" max="100" :aria-label="$t('pages.giftVouchers.maximumCards')">
+              <button type="button" :aria-label="$t('pages.giftVouchers.increaseMax')" :disabled="result.max_quantity >= 100" @click="step('max_quantity', 1)">+</button>
             </div>
           </div>
         </div>
 
         <p class="gv-hint" :class="{'gv-hint-warn': minInvalid || isMaxInvalid}">
-          <template v-if="minInvalid">The minimum must be at least 1.</template>
-          <template v-else-if="isMaxInvalid">The maximum can't be less than the minimum.</template>
+          <template v-if="minInvalid">{{ $t('pages.giftVouchers.minAtLeastOne') }}</template>
+          <template v-else-if="isMaxInvalid">{{ $t('pages.giftVouchers.maxBelowMin') }}</template>
           <template v-else-if="result.min_quantity === result.max_quantity">
-            Customers buy exactly {{ result.min_quantity }} {{ result.min_quantity === 1 ? 'card' : 'cards' }} at a time.
+            {{ $tc('pages.giftVouchers.buyExactly', result.min_quantity, { count: result.min_quantity }) }}
           </template>
           <template v-else>
-            Customers can buy {{ result.min_quantity }} to {{ result.max_quantity }} cards at a time.
+            {{ $t('pages.giftVouchers.buyRange', { min: result.min_quantity, max: result.max_quantity }) }}
           </template>
         </p>
       </section>
@@ -174,9 +174,9 @@
       <div class="gv-side-card">
         <div class="gv-side-row">
           <div>
-            <h4 class="gv-side-title">On sale</h4>
+            <h4 class="gv-side-title">{{ $t('pages.giftVouchers.onSale') }}</h4>
             <p class="gv-side-sub">
-              {{ result.is_active ? 'Customers can buy this design.' : 'Hidden from the shop. Cards already sold still work.' }}
+              {{ result.is_active ? $t('pages.giftVouchers.onSaleYes') : $t('pages.giftVouchers.onSaleNo') }}
             </p>
           </div>
           <button
@@ -184,7 +184,7 @@
             class="gv-switch"
             role="switch"
             :aria-checked="result.is_active ? 'true' : 'false'"
-            aria-label="On sale"
+            :aria-label="$t('pages.giftVouchers.onSale')"
             @click="result.is_active = !result.is_active"
           >
             <span class="gv-switch-knob"></span>
@@ -194,7 +194,7 @@
 
       <!-- Image -->
       <div class="gv-side-card">
-        <h4 class="gv-side-title">Card image</h4>
+        <h4 class="gv-side-title">{{ $t('pages.giftVouchers.cardImage') }}</h4>
 
         <label
           class="gv-drop"
@@ -210,41 +210,41 @@
             <img
               v-show="imageLoaded"
               :src="imagePreview"
-              alt="Card image"
+              :alt="$t('pages.giftVouchers.cardImage')"
               class="gv-drop-img"
               @load="imageLoaded = true"
               @error="imageBroken = true"
             >
             <template v-if="!imageLoaded">
               <span class="gv-drop-icon gv-pulse"><i class="fa-regular fa-image" aria-hidden="true"></i></span>
-              <span class="gv-drop-text">Loading image…</span>
-              <span class="gv-drop-sub">{{ result.image.startsWith('data:') ? 'New upload' : result.image }}</span>
+              <span class="gv-drop-text">{{ $t('pages.giftVouchers.loadingImage') }}</span>
+              <span class="gv-drop-sub">{{ result.image.startsWith('data:') ? $t('pages.giftVouchers.newUpload') : result.image }}</span>
             </template>
           </template>
           <template v-else-if="hasImage && imageBroken">
             <span class="gv-drop-icon"><i class="fa-regular fa-image" aria-hidden="true"></i></span>
-            <span class="gv-drop-text">Image file not found</span>
+            <span class="gv-drop-text">{{ $t('pages.giftVouchers.imageNotFound') }}</span>
             <span class="gv-drop-sub">{{ result.image }}</span>
           </template>
           <template v-else>
             <span class="gv-drop-icon"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i></span>
-            <span class="gv-drop-text">Drop an image or <u>browse</u></span>
-            <span class="gv-drop-sub">PNG, JPG or WEBP · square works best</span>
+            <span class="gv-drop-text">{{ $t('pages.giftVouchers.dropImageOr') }} <u>{{ $t('pages.giftVouchers.browse') }}</u></span>
+            <span class="gv-drop-sub">{{ $t('pages.giftVouchers.imageFormats') }}</span>
           </template>
         </label>
 
         <div v-if="hasImage" class="gv-image-actions">
           <label class="gv-btn gv-btn-ghost">
             <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="gv-file" @change="uploadImage">
-            Replace
+            {{ $t('pages.giftVouchers.replace') }}
           </label>
-          <button type="button" class="gv-btn gv-btn-danger" @click="removeImage">Remove</button>
+          <button type="button" class="gv-btn gv-btn-danger" @click="removeImage">{{ $t('pages.giftVouchers.remove') }}</button>
         </div>
       </div>
 
       <!-- Live preview -->
       <div class="gv-side-card gv-preview-card">
-        <h4 class="gv-side-title">Shop preview</h4>
+        <h4 class="gv-side-title">{{ $t('pages.giftVouchers.shopPreview') }}</h4>
 
         <div class="gv-preview" :class="{withdrawn: !result.is_active}">
           <div class="gv-preview-img">
@@ -252,17 +252,17 @@
             <div v-else class="gv-preview-fallback">
               <i class="fa-solid fa-gift" aria-hidden="true"></i>
             </div>
-            <span v-if="!result.is_active" class="gv-preview-badge">Withdrawn</span>
+            <span v-if="!result.is_active" class="gv-preview-badge">{{ $t('pages.giftVouchers.withdrawn') }}</span>
           </div>
           <div class="gv-preview-body">
-            <strong class="gv-preview-title">{{ result.title || 'Gift card title' }}</strong>
-            <span class="gv-preview-desc">{{ result.description || 'Your description appears here.' }}</span>
+            <strong class="gv-preview-title">{{ result.title || $t('pages.giftVouchers.previewTitle') }}</strong>
+            <span class="gv-preview-desc">{{ result.description || $t('pages.giftVouchers.previewDescription') }}</span>
             <div class="gv-preview-chips">
               <span v-for="amt in sortedAmounts.slice(0, 6)" :key="amt">{{ currencyIcon }}{{ formatAmount(amt) }}</span>
               <span v-if="sortedAmounts.length > 6" class="more">+{{ sortedAmounts.length - 6 }}</span>
             </div>
             <span class="gv-preview-qty">
-              Buy {{ result.min_quantity === result.max_quantity ? result.min_quantity : `${result.min_quantity}–${result.max_quantity}` }} at a time
+              {{ $t('pages.giftVouchers.previewQty', { qty: result.min_quantity === result.max_quantity ? result.min_quantity : `${result.min_quantity}–${result.max_quantity}` }) }}
             </span>
           </div>
         </div>
@@ -324,10 +324,10 @@ export default {
     },
     amountHint() {
       if (this.newAmount === '' || this.newAmount === null) return ''
-      if (this.parsedNew === null || this.parsedNew < 1) return 'A value must be at least 1.'
-      if (this.parsedNew > 5000) return 'A value can be at most 5,000.'
-      if (this.sortedAmounts.includes(this.parsedNew)) return 'That value is already on the list.'
-      if (this.sortedAmounts.length >= 12) return 'A design can offer up to 12 values.'
+      if (this.parsedNew === null || this.parsedNew < 1) return this.$t('pages.giftVouchers.valueMin')
+      if (this.parsedNew > 5000) return this.$t('pages.giftVouchers.valueMax')
+      if (this.sortedAmounts.includes(this.parsedNew)) return this.$t('pages.giftVouchers.valueDuplicate')
+      if (this.sortedAmounts.length >= 12) return this.$t('pages.giftVouchers.valueLimit')
       return ''
     },
     presets() {
@@ -383,11 +383,11 @@ export default {
     },
     readFile(file) {
       if (!file || !/^image\/(png|jpe?g|webp|gif)$/.test(file.type)) {
-        this.$store.dispatch('ui/setToastError', 'Choose a PNG, JPG, WEBP or GIF image.')
+        this.$store.dispatch('ui/setToastError', this.$t('pages.giftVouchers.imageTypeError'))
         return
       }
       if (file.size > 4 * 1024 * 1024) {
-        this.$store.dispatch('ui/setToastError', 'That image is over 4 MB. Choose a smaller one.')
+        this.$store.dispatch('ui/setToastError', this.$t('pages.giftVouchers.imageSizeError'))
         return
       }
       const reader = new FileReader()

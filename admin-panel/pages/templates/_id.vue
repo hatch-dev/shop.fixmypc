@@ -39,11 +39,11 @@
       </div>
 
       <div class="input-wrapper">
-        <label>Type</label>
+        <label>{{ $t('pages.templates.type') }}</label>
 
         <select v-model="result.type" class="type-select" :disabled="!!result.id">
-          <option value="custom">Custom</option>
-          <option value="system">System</option>
+          <option value="custom">{{ $t('pages.templates.custom') }}</option>
+          <option value="system">{{ $t('pages.templates.system') }}</option>
         </select>
       </div>
 

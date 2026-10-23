@@ -58,7 +58,7 @@
           <input
             class="mb-10"
             type="text"
-            placeholder="Image name"
+            :placeholder="$t('cmp.ProductImages.imageName')"
             v-model="imageData"
           >
 
@@ -79,8 +79,8 @@
         type="button"
         color="primary"
         class="outline-btn w-100 centered"
-        text="Upload Images"
-        loading-text="Uploading"
+        :text="$t('cmp.ProductImages.uploadImages')"
+        :loading-text="$t('error.up')"
         :fetching-data="uploading"
       />
     </div>

@@ -1,6 +1,6 @@
 <template>
   <pop-over
-    title="Cancellation reason"
+    :title="$t('fSale.cReason')"
     @close="$emit('close')"
     elem-id="rate-pop-over"
     :layer="true"

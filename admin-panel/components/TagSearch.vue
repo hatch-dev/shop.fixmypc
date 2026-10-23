@@ -29,7 +29,7 @@
           @focus="openResult"
           @keydown.enter.prevent="clickedItem({title: searchedString})"
           @keydown.delete="deleteKeyPress()"
-          placeholder="Write here"
+          :placeholder="$t('cmp.TagSearch.writeHere')"
         >
       </li>
     </ul>

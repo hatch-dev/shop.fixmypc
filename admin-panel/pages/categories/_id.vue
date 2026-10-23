@@ -10,10 +10,10 @@
     :name="$t('category.catUp')"
     :validation-keys="['title', 'slug', 'meta_title', 'meta_description']"
     :validation-labels="{
-      title: 'Category name',
-      slug: 'Category slug',
-      meta_title: 'Meta title',
-      meta_description: 'Meta description'
+      title: $t('pages.categories.valCategoryName'),
+      slug: $t('pages.categories.valCategorySlug'),
+      meta_title: $t('pages.categories.valMetaTitle'),
+      meta_description: $t('pages.categories.valMetaDescription')
     }"
     :result="result"
     @result="resultData"
@@ -22,15 +22,15 @@
       <div class="cat-head">
         <nuxt-link to="/categories" class="cat-head__crumb">
           <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-          Categories
+          {{ $t('pages.categories.categories') }}
         </nuxt-link>
         <h4 class="cat-head__title">
           {{ isNew ? $t('list.add', {title: $t('category.catUp')}) : $t('category.edit') + ' ' + $t('category.catUp') }}
         </h4>
         <p class="cat-head__sub">
           {{ isNew
-            ? 'Create a new product category and configure its settings.'
-            : 'Update this category, its media, SEO and storefront visibility.' }}
+            ? $t('pages.categories.subNew')
+            : $t('pages.categories.subEdit') }}
         </p>
       </div>
     </template>
@@ -46,31 +46,31 @@
                         <i class="fa-solid fa-circle-info"></i>
                      </div>
                      <div>
-                        <h3>Basic Information</h3>
-                        <p>Essential details about your category</p>
+                        <h3>{{ $t('pages.categories.basicInfo') }}</h3>
+                        <p>{{ $t('pages.categories.basicInfoSub') }}</p>
                      </div>
                   </div>
                   <!-- Category Name -->
-                  <label for="category-title">Category Name <span>*</span></label>
+                  <label for="category-title">{{ $t('pages.categories.categoryName') }} <span>*</span></label>
                   <div class="input-wrap" data-field="title">
-                     <input id="category-title" type="text" v-model="result.title" @input="titleChanged"  maxlength="60" :class="{ invalid: fieldErrors.title || (!result.title && hasError) }" placeholder="Electronics">
+                     <input id="category-title" type="text" v-model="result.title" @input="titleChanged"  maxlength="60" :class="{ invalid: fieldErrors.title || (!result.title && hasError) }" :placeholder="$t('pages.categories.namePlaceholder')">
                   </div>
                   <field-error :messages="fieldErrors.title" />
                   <div class="field-row">
-                     <p>This will be displayed to customers on your store</p>
+                     <p>{{ $t('pages.categories.displayedToCustomers') }}</p>
                      <span :class="{ 'text-danger': titleCount > 60 }">
                         {{ titleCount }}/60
                      </span>
                   </div>
                   <!-- Slug -->
-                  <label for="category-slug">Category Slug <span>*</span></label>
+                  <label for="category-slug">{{ $t('pages.categories.categorySlug') }} <span>*</span></label>
                   <div class="input-wrap" data-field="slug">
                      <input
                         id="category-slug"
                         type="text"
                         v-model="result.slug"
                         :class="{ invalid: fieldErrors.slug || ((!result.slug || slugState === 'taken') && hasError) }"
-                        placeholder="electronics"
+                        :placeholder="$t('pages.categories.slugPlaceholder')"
                         aria-describedby="slug-status"
                         @input="slugEdited"
                      >
@@ -83,28 +83,28 @@
                   <field-error :messages="slugState === 'taken' ? null : fieldErrors.slug" />
                   <p id="slug-status" class="field-status" :class="'is-' + slugState" aria-live="polite">
                      <template v-if="slugState === 'checking'">
-                        <i class="fa fa-spinner fa-spin"></i> Checking availability…
+                        <i class="fa fa-spinner fa-spin"></i> {{ $t('pages.categories.checkingAvailability') }}
                      </template>
                      <template v-else-if="slugState === 'available'">
-                        <i class="fa-solid fa-circle-check"></i> Slug is available
+                        <i class="fa-solid fa-circle-check"></i> {{ $t('pages.categories.slugAvailable') }}
                      </template>
                      <template v-else-if="slugState === 'taken'">
                         <i class="fa-solid fa-circle-exclamation"></i>
-                        Already used by another category.
+                        {{ $t('pages.categories.slugTaken') }}
                         <button type="button" class="link-btn" @click="useSuggestedSlug">
-                           Use &ldquo;{{ slugSuggestion }}&rdquo;
+                           {{ $t('pages.categories.useSuggestion', { slug: slugSuggestion }) }}
                         </button>
                      </template>
                      <template v-else-if="slugState === 'invalid'">
                         <i class="fa-solid fa-circle-exclamation"></i>
-                        Use lowercase letters, numbers and hyphens only.
+                        {{ $t('pages.categories.slugInvalid') }}
                      </template>
                      <template v-else>
-                        Used in the category's web address. Derived from the name until you edit it.
+                        {{ $t('pages.categories.slugHelp') }}
                      </template>
                   </p>
                   <!-- Parent -->
-                  <label id="parent-label">Parent Category</label>
+                  <label id="parent-label">{{ $t('pages.categories.parentCategory') }}</label>
                   <div v-if="parentsLoading" class="field-skeleton" aria-live="polite">
                      <span class="sk-field"></span>
                   </div>
@@ -118,36 +118,34 @@
                   </div>
                   <field-error :messages="fieldErrors.parent" />
                   <p class="field-row">
-                     Leave as &ldquo;None&rdquo; for a main category, or pick a parent to make this a
-                     subcategory. A category cannot be placed inside itself or inside one of its own
-                     subcategories, so those are not listed.
+                     {{ $t('pages.categories.parentHelp') }}
                   </p>
                   <!-- Short Description -->
-                  <label for="category-short-description">Short Description</label>
+                  <label for="category-short-description">{{ $t('pages.categories.shortDescription') }}</label>
                   <div class="input-wrap" data-field="short_description">
-                     <textarea id="category-short-description" class="shrt-des" v-model="result.short_description"  maxlength="60" placeholder="Discover the latest in consumer electronics, from smartphones to smart home devices."></textarea>
+                     <textarea id="category-short-description" class="shrt-des" v-model="result.short_description"  maxlength="60" :placeholder="$t('pages.categories.descPlaceholder')"></textarea>
                   </div>
                   <field-error :messages="fieldErrors.short_description" />
                   <div class="field-row">
-                     <p>This will be displayed to customers on your store</p>
+                     <p>{{ $t('pages.categories.displayedToCustomers') }}</p>
                     <span :class="{ 'text-danger': shortDescCount > 60 }">
                         {{ shortDescCount }}/60
                     </span>
                   </div>
                   <!-- Full Description -->
-                  <label for="category-description">Full Description</label>
+                  <label for="category-description">{{ $t('pages.categories.fullDescription') }}</label>
                   <div class="input-wrap" data-field="description">
-                     <textarea id="category-description" class="shrt-des" v-model="result.description"  maxlength="500" placeholder="Discover the latest in consumer electronics, from smartphones to smart home devices."></textarea>
+                     <textarea id="category-description" class="shrt-des" v-model="result.description"  maxlength="500" :placeholder="$t('pages.categories.descPlaceholder')"></textarea>
                   </div>
                   <field-error :messages="fieldErrors.description" />
                   <div class="field-row">
-                     <p>This will be displayed to customers on your store</p>
+                     <p>{{ $t('pages.categories.displayedToCustomers') }}</p>
                     <span :class="{ 'text-danger': descCount > 500 }">
                         {{ descCount }}/500
                     </span>
                   </div>
                   <p class="field-row">
-                     Detailed information displayed on the category page
+                     {{ $t('pages.categories.fullDescriptionHelp') }}
                   </p>
                </div>
                <!-- Media -->
@@ -157,31 +155,31 @@
                         <i class="fa-solid fa-image"></i>
                      </div>
                      <div>
-                        <h3>Media & Images</h3>
-                        <p>Upload images that represent your category</p>
+                        <h3>{{ $t('pages.categories.mediaImages') }}</h3>
+                        <p>{{ $t('pages.categories.mediaImagesSub') }}</p>
                      </div>
                   </div>
                   <!-- CATEGORY ICON -->
-                  <label>Category Icon/Thumbnail</label>
+                  <label>{{ $t('pages.categories.iconThumbnail') }}</label>
                   <field-error :messages="fieldErrors.icon" />
                   <div class="icon-row" data-field="icon">
                      <div class="upload-box" @click="$refs.iconInput.click()">
                         <input type="file" ref="iconInput" @change="handleIconUpload" accept="image/*" hidden>
                         <i class="fa-solid fa-cloud-arrow-up"></i>
-                        <p>Upload Icon</p>
-                        <span>PNG, JPG (Max 2MB)</span>
-                        <span class="size-spn"> Recommended: 256x256px</span>
+                        <p>{{ $t('pages.categories.uploadIcon') }}</p>
+                        <span>{{ $t('pages.categories.iconFormats') }}</span>
+                        <span class="size-spn"> {{ $t('pages.categories.iconRecommended') }}</span>
                      </div>
                      <div class="current-icon">
                         <p class="current-title">
-                           <span>Current Icon</span>
+                           <span>{{ $t('pages.categories.currentIcon') }}</span>
                            <i
                               v-if="iconPreview"
                               class="fa-solid fa-trash delete-icon"
                               role="button"
                               tabindex="0"
-                              title="Remove icon"
-                              aria-label="Remove icon"
+                              :title="$t('pages.categories.removeIcon')"
+                              :aria-label="$t('pages.categories.removeIcon')"
                               @click="removeIcon"
                               @keydown.enter="removeIcon"
                            ></i>
@@ -190,23 +188,23 @@
                            v-if="iconPreview"
                            :src="iconPreview"
                            loading="lazy"
-                           :alt="result.title ? result.title + ' icon' : 'Category icon'"
+                           :alt="result.title ? $t('pages.categories.iconAlt', { name: result.title }) : $t('pages.categories.categoryIcon')"
                         />
-                        <span v-else>No icon uploaded</span>
+                        <span v-else>{{ $t('pages.categories.noIcon') }}</span>
                      </div>
                   </div>
                   <!-- CATEGORY BANNER -->
-                  <label>Category Banner Image</label>
+                  <label>{{ $t('pages.categories.bannerImage') }}</label>
                   <field-error :messages="fieldErrors.banner" />
                   <div class="banner-upload" data-field="banner" @click="$refs.bannerInput.click()">
                      <input type="file" ref="bannerInput" @change="handleBannerUpload" accept="image/*" hidden>
                      <div v-if="!bannerPreview" class="banner-placeholder">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
-                        <p>Upload Banner</p>
-                        <span>JPG, PNG (max. 5MB)</span>
-                        <span class="sze-upl">Recommended size 1200x400</span>
+                        <p>{{ $t('pages.categories.uploadBanner') }}</p>
+                        <span>{{ $t('pages.categories.bannerFormats') }}</span>
+                        <span class="sze-upl">{{ $t('pages.categories.bannerRecommended') }}</span>
                      </div>
-                     <img v-else :src="bannerPreview" :alt="result.title ? result.title + ' banner' : 'Category banner'" />
+                     <img v-else :src="bannerPreview" :alt="result.title ? $t('pages.categories.bannerAlt', { name: result.title }) : $t('pages.categories.categoryBanner')" />
                      <!--
                         On the image, the way a gallery tile removes itself.
                         It used to be a text link on a row of its own below the
@@ -217,13 +215,13 @@
                         v-if="bannerPreview"
                         type="button"
                         class="remove-img banner-remove"
-                        title="Remove banner"
-                        aria-label="Remove banner"
+                        :title="$t('pages.categories.removeBanner')"
+                        :aria-label="$t('pages.categories.removeBanner')"
                         @click.stop="removeBanner"
                      >&times;</button>
                   </div>
                   <!-- ADDITIONAL IMAGES -->
-                  <label>Additional Images</label>
+                  <label>{{ $t('pages.categories.additionalImages') }}</label>
                   <!--
                      One grid, with the add tile as its first cell. The tile
                      was a sibling of the grid, so it sat on a row of its own
@@ -235,7 +233,7 @@
                      <div class="gallery-grid">
                         <div class="gallery-upload" @click="$refs.galleryInput.click()">
                            <i class="fa-solid fa-plus"></i>
-                           <p>Add Images</p>
+                           <p>{{ $t('pages.categories.addImages') }}</p>
                         </div>
                         <div v-for="(img, index) in gallery" :key="index" class="gallery-item">
                            <img :src="img.preview" />
@@ -251,12 +249,12 @@
                         <i class="fa-solid fa-magnifying-glass"></i>
                      </div>
                      <div>
-                        <h3>SEO & Meta Tags</h3>
-                        <p>Optimize your category for search engines</p>
+                        <h3>{{ $t('pages.categories.seoMeta') }}</h3>
+                        <p>{{ $t('pages.categories.seoMetaSub') }}</p>
                      </div>
                   </div>
                   <!-- META TITLE -->
-                  <label for="metaTitle">Meta Title <span>*</span></label>
+                  <label for="metaTitle">{{ $t('pages.categories.metaTitle') }} <span>*</span></label>
                   <input
                      type="text"
                      id="metaTitle"
@@ -264,17 +262,17 @@
                      v-model="result.meta_title"
                      maxlength="60"
                      :class="{ invalid: fieldErrors.meta_title }"
-                     placeholder="Electronics - Latest Tech & Gadgets | YourStore"
+                     :placeholder="$t('pages.categories.metaTitlePlaceholder')"
                   >
                   <field-error :messages="fieldErrors.meta_title" />
                   <div class="field-row">
-                    <p>Recommended: 50–60 characters for best display</p>
+                    <p>{{ $t('pages.categories.metaTitleHelp') }}</p>
                     <span :class="{ 'text-danger': metaTitleCount > 60 }">
                         {{ metaTitleCount }}/60
                     </span>
                   </div>
                   <!-- META DESCRIPTION -->
-                  <label for="metaDesc">Meta Description <span>*</span></label>
+                  <label for="metaDesc">{{ $t('pages.categories.metaDescription') }} <span>*</span></label>
                   <textarea
                      rows="3"
                      id="metaDesc"
@@ -282,17 +280,17 @@
                      v-model="result.meta_description"
                      maxlength="500"
                      :class="{ invalid: fieldErrors.meta_description }"
-                     placeholder="Shop the latest electronics including smartphones, laptops, audio devices, and smart home technology. Free shipping on orders over $50."
+                     :placeholder="$t('pages.categories.metaDescPlaceholder')"
                   ></textarea>
                   <field-error :messages="fieldErrors.meta_description" />
                   <div class="field-row">
-                     <p>Recommended: 300-500 characters</p>
+                     <p>{{ $t('pages.categories.metaDescHelp') }}</p>
                      <span :class="{ 'text-danger': metaDescCount > 500 }">
                         {{ metaDescCount }}/500
                     </span>
                   </div>
                   <!-- FOCUS KEYWORDS -->
-                  <label>Focus Keywords</label>
+                  <label>{{ $t('pages.categories.focusKeywords') }}</label>
                   <field-error :messages="fieldErrors.meta_keywords" />
                   <div class="keyword-box" data-field="meta_keywords" :class="{ 'is-invalid': fieldErrors.meta_keywords }">
                     <div 
@@ -307,14 +305,14 @@
                         type="text"
                         v-model="keywordInput"
                         @keydown.enter.prevent="addKeyword"
-                        placeholder="Type and press Enter"
+                        :placeholder="$t('pages.categories.keywordPlaceholder')"
                     >
                   </div>
                   <p class="field-row">
-                     Add relevant keywords, press Enter after each
+                     {{ $t('pages.categories.keywordHelp') }}
                   </p>
                   <!-- CANONICAL URL -->
-                  <label for="category-canonical">Canonical URL</label>
+                  <label for="category-canonical">{{ $t('pages.categories.canonicalUrl') }}</label>
                   <div class="canonical-field" data-field="canonical_url">
                      <input id="category-canonical" type="url" v-model="result.canonical_url"
                         :class="{ invalid: fieldErrors.canonical_url }"
@@ -323,10 +321,10 @@
                   </div>
                   <field-error :messages="fieldErrors.canonical_url" />
                   <p v-if="canonicalCopied" class="copy-done">
-                     <i class="fa-solid fa-circle-check"></i> Copied to clipboard
+                     <i class="fa-solid fa-circle-check"></i> {{ $t('pages.categories.copiedToClipboard') }}
                   </p>
                   <p v-else class="field-row">
-                     Preferred URL for search engines (auto-generated)
+                     {{ $t('pages.categories.canonicalHelp') }}
                   </p>
                   <div class="seo-score-box">
                      <div class="seo-score-header">
@@ -334,7 +332,7 @@
                            <i class="fa-solid fa-chart-line"></i>
                         </div>
                         <div class="seo-score-title">
-                           <h4>SEO Score: {{ seoScore.score }}/100</h4>
+                           <h4>{{ $t('pages.categories.seoScore', { score: seoScore.score }) }}</h4>
                            <div class="seo-score-checklist">
                               <div
                                  v-for="check in seoScore.checks"
@@ -356,14 +354,14 @@
                         <i class="fa-solid fa-sliders"></i>
                      </div>
                      <div>
-                        <h3>Advanced Settings</h3>
-                        <p>Additional configuration options</p>
+                        <h3>{{ $t('pages.categories.advancedSettings') }}</h3>
+                        <p>{{ $t('pages.categories.advancedSettingsSub') }}</p>
                      </div>
                   </div>
                   <!-- Display Order + Products per Page -->
                   <div class="advanced-grid">
                      <div class="field-group">
-                        <label for="category-display-order">Display Order</label>
+                        <label for="category-display-order">{{ $t('pages.categories.displayOrder') }}</label>
                         <input
                            id="category-display-order"
                            type="number"
@@ -372,30 +370,30 @@
                            :class="{ invalid: fieldErrors.display_order }"
                         >
                         <field-error :messages="fieldErrors.display_order" />
-                        <p class="field-row">Lower numbers appear first</p>
+                        <p class="field-row">{{ $t('pages.categories.displayOrderHelp') }}</p>
                      </div>
                      <div class="field-group">
-                        <label for="category-per-page">Products per Page</label>
+                        <label for="category-per-page">{{ $t('pages.categories.productsPerPage') }}</label>
                         <select id="category-per-page" data-field="products_per_page" v-model="result.products_per_page">
                             <option 
                             v-for="item in productOptions" 
                             :key="item" 
                             :value="item"
                             >
-                            {{ item }} products
+                            {{ $t('pages.categories.productsPerPageOption', { count: item }) }}
                             </option>
                         </select>
                         <field-error :messages="fieldErrors.products_per_page" />
                     </div>
                   </div>
                   <!-- Category Features -->
-                  <label class="feature-label">Category Features</label>
+                  <label class="feature-label">{{ $t('pages.categories.categoryFeatures') }}</label>
                   <div class="feature-box" data-field="show_in_nav" @click="toggleFeature('show_in_nav')">
                      <div class="feature-left">
                         <i class="fa-regular fa-eye"></i>
                         <div>
-                           <h4>Show in Main Navigation</h4>
-                           <p>Display this category in main navigation</p>
+                           <h4>{{ $t('pages.categories.showInNav') }}</h4>
+                           <p>{{ $t('pages.categories.showInNavHelp') }}</p>
                         </div>
                      </div>
                      <input 
@@ -417,8 +415,8 @@
                      <div class="feature-left">
                         <i class="fa-regular fa-eye"></i>
                         <div>
-                           <h4>Show in Website Footer</h4>
-                           <p>Display this category in footer</p>
+                           <h4>{{ $t('pages.categories.showInFooter') }}</h4>
+                           <p>{{ $t('pages.categories.showInFooterHelp') }}</p>
                         </div>
                      </div>
                      <input 
@@ -435,8 +433,8 @@
                      <div class="feature-left">
                         <i class="fa-solid fa-house"></i>
                         <div>
-                           <h4>Show on Homepage</h4>
-                           <p>Feature this category on the homepage</p>
+                           <h4>{{ $t('pages.categories.showHomepage') }}</h4>
+                           <p>{{ $t('pages.categories.showHomepageHelp') }}</p>
                         </div>
                      </div>
                      <input 
@@ -451,8 +449,8 @@
                      <div class="feature-left">
                         <i class="fa-solid fa-filter"></i>
                         <div>
-                           <h4>Enable Filters</h4>
-                           <p>Allow product filtering on category page</p>
+                           <h4>{{ $t('pages.categories.enableFilters') }}</h4>
+                           <p>{{ $t('pages.categories.enableFiltersHelp') }}</p>
                         </div>
                      </div>
                      <input 
@@ -467,8 +465,8 @@
                      <div class="feature-left">
                         <i class="fa-solid fa-tag"></i>
                         <div>
-                           <h4>Allow Promotions</h4>
-                           <p>Enable promotional campaigns for this category</p>
+                           <h4>{{ $t('pages.categories.allowPromotions') }}</h4>
+                           <p>{{ $t('pages.categories.allowPromotionsHelp') }}</p>
                         </div>
                      </div>
                      <input 
@@ -489,10 +487,10 @@
                         <i class="fa-solid fa-eye"></i>
                      </div>
                      <div>
-                        <h3>Status & Visibility</h3>
+                        <h3>{{ $t('pages.categories.statusVisibility') }}</h3>
                      </div>
                   </div>
-                  <label>Publication Status</label>
+                  <label>{{ $t('pages.categories.publicationStatus') }}</label>
                   <!--
                      Two states, which is all a category has ever had: the list
                      page, the bulk action and the API all read 1 as published
@@ -504,17 +502,17 @@
                     <label class="radio-row">
                     <input type="radio" :value="1" v-model="result.status">
                     <span class="status-category-dot green"></span>
-                    Published
+                    {{ $t('pages.categories.published') }}
                     </label>
                     <label class="radio-row">
                     <input type="radio" :value="2" v-model="result.status">
                     <span class="status-category-dot orange"></span>
-                    Draft
+                    {{ $t('pages.categories.draft') }}
                     </label>
                   </div>
                   <field-error :messages="fieldErrors.status" />
                   <div class="line-col visiblity-cl">
-                     <label>Visibility</label>
+                     <label>{{ $t('pages.categories.visibility') }}</label>
                      <label class="check-row" data-field="featured">
                      <input 
                         type="checkbox"
@@ -522,12 +520,12 @@
                         :false-value="2"
                         v-model="result.featured"
                         @click.stop
-                        > Featured category
+                        > {{ $t('pages.categories.featuredCategory') }}
                      </label>
                      <field-error :messages="fieldErrors.featured" />
                   </div>
                   <div class="line-col sch-cl">
-                     <label for="category-publish-at">Schedule Publishing</label>
+                     <label for="category-publish-at">{{ $t('pages.categories.schedulePublishing') }}</label>
                      <input 
                             id="category-publish-at"
                             type="datetime-local"
@@ -546,91 +544,94 @@
                         <i :class="scheduleNote.icon" aria-hidden="true"></i>
                         {{ scheduleNote.text }}
                      </p>
-                     <p v-else class="field-row">Leave empty to publish immediately</p>
+                     <p v-else class="field-row">{{ $t('pages.categories.scheduleHelp') }}</p>
                   </div>
                </div>
                <!-- Quick Stats -->
                <div class="stats-card">
-                  <h3><i class="fa-solid fa-chart-simple"></i> Quick Stats</h3>
+                  <h3><i class="fa-solid fa-chart-simple"></i> {{ $t('pages.categories.quickStats') }}</h3>
                   <template v-if="isNew">
-                     <p class="stat-empty">Counts appear once the category has been saved.</p>
+                     <p class="stat-empty">{{ $t('pages.categories.statsEmpty') }}</p>
                   </template>
                   <template v-else>
                      <div class="stat">
-                        <span>Products in this category</span>
+                        <span>{{ $t('pages.categories.statProducts') }}</span>
                         <b>{{ result.products_count || 0 }}</b>
                      </div>
                      <div class="stat">
-                        <span>Direct subcategories</span>
+                        <span>{{ $t('pages.categories.statDirectSubs') }}</span>
                         <b>{{ result.children_count || 0 }}</b>
                      </div>
                      <div class="stat">
-                        <span>Sub-categories (all levels)</span>
+                        <span>{{ $t('pages.categories.statAllSubs') }}</span>
                         <b>{{ result.descendants_count || 0 }}</b>
                      </div>
                      <div class="stat">
-                        <span>Products incl. subcategories</span>
+                        <span>{{ $t('pages.categories.statBranchProducts') }}</span>
                         <b>{{ result.products_in_branch || 0 }}</b>
                      </div>
                   </template>
                </div>
                <!-- Pro Tips -->
                <div class="pro-tips-card">
-                  <h3><i class="fa-solid fa-lightbulb"></i> Pro Tips</h3>
+                  <h3><i class="fa-solid fa-lightbulb"></i> {{ $t('pages.categories.proTips') }}</h3>
                   <ul>
-                     <li> <i class="fa-solid fa-check"></i> Use descriptive names that customers will search for</li>
-                     <li> <i class="fa-solid fa-check"></i> Add high-quality images to improve engagement</li>
-                     <li> <i class="fa-solid fa-check"></i> Optimize meta tags for better SEO ranking</li>
-                     <li> <i class="fa-solid fa-check"></i> Organize with subcategories for easier navigation</li>
+                     <li> <i class="fa-solid fa-check"></i> {{ $t('pages.categories.tipNames') }}</li>
+                     <li> <i class="fa-solid fa-check"></i> {{ $t('pages.categories.tipImages') }}</li>
+                     <li> <i class="fa-solid fa-check"></i> {{ $t('pages.categories.tipMeta') }}</li>
+                     <li> <i class="fa-solid fa-check"></i> {{ $t('pages.categories.tipSubcategories') }}</li>
                   </ul>
                </div>
                <!-- Record -->
                <div v-if="!isNew" class="card activity-card">
                   <div class="card-header">
                      <i class="fa-solid fa-clock-rotate-left"></i>
-                     <h3>Record</h3>
+                     <h3>{{ $t('pages.categories.record') }}</h3>
                   </div>
                   <div class="activity-item">
                      <span class="activity-icon green"><i class="fa-solid fa-plus"></i></span>
                      <div>
-                        <b>Created</b>
+                        <b>{{ $t('pages.categories.created') }}</b>
                         <p>{{ formatStamp(result.created_at) }}</p>
                      </div>
                   </div>
                   <div class="activity-item">
                      <span class="activity-icon blue"><i class="fa-solid fa-pencil"></i></span>
                      <div>
-                        <b>Last updated</b>
+                        <b>{{ $t('pages.categories.lastUpdated') }}</b>
                         <p>{{ formatStamp(result.updated_at) }}</p>
                      </div>
                   </div>
                   <div class="activity-item">
                      <span class="activity-icon purple"><i class="fa-solid fa-hashtag"></i></span>
                      <div>
-                        <b>Category ID</b>
+                        <b>{{ $t('pages.categories.categoryId') }}</b>
                         <p>{{ result.id }}</p>
                      </div>
                   </div>
                </div>
                <!-- Danger Zone -->
                <div class="danger-card">
-                  <h3><i class="fa-solid fa-triangle-exclamation"></i> Danger Zone</h3>
+                  <h3><i class="fa-solid fa-triangle-exclamation"></i> {{ $t('pages.categories.dangerZone') }}</h3>
                   <p v-if="isNew">
-                     This category has not been saved yet, so there is nothing to delete.
+                     {{ $t('pages.categories.dangerUnsaved') }}
                   </p>
                   <p v-else>
-                     Deleting <strong>{{ result.title }}</strong> cannot be undone.
+                     <i18n path="pages.categories.dangerDeleting" tag="span">
+                        <template v-slot:name><strong>{{ result.title }}</strong></template>
+                     </i18n>
                      <template v-if="result.descendants_count">
-                        It has <strong>{{ result.descendants_count }}</strong>
-                        {{ result.descendants_count === 1 ? 'subcategory' : 'subcategories' }},
+                        <i18n :path="result.descendants_count === 1 ? 'pages.categories.dangerHasSubOne' : 'pages.categories.dangerHasSubMany'" tag="span">
+                           <template v-slot:count><strong>{{ result.descendants_count }}</strong></template>
+                        </i18n>
                      </template>
                      <template v-if="result.products_in_branch">
-                        and <strong>{{ result.products_in_branch }}</strong>
-                        {{ result.products_in_branch === 1 ? 'product' : 'products' }}
-                        would lose this category (the products themselves are kept).
+                        <i18n :path="result.products_in_branch === 1 ? 'pages.categories.dangerProductsOne' : 'pages.categories.dangerProductsMany'" tag="span">
+                           <template v-slot:count><strong>{{ result.products_in_branch }}</strong></template>
+                        </i18n>
                      </template>
                      <template v-if="!result.descendants_count && !result.products_in_branch">
-                        Nothing else is linked to it.
+                        {{ $t('pages.categories.dangerNothingLinked') }}
                      </template>
                   </p>
                   <button
@@ -639,7 +640,7 @@
                      :disabled="isNew"
                      @click="confirmDelete"
                   >
-                  <i class="fa-solid fa-trash"></i> Delete Category
+                  <i class="fa-solid fa-trash"></i> {{ $t('pages.categories.deleteCategoryBtn') }}
                   </button>
                </div>
             </div>
@@ -651,18 +652,20 @@
     <!-- DELETE CONFIRMATION -->
       <confirm-dialog
         :open="showDeleteConfirm"
-        title="Delete category?"
-        warning="This cannot be undone."
-        confirm-label="Delete category"
+        :title="$t('pages.categories.deleteCategoryTitle')"
+        :warning="$t('pages.categories.cannotBeUndone')"
+        :confirm-label="$t('pages.categories.deleteCategory')"
         confirm-icon="fa-solid fa-trash"
-        busy-label="Deleting…"
+        :busy-label="$t('pages.categories.deleting')"
         :busy="deleting"
         :confirm-disabled="impactLoading"
         @cancel="closeDelete"
         @confirm="executeDelete"
       >
         <template v-slot:subject>
-          You are about to delete <strong>{{ result.title }}</strong>.
+          <i18n path="pages.categories.deleteSubjectOne" tag="span">
+            <template v-slot:name><strong>{{ result.title }}</strong></template>
+          </i18n>
         </template>
 
           <div v-if="impactLoading" class="impact-box" aria-busy="true">
@@ -680,38 +683,39 @@
             <p v-if="impact.subcategories" class="impact-line warn">
               <i class="fa fa-sitemap" aria-hidden="true"></i>
               <span>
-                Contains <strong>{{ impact.subcategories }}</strong>
-                {{ impact.subcategories === 1 ? 'subcategory' : 'subcategories' }}.
+                <i18n :path="impact.subcategories === 1 ? 'pages.categories.impactSubsOne' : 'pages.categories.impactSubsMany'" tag="span">
+                  <template v-slot:count><strong>{{ impact.subcategories }}</strong></template>
+                </i18n>
               </span>
             </p>
             <p v-if="impact.products_including_subcategories" class="impact-line warn">
               <i class="fa fa-box" aria-hidden="true"></i>
               <span>
-                <strong>{{ impact.products_including_subcategories }}</strong>
-                {{ impact.products_including_subcategories === 1 ? 'product is' : 'products are' }}
-                linked. They will stay in your catalogue but lose this category.
+                <i18n :path="impact.products_including_subcategories === 1 ? 'pages.categories.impactProductsOne' : 'pages.categories.impactProductsMany'" tag="span">
+                  <template v-slot:count><strong>{{ impact.products_including_subcategories }}</strong></template>
+                </i18n>
               </span>
             </p>
             <p v-if="!impact.subcategories && !impact.products_including_subcategories" class="impact-line ok">
               <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-              <span>Nothing else is linked to this category.</span>
+              <span>{{ $t('pages.categories.nothingLinkedOne') }}</span>
             </p>
           </div>
 
           <fieldset v-if="impact && impact.subcategories" class="children-choice">
-            <legend>What should happen to the subcategories?</legend>
+            <legend>{{ $t('pages.categories.childrenQuestion') }}</legend>
             <label>
               <input type="radio" value="reparent" v-model="childrenMode">
               <span>
-                <strong>Move them up</strong>
-                <em>They take this category's place in the tree.</em>
+                <strong>{{ $t('pages.categories.moveThemUp') }}</strong>
+                <em>{{ $t('pages.categories.moveThemUpHelp') }}</em>
               </span>
             </label>
             <label>
               <input type="radio" value="cascade" v-model="childrenMode">
               <span>
-                <strong>Delete them too</strong>
-                <em>All {{ impact.subcategories }} will be permanently removed.</em>
+                <strong>{{ $t('pages.categories.deleteThemToo') }}</strong>
+                <em>{{ $t('pages.categories.deleteThemTooHelp', { count: impact.subcategories }) }}</em>
               </span>
             </label>
           </fieldset>
@@ -832,30 +836,30 @@
             const checks = [
                 {
                     label: title.length >= 30 && title.length <= 60
-                        ? 'Meta title is a good length'
-                        : (title ? 'Meta title should be 30–60 characters' : 'Add a meta title'),
+                        ? this.$t('pages.categories.seoTitleGood')
+                        : (title ? this.$t('pages.categories.seoTitleLength') : this.$t('pages.categories.seoTitleMissing')),
                     ok: title.length >= 30 && title.length <= 60
                 },
                 {
                     label: description.length >= 120 && description.length <= 500
-                        ? 'Meta description is a good length'
-                        : (description ? 'Meta description should be 120–500 characters' : 'Add a meta description'),
+                        ? this.$t('pages.categories.seoDescGood')
+                        : (description ? this.$t('pages.categories.seoDescLength') : this.$t('pages.categories.seoDescMissing')),
                     ok: description.length >= 120 && description.length <= 500
                 },
                 {
                     label: this.keywords.length >= 3
-                        ? 'Focus keywords added'
-                        : 'Add at least three focus keywords',
+                        ? this.$t('pages.categories.seoKeywordsGood')
+                        : this.$t('pages.categories.seoKeywordsMissing'),
                     ok: this.keywords.length >= 3
                 },
                 {
-                    label: this.result.slug ? 'Slug is set' : 'Add a slug',
+                    label: this.result.slug ? this.$t('pages.categories.seoSlugGood') : this.$t('pages.categories.seoSlugMissing'),
                     ok: !!this.result.slug
                 },
                 {
                     label: (this.result.short_description || '').trim()
-                        ? 'Short description written'
-                        : 'Add a short description',
+                        ? this.$t('pages.categories.seoShortDescGood')
+                        : this.$t('pages.categories.seoShortDescMissing'),
                     ok: !!(this.result.short_description || '').trim()
                 }
             ]
@@ -896,7 +900,7 @@
                 return {
                     tone: 'warn',
                     icon: 'fa-solid fa-circle-exclamation',
-                    text: 'This category is already published. A schedule only applies while it is a draft.'
+                    text: this.$t('pages.categories.scheduleAlreadyPublished')
                 }
             }
 
@@ -904,14 +908,14 @@
                 return {
                     tone: 'warn',
                     icon: 'fa-solid fa-circle-exclamation',
-                    text: 'That time has already passed, so it will be published on the next check.'
+                    text: this.$t('pages.categories.schedulePassed')
                 }
             }
 
             return {
                 tone: 'ok',
                 icon: 'fa-solid fa-clock',
-                text: 'Stays a draft until ' + this.formatStamp(when) + ', then publishes on its own.'
+                text: this.$t('pages.categories.scheduleUntil', { when: this.formatStamp(when) })
             }
         },
         isNew() {
@@ -982,7 +986,7 @@
             } catch (e) {
                 // The dialog stays open and the category is still there.
                 this.$store.dispatch('ui/setToastError',
-                    e?.message || this.$t('error.err') || 'Could not delete this category')
+                    e?.message || this.$t('error.err') || this.$t('pages.categories.couldNotDelete'))
             } finally {
                 this.deleting = false
             }
@@ -1150,7 +1154,7 @@
         if (!value) return '—'
         const parsed = value instanceof Date ? value : this.asDate(value)
         if (!parsed) return '—'
-        return parsed.toLocaleString('en-GB', {
+        return parsed.toLocaleString(this.$i18n?.locale || 'en', {
           year: 'numeric', month: 'short', day: '2-digit',
           hour: '2-digit', minute: '2-digit'
         })
@@ -1262,7 +1266,7 @@
         } catch (e) {
           this.parentOptions = {}
           this.$store.dispatch('ui/setToastError',
-            e?.message || 'Could not load the parent categories')
+            e?.message || this.$t('pages.categories.couldNotLoadParents'))
         } finally {
           this.parentsLoading = false
         }
@@ -1281,13 +1285,13 @@
         const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/svg+xml']
 
         if (!allowed.includes(file.type)) {
-            this.imageError = 'Choose a JPG, PNG, GIF, WebP, AVIF or SVG image.'
+            this.imageError = this.$t('pages.categories.imageType')
             this.$store.dispatch('ui/setToastError', this.imageError)
             return false
         }
 
         if (file.size > maxMb * 1024 * 1024) {
-            this.imageError = `That image is ${(file.size / 1024 / 1024).toFixed(1)}MB. The maximum is ${maxMb}MB.`
+            this.imageError = this.$t('pages.categories.imageTooLarge', { size: (file.size / 1024 / 1024).toFixed(1), max: maxMb })
             this.$store.dispatch('ui/setToastError', this.imageError)
             return false
         }

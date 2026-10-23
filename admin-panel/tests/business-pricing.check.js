@@ -15,6 +15,7 @@
  * Run from admin-panel/: npm run check:business-pricing
  */
 const fs = require('fs')
+const { translate, translateCount } = require('./i18n-en')
 const path = require('path')
 const { JSDOM } = require('jsdom')
 
@@ -114,11 +115,13 @@ function makeHarness(options) {
     directives: { outsideClick: {}, 'outside-click': {} }
   }))
 
-  Component.prototype.$t = (key) => key
+  Component.prototype.$t = translate
+  Component.prototype.$tc = translateCount
 
   const vm = new Component()
 
-  vm.$t = (key) => key
+  vm.$t = translate
+  vm.$tc = translateCount
   vm.$route = { params: { id: '1' }, query: {} }
   vm.$router = { push: () => {} }
   vm.$store = {

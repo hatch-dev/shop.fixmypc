@@ -10,6 +10,7 @@
  * Run from admin-panel/: npm run check:trade-upgrades
  */
 const assert = require('assert')
+const { translate, translateCount } = require('./i18n-en')
 const fs = require('fs')
 const path = require('path')
 const {JSDOM} = require('jsdom')
@@ -83,7 +84,8 @@ const toasts = []
 let storeErrors = {}
 let canEdit = true
 
-Vue.prototype.$t = key => key
+Vue.prototype.$t = translate
+Vue.prototype.$tc = translateCount
 Vue.prototype.$can = (_module, action) => action === 'view' || canEdit
 Vue.prototype.$store = {
   getters: {get 'ui/errors' () { return storeErrors }},

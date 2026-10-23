@@ -72,7 +72,7 @@
           </span>
 
         <span v-html="formatAddress(value)"/>
-        <span class="block mt-5">tel: {{value.phone}}</span>
+        <span class="block mt-5">{{ $t('cmp.PosShipping.tel', { phone: value.phone }) }}</span>
       </label>
 
       <button

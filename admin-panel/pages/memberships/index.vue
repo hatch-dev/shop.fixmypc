@@ -2,38 +2,38 @@
   <div class="members-page">
 
     <div v-if="stats" class="ms-stats">
-      <div class="ms-stat"><span>Members</span><strong>{{ stats.members }}</strong><small>{{ stats.paying }} paying · {{ stats.granted }} granted</small></div>
-      <div class="ms-stat"><span>Monthly revenue</span><strong>{{ currencyIcon }}{{ money(stats.monthly_revenue) }}</strong><small>at what each member pays</small></div>
-      <div class="ms-stat"><span>Ending</span><strong>{{ stats.ending }}</strong><small>cancelled, active to period end</small></div>
-      <div class="ms-stat" :class="{alert: stats.past_due > 0}"><span>Payment due</span><strong>{{ stats.past_due }}</strong><small>Stripe is retrying</small></div>
-      <div class="ms-stat"><span>Discount given</span><strong>{{ currencyIcon }}{{ money(stats.discount_given) }}</strong><small>on member orders</small></div>
+      <div class="ms-stat"><span>{{ $t('pages.memberships.statMembers') }}</span><strong>{{ stats.members }}</strong><small>{{ $t('pages.memberships.statPayingGranted', { paying: stats.paying, granted: stats.granted }) }}</small></div>
+      <div class="ms-stat"><span>{{ $t('pages.memberships.statMonthlyRevenue') }}</span><strong>{{ currencyIcon }}{{ money(stats.monthly_revenue) }}</strong><small>{{ $t('pages.memberships.statMonthlyRevenueNote') }}</small></div>
+      <div class="ms-stat"><span>{{ $t('pages.memberships.statEnding') }}</span><strong>{{ stats.ending }}</strong><small>{{ $t('pages.memberships.statEndingNote') }}</small></div>
+      <div class="ms-stat" :class="{alert: stats.past_due > 0}"><span>{{ $t('pages.memberships.statPaymentDue') }}</span><strong>{{ stats.past_due }}</strong><small>{{ $t('pages.memberships.statPaymentDueNote') }}</small></div>
+      <div class="ms-stat"><span>{{ $t('pages.memberships.statDiscountGiven') }}</span><strong>{{ currencyIcon }}{{ money(stats.discount_given) }}</strong><small>{{ $t('pages.memberships.statDiscountGivenNote') }}</small></div>
     </div>
 
     <p v-if="stats && !stats.stripe_ready" class="ms-warning">
-      Stripe keys are not set in Payment Setting, so customers cannot join or be billed.
+      {{ $t('pages.memberships.stripeNotReady') }}
     </p>
 
     <list-page
       ref="listPage"
       list-api="getMemberships"
       route-name="memberships"
-      name="Members"
+      :name="$t('pages.memberships.listName')"
       gate="membership"
       :add-button="false"
       :order-options="orderOptions"
     >
       <template v-slot:extra-filters>
         <div class="ups-filters">
-          <select v-model="filter" aria-label="Status" @change="applyFilters">
-            <option value="">All memberships</option>
-            <option value="entitled">With benefits now</option>
-            <option value="ending">Ending</option>
-            <option value="past_due">Payment due</option>
-            <option value="ended">Ended</option>
-            <option value="admin">Granted by an admin</option>
+          <select v-model="filter" :aria-label="$t('pages.memberships.filterStatus')" @change="applyFilters">
+            <option value="">{{ $t('pages.memberships.filterAll') }}</option>
+            <option value="entitled">{{ $t('pages.memberships.filterEntitled') }}</option>
+            <option value="ending">{{ $t('pages.memberships.filterEnding') }}</option>
+            <option value="past_due">{{ $t('pages.memberships.filterPastDue') }}</option>
+            <option value="ended">{{ $t('pages.memberships.filterEnded') }}</option>
+            <option value="admin">{{ $t('pages.memberships.filterAdmin') }}</option>
           </select>
-          <select v-model="planId" aria-label="Plan" @change="applyFilters">
-            <option value="">All plans</option>
+          <select v-model="planId" :aria-label="$t('pages.memberships.filterPlan')" @change="applyFilters">
+            <option value="">{{ $t('pages.memberships.filterAllPlans') }}</option>
             <option v-for="plan in plans" :key="plan.id" :value="String(plan.id)">{{ plan.name }}</option>
           </select>
         </div>
@@ -41,67 +41,67 @@
 
       <template v-slot:add-button>
         <button v-if="$can('membership', 'create')" type="button" class="button primary-btn ms-grant-btn" @click="openGrant">
-          <i class="fa-solid fa-gift" aria-hidden="true"></i> Grant membership
+          <i class="fa-solid fa-gift" aria-hidden="true"></i> {{ $t('pages.memberships.grantMembership') }}
         </button>
       </template>
 
       <template v-slot:table="{list, from}">
         <tr class="lite-bold">
           <th class="w-50x mx-w-50x">#</th>
-          <th>Customer</th>
-          <th>Plan</th>
-          <th>Status</th>
-          <th>Pays</th>
-          <th>Renews / ends</th>
+          <th>{{ $t('pages.memberships.colCustomer') }}</th>
+          <th>{{ $t('pages.memberships.colPlan') }}</th>
+          <th>{{ $t('pages.memberships.colStatus') }}</th>
+          <th>{{ $t('pages.memberships.colPays') }}</th>
+          <th>{{ $t('pages.memberships.colRenewsEnds') }}</th>
           <th>&nbsp;</th>
         </tr>
 
         <tr v-for="(value, index) in list" :key="value.id">
           <td class="w-50x mx-w-50x">{{ from + index }}</td>
           <td>
-            <nuxt-link class="link" :to="`/memberships/${value.id}`"><h5>{{ value.user_name || 'Customer #' + value.user_id }}</h5></nuxt-link>
+            <nuxt-link class="link" :to="`/memberships/${value.id}`"><h5>{{ value.user_name || $t('pages.memberships.customerNumber', { id: value.user_id }) }}</h5></nuxt-link>
             <span class="sub-note">{{ value.user_email }}</span>
           </td>
           <td>{{ value.plan_name }}</td>
           <td>
             <span class="pill" :class="pillClass(value)">{{ value.status_label }}</span>
-            <span v-if="value.source === 'admin'" class="sub-note">granted</span>
+            <span v-if="value.source === 'admin'" class="sub-note">{{ $t('pages.memberships.granted') }}</span>
           </td>
           <td>
             <template v-if="value.source === 'stripe'">{{ currencyIcon }}{{ money(value.price) }} <span class="sub-note">{{ intervalLabel(value) }}</span></template>
-            <span v-else class="sub-note">free</span>
+            <span v-else class="sub-note">{{ $t('pages.memberships.free') }}</span>
           </td>
           <td>
-            {{ value.current_period_end ? formatDate(value.current_period_end) : 'No end date' }}
+            {{ value.current_period_end ? formatDate(value.current_period_end) : $t('pages.memberships.noEndDate') }}
             <span class="sub-note">{{ endNote(value) }}</span>
           </td>
-          <td><button class="lite-btn" @click.prevent="$router.push(`/memberships/${value.id}`)">Open</button></td>
+          <td><button class="lite-btn" @click.prevent="$router.push(`/memberships/${value.id}`)">{{ $t('pages.memberships.open') }}</button></td>
         </tr>
       </template>
     </list-page>
 
     <confirm-dialog
       :open="grant.open"
-      title="Grant a membership"
+      :title="$t('pages.memberships.grantTitle')"
       tone="primary"
       icon="fa-solid fa-gift"
-      confirm-label="Grant"
-      busy-label="Granting…"
+      :confirm-label="$t('pages.memberships.grant')"
+      :busy-label="$t('pages.memberships.granting')"
       :busy="grant.busy"
       :confirm-disabled="!grant.user || !grant.planId"
       @cancel="grant.open = false"
       @confirm="submitGrant"
     >
-      <template v-slot:subject>No payment is taken. The customer gets the plan's benefits until the end date.</template>
+      <template v-slot:subject>{{ $t('pages.memberships.grantSubject') }}</template>
 
       <div class="ms-form">
-        <label>Customer</label>
+        <label>{{ $t('pages.memberships.customer') }}</label>
         <div v-if="grant.user" class="ms-picked">
           <span>{{ grant.user.name }} <small>{{ grant.user.email }}</small></span>
-          <button type="button" class="lite-btn" @click="grant.user = null">Change</button>
+          <button type="button" class="lite-btn" @click="grant.user = null">{{ $t('pages.memberships.change') }}</button>
         </div>
         <template v-else>
-          <input type="text" v-model="grant.q" placeholder="Search by name or email" @input="searchCustomers">
+          <input type="text" v-model="grant.q" :placeholder="$t('pages.memberships.searchCustomer')" @input="searchCustomers">
           <ul v-if="grant.results.length" class="ms-results">
             <li v-for="u in grant.results" :key="u.id">
               <button type="button" @click="grant.user = u">{{ u.name }} <small>{{ u.email }}</small></button>
@@ -109,18 +109,18 @@
           </ul>
         </template>
 
-        <label>Plan</label>
+        <label>{{ $t('pages.memberships.plan') }}</label>
         <select v-model="grant.planId">
-          <option value="">Choose a plan</option>
+          <option value="">{{ $t('pages.memberships.choosePlan') }}</option>
           <option v-for="plan in plans" :key="plan.id" :value="String(plan.id)">{{ plan.name }}</option>
         </select>
 
-        <label>Ends on</label>
+        <label>{{ $t('pages.memberships.endsOn') }}</label>
         <input type="date" v-model="grant.endsAt" :min="tomorrow">
-        <small class="sub-note">Leave empty for no end date.</small>
+        <small class="sub-note">{{ $t('pages.memberships.endsOnHint') }}</small>
 
-        <label>Note (staff only)</label>
-        <input type="text" maxlength="255" v-model="grant.note" placeholder="e.g. Apology for a late delivery">
+        <label>{{ $t('pages.memberships.noteStaffOnly') }}</label>
+        <input type="text" maxlength="255" v-model="grant.note" :placeholder="$t('pages.memberships.notePlaceholder')">
 
         <p v-if="grant.error" class="ms-error">{{ grant.error }}</p>
       </div>
@@ -147,7 +147,7 @@ export default {
       filter: this.$route.query.filter || '',
       planId: this.$route.query.plan_id || '',
       orderOptions: {
-        created_at: { title: 'Date' }
+        created_at: { title: this.$t('pages.memberships.orderDate') }
       },
       grant: { open: false, busy: false, q: '', results: [], user: null, planId: '', endsAt: '', note: '', error: '' },
       searchTimer: null
@@ -172,17 +172,22 @@ export default {
     },
     intervalLabel(m) {
       const count = Number(m.interval_count || 1)
-      return count === 1 ? `per ${m.interval || 'month'}` : `every ${count} ${m.interval}s`
+      const unit = m.interval || 'month'
+      const known = ['day', 'week', 'month', 'year'].includes(unit)
+      if (count === 1) {
+        return known ? this.$t('pages.memberships.per_' + unit) : this.$t('pages.memberships.perUnit', { unit })
+      }
+      return known ? this.$t('pages.memberships.every_' + unit, { count }) : this.$t('pages.memberships.everyUnit', { count, unit })
     },
     formatDate(value) {
       const d = new Date(String(value).replace(' ', 'T'))
-      return isNaN(d.getTime()) ? value : d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' })
+      return isNaN(d.getTime()) ? value : d.toLocaleDateString(this.$i18n?.locale || 'en', { day: 'numeric', month: 'short', year: 'numeric' })
     },
     endNote(m) {
-      if (m.status === 'canceled') return 'ended'
-      if (m.cancel_at_period_end) return 'ends then'
-      if (m.source === 'admin') return 'ends then'
-      return m.entitled ? 'renews then' : ''
+      if (m.status === 'canceled') return this.$t('pages.memberships.noteEnded')
+      if (m.cancel_at_period_end) return this.$t('pages.memberships.noteEndsThen')
+      if (m.source === 'admin') return this.$t('pages.memberships.noteEndsThen')
+      return m.entitled ? this.$t('pages.memberships.noteRenewsThen') : ''
     },
     pillClass(m) {
       if (['past_due', 'unpaid'].includes(m.status)) return 'pill-bad'
@@ -239,13 +244,13 @@ export default {
         })
         // setRequest hands a refusal back as the response body (status 201)
         if (data && data.status === 201) {
-          this.grant.error = data.message || 'The membership was not granted.'
+          this.grant.error = data.message || this.$t('pages.memberships.grantFailed')
           return
         }
         this.grant.open = false
         this.$router.push(`/memberships/${data.id}`)
       } catch (e) {
-        this.grant.error = e?.message || 'The membership was not granted.'
+        this.grant.error = e?.message || this.$t('pages.memberships.grantFailed')
       } finally {
         this.grant.busy = false
       }

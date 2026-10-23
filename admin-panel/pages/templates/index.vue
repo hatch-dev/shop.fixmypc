@@ -14,7 +14,7 @@
     <div>
       <!-- ================= SYSTEM TEMPLATES ================= -->
       <div class="section">
-        <h3 class="section-title">System Templates</h3>
+        <h3 class="section-title">{{ $t('pages.templates.systemTemplates') }}</h3>
         <table class="custom-table">
             <tr class="lite-bold">
               <th><input type="checkbox" @change="checkAll(systemTemplates)"></th>
@@ -47,7 +47,7 @@
       </div>
       <!-- ================= CUSTOM TEMPLATES ================= -->
       <div class="section">
-        <h3 class="section-title">Custom Templates</h3>
+        <h3 class="section-title">{{ $t('pages.templates.customTemplates') }}</h3>
 
         <table class="custom-table">
           <tr class="lite-bold">

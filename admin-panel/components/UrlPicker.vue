@@ -27,7 +27,7 @@
         type="button"
         class="up-caret"
         tabindex="-1"
-        :aria-label="open ? 'Hide pages' : 'Show all pages'"
+        :aria-label="open ? $t('cmp.UrlPicker.hidePages') : $t('cmp.UrlPicker.showAllPages')"
         @mousedown.prevent="toggle"
       >
         <svg
@@ -63,7 +63,7 @@
         @mousedown.prevent="choose(value)"
         @mouseenter="cursor = -1"
       >
-        <span class="up-row-label">Use this address</span>
+        <span class="up-row-label">{{ $t('cmp.UrlPicker.useThisAddress') }}</span>
         <span class="up-row-url">{{ value }}</span>
       </button>
 
@@ -71,14 +71,14 @@
         v-if="!options.length"
         class="up-none"
       >
-        The page list could not be loaded. Type any path or https:// address.
+        {{ $t('cmp.UrlPicker.listNotLoaded') }}
       </p>
 
       <p
         v-else-if="!matches.length"
         class="up-none"
       >
-        No matching page. Type any path or https:// address.
+        {{ $t('cmp.UrlPicker.noMatch') }}
       </p>
 
       <template v-for="group in grouped">

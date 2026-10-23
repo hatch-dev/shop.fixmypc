@@ -115,7 +115,7 @@
                 @click.prevent="$router.push(`/returns/start?order=${result.id}`)"
               >
                 <i class="fa-solid fa-rotate-left mr-10" />
-                Start a return
+                {{ $t('pages.orders.startReturn') }}
               </button>
 
               <!-- Contextual: only rendered when the order actually has a
@@ -170,9 +170,9 @@
             <span class="ov-value">{{ paymentTypes[result.order_method] || $t('prod.na') }}</span>
           </div>
           <div v-if="result.state && result.state.refund" class="ov-item">
-            <span class="ov-label">Refund</span>
+            <span class="ov-label">{{ $t('pages.orders.refund') }}</span>
             <span class="ov-value" :class="{ 'color-success': ['completed', 'partial'].includes(result.state.refund.key), 'color-danger': result.state.refund.key === 'failed' }">
-              {{ { pending: 'Pending', processing: 'Processing', completed: 'Refunded', partial: 'Partly refunded', failed: 'Failed' }[result.state.refund.key] }}
+              {{ { pending: $t('pages.orders.refundPending'), processing: $t('pages.orders.refundProcessing'), completed: $t('pages.orders.refundCompleted'), partial: $t('pages.orders.refundPartial'), failed: $t('pages.orders.refundFailed') }[result.state.refund.key] }}
               <template v-if="result.state.refund.amount">· {{ priceFormatting(result.state.refund.amount) }}</template>
             </span>
           </div>
@@ -427,11 +427,11 @@
               -->
               <template v-if="walletPaid > 0">
                 <div class="summary-row">
-                  <span>Paid from wallet</span>
+                  <span>{{ $t('pages.orders.paidFromWallet') }}</span>
                   <span class="summary-credit">- {{ priceFormatting(walletPaid) }}</span>
                 </div>
                 <div class="summary-row">
-                  <span>Due by order method</span>
+                  <span>{{ $t('pages.orders.dueByOrderMethod') }}</span>
                   <span>{{ priceFormatting(amountDue) }}</span>
                 </div>
               </template>
@@ -905,18 +905,18 @@
         >
           <div class="order-card-head">
             <i class="fa-solid fa-rotate-left" />
-            Returns
+            {{ $t('pages.orders.returns') }}
           </div>
           <div class="order-card-body">
             <table class="order-returns-table">
               <tr>
-                <th>Return</th><th>Type</th><th>Opened</th><th>Reason</th><th>Units</th><th>Status</th><th>Refund</th>
+                <th>{{ $t('pages.orders.returnCol') }}</th><th>{{ $t('pages.orders.type') }}</th><th>{{ $t('pages.orders.opened') }}</th><th>{{ $t('pages.orders.reason') }}</th><th>{{ $t('pages.orders.units') }}</th><th>{{ $t('pages.orders.status') }}</th><th>{{ $t('pages.orders.refund') }}</th>
               </tr>
               <tr v-for="ret in returnsInfo.returns" :key="ret.id">
                 <td><nuxt-link class="link" :to="`/returns/${ret.id}`">{{ ret.rma_number }}</nuxt-link></td>
                 <td>
-                  {{ ret.type === 'exchange' ? 'Exchange' : 'Return' }}
-                  <nuxt-link v-if="ret.replacement_order_id" class="link" :to="`/orders/${ret.replacement_order_id}`">(replacement)</nuxt-link>
+                  {{ ret.type === 'exchange' ? $t('pages.orders.exchange') : $t('pages.orders.returnCol') }}
+                  <nuxt-link v-if="ret.replacement_order_id" class="link" :to="`/orders/${ret.replacement_order_id}`">{{ $t('pages.orders.replacement') }}</nuxt-link>
                 </td>
                 <td>{{ ret.created_at }}</td>
                 <td>{{ ret.reason_label }}</td>
@@ -1370,7 +1370,7 @@
         return Number(this.result?.calculated?.loyalty_discount || 0)
       },
       loyaltyLabel(){
-        return this.result?.calculated?.loyalty_label || 'Loyalty Discount'
+        return this.result?.calculated?.loyalty_label || this.$t('pages.orders.loyaltyDiscount')
       },
       pointsDiscount(){
         return Number(this.result?.calculated?.points_discount || 0)
@@ -1768,7 +1768,7 @@
           this.couriersTotal = data?.total || 0
           this.couriersFetchedAt = data?.fetched_at || null
         } catch (e) {
-          this.courierError = e?.message || 'Could not load couriers from AfterShip.'
+          this.courierError = e?.message || this.$t('pages.orders.couriersLoadFailed')
         } finally {
           this.courierLoading = false
         }
@@ -1793,7 +1793,7 @@
         if (!d || isNaN(d.getTime())) return value || ''
         const opts = { day: 'numeric', month: 'short', year: 'numeric' }
         if (withTime) Object.assign(opts, { hour: '2-digit', minute: '2-digit' })
-        return d.toLocaleString('en-IE', opts)
+        return d.toLocaleString(this.$i18n?.locale || 'en', opts)
       },
       /*
        * Take a shipment answer from the server: the row, and the status the
@@ -1838,7 +1838,7 @@
 
           // A refusal resolves with the whole envelope (status 201), not a throw.
           if (!data || data.status === 201 || !data.shipment) {
-            this.shipmentError = data?.data?.form?.[0] || this.$store.getters['ui/errors']?.form?.[0] || 'AfterShip refused the shipment.'
+            this.shipmentError = data?.data?.form?.[0] || this.$store.getters['ui/errors']?.form?.[0] || this.$t('pages.orders.shipmentRefused')
             this.clearPageErrors()
             return
           }
@@ -1852,7 +1852,7 @@
             tracking_email: this.$t('fSale.shipSaved')
           }[data.notified] || this.$t('fSale.shipSaved')
         } catch (e) {
-          this.shipmentError = e?.message || 'Could not save the shipment.'
+          this.shipmentError = e?.message || this.$t('pages.orders.shipmentSaveFailed')
         } finally {
           this.shipmentSaving = false
         }
@@ -1866,7 +1866,7 @@
           const data = await this.setById({ id: this.id, params: {}, api: 'refreshShipment' })
 
           if (!data || !data.shipment) {
-            this.shipmentError = this.$store.getters['ui/errors']?.form?.[0] || 'AfterShip could not be reached.'
+            this.shipmentError = this.$store.getters['ui/errors']?.form?.[0] || this.$t('pages.orders.aftershipUnreachable')
             this.clearPageErrors()
             await this.fetchingData()
             return
@@ -1875,7 +1875,7 @@
           this.applyShipmentResult(data)
           this.shipmentNotice = this.$t('fSale.shipRefreshed')
         } catch (e) {
-          this.shipmentError = e?.message || 'AfterShip could not be reached.'
+          this.shipmentError = e?.message || this.$t('pages.orders.aftershipUnreachable')
         } finally {
           this.shipmentRefreshing = false
         }

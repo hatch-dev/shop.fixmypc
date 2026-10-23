@@ -49,11 +49,11 @@
                 class="attr-color-input"
                 :value="a.color || '#000000'"
                 @input="setColor(i, $event.target.value)"
-                :title="a.color || 'Pick colour'"
+                :title="a.color || $t('pages.attributes.pickColour')"
               >
               <input
                 type="text"
-                placeholder="Name"
+                :placeholder="$t('index.name')"
                 v-model="a.title"
                 class="attr-value-input"
               >

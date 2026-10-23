@@ -18,7 +18,7 @@
           <th class="w-50x mx-w-50x">#</th>
           <th>{{ $t('index.title') }}</th>
           <th>{{ $t('prod.code') }}</th>
-          <th>Voucher Type</th>
+          <th>{{ $t('pages.vouchers.voucherType') }}</th>
           <th>{{ $t('brand.price') }}({{ currencyIcon }})</th>
           <th>{{ $t('prod.capped') }}({{ currencyIcon }})</th>
           <th>{{ $t('prod.spent') }}({{ currencyIcon }})</th>
@@ -46,8 +46,8 @@
             >
               {{
                 item.apply_type == 2
-                  ? 'Product Wise'
-                  : 'Global'
+                  ? $t('pages.vouchers.productWise')
+                  : $t('pages.vouchers.global')
               }}
             </span>
           </td>
@@ -57,7 +57,7 @@
               {{ getDataFromObject(item, 'capped_price') }}
             </span>
             <span v-else>
-              N/A
+              {{ $t('prod.na') }}
             </span>
           </td>
           <td>
@@ -65,7 +65,7 @@
              {{ getDataFromObject(item, 'min_spend') }}
             </span>
             <span v-else>
-              N/A
+              {{ $t('prod.na') }}
             </span>
           </td>
           <td>{{ item.usage_limit }}</td>

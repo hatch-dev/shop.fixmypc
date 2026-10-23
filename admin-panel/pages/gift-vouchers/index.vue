@@ -4,7 +4,7 @@
     list-api="getGiftVouchers"
     delete-api="deleteGiftVoucher"
     route-name="gift-vouchers"
-    :name="'Gift Card Design'"
+    :name="$t('pages.giftVouchers.listName')"
     :order-options="orderOptions"
     @delete-bulk="deleteBulk"
     @list="itemList = $event"
@@ -17,14 +17,14 @@
           </th>
 
           <th class="w-50x mx-w-50x">#</th>
-          <th>Image</th>
-          <th>Title</th>
-          <th>Amounts</th>
-          <th>Min Qty</th>
-          <th>Max Qty</th>
-          <th>Status</th>
-          <th>Sold</th>
-          <th>Created</th>
+          <th>{{ $t('pages.giftVouchers.colImage') }}</th>
+          <th>{{ $t('pages.giftVouchers.colTitle') }}</th>
+          <th>{{ $t('pages.giftVouchers.colAmounts') }}</th>
+          <th>{{ $t('pages.giftVouchers.colMinQty') }}</th>
+          <th>{{ $t('pages.giftVouchers.colMaxQty') }}</th>
+          <th>{{ $t('pages.giftVouchers.colStatus') }}</th>
+          <th>{{ $t('pages.giftVouchers.colSold') }}</th>
+          <th>{{ $t('pages.giftVouchers.colCreated') }}</th>
           <th>&nbsp;</th>
         </tr>
 
@@ -61,7 +61,7 @@
                 {{ currencyIcon }}{{ amt }}
               </span>
             </span>
-            <span v-else>N/A</span>
+            <span v-else>{{ $t('pages.giftVouchers.notApplicable') }}</span>
           </td>
 
           <!-- Min Quantity -->
@@ -73,7 +73,7 @@
           <!-- On sale or withdrawn -->
           <td>
             <span class="gv-status" :class="item.is_active ? 'on' : 'off'">
-              {{ item.is_active ? 'On sale' : 'Withdrawn' }}
+              {{ item.is_active ? $t('pages.giftVouchers.onSale') : $t('pages.giftVouchers.withdrawn') }}
             </span>
           </td>
 
@@ -89,14 +89,14 @@
               @click.prevent="$refs.listPage.editItem(item.id)"
               class="lite-btn"
             >
-              Edit
+              {{ $t('pages.giftVouchers.edit') }}
             </button>
 
             <button
               @click.prevent="$refs.listPage.deleteItem(item.id)"
               class="delete-btn lite-btn"
             >
-              Delete
+              {{ $t('pages.giftVouchers.delete') }}
             </button>
           </td>
         </tr>
@@ -117,8 +117,8 @@ export default {
   data(){
     return {
       orderOptions:{
-        title: { title: 'Title' },
-        created_at: { title: 'Date' }
+        title: { title: this.$t('pages.giftVouchers.orderTitle') },
+        created_at: { title: this.$t('pages.giftVouchers.orderDate') }
       }
     }
   },

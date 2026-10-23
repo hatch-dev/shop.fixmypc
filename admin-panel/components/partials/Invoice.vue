@@ -257,11 +257,11 @@
                   <!-- A split payment: how the total was paid. -->
                   <template v-if="walletPaid > 0">
                     <tr>
-                      <td class="k">Paid from wallet</td>
+                      <td class="k">{{ $t('cmp.Invoice.paidFromWallet') }}</td>
                       <td class="v">- {{ priceFormatting(walletPaid) }}</td>
                     </tr>
                     <tr>
-                      <td class="k">Paid by order method</td>
+                      <td class="k">{{ $t('cmp.Invoice.paidByOrderMethod') }}</td>
                       <td class="v">{{ priceFormatting(amountDue) }}</td>
                     </tr>
                   </template>
@@ -543,7 +543,7 @@
         return Number(this.order?.calculated?.loyalty_discount || 0)
       },
       loyaltyLabel(){
-        return this.order?.calculated?.loyalty_label || 'Loyalty Discount'
+        return this.order?.calculated?.loyalty_label || this.$t('cmp.Invoice.loyaltyDiscount')
       },
       pointsDiscount(){
         return Number(this.order?.calculated?.points_discount || 0)

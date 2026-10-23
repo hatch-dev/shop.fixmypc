@@ -5,25 +5,24 @@
     <div class="top-bar">
       <div class="page-header">
         <div class="breadcrumb">
-          <span>Store</span>
+          <span>{{ $t('pages.categories.store') }}</span>
           <i class="fa fa-chevron-right"></i>
-          Categories
+          {{ $t('pages.categories.categories') }}
         </div>
-        <div class="page-title">Category Management</div>
+        <div class="page-title">{{ $t('pages.categories.categoryManagement') }}</div>
         <p class="page-subtitle">
-          Organise your catalogue into categories and subcategories, and control
-          what customers see on the storefront.
+          {{ $t('pages.categories.listSubtitle') }}
         </p>
       </div>
 
       <div class="page-actions">
         <div class="search-box">
           <i class="fa fa-search"></i>
-          <label class="sr-only" for="category-search">Search categories</label>
+          <label class="sr-only" for="category-search">{{ $t('pages.categories.searchCategories') }}</label>
           <input
             id="category-search"
             type="search"
-            placeholder="Search name, slug or parent"
+            :placeholder="$t('pages.categories.searchPlaceholder')"
             v-model="search"
             @input="onSearchInput"
           >
@@ -31,8 +30,8 @@
             v-if="search"
             class="search-clear"
             type="button"
-            title="Clear search"
-            aria-label="Clear search"
+            :title="$t('pages.categories.clearSearch')"
+            :aria-label="$t('pages.categories.clearSearch')"
             @click="clearSearch"
           >
             <i class="fa fa-times"></i>
@@ -47,7 +46,7 @@
           aria-controls="category-filters"
           @click="showFilter = !showFilter"
         >
-          <i class="fa fa-filter"></i> Filters
+          <i class="fa fa-filter"></i> {{ $t('pages.categories.filters') }}
           <span v-if="activeFilterCount" class="filter-count">{{ activeFilterCount }}</span>
         </button>
 
@@ -57,7 +56,7 @@
           type="button"
           @click="addCategory"
         >
-          <i class="fa fa-plus"></i> Add Category
+          <i class="fa fa-plus"></i> {{ $t('pages.categories.addCategory') }}
         </button>
       </div>
     </div>
@@ -67,64 +66,64 @@
       <div class="container">
         <div class="filter-grid">
           <div class="filter-item">
-            <label for="filter-status">Status</label>
+            <label for="filter-status">{{ $t('pages.categories.status') }}</label>
             <select id="filter-status" v-model="filters.status" @change="applyFilters">
-              <option value="">All statuses</option>
-              <option value="1">Published</option>
-              <option value="2">Draft</option>
+              <option value="">{{ $t('pages.categories.allStatuses') }}</option>
+              <option value="1">{{ $t('pages.categories.published') }}</option>
+              <option value="2">{{ $t('pages.categories.draft') }}</option>
             </select>
           </div>
 
           <div class="filter-item">
-            <label for="filter-scope">Level</label>
+            <label for="filter-scope">{{ $t('pages.categories.level') }}</label>
             <select id="filter-scope" v-model="filters.scope" @change="applyFilters">
-              <option value="">All levels</option>
-              <option value="root">Root categories only</option>
-              <option value="sub">Subcategories only</option>
+              <option value="">{{ $t('pages.categories.allLevels') }}</option>
+              <option value="root">{{ $t('pages.categories.rootOnly') }}</option>
+              <option value="sub">{{ $t('pages.categories.subOnly') }}</option>
             </select>
           </div>
 
           <div class="filter-item">
-            <label for="filter-parent">Parent category</label>
+            <label for="filter-parent">{{ $t('pages.categories.parentCategoryLower') }}</label>
             <select id="filter-parent" v-model="filters.parent" :disabled="parentsLoading" @change="applyFilters">
-              <option value="">Any parent</option>
-              <option value="none">No parent (root)</option>
+              <option value="">{{ $t('pages.categories.anyParent') }}</option>
+              <option value="none">{{ $t('pages.categories.noParent') }}</option>
               <option
                 v-for="option in parentOptions"
                 :key="option.id"
                 :value="option.id"
               >{{ option.label }}</option>
             </select>
-            <span v-if="parentsLoading" class="filter-hint">Loading categories…</span>
+            <span v-if="parentsLoading" class="filter-hint">{{ $t('pages.categories.loadingCategories') }}</span>
           </div>
 
           <div class="filter-item">
-            <label for="filter-products">Products</label>
+            <label for="filter-products">{{ $t('pages.categories.products') }}</label>
             <select id="filter-products" v-model="filters.has_products" @change="applyFilters">
-              <option value="">Any</option>
-              <option value="1">With products</option>
-              <option value="0">Without products</option>
+              <option value="">{{ $t('pages.categories.any') }}</option>
+              <option value="1">{{ $t('pages.categories.withProducts') }}</option>
+              <option value="0">{{ $t('pages.categories.withoutProducts') }}</option>
             </select>
           </div>
 
           <div class="filter-item">
-            <label for="filter-sort">Sort by</label>
+            <label for="filter-sort">{{ $t('pages.categories.sortBy') }}</label>
             <select id="filter-sort" v-model="orderby" @change="applyFilters">
               <option v-for="(label, key) in sortOptions" :key="key" :value="key">{{ label }}</option>
             </select>
           </div>
 
           <div class="filter-item">
-            <label for="filter-direction">Direction</label>
+            <label for="filter-direction">{{ $t('pages.categories.direction') }}</label>
             <select id="filter-direction" v-model="ordertype" @change="applyFilters">
-              <option value="desc">Descending</option>
-              <option value="asc">Ascending</option>
+              <option value="desc">{{ $t('pages.categories.descending') }}</option>
+              <option value="asc">{{ $t('pages.categories.ascending') }}</option>
             </select>
           </div>
 
           <div class="filter-item filter-reset-cell">
             <button class="reset-btn" type="button" @click="resetFilter">
-              <i class="fa-solid fa-rotate-right"></i> Reset filters
+              <i class="fa-solid fa-rotate-right"></i> {{ $t('pages.categories.resetFilters') }}
             </button>
           </div>
         </div>
@@ -154,7 +153,7 @@
 
         <div class="table-header">
           <div>
-            <h3>All Categories</h3>
+            <h3>{{ $t('pages.categories.allCategories') }}</h3>
             <p>{{ resultSummary }}</p>
             <!--
               The tree is assembled in one pass over the matching set, so it
@@ -163,8 +162,7 @@
             -->
             <p v-if="pagination.truncated" class="tree-truncated">
               <i class="fa-solid fa-triangle-exclamation"></i>
-              This is more of the catalogue than the tree can arrange at once.
-              Narrow it with a search or a filter, or use the flat view.
+              {{ $t('pages.categories.treeTruncated') }}
             </p>
           </div>
           <div class="table-actions">
@@ -175,24 +173,24 @@
               kept because the tree can only order siblings — sorting the whole
               catalogue by, say, product count is a flat question.
             -->
-            <div class="view-toggle" role="group" aria-label="List layout">
+            <div class="view-toggle" role="group" :aria-label="$t('pages.categories.listLayout')">
               <button
                 type="button"
                 :class="{ on: isTree }"
                 :aria-pressed="String(isTree)"
-                title="Group subcategories under their parent"
+                :title="$t('pages.categories.treeViewTitle')"
                 @click="setView('tree')"
               >
-                <i class="fa fa-sitemap"></i> Tree
+                <i class="fa fa-sitemap"></i> {{ $t('pages.categories.tree') }}
               </button>
               <button
                 type="button"
                 :class="{ on: !isTree }"
                 :aria-pressed="String(!isTree)"
-                title="One flat, fully sortable list"
+                :title="$t('pages.categories.flatViewTitle')"
                 @click="setView('flat')"
               >
-                <i class="fa fa-list-ul"></i> Flat
+                <i class="fa fa-list-ul"></i> {{ $t('pages.categories.flat') }}
               </button>
             </div>
 
@@ -201,28 +199,28 @@
               class="btn"
               type="button"
               :disabled="loading || !expandableCount"
-              :title="allExpanded ? 'Collapse every parent' : 'Expand every parent'"
+              :title="allExpanded ? $t('pages.categories.collapseEveryParent') : $t('pages.categories.expandEveryParent')"
               @click="allExpanded ? collapseAll() : expandAll()"
             >
               <i class="fa" :class="allExpanded ? 'fa-compress' : 'fa-expand'"></i>
-              {{ allExpanded ? 'Collapse all' : 'Expand all' }}
+              {{ allExpanded ? $t('pages.categories.collapseAll') : $t('pages.categories.expandAll') }}
             </button>
 
             <div class="limit-box">
-              <label for="page-limit">Show</label>
+              <label for="page-limit">{{ $t('pages.categories.show') }}</label>
               <select id="page-limit" v-model="limit" @change="applyFilters">
                 <option value="10">10</option>
                 <option value="25">25</option>
                 <option value="50">50</option>
                 <option value="100">100</option>
               </select>
-              <span>{{ isTree ? 'parents' : 'entries' }}</span>
+              <span>{{ isTree ? $t('pages.categories.parentsWord') : $t('pages.categories.entriesWord') }}</span>
             </div>
             <button class="btn" type="button" :disabled="exporting || !hasRows" @click="exportCategories">
-              <i class="fa fa-download"></i> {{ exporting ? 'Exporting…' : 'Export' }}
+              <i class="fa fa-download"></i> {{ exporting ? $t('pages.categories.exporting') : $t('pages.categories.export') }}
             </button>
             <button class="btn" type="button" :disabled="loading" @click="refresh">
-              <i class="fa fa-rotate" :class="{ 'fa-spin': loading }"></i> Refresh
+              <i class="fa fa-rotate" :class="{ 'fa-spin': loading }"></i> {{ $t('pages.categories.refresh') }}
             </button>
           </div>
         </div>
@@ -230,8 +228,9 @@
         <!-- Bulk action bar -->
         <div v-if="cbList.length" class="bulk-bar">
           <span class="bulk-count">
-            <strong>{{ cbList.length }}</strong>
-            {{ cbList.length === 1 ? 'category' : 'categories' }} selected
+            <i18n :path="cbList.length === 1 ? 'pages.categories.selectedOne' : 'pages.categories.selectedMany'" tag="span">
+              <template v-slot:count><strong>{{ cbList.length }}</strong></template>
+            </i18n>
           </span>
           <div class="bulk-actions">
             <button
@@ -241,7 +240,7 @@
               :disabled="bulkWorking"
               @click="bulkStatus(1)"
             >
-              <i class="fa-solid fa-circle-check"></i> Publish
+              <i class="fa-solid fa-circle-check"></i> {{ $t('pages.categories.publish') }}
             </button>
             <button
               v-if="$can('category', 'edit')"
@@ -250,7 +249,7 @@
               :disabled="bulkWorking"
               @click="bulkStatus(2)"
             >
-              <i class="fa-regular fa-circle"></i> Move to draft
+              <i class="fa-regular fa-circle"></i> {{ $t('pages.categories.moveToDraft') }}
             </button>
             <button
               v-if="$can('category', 'delete')"
@@ -259,18 +258,18 @@
               :disabled="bulkWorking"
               @click="deleteBulk"
             >
-              <i class="fa fa-trash"></i> Delete
+              <i class="fa fa-trash"></i> {{ $t('pages.categories.delete') }}
             </button>
-            <button class="btn bulk-btn ghost" type="button" @click="cbList = []">Clear</button>
+            <button class="btn bulk-btn ghost" type="button" @click="cbList = []">{{ $t('pages.categories.clear') }}</button>
           </div>
         </div>
 
         <!-- Error -->
         <div v-if="errorMessage && !loading" class="state-box error-state" role="alert">
           <div class="state-icon danger"><i class="fa-solid fa-triangle-exclamation"></i></div>
-          <h4>We couldn't load your categories</h4>
+          <h4>{{ $t('pages.categories.loadErrorTitle') }}</h4>
           <p>{{ errorMessage }}</p>
-          <button class="button primary-btn" type="button" @click="refresh">Try again</button>
+          <button class="button primary-btn" type="button" @click="refresh">{{ $t('pages.categories.tryAgain') }}</button>
         </div>
 
         <div v-else class="table-scroll">
@@ -280,15 +279,15 @@
                 <th class="col-checkbox">
                   <input
                     type="checkbox"
-                    title="Select all on this page"
-                    aria-label="Select all categories on this page"
+                    :title="$t('pages.categories.selectAllTitle')"
+                    :aria-label="$t('pages.categories.selectAllLabel')"
                     :checked="allOnPageSelected"
                     :indeterminate.prop="someOnPageSelected"
                     :disabled="!hasRows"
                     @change="toggleSelectAll($event)"
                   >
                 </th>
-                <th class="col-thumb">Image</th>
+                <th class="col-thumb">{{ $t('pages.categories.image') }}</th>
                 <th
                   v-for="column in visibleColumns"
                   :key="column.key"
@@ -304,7 +303,7 @@
                   {{ column.label }}
                   <i :class="sortIcon(column.key)"></i>
                 </th>
-                <th class="col-actions">Actions</th>
+                <th class="col-actions">{{ $t('pages.categories.actions') }}</th>
               </tr>
             </thead>
 
@@ -348,17 +347,16 @@
                         <span class="tree-elbow last"></span>
                       </span>
                       <span v-if="row.hidden" class="tree-placeholder-text">
-                        {{ row.hidden }} {{ row.hidden === 1 ? 'subcategory' : 'subcategories' }}
-                        hidden by the current filters
+                        {{ $t(row.hidden === 1 ? 'pages.categories.hiddenByFiltersOne' : 'pages.categories.hiddenByFiltersMany', { count: row.hidden }) }}
                       </span>
-                      <span v-else class="tree-placeholder-text">No subcategories</span>
+                      <span v-else class="tree-placeholder-text">{{ $t('pages.categories.noSubcategories') }}</span>
                       <button
                         v-if="!row.hidden && row.parent.can_have_children && $can('category', 'create')"
                         class="tree-add-btn"
                         type="button"
                         @click="addChild(row.parent)"
                       >
-                        <i class="fa fa-plus"></i> Add one
+                        <i class="fa fa-plus"></i> {{ $t('pages.categories.addOne') }}
                       </button>
                     </div>
                   </td>
@@ -378,7 +376,7 @@
                       type="checkbox"
                       :value="row.id"
                       v-model="cbList"
-                      :aria-label="'Select ' + row.title"
+                      :aria-label="$t('pages.categories.selectRow', { name: row.title })"
                     >
                   </td>
 
@@ -391,7 +389,7 @@
                         width="44"
                         height="44"
                         :src="rowImage(row)"
-                        :alt="row.title ? row.title + ' category image' : 'Category image'"
+                        :alt="row.title ? $t('pages.categories.rowImageAlt', { name: row.title }) : $t('pages.categories.categoryImage')"
                         @error="onImageError"
                       >
                     </span>
@@ -441,14 +439,14 @@
                       <span
                         v-if="isTree && !rowDepth(row) && branchSize(row)"
                         class="branch-count"
-                        :title="branchSize(row) + ' subcategories'"
+                        :title="$t('pages.categories.subcategoriesCount', { count: branchSize(row) })"
                       >{{ branchSize(row) }}</span>
 
                       <span
                         v-if="!isTree"
                         class="category-type"
                         :class="isSub(row) ? 'secondary' : 'primary'"
-                      >{{ isSub(row) ? 'Subcategory' : 'Root' }}</span>
+                      >{{ isSub(row) ? $t('pages.categories.subcategory') : $t('pages.categories.root') }}</span>
 
                       <!--
                         Only reachable from a search or a filter: this row is
@@ -456,8 +454,8 @@
                         because it matched. Saying so stops it reading as a
                         result that should not be there.
                       -->
-                      <span v-if="isContext(row)" class="context-chip" title="Shown so its subcategories have a parent">
-                        context
+                      <span v-if="isContext(row)" class="context-chip" :title="$t('pages.categories.contextTitle')">
+                        {{ $t('pages.categories.context') }}
                       </span>
                     </div>
                   </td>
@@ -488,15 +486,15 @@
                       type="button"
                       :class="Number(row.status) === 1 ? 'green' : 'orange'"
                       :disabled="busyId === row.id"
-                      :title="Number(row.status) === 1 ? 'Published — click to move to draft' : 'Draft — click to publish'"
+                      :title="Number(row.status) === 1 ? $t('pages.categories.statusToDraftTitle') : $t('pages.categories.statusToPublishTitle')"
                       @click="toggleStatus(row)"
                     >
                       <i :class="statusIcon(row)"></i>
-                      {{ Number(row.status) === 1 ? 'Published' : 'Draft' }}
+                      {{ Number(row.status) === 1 ? $t('pages.categories.published') : $t('pages.categories.draft') }}
                     </button>
                     <span v-else class="badge" :class="Number(row.status) === 1 ? 'green' : 'orange'">
                       <i class="fa-solid fa-circle-check"></i>
-                      {{ Number(row.status) === 1 ? 'Published' : 'Draft' }}
+                      {{ Number(row.status) === 1 ? $t('pages.categories.published') : $t('pages.categories.draft') }}
                     </span>
                   </td>
 
@@ -509,8 +507,8 @@
                       <button
                         class="icon-btn"
                         type="button"
-                        title="Edit category"
-                        aria-label="Edit category"
+                        :title="$t('pages.categories.editCategory')"
+                        :aria-label="$t('pages.categories.editCategory')"
                         @click="editNode(row)"
                       >
                         <i class="fa fa-pen"></i>
@@ -518,9 +516,9 @@
                       <button
                         class="icon-btn"
                         type="button"
-                        title="More actions"
+                        :title="$t('pages.categories.moreActions')"
                         :aria-expanded="menuId === row.id ? 'true' : 'false'"
-                        aria-label="More actions"
+                        :aria-label="$t('pages.categories.moreActions')"
                         @click="toggleMenu(row)"
                       >
                         <i class="fa fa-ellipsis-vertical"></i>
@@ -528,7 +526,7 @@
 
                       <div v-if="menuId === row.id" class="action-dropdown" @click.stop>
                         <button type="button" @click="editNode(row)">
-                          <i class="fa fa-pen"></i> Edit
+                          <i class="fa fa-pen"></i> {{ $t('pages.categories.edit') }}
                         </button>
                         <!--
                           Offered only where the server would accept one. The
@@ -541,10 +539,10 @@
                           type="button"
                           @click="addChild(row)"
                         >
-                          <i class="fa fa-plus"></i> Add subcategory
+                          <i class="fa fa-plus"></i> {{ $t('pages.categories.addSubcategory') }}
                         </button>
                         <button type="button" @click="openEmbedModal(row)">
-                          <i class="fa-solid fa-code"></i> Embed code
+                          <i class="fa-solid fa-code"></i> {{ $t('pages.categories.embedCode') }}
                         </button>
                         <button
                           v-if="$can('category', 'delete')"
@@ -552,7 +550,7 @@
                           type="button"
                           @click="deleteNode(row)"
                         >
-                          <i class="fa fa-trash"></i> Delete
+                          <i class="fa fa-trash"></i> {{ $t('pages.categories.delete') }}
                         </button>
                       </div>
                     </div>
@@ -566,23 +564,23 @@
                 <td :colspan="columnCount">
                   <div v-if="isFiltered" class="state-box">
                     <div class="state-icon"><i class="fa fa-magnifying-glass"></i></div>
-                    <h4>No categories match your filters</h4>
-                    <p>Try a different search term, or clear the filters to see everything.</p>
+                    <h4>{{ $t('pages.categories.noMatch') }}</h4>
+                    <p>{{ $t('pages.categories.noMatchHelp') }}</p>
                     <button class="button primary-btn" type="button" @click="resetFilter">
-                      Clear filters
+                      {{ $t('pages.categories.clearFilters') }}
                     </button>
                   </div>
                   <div v-else class="state-box">
                     <div class="state-icon"><i class="fa fa-layer-group"></i></div>
-                    <h4>No categories yet</h4>
-                    <p>Categories group your products so customers can browse them. Create your first one to get started.</p>
+                    <h4>{{ $t('pages.categories.noCategoriesYet') }}</h4>
+                    <p>{{ $t('pages.categories.emptyHelp') }}</p>
                     <button
                       v-if="$can('category', 'create')"
                       class="button primary-btn"
                       type="button"
                       @click="addCategory"
                     >
-                      <i class="fa fa-plus"></i> Add Category
+                      <i class="fa fa-plus"></i> {{ $t('pages.categories.addCategory') }}
                     </button>
                   </div>
                 </td>
@@ -594,20 +592,25 @@
         <!-- Pagination -->
         <div class="pagination" v-if="!loading && pagination.total">
           <p class="shw-cat">
-            Showing <span>{{ pagination.from }}</span> - <span>{{ pagination.to }}</span>
-            of <span>{{ pagination.total }}</span>
-            {{ isTree ? (pagination.total === 1 ? 'parent category' : 'parent categories') : 'results' }}
+            <i18n path="pages.categories.pagerShowing" tag="span">
+              <template v-slot:from><span>{{ pagination.from }}</span></template>
+              <template v-slot:to><span>{{ pagination.to }}</span></template>
+              <template v-slot:total><span>{{ pagination.total }}</span></template>
+              <template v-slot:what>{{ isTree ? (pagination.total === 1 ? $t('pages.categories.parentCategoryWord') : $t('pages.categories.parentCategoriesWord')) : $t('pages.categories.resultsWord') }}</template>
+            </i18n>
             <template v-if="isTree && subRowCount">
-              &middot; <span>{{ subRowCount }}</span>
-              {{ subRowCount === 1 ? 'subcategory' : 'subcategories' }}
+              &middot;
+              <i18n :path="subRowCount === 1 ? 'pages.categories.subCountOne' : 'pages.categories.subCountMany'" tag="span">
+                <template v-slot:count><span>{{ subRowCount }}</span></template>
+              </i18n>
             </template>
           </p>
-          <div class="page-buttons" role="navigation" aria-label="Pagination">
+          <div class="page-buttons" role="navigation" :aria-label="$t('pages.categories.pagination')">
             <button
               class="page-btn"
               type="button"
               :disabled="pagination.current_page <= 1"
-              aria-label="Previous page"
+              :aria-label="$t('pages.categories.previousPage')"
               @click="changePage(pagination.current_page - 1)"
             >
               <i class="fa fa-chevron-left"></i>
@@ -626,7 +629,7 @@
               class="page-btn"
               type="button"
               :disabled="pagination.current_page >= pagination.last_page"
-              aria-label="Next page"
+              :aria-label="$t('pages.categories.nextPage')"
               @click="changePage(pagination.current_page + 1)"
             >
               <i class="fa fa-chevron-right"></i>
@@ -639,33 +642,33 @@
 
     <!-- EMBED MODAL -->
     <div v-if="showEmbed" class="category-embed-modal" @click.self="showEmbed = false">
-      <div class="embed-box" role="dialog" aria-modal="true" aria-label="Category embed code">
+      <div class="embed-box" role="dialog" aria-modal="true" :aria-label="$t('pages.categories.embedDialogLabel')">
         <div class="embed-header">
-          <h3>Embed &ldquo;{{ selectedCategory && selectedCategory.title }}&rdquo;</h3>
-          <button class="close" type="button" aria-label="Close" @click="showEmbed = false">&times;</button>
+          <h3>{{ $t('pages.categories.embedTitle', { name: selectedCategory && selectedCategory.title }) }}</h3>
+          <button class="close" type="button" :aria-label="$t('pages.categories.close')" @click="showEmbed = false">&times;</button>
         </div>
         <div class="embed-body">
-          <label>Layout</label>
+          <label>{{ $t('pages.categories.layout') }}</label>
           <select v-model="embed.layout">
-            <option value="horizontal">Horizontal</option>
-            <option value="grid">Grid</option>
+            <option value="horizontal">{{ $t('pages.categories.horizontal') }}</option>
+            <option value="grid">{{ $t('pages.categories.grid') }}</option>
           </select>
 
-          <label>Products</label>
+          <label>{{ $t('pages.categories.products') }}</label>
           <select v-model="embed.mode">
-            <option value="normal">Latest</option>
-            <option value="offers">On offer</option>
-            <option value="all">All</option>
+            <option value="normal">{{ $t('pages.categories.latest') }}</option>
+            <option value="offers">{{ $t('pages.categories.onOffer') }}</option>
+            <option value="all">{{ $t('pages.categories.all') }}</option>
           </select>
 
-          <label v-if="embed.mode !== 'all'">How many</label>
+          <label v-if="embed.mode !== 'all'">{{ $t('pages.categories.howMany') }}</label>
           <input v-if="embed.mode !== 'all'" type="number" min="1" max="24" v-model.number="embed.limit">
 
-          <label>Embed code</label>
+          <label>{{ $t('pages.categories.embedCode') }}</label>
           <textarea class="embed-code" readonly rows="3" :value="generatedCode"></textarea>
 
           <button class="button primary-btn" type="button" @click="copyCode">
-            <i class="fa fa-copy"></i> Copy code
+            <i class="fa fa-copy"></i> {{ $t('pages.categories.copyCode') }}
           </button>
         </div>
       </div>
@@ -674,11 +677,11 @@
     <!-- DELETE CONFIRMATION -->
     <confirm-dialog
       :open="showDeleteConfirm"
-      :title="deleteType === 'bulk' ? 'Delete categories?' : 'Delete category?'"
-      warning="This cannot be undone."
-      :confirm-label="deleteType === 'bulk' ? 'Delete categories' : 'Delete category'"
+      :title="deleteType === 'bulk' ? $t('pages.categories.deleteCategoriesTitle') : $t('pages.categories.deleteCategoryTitle')"
+      :warning="$t('pages.categories.cannotBeUndone')"
+      :confirm-label="deleteType === 'bulk' ? $t('pages.categories.deleteCategories') : $t('pages.categories.deleteCategory')"
       confirm-icon="fa-solid fa-trash"
-      busy-label="Deleting…"
+      :busy-label="$t('pages.categories.deleting')"
       :busy="deleting"
       :confirm-disabled="impactLoading"
       @cancel="closeDelete"
@@ -686,10 +689,14 @@
     >
       <template v-slot:subject>
         <template v-if="deleteType === 'single'">
-          You are about to delete <strong>{{ deleteTarget && deleteTarget.title }}</strong>.
+          <i18n path="pages.categories.deleteSubjectOne" tag="span">
+            <template v-slot:name><strong>{{ deleteTarget && deleteTarget.title }}</strong></template>
+          </i18n>
         </template>
         <template v-else>
-          You are about to delete <strong>{{ deleteTarget ? deleteTarget.length : 0 }}</strong> categories.
+          <i18n path="pages.categories.deleteSubjectMany" tag="span">
+            <template v-slot:count><strong>{{ deleteTarget ? deleteTarget.length : 0 }}</strong></template>
+          </i18n>
         </template>
       </template>
 
@@ -709,41 +716,41 @@
           <p v-if="impact.subcategories" class="impact-line warn">
             <i class="fa fa-sitemap" aria-hidden="true"></i>
             <span>
-              Contains <strong>{{ impact.subcategories }}</strong>
-              {{ impact.subcategories === 1 ? 'subcategory' : 'subcategories' }}.
+              <i18n :path="impact.subcategories === 1 ? 'pages.categories.impactSubsOne' : 'pages.categories.impactSubsMany'" tag="span">
+                <template v-slot:count><strong>{{ impact.subcategories }}</strong></template>
+              </i18n>
             </span>
           </p>
           <p v-if="impact.products_including_subcategories" class="impact-line warn">
             <i class="fa fa-box" aria-hidden="true"></i>
             <span>
-              <strong>{{ impact.products_including_subcategories }}</strong>
-              {{ impact.products_including_subcategories === 1 ? 'product is' : 'products are' }}
-              linked. They will stay in your catalogue but lose this category.
+              <i18n :path="impact.products_including_subcategories === 1 ? 'pages.categories.impactProductsOne' : 'pages.categories.impactProductsMany'" tag="span">
+                <template v-slot:count><strong>{{ impact.products_including_subcategories }}</strong></template>
+              </i18n>
             </span>
           </p>
           <p v-if="!impact.subcategories && !impact.products_including_subcategories" class="impact-line ok">
             <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
             <span>
-              Nothing else is linked to
-              {{ deleteType === 'bulk' ? 'these categories' : 'this category' }}.
+              {{ deleteType === 'bulk' ? $t('pages.categories.nothingLinkedMany') : $t('pages.categories.nothingLinkedOne') }}
             </span>
           </p>
         </div>
 
         <fieldset v-if="impact && impact.subcategories" class="children-choice">
-          <legend>What should happen to the subcategories?</legend>
+          <legend>{{ $t('pages.categories.childrenQuestion') }}</legend>
           <label>
             <input type="radio" value="reparent" v-model="childrenMode">
             <span>
-              <strong>Move them up</strong>
-              <em>They become children of {{ parentOfTargetLabel }}.</em>
+              <strong>{{ $t('pages.categories.moveThemUp') }}</strong>
+              <em>{{ $t('pages.categories.becomeChildrenOf', { parent: parentOfTargetLabel }) }}</em>
             </span>
           </label>
           <label>
             <input type="radio" value="cascade" v-model="childrenMode">
             <span>
-              <strong>Delete them too</strong>
-              <em>All {{ impact.subcategories }} will be permanently removed.</em>
+              <strong>{{ $t('pages.categories.deleteThemToo') }}</strong>
+              <em>{{ $t('pages.categories.deleteThemTooHelp', { count: impact.subcategories }) }}</em>
             </span>
           </label>
         </fieldset>
@@ -841,14 +848,14 @@
         },
 
         sortOptions: {
-          display_order: 'Sort order',
-          title: 'Name',
-          parent: 'Parent category',
-          products_count: 'Product count',
-          children_count: 'Subcategory count',
-          status: 'Status',
-          created_at: 'Created date',
-          updated_at: 'Updated date'
+          display_order: this.$t('pages.categories.sortOrder'),
+          title: this.$t('pages.categories.name'),
+          parent: this.$t('pages.categories.parentCategoryLower'),
+          products_count: this.$t('pages.categories.productCount'),
+          children_count: this.$t('pages.categories.subcategoryCount'),
+          status: this.$t('pages.categories.status'),
+          created_at: this.$t('pages.categories.createdDate'),
+          updated_at: this.$t('pages.categories.updatedDate')
         },
 
         searchTimer: null
@@ -953,14 +960,14 @@
       },
       sortableColumns() {
         return [
-          { key: 'title', label: 'Category', class: 'col-category' },
-          { key: 'parent', label: 'Parent', class: 'col-parent' },
-          { key: 'children_count', label: 'Subcats', class: 'col-count' },
-          { key: 'products_count', label: 'Products', class: 'col-count' },
-          { key: 'status', label: 'Status', class: 'col-status' },
-          { key: 'display_order', label: 'Order', class: 'col-order' },
-          { key: 'created_at', label: 'Created', class: 'col-date' },
-          { key: 'updated_at', label: 'Updated', class: 'col-date' }
+          { key: 'title', label: this.$t('pages.categories.colCategory'), class: 'col-category' },
+          { key: 'parent', label: this.$t('pages.categories.colParent'), class: 'col-parent' },
+          { key: 'children_count', label: this.$t('pages.categories.colSubcats'), class: 'col-count' },
+          { key: 'products_count', label: this.$t('pages.categories.products'), class: 'col-count' },
+          { key: 'status', label: this.$t('pages.categories.status'), class: 'col-status' },
+          { key: 'display_order', label: this.$t('pages.categories.colOrder'), class: 'col-order' },
+          { key: 'created_at', label: this.$t('pages.categories.created'), class: 'col-date' },
+          { key: 'updated_at', label: this.$t('pages.categories.updated'), class: 'col-date' }
         ]
       },
       /* The tree already says what each row's parent is, far more directly
@@ -985,29 +992,29 @@
 
         return [
           {
-            key: 'total', title: 'Total Categories', tone: 'blue',
+            key: 'total', title: this.$t('pages.categories.totalCategories'), tone: 'blue',
             icon: 'fa fa-layer-group', value: this.statValue(s.total),
             badge: this.loaded ? this.formatGrowth(growth) : '',
             badgeClass: this.growthClass(growth)
           },
           {
-            key: 'root', title: 'Root Categories', tone: 'purple',
+            key: 'root', title: this.$t('pages.categories.rootCategories'), tone: 'purple',
             icon: 'fa fa-folder', value: this.statValue(s.root_categories)
           },
           {
-            key: 'sub', title: 'Subcategories', tone: 'purple',
+            key: 'sub', title: this.$t('pages.categories.subcategories'), tone: 'purple',
             icon: 'fa fa-sitemap', value: this.statValue(s.sub_categories)
           },
           {
-            key: 'active', title: 'Published', tone: 'green',
+            key: 'active', title: this.$t('pages.categories.published'), tone: 'green',
             icon: 'fa-solid fa-circle-check', value: this.statValue(s.active_categories)
           },
           {
-            key: 'inactive', title: 'Draft', tone: 'orange',
+            key: 'inactive', title: this.$t('pages.categories.draft'), tone: 'orange',
             icon: 'fa fa-clock', value: this.statValue(s.inactive_categories)
           },
           {
-            key: 'with_products', title: 'With Products', tone: 'blue',
+            key: 'with_products', title: this.$t('pages.categories.withProductsCard'), tone: 'blue',
             icon: 'fa fa-box', value: this.statValue(s.with_products)
           }
         ]
@@ -1022,10 +1029,10 @@
         return this.activeFilterCount > 0 || this.search.trim() !== ''
       },
       resultSummary() {
-        if (this.loading) return 'Loading categories…'
-        if (this.errorMessage) return 'Could not load categories'
+        if (this.loading) return this.$t('pages.categories.loadingCategories')
+        if (this.errorMessage) return this.$t('pages.categories.couldNotLoad')
         if (!this.pagination.total) {
-          return this.isFiltered ? 'No categories match your filters' : 'No categories yet'
+          return this.isFiltered ? this.$t('pages.categories.noMatch') : this.$t('pages.categories.noCategoriesYet')
         }
 
         const { from, to, total } = this.pagination
@@ -1033,14 +1040,14 @@
         /* A page of the tree is a page of parents, not of rows — saying
          * "1–15 of 15" beside eighteen visible rows reads as a bug. */
         if (this.isTree) {
-          const parents = `Showing ${from}–${to} of ${total} parent ${total === 1 ? 'category' : 'categories'}`
+          const parents = this.$t(total === 1 ? 'pages.categories.summaryTreeOne' : 'pages.categories.summaryTreeMany', { from, to, total })
           const subs = this.subRowCount
           return subs
-            ? `${parents}, ${subs} ${subs === 1 ? 'subcategory' : 'subcategories'}`
+            ? this.$t(subs === 1 ? 'pages.categories.summaryWithSubsOne' : 'pages.categories.summaryWithSubsMany', { parents, count: subs })
             : parents
         }
 
-        return `Showing ${from}–${to} of ${total}`
+        return this.$t('pages.categories.summaryFlat', { from, to, total })
       },
       /* Every category on screen now, in the order it is drawn: what the
        * select-all checkbox covers. Reading it off itemList instead would
@@ -1085,8 +1092,8 @@
         return pages
       },
       parentOfTargetLabel() {
-        if (this.deleteType !== 'single' || !this.deleteTarget) return 'the top level'
-        return this.deleteTarget.parent_title || 'the top level'
+        if (this.deleteType !== 'single' || !this.deleteTarget) return this.$t('pages.categories.topLevel')
+        return this.deleteTarget.parent_title || this.$t('pages.categories.topLevel')
       },
       embedUrl() {
         if (!this.selectedCategory) return ''
@@ -1161,7 +1168,7 @@
         } catch (e) {
           this.itemList = []
           this.pagination = {}
-          this.errorMessage = e?.message || this.$t('error.err') || 'Something went wrong'
+          this.errorMessage = e?.message || this.$t('error.err') || this.$t('pages.categories.somethingWrong')
           this.$store.dispatch('ui/setToastError', this.errorMessage)
         } finally {
           this.loading = false
@@ -1301,7 +1308,7 @@
 
         } catch (e) {
           this.$store.dispatch('ui/setToastError',
-            e?.message || this.$t('error.err') || 'Could not change the status')
+            e?.message || this.$t('error.err') || this.$t('pages.categories.couldNotChangeStatus'))
         } finally {
           this.busyId = null
         }
@@ -1323,7 +1330,7 @@
 
         } catch (e) {
           this.$store.dispatch('ui/setToastError',
-            e?.message || this.$t('error.err') || 'Could not change the status')
+            e?.message || this.$t('error.err') || this.$t('pages.categories.couldNotChangeStatus'))
         } finally {
           this.bulkWorking = false
         }
@@ -1402,7 +1409,7 @@
           /* The dialog stays open and the list is untouched — a failed delete
            * used to close the dialog and refresh, which read as success. */
           this.$store.dispatch('ui/setToastError',
-            e?.message || this.$t('error.err') || 'Could not delete this category')
+            e?.message || this.$t('error.err') || this.$t('pages.categories.couldNotDelete'))
         } finally {
           this.deleting = false
         }
@@ -1428,7 +1435,7 @@
       copyCode() {
         if (!navigator.clipboard) return
         navigator.clipboard.writeText(this.generatedCode).then(() => {
-          this.$store.dispatch('ui/setToastMessage', 'Embed code copied')
+          this.$store.dispatch('ui/setToastMessage', this.$t('pages.categories.embedCopied'))
         })
       },
 
@@ -1521,10 +1528,13 @@
       branchTitle(cat) {
         const size = this.branchSize(cat)
 
-        if (!size) return cat.title + ' has no subcategories'
+        if (!size) return this.$t('pages.categories.branchNone', { name: cat.title })
 
-        return (this.isCollapsed(cat) ? 'Show the ' : 'Hide the ')
-          + size + (size === 1 ? ' subcategory of ' : ' subcategories of ') + cat.title
+        const key = this.isCollapsed(cat)
+          ? (size === 1 ? 'pages.categories.branchShowOne' : 'pages.categories.branchShowMany')
+          : (size === 1 ? 'pages.categories.branchHideOne' : 'pages.categories.branchHideMany')
+
+        return this.$t(key, { count: size, name: cat.title })
       },
       treeIcon(cat) {
         if (this.rowDepth(cat)) return 'fa-regular fa-folder tree-icon-child'
@@ -1566,7 +1576,7 @@
         if (!date) return '—'
         const parsed = new Date(date)
         if (isNaN(parsed.getTime())) return '—'
-        return parsed.toLocaleDateString('en-GB', {
+        return parsed.toLocaleDateString(this.$i18n?.locale || 'en', {
           year: 'numeric', month: 'short', day: '2-digit'
         })
       },
@@ -1599,7 +1609,11 @@
           /* The tree view exports in hierarchy order, so Level says how deep
            * each row sits — without it the order looks arbitrary in a
            * spreadsheet that cannot show the indentation. */
-          const header = ['Level', 'Name', 'Slug', 'Parent', 'Subcategories', 'Products', 'Status', 'Order', 'Created', 'Updated']
+          const header = [
+            this.$t('pages.categories.level'), this.$t('pages.categories.name'), this.$t('pages.categories.slug'), this.$t('pages.categories.colParent'),
+            this.$t('pages.categories.subcategories'), this.$t('pages.categories.products'), this.$t('pages.categories.status'),
+            this.$t('pages.categories.colOrder'), this.$t('pages.categories.created'), this.$t('pages.categories.updated')
+          ]
 
           const escape = (value) => {
             const s = value === null || value === undefined ? '' : String(value)
@@ -1607,10 +1621,10 @@
           }
 
           const csv = [header.join(',')].concat(rows.map(c => [
-            this.isSub(c) ? 'Subcategory' : 'Root',
+            this.isSub(c) ? this.$t('pages.categories.subcategory') : this.$t('pages.categories.root'),
             c.title, c.slug, c.parent_title || '',
             c.children_count || 0, c.products_count || 0,
-            Number(c.status) === 1 ? 'Published' : 'Draft',
+            Number(c.status) === 1 ? this.$t('pages.categories.published') : this.$t('pages.categories.draft'),
             c.display_order,
             this.formatDate(c.created_at), this.formatDate(c.updated_at)
           ].map(escape).join(','))).join('\n')
@@ -1625,11 +1639,11 @@
           document.body.removeChild(link)
           URL.revokeObjectURL(url)
 
-          this.$store.dispatch('ui/setToastMessage', `Exported ${rows.length} categories`)
+          this.$store.dispatch('ui/setToastMessage', this.$t('pages.categories.exported', { count: rows.length }))
 
         } catch (e) {
           this.$store.dispatch('ui/setToastError',
-            e?.message || this.$t('error.err') || 'Could not export')
+            e?.message || this.$t('error.err') || this.$t('pages.categories.couldNotExport'))
         } finally {
           this.exporting = false
         }

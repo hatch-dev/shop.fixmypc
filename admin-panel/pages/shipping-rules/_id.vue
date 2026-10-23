@@ -37,8 +37,8 @@
 
           <section class="sr-card">
             <div class="sr-card-head">
-              <h5 class="sr-card-title">Rule name</h5>
-              <p class="sr-help">Only shown in the admin panel, to tell your rules apart.</p>
+              <h5 class="sr-card-title">{{ $t('pages.shippingRules.ruleName') }}</h5>
+              <p class="sr-help">{{ $t('pages.shippingRules.ruleNameHelp') }}</p>
             </div>
 
             <div class="input-wrapper sr-field mb-0">
@@ -46,7 +46,7 @@
               <input
                 id="sr-title"
                 type="text"
-                placeholder="e.g. Ireland, United Kingdom, Dublin"
+                :placeholder="$t('pages.shippingRules.titlePlaceholder')"
                 name="title"
                 v-model="result.title"
                 ref="title"
@@ -68,7 +68,7 @@
               :class="{'z-10': dropdownOpened[index], 'is-deleted': item.deleted}"
             >
               <div v-if="item.deleted" class="sr-deleted">
-                <span>This destination will be removed when you save.</span>
+                <span>{{ $t('pages.shippingRules.destinationRemoved') }}</span>
                 <button type="button" class="outline-btn" @click.prevent="undoShippingPlace(index)">
                   {{ $t('brand.undoShip') }}
                 </button>
@@ -77,8 +77,8 @@
               <section class="sr-card">
                 <div class="sr-card-head sr-card-head-row">
                   <div>
-                    <h5 class="sr-card-title">Delivery destination</h5>
-                    <p class="sr-help">Customers whose delivery address is here pay this price, once per order.</p>
+                    <h5 class="sr-card-title">{{ $t('pages.shippingRules.deliveryDestination') }}</h5>
+                    <p class="sr-help">{{ $t('pages.shippingRules.deliveryDestinationHelp') }}</p>
                   </div>
                   <button
                     v-if="activeRules > 1 && !item.deleted"
@@ -86,7 +86,7 @@
                     class="lite-btn sr-remove"
                     @click.prevent="deleteShippingPlace(index)"
                   >
-                    Remove this destination
+                    {{ $t('pages.shippingRules.removeDestination') }}
                   </button>
                 </div>
 
@@ -110,7 +110,7 @@
                     v-if="item.country && item.country !== 'ALL' && stateList && getDataFromObject(stateList, `${item.country}.states`)"
                     class="input-wrapper sr-field place-field"
                   >
-                    <label class="block">State / County</label>
+                    <label class="block">{{ $t('pages.shippingRules.stateCounty') }}</label>
                     <dropdown
                       class="grow full-width"
                       :selected-key="item.state"
@@ -122,12 +122,12 @@
                     />
                   </div>
                   <div v-else class="input-wrapper sr-field">
-                    <label class="block">State / County</label>
-                    <div class="sr-static">{{ item.country ? 'Whole area' : 'Choose a country first' }}</div>
+                    <label class="block">{{ $t('pages.shippingRules.stateCounty') }}</label>
+                    <div class="sr-static">{{ item.country ? $t('pages.shippingRules.wholeArea') : $t('pages.shippingRules.chooseCountryFirst') }}</div>
                   </div>
 
                   <div class="input-wrapper sr-field" data-field="price" :class="{ 'sr-invalid': fieldErrors.price }">
-                    <label :for="`sr-price-${index}`">Delivery price</label>
+                    <label :for="`sr-price-${index}`">{{ $t('pages.shippingRules.deliveryPrice') }}</label>
                     <div class="sr-affix has-pre">
                       <span class="sr-affix-pre">{{ currencyIcon }}</span>
                       <input
@@ -143,7 +143,7 @@
                   </div>
 
                   <div class="input-wrapper sr-field" data-field="day_needed" :class="{ 'sr-invalid': fieldErrors.day_needed }">
-                    <label :for="`sr-days-${index}`">Delivery time</label>
+                    <label :for="`sr-days-${index}`">{{ $t('pages.shippingRules.deliveryTime') }}</label>
                     <div class="sr-affix has-post">
                       <input
                         :id="`sr-days-${index}`"
@@ -153,7 +153,7 @@
                         placeholder="0"
                         v-model="item.day_needed"
                       >
-                      <span class="sr-affix-post">working days</span>
+                      <span class="sr-affix-post">{{ $t('pages.shippingRules.workingDays') }}</span>
                     </div>
                     <field-error :messages="fieldErrors.day_needed" />
                   </div>
@@ -167,22 +167,19 @@
               <section class="sr-card" data-field="weight_rates" :class="{ 'sr-invalid': fieldErrors.weight_rates }">
                 <div class="sr-card-head sr-card-head-row">
                   <div>
-                    <h5 class="sr-card-title">Price by weight <span class="sr-optional">optional</span></h5>
-                    <p class="sr-help">
-                      Charge by what the whole order weighs (each product&rsquo;s weight &times; its quantity) instead of
-                      the delivery price above. Leave this empty to charge the delivery price whatever the order weighs.
-                    </p>
+                    <h5 class="sr-card-title">{{ $t('pages.shippingRules.priceByWeight') }} <span class="sr-optional">{{ $t('pages.shippingRules.optional') }}</span></h5>
+                    <p class="sr-help">{{ $t('pages.shippingRules.priceByWeightHelp') }}</p>
                   </div>
                   <button type="button" class="lite-btn sr-head-btn" @click.prevent="addWeightBand(index)">
-                    Add weight band
+                    {{ $t('pages.shippingRules.addWeightBand') }}
                   </button>
                 </div>
 
                 <div v-if="weightBands(item).length" class="sr-bands">
                   <div class="sr-band sr-band-head" aria-hidden="true">
-                    <span>From</span>
-                    <span>Up to</span>
-                    <span>Cost</span>
+                    <span>{{ $t('pages.shippingRules.bandFrom') }}</span>
+                    <span>{{ $t('pages.shippingRules.bandUpTo') }}</span>
+                    <span>{{ $t('pages.shippingRules.bandCost') }}</span>
                     <span></span>
                   </div>
                   <div v-for="(band, b) in weightBands(item)" :key="b" class="sr-band">
@@ -192,8 +189,8 @@
                         type="number"
                         step="0.001"
                         min="0"
-                        placeholder="e.g. 10"
-                        :aria-label="`Weight band ${b + 1}: up to (kg)`"
+                        :placeholder="$t('pages.shippingRules.bandMaxPlaceholder')"
+                        :aria-label="$t('pages.shippingRules.bandMaxAria', { n: b + 1 })"
                         v-model="band.max"
                       >
                       <span class="sr-affix-post">kg</span>
@@ -205,28 +202,28 @@
                         step="0.01"
                         min="0"
                         placeholder="0.00"
-                        :aria-label="`Weight band ${b + 1}: cost`"
+                        :aria-label="$t('pages.shippingRules.bandCostAria', { n: b + 1 })"
                         v-model="band.cost"
                       >
                     </div>
                     <button
                       type="button"
                       class="lite-btn sr-band-remove"
-                      :aria-label="`Remove weight band ${b + 1}`"
+                      :aria-label="$t('pages.shippingRules.bandRemoveAria', { n: b + 1 })"
                       @click.prevent="removeWeightBand(index, b)"
                     >
-                      Remove
+                      {{ $t('pages.shippingRules.remove') }}
                     </button>
                   </div>
                 </div>
                 <p v-else class="sr-muted">
-                  No weight bands: every order to this destination pays the delivery price above.
+                  {{ $t('pages.shippingRules.noWeightBands') }}
                 </p>
 
                 <div v-if="weightBands(item).length" class="input-wrapper sr-field sr-extra">
                   <label :for="`sr-extra-${index}`">
-                    Heavier than {{ formatKg(heaviestBand(item)) }}
-                    <span class="sr-optional">optional</span>
+                    {{ $t('pages.shippingRules.heavierThan', { weight: formatKg(heaviestBand(item)) }) }}
+                    <span class="sr-optional">{{ $t('pages.shippingRules.optional') }}</span>
                   </label>
                   <div class="sr-affix has-pre has-post">
                     <span class="sr-affix-pre">{{ currencyIcon }}</span>
@@ -238,7 +235,7 @@
                       placeholder="0.00"
                       v-model="item.weight_extra_per_kg"
                     >
-                    <span class="sr-affix-post">per extra kg</span>
+                    <span class="sr-affix-post">{{ $t('pages.shippingRules.perExtraKg') }}</span>
                   </div>
                 </div>
                 <field-error :messages="fieldErrors.weight_rates" />
@@ -251,8 +248,8 @@
               <section class="sr-card">
                 <div class="sr-card-head sr-card-head-row">
                   <div>
-                    <h5 class="sr-card-title">Collection point</h5>
-                    <p class="sr-help">Let customers pick their order up at this address instead of having it posted.</p>
+                    <h5 class="sr-card-title">{{ $t('pages.shippingRules.collectionPoint') }}</h5>
+                    <p class="sr-help">{{ $t('pages.shippingRules.collectionPointHelp') }}</p>
                   </div>
                   <label class="sr-switch">
                     <input
@@ -261,17 +258,17 @@
                       @change="togglePickup(index, $event.target.checked)"
                     >
                     <span class="sr-switch-track" aria-hidden="true"><span class="sr-switch-thumb" /></span>
-                    <span class="sr-switch-label">{{ isPickup(item) ? 'On' : 'Off' }}</span>
+                    <span class="sr-switch-label">{{ isPickup(item) ? $t('pages.shippingRules.on') : $t('pages.shippingRules.off') }}</span>
                   </label>
                 </div>
 
                 <p v-if="isPickup(item) && item.country === 'ALL'" class="sr-warn">
-                  A collection point needs a specific country. Choose one under Delivery destination.
+                  {{ $t('pages.shippingRules.collectionNeedsCountry') }}
                 </p>
 
                 <div v-if="isPickup(item)" class="sr-grid sr-grid-2">
                   <div class="input-wrapper sr-field" data-field="pickup_price" :class="{ 'sr-invalid': fieldErrors.pickup_price }">
-                    <label :for="`sr-pprice-${index}`">Collection price <span class="sr-req" aria-hidden="true">*</span></label>
+                    <label :for="`sr-pprice-${index}`">{{ $t('pages.shippingRules.collectionPrice') }} <span class="sr-req" aria-hidden="true">*</span></label>
                     <div class="sr-affix has-pre">
                       <span class="sr-affix-pre">{{ currencyIcon }}</span>
                       <input
@@ -279,7 +276,7 @@
                         type="number"
                         step="0.01"
                         min="0"
-                        placeholder="0.00 = free"
+                        :placeholder="$t('pages.shippingRules.collectionPricePlaceholder')"
                         required
                         v-model="item.pickup_price"
                       >
@@ -288,25 +285,25 @@
                   </div>
 
                   <div class="input-wrapper sr-field" data-field="pickup_phone" :class="{ 'sr-invalid': fieldErrors.pickup_phone }">
-                    <label :for="`sr-pphone-${index}`">Store phone <span class="sr-req" aria-hidden="true">*</span></label>
-                    <input :id="`sr-pphone-${index}`" type="text" required placeholder="e.g. 01 504 7000" v-model="item.pickup_phone">
+                    <label :for="`sr-pphone-${index}`">{{ $t('pages.shippingRules.storePhone') }} <span class="sr-req" aria-hidden="true">*</span></label>
+                    <input :id="`sr-pphone-${index}`" type="text" required :placeholder="$t('pages.shippingRules.storePhonePlaceholder')" v-model="item.pickup_phone">
                     <field-error :messages="fieldErrors.pickup_phone" />
                   </div>
 
                   <div class="input-wrapper sr-field sr-span-2" data-field="pickup_address_line_1" :class="{ 'sr-invalid': fieldErrors.pickup_address_line_1 }">
-                    <label :for="`sr-pa1-${index}`">Address line 1 <span class="sr-req" aria-hidden="true">*</span></label>
-                    <input :id="`sr-pa1-${index}`" type="text" required placeholder="Street and number" v-model="item.pickup_address_line_1">
+                    <label :for="`sr-pa1-${index}`">{{ $t('pages.shippingRules.addressLine1') }} <span class="sr-req" aria-hidden="true">*</span></label>
+                    <input :id="`sr-pa1-${index}`" type="text" required :placeholder="$t('pages.shippingRules.addressLine1Placeholder')" v-model="item.pickup_address_line_1">
                     <field-error :messages="fieldErrors.pickup_address_line_1" />
                   </div>
 
                   <div class="input-wrapper sr-field sr-span-2">
-                    <label :for="`sr-pa2-${index}`">Address line 2 <span class="sr-optional">(optional)</span></label>
-                    <input :id="`sr-pa2-${index}`" type="text" placeholder="Unit, building, area" v-model="item.pickup_address_line_2">
+                    <label :for="`sr-pa2-${index}`">{{ $t('pages.shippingRules.addressLine2') }} <span class="sr-optional">{{ $t('pages.shippingRules.optionalParen') }}</span></label>
+                    <input :id="`sr-pa2-${index}`" type="text" :placeholder="$t('pages.shippingRules.addressLine2Placeholder')" v-model="item.pickup_address_line_2">
                   </div>
 
                   <div class="input-wrapper sr-field" data-field="pickup_city" :class="{ 'sr-invalid': fieldErrors.pickup_city }">
-                    <label :for="`sr-pcity-${index}`">Town / City <span class="sr-req" aria-hidden="true">*</span></label>
-                    <input :id="`sr-pcity-${index}`" type="text" required placeholder="Town / City" v-model="item.pickup_city">
+                    <label :for="`sr-pcity-${index}`">{{ $t('pages.shippingRules.townCity') }} <span class="sr-req" aria-hidden="true">*</span></label>
+                    <input :id="`sr-pcity-${index}`" type="text" required :placeholder="$t('pages.shippingRules.townCity')" v-model="item.pickup_city">
                     <field-error :messages="fieldErrors.pickup_city" />
                   </div>
 
@@ -315,12 +312,12 @@
                     the row is for one county - the server holds it to that.
                   -->
                   <div v-if="rowCountyName(item)" class="input-wrapper sr-field" data-field="pickup_state" :class="{ 'sr-invalid': fieldErrors.pickup_state }">
-                    <label class="block">County / State <span class="sr-req" aria-hidden="true">*</span></label>
+                    <label class="block">{{ $t('pages.shippingRules.countyState') }} <span class="sr-req" aria-hidden="true">*</span></label>
                     <div class="sr-static">{{ rowCountyName(item) }}</div>
                     <field-error :messages="fieldErrors.pickup_state" />
                   </div>
                   <div v-else-if="Object.keys(pickupCountyOptions(item)).length" class="input-wrapper sr-field" data-field="pickup_state" :class="{ 'sr-invalid': fieldErrors.pickup_state }">
-                    <label class="block">County / State <span class="sr-req" aria-hidden="true">*</span></label>
+                    <label class="block">{{ $t('pages.shippingRules.countyState') }} <span class="sr-req" aria-hidden="true">*</span></label>
                     <dropdown
                       class="grow full-width"
                       :selected-key="pickupCountyKey(item)"
@@ -334,28 +331,28 @@
                     <field-error :messages="fieldErrors.pickup_state" />
                   </div>
                   <div v-else class="input-wrapper sr-field" data-field="pickup_state" :class="{ 'sr-invalid': fieldErrors.pickup_state }">
-                    <label :for="`sr-pstate-${index}`">County / State <span class="sr-req" aria-hidden="true">*</span></label>
-                    <input :id="`sr-pstate-${index}`" type="text" required placeholder="County / State" v-model="item.pickup_state">
+                    <label :for="`sr-pstate-${index}`">{{ $t('pages.shippingRules.countyState') }} <span class="sr-req" aria-hidden="true">*</span></label>
+                    <input :id="`sr-pstate-${index}`" type="text" required :placeholder="$t('pages.shippingRules.countyState')" v-model="item.pickup_state">
                     <field-error :messages="fieldErrors.pickup_state" />
                   </div>
 
                   <div class="input-wrapper sr-field" data-field="pickup_zip" :class="{ 'sr-invalid': fieldErrors.pickup_zip }">
-                    <label :for="`sr-pzip-${index}`">Eircode / Postcode <span class="sr-req" aria-hidden="true">*</span></label>
-                    <input :id="`sr-pzip-${index}`" type="text" required placeholder="Eircode / Postcode" v-model="item.pickup_zip">
+                    <label :for="`sr-pzip-${index}`">{{ $t('pages.shippingRules.postcode') }} <span class="sr-req" aria-hidden="true">*</span></label>
+                    <input :id="`sr-pzip-${index}`" type="text" required :placeholder="$t('pages.shippingRules.postcode')" v-model="item.pickup_zip">
                     <field-error :messages="fieldErrors.pickup_zip" />
                   </div>
 
                   <div class="input-wrapper sr-field">
-                    <label class="block">Country <span class="sr-req" aria-hidden="true">*</span></label>
-                    <div class="sr-static">{{ countryName(item.country) || 'Choose a country above' }}</div>
+                    <label class="block">{{ $t('pages.shippingRules.country') }} <span class="sr-req" aria-hidden="true">*</span></label>
+                    <div class="sr-static">{{ countryName(item.country) || $t('pages.shippingRules.chooseCountryAbove') }}</div>
                   </div>
 
                   <p class="sr-muted sr-span-2">
-                    The store is in the destination country above. Products limited to other countries cannot be collected here.
+                    {{ $t('pages.shippingRules.storeCountryNote') }}
                   </p>
                 </div>
 
-                <p v-else class="sr-muted">Collection is off: customers in this destination can only have their order posted.</p>
+                <p v-else class="sr-muted">{{ $t('pages.shippingRules.collectionOff') }}</p>
               </section>
             </div>
           </template>
@@ -363,14 +360,14 @@
 
         <aside class="sr-aside">
           <div class="sr-card sr-info">
-            <h5 class="sr-card-title">How shipping rules work</h5>
+            <h5 class="sr-card-title">{{ $t('pages.shippingRules.howTitle') }}</h5>
             <ul>
-              <li>Each rule is <strong>one destination</strong>: a whole country, or one state/county of it.</li>
-              <li>At checkout the rule covering the customer&rsquo;s address is used, and delivery is charged <strong>once per order</strong>.</li>
-              <li>An exact county beats &ldquo;All states&rdquo;, which beats &ldquo;All countries&rdquo;. For a cheaper Dublin price, add a rule for Ireland &rsaquo; Dublin.</li>
-              <li>Places already covered by another rule are not offered.</li>
-              <li><strong>Price by weight</strong> charges the band the whole order&rsquo;s weight falls in. Orders heavier than the last band pay its cost plus the cost per extra kg, or cannot be delivered when that is empty. Products with no weight count as 0 kg, so set weights on products first.</li>
-              <li>Products are not linked to rules. To stop a product being sold somewhere, use <em>Where this product can be sold</em> on the product.</li>
+              <i18n path="pages.shippingRules.how1" tag="li"><template #dest><strong>{{ $t('pages.shippingRules.how1Dest') }}</strong></template></i18n>
+              <i18n path="pages.shippingRules.how2" tag="li"><template #once><strong>{{ $t('pages.shippingRules.how2Once') }}</strong></template></i18n>
+              <li>{{ $t('pages.shippingRules.how3') }}</li>
+              <li>{{ $t('pages.shippingRules.how4') }}</li>
+              <i18n path="pages.shippingRules.how5" tag="li"><template #pbw><strong>{{ $t('pages.shippingRules.priceByWeight') }}</strong></template></i18n>
+              <i18n path="pages.shippingRules.how6" tag="li"><template #setting><em>{{ $t('pages.shippingRules.how6Setting') }}</em></template></i18n>
             </ul>
           </div>
         </aside>
@@ -519,8 +516,7 @@
         if (!heaviest) return ''
 
         if (extra === '' || extra === null || extra === undefined || isNaN(parseFloat(extra))) {
-          return 'Orders heavier than ' + this.formatKg(heaviest) + ' cannot be delivered here. ' +
-            'Enter a cost per extra kg to deliver them.'
+          return this.$t('pages.shippingRules.heavierUndeliverable', { weight: this.formatKg(heaviest) })
         }
 
         const last = this.weightBands(place).find(band => this.bandMax(band) === heaviest)
@@ -529,9 +525,13 @@
         const over = 5
         const money = value => this.currencyIcon + value.toFixed(2)
 
-        return 'Heavier orders pay the last band plus the cost per extra kg: a ' +
-          this.formatKg(heaviest + over) + ' order costs ' + money(cost + rate * over) +
-          ' (' + money(cost) + ' + ' + over + ' kg × ' + money(rate) + ').'
+        return this.$t('pages.shippingRules.heavierExample', {
+          weight: this.formatKg(heaviest + over),
+          total: money(cost + rate * over),
+          cost: money(cost),
+          over,
+          rate: money(rate)
+        })
       },
       heaviestBand(place) {
         const maxes = this.weightBands(place).map(band => this.bandMax(band)).filter(max => max !== null)
@@ -561,7 +561,7 @@
       destinationSummary(place) {
         const all = place.country === 'ALL'
         const country = all
-          ? 'Every country without its own rule'
+          ? this.$t('pages.shippingRules.everyCountry')
           : (this.countries?.[place.country]?.name || place.country)
         const state = place.state && place.state !== 'ALL'
           ? (this.countries?.[place.country]?.states?.[place.state]?.name || place.state)
@@ -569,13 +569,16 @@
         const price = parseFloat(place.price || 0)
         const bands = this.weightBands(place).length
         const cost = bands
-          ? 'priced by weight (' + bands + ' ' + (bands === 1 ? 'band' : 'bands') + ')'
-          : (price > 0 ? this.currencyIcon + price.toFixed(2) : 'free delivery')
+          ? this.$tc('pages.shippingRules.pricedByWeight', bands, { count: bands })
+          : (price > 0 ? this.currencyIcon + price.toFixed(2) : this.$t('pages.shippingRules.freeDelivery'))
         const days = parseInt(place.day_needed || 0)
-        const where = state ? state + ', ' + country : country + (all ? '' : ' (whole country)')
+        const where = state
+          ? this.$t('pages.shippingRules.stateOfCountry', { state, country })
+          : (all ? country : this.$t('pages.shippingRules.wholeCountry', { country }))
 
-        return where + ': ' + cost +
-          (days > 0 ? ', usually ' + days + ' working ' + (days === 1 ? 'day' : 'days') + '.' : '.')
+        return days > 0
+          ? this.$tc('pages.shippingRules.summaryWithDays', days, { where, cost, days })
+          : this.$t('pages.shippingRules.summary', { where, cost })
       },
       pickupUpdated(index, evt) {
         this.result.shipping_places[index] = {...this.result.shipping_places[index], ...evt}
@@ -693,7 +696,7 @@
         const free = this.firstFreePlace()
 
         if (!free) {
-          this.setToastError('Every country and state is already covered by a shipping rule.')
+          this.setToastError(this.$t('pages.shippingRules.allCovered'))
           return
         }
 

@@ -2,16 +2,14 @@
 
   <div class="ab-page">
 
-    <p class="ab-crumb">Shop / Banners</p>
+    <p class="ab-crumb">{{ $t('pages.authBanners.crumb') }}</p>
 
     <div class="ab-head">
 
       <div>
-        <h2 class="ab-title">Sign-in banners</h2>
+        <h2 class="ab-title">{{ $t('pages.authBanners.title') }}</h2>
         <p class="ab-lede">
-          These fill the left side of the shop sign-in, register and
-          password screens. Live banners rotate every 7 seconds in the order
-          below.
+          {{ $t('pages.authBanners.lede') }}
         </p>
       </div>
 
@@ -20,7 +18,7 @@
         class="button primary-btn"
         @click="openEditor(null)"
       >
-        + New banner
+        + {{ $t('pages.authBanners.newBanner') }}
       </button>
 
     </div>
@@ -31,10 +29,10 @@
       class="ab-preview-wrap"
     >
 
-      <h3 class="ab-preview-title">Live preview</h3>
+      <h3 class="ab-preview-title">{{ $t('pages.authBanners.livePreview') }}</h3>
 
       <p class="ab-preview-sub">
-        What a customer sees on the sign-in screen. Pick a banner below to preview it.
+        {{ $t('pages.authBanners.previewSub') }}
       </p>
 
       <div class="ab-mock">
@@ -54,9 +52,9 @@
       v-else-if="!banners.length"
       class="ab-empty"
     >
-      <b>No banners yet</b>
+      <b>{{ $t('pages.authBanners.noBanners') }}</b>
       <span>
-        Customers see the branded placeholder until you add one.
+        {{ $t('pages.authBanners.noBannersSub') }}
       </span>
     </div>
 
@@ -84,14 +82,14 @@
             v-else
             class="ab-noimg"
           >
-            No image · placeholder shown
+            {{ $t('pages.authBanners.noImage') }}
           </span>
 
         </div>
 
         <div class="ab-card-body">
 
-          <h3>{{ banner.title || banner.name || 'Untitled banner' }}</h3>
+          <h3>{{ banner.title || banner.name || $t('pages.authBanners.untitledBanner') }}</h3>
 
           <p v-if="banner.sub">
             {{ banner.sub }}
@@ -111,7 +109,7 @@
             </span>
 
             <span class="ab-tag">
-              Position {{ index + 1 }}
+              {{ $t('pages.authBanners.position', { n: index + 1 }) }}
             </span>
 
           </div>
@@ -125,21 +123,21 @@
             class="lite-btn"
             @click="openEditor(banner)"
           >
-            Edit
+            {{ $t('category.edit') }}
           </button>
 
           <button
             class="lite-btn"
             @click="previewBanner(banner)"
           >
-            Preview
+            {{ $t('pages.authBanners.preview') }}
           </button>
 
           <button
             v-if="$can('banner', 'edit')"
             class="lite-btn ab-icon-btn"
             :disabled="index === 0 || reordering"
-            aria-label="Move up"
+            :aria-label="$t('pages.authBanners.moveUp')"
             @click="move(index, index - 1)"
           >
             &uarr;
@@ -149,7 +147,7 @@
             v-if="$can('banner', 'edit')"
             class="lite-btn ab-icon-btn"
             :disabled="index === banners.length - 1 || reordering"
-            aria-label="Move down"
+            :aria-label="$t('pages.authBanners.moveDown')"
             @click="move(index, index + 1)"
           >
             &darr;
@@ -160,7 +158,7 @@
             class="lite-btn ab-danger-btn"
             @click="removeBanner(banner)"
           >
-            Delete
+            {{ $t('category.delete') }}
           </button>
 
           <label
@@ -201,12 +199,12 @@
 
         <div>
           <h2 id="ab-fly-title">
-            {{ editing ? 'Edit banner' : 'New banner' }}
+            {{ editing ? $t('pages.authBanners.editBanner') : $t('pages.authBanners.newBanner') }}
           </h2>
           <p class="ab-modal-sub">
             {{ editing
-              ? (editing.name || 'Untitled banner')
-              : 'Fills the left side of the shop sign-in screens.' }}
+              ? (editing.name || $t('pages.authBanners.untitledBanner'))
+              : $t('pages.authBanners.modalSub') }}
           </p>
         </div>
 
@@ -220,12 +218,12 @@
               :false-value="0"
             >
             <span class="ab-track" />
-            <span class="ab-switch-text">Live</span>
+            <span class="ab-switch-text">{{ $t('pages.authBanners.live') }}</span>
           </label>
 
           <button
             class="ab-x"
-            aria-label="Close builder"
+            :aria-label="$t('pages.authBanners.closeBuilder')"
             @click="closeEditor"
           >
             &times;
@@ -245,11 +243,11 @@
 
           <section class="ab-fs">
 
-            <h3>Content</h3>
+            <h3>{{ $t('pages.authBanners.content') }}</h3>
 
             <div class="input-wrapper">
               <label for="ab-title">
-                Headline
+                {{ $t('pages.authBanners.headline') }}
                 <span class="ab-req">*</span>
               </label>
               <input
@@ -257,46 +255,46 @@
                 v-model="form.title"
                 type="text"
                 maxlength="70"
-                placeholder="Free diagnostics on every laptop repair"
+                :placeholder="$t('pages.authBanners.headlinePlaceholder')"
                 :class="{ invalid: !form.title && hasError }"
               >
               <p class="ab-hint">
-                <span>Under about 60 characters so it holds on two lines.</span>
+                <span>{{ $t('pages.authBanners.headlineHint') }}</span>
                 <span class="ab-counter">{{ (form.title || '').length }}/70</span>
               </p>
               <span
                 v-if="!form.title && hasError"
                 class="error"
               >
-                {{ $t('category.req', { type: 'Headline' }) }}
+                {{ $t('category.req', { type: $t('pages.authBanners.headline') }) }}
               </span>
             </div>
 
             <div class="input-wrapper">
-              <label for="ab-eyebrow">Eyebrow</label>
+              <label for="ab-eyebrow">{{ $t('pages.authBanners.eyebrow') }}</label>
               <input
                 id="ab-eyebrow"
                 v-model="form.eyebrow"
                 type="text"
                 maxlength="28"
-                placeholder="August offer"
+                :placeholder="$t('pages.authBanners.eyebrowPlaceholder')"
               >
               <p class="ab-hint">
-                <span>Small pill above the headline.</span>
+                <span>{{ $t('pages.authBanners.eyebrowHint') }}</span>
                 <span class="ab-counter">{{ (form.eyebrow || '').length }}/28</span>
               </p>
             </div>
 
             <div class="input-wrapper">
-              <label for="ab-sub">Supporting line</label>
+              <label for="ab-sub">{{ $t('pages.authBanners.supportingLine') }}</label>
               <textarea
                 id="ab-sub"
                 v-model="form.sub"
                 maxlength="180"
-                placeholder="No fix, no fee — you only pay when you approve the quote."
+                :placeholder="$t('pages.authBanners.subPlaceholder')"
               />
               <p class="ab-hint">
-                <span>Hidden on phones, so never put anything essential here.</span>
+                <span>{{ $t('pages.authBanners.subHint') }}</span>
                 <span class="ab-counter">{{ (form.sub || '').length }}/180</span>
               </p>
             </div>
@@ -305,30 +303,30 @@
 
           <section class="ab-fs">
 
-            <h3>Button</h3>
+            <h3>{{ $t('pages.authBanners.button') }}</h3>
 
             <div class="ab-two">
 
               <div class="input-wrapper">
-                <label for="ab-cta">Button label</label>
+                <label for="ab-cta">{{ $t('pages.authBanners.buttonLabel') }}</label>
                 <input
                   id="ab-cta"
                   v-model="form.cta"
                   type="text"
                   maxlength="26"
-                  placeholder="See repair prices"
+                  :placeholder="$t('pages.authBanners.ctaPlaceholder')"
                 >
               </div>
 
               <div class="input-wrapper">
-                <label for="ab-href">Links to</label>
+                <label for="ab-href">{{ $t('pages.authBanners.linksTo') }}</label>
                 <url-picker
                   v-model="form.href"
                   :options="linkOptions"
-                  placeholder="Search pages, or type a path"
+                  :placeholder="$t('pages.authBanners.hrefPlaceholder')"
                 />
                 <p class="ab-hint">
-                  <span>Pick a shop page, or type any path or https:// address.</span>
+                  <span>{{ $t('pages.authBanners.hrefHint') }}</span>
                 </p>
               </div>
 
@@ -341,22 +339,22 @@
                 :true-value="1"
                 :false-value="0"
               >
-              <span>Open in a new tab</span>
+              <span>{{ $t('pages.authBanners.newTab') }}</span>
             </label>
 
             <p class="ab-hint">
-              <span>Leave the label empty for a banner with no button.</span>
+              <span>{{ $t('pages.authBanners.noButtonHint') }}</span>
             </p>
 
           </section>
 
           <section class="ab-fs">
 
-            <h3>Artwork</h3>
+            <h3>{{ $t('pages.authBanners.artwork') }}</h3>
 
             <div class="input-wrapper">
 
-              <label>Image</label>
+              <label>{{ $t('admin.img') }}</label>
 
               <div
                 v-if="!imagePreview"
@@ -367,8 +365,8 @@
                 @dragleave.prevent="dragging = false"
                 @drop.prevent="onDrop"
               >
-                <b>Drop an image or click to choose</b>
-                <span>1200 × 1600 px portrait, JPG or WebP, under 400 KB</span>
+                <b>{{ $t('pages.authBanners.dropImage') }}</b>
+                <span>{{ $t('pages.authBanners.imageSpec') }}</span>
               </div>
 
               <div
@@ -377,7 +375,7 @@
               >
                 <img
                   :src="imagePreview"
-                  alt="Banner artwork"
+                  :alt="$t('pages.authBanners.bannerArtwork')"
                 >
                 <div class="ab-shot-acts">
                   <button
@@ -385,14 +383,14 @@
                     class="lite-btn"
                     @click="$refs.file.click()"
                   >
-                    Replace
+                    {{ $t('pages.authBanners.replace') }}
                   </button>
                   <button
                     type="button"
                     class="lite-btn ab-danger-btn"
                     @click="clearImage"
                   >
-                    Remove
+                    {{ $t('pages.authBanners.remove') }}
                   </button>
                 </div>
               </div>
@@ -407,9 +405,7 @@
 
               <p class="ab-hint">
                 <span>
-                  Dropped in whole and centred. Drag it in the preview to move
-                  it, or pull the handles to stretch it. Leave empty for the
-                  branded placeholder.
+                  {{ $t('pages.authBanners.artworkHint') }}
                 </span>
               </p>
 
@@ -417,7 +413,7 @@
 
             <div class="input-wrapper">
 
-              <label>Placeholder colours</label>
+              <label>{{ $t('pages.authBanners.placeholderColours') }}</label>
 
               <div class="ab-colors">
 
@@ -425,7 +421,7 @@
                   <input
                     v-model="bgFrom"
                     type="color"
-                    aria-label="Placeholder gradient start"
+                    :aria-label="$t('pages.authBanners.gradientStart')"
                   >
                   <input
                     v-model="bgFrom"
@@ -439,7 +435,7 @@
                   <input
                     v-model="bgTo"
                     type="color"
-                    aria-label="Placeholder gradient end"
+                    :aria-label="$t('pages.authBanners.gradientEnd')"
                   >
                   <input
                     v-model="bgTo"
@@ -454,13 +450,13 @@
                   class="lite-btn"
                   @click="resetColours"
                 >
-                  Reset
+                  {{ $t('pages.authBanners.reset') }}
                 </button>
 
               </div>
 
               <p class="ab-hint">
-                <span>Used behind the copy whenever there is no artwork for the screen.</span>
+                <span>{{ $t('pages.authBanners.coloursHint') }}</span>
               </p>
 
             </div>
@@ -469,11 +465,11 @@
 
           <section class="ab-fs">
 
-            <h3>Layout</h3>
+            <h3>{{ $t('pages.authBanners.layout') }}</h3>
 
             <div class="input-wrapper">
 
-              <label>Text colour</label>
+              <label>{{ $t('pages.authBanners.textColour') }}</label>
 
               <div class="ab-colors">
 
@@ -481,7 +477,7 @@
                   <input
                     v-model="textColor"
                     type="color"
-                    aria-label="Text colour"
+                    :aria-label="$t('pages.authBanners.textColour')"
                   >
                   <input
                     v-model="textColor"
@@ -496,16 +492,14 @@
                   class="lite-btn"
                   @click="resetTextColor"
                 >
-                  Reset
+                  {{ $t('pages.authBanners.reset') }}
                 </button>
 
               </div>
 
               <p class="ab-hint">
                 <span>
-                  Used for the eyebrow, headline and supporting line. White holds
-                  up over most artwork; pick something darker only for a light
-                  image.
+                  {{ $t('pages.authBanners.textColourHint') }}
                 </span>
               </p>
 
@@ -515,26 +509,26 @@
 
           <section class="ab-fs">
 
-            <h3>Where and when</h3>
+            <h3>{{ $t('pages.authBanners.whereWhen') }}</h3>
 
             <div class="input-wrapper">
-              <label for="ab-placement">Shows on</label>
+              <label for="ab-placement">{{ $t('pages.authBanners.showsOn') }}</label>
               <select
                 id="ab-placement"
                 v-model="form.placement"
               >
-                <option value="auth">Every auth screen</option>
-                <option value="login">Sign in only</option>
-                <option value="signup">Register only</option>
-                <option value="forgot">Forgot password only</option>
-                <option value="reset">Reset password only</option>
+                <option value="auth">{{ placementLabels.auth }}</option>
+                <option value="login">{{ placementLabels.login }}</option>
+                <option value="signup">{{ placementLabels.signup }}</option>
+                <option value="forgot">{{ placementLabels.forgot }}</option>
+                <option value="reset">{{ placementLabels.reset }}</option>
               </select>
             </div>
 
             <div class="ab-two">
 
               <div class="input-wrapper">
-                <label for="ab-start">Starts</label>
+                <label for="ab-start">{{ $t('pages.authBanners.startsLabel') }}</label>
                 <input
                   id="ab-start"
                   v-model="form.starts_at"
@@ -543,7 +537,7 @@
               </div>
 
               <div class="input-wrapper">
-                <label for="ab-end">Ends</label>
+                <label for="ab-end">{{ $t('pages.authBanners.endsLabel') }}</label>
                 <input
                   id="ab-end"
                   v-model="form.ends_at"
@@ -558,26 +552,25 @@
               v-if="invalidDates"
               class="error"
             >
-              The end date must be on or after the start date.
+              {{ $t('pages.authBanners.invalidDates') }}
             </span>
 
             <p class="ab-hint">
               <span>
-                Leave both empty to run indefinitely. Outside these dates the
-                banner is skipped, even when it is set to live.
+                {{ $t('pages.authBanners.datesHint') }}
               </span>
             </p>
 
             <div class="input-wrapper ab-spaced">
-              <label for="ab-name">Internal name</label>
+              <label for="ab-name">{{ $t('pages.authBanners.internalName') }}</label>
               <input
                 id="ab-name"
                 v-model="form.name"
                 type="text"
-                placeholder="August diagnostics push"
+                :placeholder="$t('pages.authBanners.namePlaceholder')"
               >
               <p class="ab-hint">
-                <span>Staff only — how you will find this banner in the list.</span>
+                <span>{{ $t('pages.authBanners.nameHint') }}</span>
               </p>
             </div>
 
@@ -590,16 +583,16 @@
 
           <div class="ab-mp-bar">
 
-            <span class="ab-mp-label">Live preview</span>
+            <span class="ab-mp-label">{{ $t('pages.authBanners.livePreview') }}</span>
 
             <button
               v-if="imagePreview"
               type="button"
               class="lite-btn ab-mp-reset"
-              title="Centre the image again at its natural shape"
+              :title="$t('pages.authBanners.resetImageTitle')"
               @click="refitImage"
             >
-              Reset image
+              {{ $t('pages.authBanners.resetImage') }}
             </button>
 
             <div class="ab-mp-tog">
@@ -608,14 +601,14 @@
                 :class="{ on: device === 'desktop' }"
                 @click="device = 'desktop'"
               >
-                Desktop
+                {{ $t('pages.authBanners.desktop') }}
               </button>
               <button
                 type="button"
                 :class="{ on: device === 'mobile' }"
                 @click="device = 'mobile'"
               >
-                Mobile
+                {{ $t('pages.authBanners.mobile') }}
               </button>
             </div>
 
@@ -634,7 +627,7 @@
           />
 
           <p class="ab-mp-hint">
-            Updates as you type. Rotates with any other live banner every 7 seconds.
+            {{ $t('pages.authBanners.builderHint') }}
           </p>
 
         </aside>
@@ -648,7 +641,7 @@
           class="lite-btn ab-danger-btn"
           @click="removeFromEditor"
         >
-          Delete banner
+          {{ $t('pages.authBanners.deleteBanner') }}
         </button>
 
         <span class="ab-modal-foot-state">{{ saveState }}</span>
@@ -657,7 +650,7 @@
           class="lite-btn"
           @click="closeEditor"
         >
-          Cancel
+          {{ $t('pages.authBanners.cancel') }}
         </button>
 
         <button
@@ -665,7 +658,7 @@
           :disabled="saving"
           @click="save"
         >
-          {{ saving ? $t('list.loadn') + '...' : 'Save banner' }}
+          {{ saving ? $t('pages.authBanners.saving') + '...' : $t('pages.authBanners.saveBanner') }}
         </button>
 
       </div>
@@ -729,11 +722,11 @@
         reordering: false,
         toggling: null,
         placementLabels: {
-          auth: 'Every auth screen',
-          login: 'Sign in only',
-          signup: 'Register only',
-          forgot: 'Forgot password only',
-          reset: 'Reset password only'
+          auth: this.$t('pages.authBanners.placementAuth'),
+          login: this.$t('pages.authBanners.placementLogin'),
+          signup: this.$t('pages.authBanners.placementSignup'),
+          forgot: this.$t('pages.authBanners.placementForgot'),
+          reset: this.$t('pages.authBanners.placementReset')
         },
         // ── builder ──
         open: false,
@@ -819,20 +812,20 @@
       saveState() {
 
         if (this.form.status !== 1) {
-          return 'Saved as off — customers won’t see it'
+          return this.$t('pages.authBanners.stateOff')
         }
 
         const today = this.today()
 
         if (this.form.starts_at && this.form.starts_at > today) {
-          return `Scheduled to start ${this.form.starts_at}`
+          return this.$t('pages.authBanners.stateScheduled', { date: this.form.starts_at })
         }
 
         if (this.form.ends_at && this.form.ends_at < today) {
-          return 'End date has passed — it won’t show'
+          return this.$t('pages.authBanners.stateEnded')
         }
 
-        return 'Live as soon as you save'
+        return this.$t('pages.authBanners.stateLive')
       }
     },
 
@@ -853,26 +846,26 @@
       bannerState(banner) {
 
         if (banner.status !== 1) {
-          return {cls: 'off', label: 'Off'}
+          return {cls: 'off', label: this.$t('pages.authBanners.off')}
         }
 
         const today = this.today()
 
         if (banner.starts_at && banner.starts_at > today) {
-          return {cls: 'sched', label: `Starts ${banner.starts_at}`}
+          return {cls: 'sched', label: this.$t('pages.authBanners.startsOn', { date: banner.starts_at })}
         }
 
         if (banner.ends_at && banner.ends_at < today) {
-          return {cls: 'off', label: `Ended ${banner.ends_at}`}
+          return {cls: 'off', label: this.$t('pages.authBanners.endedOn', { date: banner.ends_at })}
         }
 
-        return {cls: 'live', label: 'Live'}
+        return {cls: 'live', label: this.$t('pages.authBanners.live')}
       },
 
       previewBanner(banner) {
 
         this.previewed = banner
-        this.toast(`Previewing "${banner.name || banner.title}"`)
+        this.toast(this.$t('pages.authBanners.previewing', { name: banner.name || banner.title }))
 
         this.$nextTick(() => {
           if (this.$refs.previewWrap) {
@@ -1000,12 +993,12 @@
         }
 
         if (!/^image\//.test(file.type)) {
-          this.$store.dispatch('ui/setToastError', 'That file isn’t an image.')
+          this.$store.dispatch('ui/setToastError', this.$t('pages.authBanners.notImage'))
           return
         }
 
         if (file.size > 2 * 1024 * 1024) {
-          this.$store.dispatch('ui/setToastError', 'Image is over 2 MB — compress it first.')
+          this.$store.dispatch('ui/setToastError', this.$t('pages.authBanners.tooLarge'))
           return
         }
 
@@ -1013,7 +1006,7 @@
         this.awaitingFit = true
         this.photo = file
         this.localPreview = URL.createObjectURL(file)
-        this.toast('Image ready. Save to apply.')
+        this.toast(this.$t('pages.authBanners.imageReady'))
       },
 
       clearImage() {
@@ -1068,7 +1061,7 @@
           this.closeEditor()
           await this.getBanners()
 
-          this.toast(wasEditing ? 'Banner saved' : 'Banner created')
+          this.toast(wasEditing ? this.$t('pages.authBanners.saved') : this.$t('pages.authBanners.created'))
 
         } catch (e) {
           this.toastError(e)
@@ -1098,7 +1091,7 @@
 
           this.closeEditor()
           await this.getBanners()
-          this.toast('Banner deleted')
+          this.toast(this.$t('pages.authBanners.deleted'))
 
         } catch (e) {
           this.toastError(e)
@@ -1126,7 +1119,7 @@
               this.previewed = updated
             }
 
-            this.toast(updated.status === 1 ? 'Banner is live' : 'Banner turned off')
+            this.toast(updated.status === 1 ? this.$t('pages.authBanners.nowLive') : this.$t('pages.authBanners.turnedOff'))
           }
 
         } catch (e) {
@@ -1150,7 +1143,7 @@
             params: {ids: reordered.map(i => i.id)}
           })
 
-          this.toast(to < from ? 'Moved up' : 'Moved down')
+          this.toast(to < from ? this.$t('pages.authBanners.movedUp') : this.$t('pages.authBanners.movedDown'))
 
         } catch (e) {
           this.toastError(e)
@@ -1174,7 +1167,7 @@
           }
 
           await this.getBanners()
-          this.toast('Banner deleted')
+          this.toast(this.$t('pages.authBanners.deleted'))
 
         } catch (e) {
           this.toastError(e)

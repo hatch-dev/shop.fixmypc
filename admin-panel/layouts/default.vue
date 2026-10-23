@@ -89,6 +89,10 @@
       }
     },
     mixins: [],
+    head() {
+      // The page language drives CSS text-transform: a Turkish "i" only uppercases to "İ" under lang="tr"
+      return { htmlAttrs: { lang: this.$i18n?.locale || 'en' } }
+    },
     computed:{
       sidebarClass(){
         return this.sidebarOpen ? 'sidebar-opened' : 'sidebar-closed'

@@ -62,17 +62,17 @@
         >
           <span
             class="abp-handle e"
-            title="Stretch width"
+            :title="$t('cmp.AuthBannerPreview.stretchWidth')"
             @mousedown="startResize($event, 'x')"
           />
           <span
             class="abp-handle s"
-            title="Stretch height"
+            :title="$t('cmp.AuthBannerPreview.stretchHeight')"
             @mousedown="startResize($event, 'y')"
           />
           <span
             class="abp-handle se"
-            title="Stretch width and height"
+            :title="$t('cmp.AuthBannerPreview.stretchBoth')"
             @mousedown="startResize($event, 'xy')"
           />
         </div>
@@ -92,7 +92,7 @@
           </span>
 
           <h2 class="abp-slide-title">
-            {{ banner.title || 'Headline goes here' }}
+            {{ banner.title || $t('cmp.AuthBannerPreview.headlinePlaceholder') }}
           </h2>
 
           <p
@@ -135,29 +135,29 @@
             <span class="abp-brand-logo">FixMyPC</span>
           </div>
 
-          <h1 class="abp-h1">Sign in to your account</h1>
+          <h1 class="abp-h1">{{ $t('cmp.AuthBannerPreview.signInTitle') }}</h1>
 
-          <p class="abp-lede">Track repairs, reorder parts and check out faster.</p>
+          <p class="abp-lede">{{ $t('cmp.AuthBannerPreview.lede') }}</p>
 
           <div class="abp-group">
-            <span class="abp-label">Email address</span>
+            <span class="abp-label">{{ $t('cmp.AuthBannerPreview.emailAddress') }}</span>
             <span class="abp-input" />
           </div>
 
           <div class="abp-group">
-            <span class="abp-label">Password</span>
+            <span class="abp-label">{{ $t('cmp.AuthBannerPreview.password') }}</span>
             <span class="abp-input" />
           </div>
 
-          <span class="abp-btn">Sign in</span>
+          <span class="abp-btn">{{ $t('cmp.AuthBannerPreview.signIn') }}</span>
 
           <p class="abp-foot">
-            New to FixMyPC?
-            <span class="abp-foot-link">Create an account</span>
+            {{ $t('cmp.AuthBannerPreview.newTo') }}
+            <span class="abp-foot-link">{{ $t('cmp.AuthBannerPreview.createAccount') }}</span>
           </p>
 
           <div class="abp-powered">
-            <span>Powered by</span>
+            <span>{{ $t('cmp.AuthBannerPreview.poweredBy') }}</span>
             <span class="abp-powered-logo">excytech</span>
           </div>
 

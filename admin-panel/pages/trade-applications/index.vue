@@ -5,11 +5,8 @@
     <div class="ta-head">
 
       <div>
-        <h2 class="ta-title">Trade applications</h2>
-        <p class="ta-lede">
-          Trade accounts order at retail prices until they are approved here.
-          Approving switches trade pricing on for that customer.
-        </p>
+        <h2 class="ta-title">{{ $t('pages.tradeApplications.title') }}</h2>
+        <p class="ta-lede">{{ $t('pages.tradeApplications.lede') }}</p>
       </div>
 
     </div>
@@ -51,7 +48,7 @@
       <input
         v-model.trim="search"
         class="ta-search"
-        placeholder="Search name or email"
+        :placeholder="$t('pages.tradeApplications.searchPlaceholder')"
         @keyup.enter="reload"
       >
 
@@ -65,8 +62,8 @@
       v-if="!applications.length"
       class="ta-empty"
     >
-      <b>Nothing here</b>
-      <span>No trade applications with this status.</span>
+      <b>{{ $t('pages.tradeApplications.nothingHere') }}</b>
+      <span>{{ $t('pages.tradeApplications.noApplications') }}</span>
     </div>
 
     <div
@@ -102,43 +99,43 @@
         <dl class="ta-facts">
 
           <div>
-            <dt>Trade</dt>
+            <dt>{{ $t('pages.tradeApplications.trade') }}</dt>
             <dd>{{ profileOf(item).trade || '—' }}</dd>
           </div>
 
           <div>
-            <dt>VAT number</dt>
+            <dt>{{ $t('pages.tradeApplications.vatNumber') }}</dt>
             <dd>{{ profileOf(item).vat_number || '—' }}</dd>
           </div>
 
           <div>
-            <dt>CRO number</dt>
+            <dt>{{ $t('pages.tradeApplications.croNumber') }}</dt>
             <dd>{{ profileOf(item).cro_number || '—' }}</dd>
           </div>
 
           <div>
-            <dt>Expected spend</dt>
+            <dt>{{ $t('pages.tradeApplications.expectedSpend') }}</dt>
             <dd>{{ profileOf(item).expected_spend || '—' }}</dd>
           </div>
 
           <div>
-            <dt>Website</dt>
+            <dt>{{ $t('pages.tradeApplications.website') }}</dt>
             <dd>{{ profileOf(item).website || '—' }}</dd>
           </div>
 
           <div>
-            <dt>Applied</dt>
+            <dt>{{ $t('pages.tradeApplications.applied') }}</dt>
             <dd>{{ item.created || '—' }}</dd>
           </div>
 
           <div class="ta-wide">
-            <dt>Business address</dt>
+            <dt>{{ $t('pages.tradeApplications.businessAddress') }}</dt>
             <dd>{{ profileOf(item).billing_address || '—' }}</dd>
           </div>
 
           <div class="ta-wide">
-            <dt>Resale confirmed</dt>
-            <dd>{{ profileOf(item).resale_confirmed ? 'Yes' : 'No' }}</dd>
+            <dt>{{ $t('pages.tradeApplications.resaleConfirmed') }}</dt>
+            <dd>{{ profileOf(item).resale_confirmed ? $t('pages.tradeApplications.yes') : $t('pages.tradeApplications.no') }}</dd>
           </div>
 
           <!--
@@ -147,12 +144,12 @@
             suspended account grants pricing it cannot use.
           -->
           <div>
-            <dt>Account status</dt>
+            <dt>{{ $t('pages.tradeApplications.accountStatus') }}</dt>
             <dd>{{ accountStatusOf(item) }}</dd>
           </div>
 
           <div>
-            <dt>Details checked</dt>
+            <dt>{{ $t('pages.tradeApplications.detailsChecked') }}</dt>
             <dd>{{ verificationOf(item) }}</dd>
           </div>
 
@@ -167,14 +164,14 @@
           :to="'/registered-users/' + item.id"
           class="ta-full"
         >
-          View full customer record &rarr;
+          {{ $t('pages.tradeApplications.viewRecord') }} &rarr;
         </nuxt-link>
 
         <div
           v-if="item.trade_review_note"
           class="ta-note"
         >
-          <b>Note to the customer:</b> {{ item.trade_review_note }}
+          <b>{{ $t('pages.tradeApplications.noteToCustomer') }}</b> {{ item.trade_review_note }}
         </div>
 
         <div class="ta-acts">
@@ -190,7 +187,7 @@
             v-model.trim="notes[item.id]"
             class="ta-note-input"
             maxlength="600"
-            placeholder="Note to the customer (optional) — shown on their account and in the decision email"
+            :placeholder="$t('pages.tradeApplications.notePlaceholder')"
           >
 
           <button
@@ -199,7 +196,7 @@
             :disabled="saving === item.id"
             @click="review(item, 'approved')"
           >
-            Approve
+            {{ $t('pages.tradeApplications.approve') }}
           </button>
 
           <button
@@ -208,7 +205,7 @@
             :disabled="saving === item.id"
             @click="review(item, 'rejected')"
           >
-            Reject
+            {{ $t('pages.tradeApplications.reject') }}
           </button>
 
           <!--
@@ -222,7 +219,7 @@
             :disabled="saving === item.id"
             @click="review(item, 'suspended')"
           >
-            Suspend trade pricing
+            {{ $t('pages.tradeApplications.suspendPricing') }}
           </button>
 
           <!--
@@ -237,7 +234,7 @@
             :disabled="saving === item.id"
             @click="review(item, 'pending')"
           >
-            Back to pending
+            {{ $t('pages.tradeApplications.backToPending') }}
           </button>
 
         </div>
@@ -255,11 +252,11 @@
       v-if="!upgrades.length"
       class="ta-empty"
     >
-      <b>Nothing here</b>
+      <b>{{ $t('pages.tradeApplications.nothingHere') }}</b>
       <span>
         {{ upgradeStatus === 'pending'
-          ? 'No existing customers are waiting for a trade decision.'
-          : 'No upgrade applications with this status.' }}
+          ? $t('pages.tradeApplications.noUpgradesPending')
+          : $t('pages.tradeApplications.noUpgrades') }}
       </span>
     </div>
 
@@ -277,7 +274,7 @@
         <div class="ta-card-head">
 
           <div>
-            <h3>{{ (item.details && item.details.company_name) || (item.user && item.user.name) || 'Customer removed' }}</h3>
+            <h3>{{ (item.details && item.details.company_name) || (item.user && item.user.name) || $t('pages.tradeApplications.customerRemoved') }}</h3>
             <p v-if="item.user" class="ta-contact">
               {{ item.user.name }} · {{ item.user.email }}
               <template v-if="item.user.phone"> · {{ item.user.phone }}</template>
@@ -295,7 +292,7 @@
 
           <!-- Browser time, like Decided below: the server formats in its own zone. -->
           <div>
-            <dt>Applied</dt>
+            <dt>{{ $t('pages.tradeApplications.applied') }}</dt>
             <dd>{{ formatWhen(item.created_at) }}</dd>
           </div>
 
@@ -305,36 +302,36 @@
             approval is what switches it on.
           -->
           <div>
-            <dt>Pricing now</dt>
+            <dt>{{ $t('pages.tradeApplications.pricingNow') }}</dt>
             <dd>{{ pricingNow(item) }}</dd>
           </div>
 
           <div>
-            <dt>Account status</dt>
+            <dt>{{ $t('pages.tradeApplications.accountStatus') }}</dt>
             <dd>{{ accountStatusOf(item.user) }}</dd>
           </div>
 
           <div>
-            <dt>Details checked</dt>
+            <dt>{{ $t('pages.tradeApplications.detailsChecked') }}</dt>
             <dd>{{ verificationOf(item.user) }}</dd>
           </div>
 
           <div v-if="item.reviewed_at">
-            <dt>Decided</dt>
+            <dt>{{ $t('pages.tradeApplications.decided') }}</dt>
             <dd>
               {{ formatWhen(item.reviewed_at) }}
-              <template v-if="item.reviewed_by"> by {{ item.reviewed_by.name }}</template>
+              <template v-if="item.reviewed_by"> {{ $t('pages.tradeApplications.decidedBy', { name: item.reviewed_by.name }) }}</template>
             </dd>
           </div>
 
         </dl>
 
         <!-- What the account holds against what the customer submitted. -->
-        <div class="ta-changes" role="table" :aria-label="'Submitted details for application ' + item.id">
+        <div class="ta-changes" role="table" :aria-label="$t('pages.tradeApplications.changesAria', { id: item.id })">
           <div class="ta-changes-row head" role="row">
-            <span role="columnheader">Field</span>
-            <span role="columnheader">{{ item.status === 'pending' ? 'On the account now' : 'On the account' }}</span>
-            <span role="columnheader">Submitted</span>
+            <span role="columnheader">{{ $t('pages.tradeApplications.field') }}</span>
+            <span role="columnheader">{{ item.status === 'pending' ? $t('pages.tradeApplications.onAccountNow') : $t('pages.tradeApplications.onAccount') }}</span>
+            <span role="columnheader">{{ $t('pages.tradeApplications.submitted') }}</span>
           </div>
           <div
             v-for="row in visibleChanges(item)"
@@ -351,15 +348,15 @@
                 v-if="changeBadge(item, row)"
                 class="ta-changed"
                 :class="{ 'is-new': changeBadge(item, row) === 'New' }"
-              >{{ changeBadge(item, row) }}</span>
+              >{{ changeBadge(item, row) === 'New' ? $t('pages.tradeApplications.badgeNew') : $t('pages.tradeApplications.badgeChanged') }}</span>
             </span>
           </div>
         </div>
 
         <p v-if="identityChanged(item)" class="ta-warn">
-          The company name, VAT or CRO number differs from the details on this account<template
+          {{ $t('pages.tradeApplications.identityWarn') }}<template
             v-if="item.user && item.user.account && item.user.account.verification_status === 'verified'"
-          >, which we have verified</template>. Approving replaces them with the submitted ones.
+          >{{ $t('pages.tradeApplications.identityWarnVerified') }}</template>{{ $t('pages.tradeApplications.identityWarnTail') }}
         </p>
 
         <nuxt-link
@@ -367,14 +364,14 @@
           :to="'/registered-users/' + item.user.id"
           class="ta-full"
         >
-          View full customer record &rarr;
+          {{ $t('pages.tradeApplications.viewRecord') }} &rarr;
         </nuxt-link>
 
         <div
           v-if="item.review_note"
           class="ta-note"
         >
-          <b>Note to the customer:</b> {{ item.review_note }}
+          <b>{{ $t('pages.tradeApplications.noteToCustomer') }}</b> {{ item.review_note }}
         </div>
 
         <div
@@ -386,7 +383,7 @@
             v-model.trim="upgradeNotes[item.id]"
             class="ta-note-input"
             maxlength="600"
-            placeholder="Note to the customer (optional) — shown on their account and in the decision email"
+            :placeholder="$t('pages.tradeApplications.notePlaceholder')"
           >
 
           <button
@@ -394,7 +391,7 @@
             :disabled="saving === 'u' + item.id"
             @click="decideUpgrade(item, 'approved')"
           >
-            Approve
+            {{ $t('pages.tradeApplications.approve') }}
           </button>
 
           <button
@@ -402,7 +399,7 @@
             :disabled="saving === 'u' + item.id"
             @click="decideUpgrade(item, 'rejected')"
           >
-            Reject
+            {{ $t('pages.tradeApplications.reject') }}
           </button>
 
         </div>
@@ -442,30 +439,30 @@
         loading: true,
         saving: null,
         tabs: [
-          {key: 'pending', label: 'Pending'},
-          {key: 'approved', label: 'Approved'},
-          {key: 'rejected', label: 'Rejected'},
+          {key: 'pending', label: this.$t('pages.tradeApplications.tabPending')},
+          {key: 'approved', label: this.$t('pages.tradeApplications.tabApproved')},
+          {key: 'rejected', label: this.$t('pages.tradeApplications.tabRejected')},
           // Approved once, withdrawn since. Not the same as never approved,
           // and a reviewer needs to be able to find them again.
-          {key: 'suspended', label: 'Suspended'},
-          {key: 'all', label: 'All'}
+          {key: 'suspended', label: this.$t('pages.tradeApplications.tabSuspended')},
+          {key: 'all', label: this.$t('pages.tradeApplications.tabAll')}
         ],
         mode: 'signups',
         modes: [
-          {key: 'signups', label: 'New trade sign-ups'},
-          {key: 'upgrades', label: 'Upgrades from existing accounts'}
+          {key: 'signups', label: this.$t('pages.tradeApplications.modeSignups')},
+          {key: 'upgrades', label: this.$t('pages.tradeApplications.modeUpgrades')}
         ],
         upgrades: [],
         upgradeNotes: {},
         upgradeStatus: 'pending',
         upgradeTabs: [
-          {key: 'pending', label: 'Pending'},
-          {key: 'approved', label: 'Approved'},
-          {key: 'rejected', label: 'Rejected'},
-          {key: 'withdrawn', label: 'Withdrawn'},
+          {key: 'pending', label: this.$t('pages.tradeApplications.tabPending')},
+          {key: 'approved', label: this.$t('pages.tradeApplications.tabApproved')},
+          {key: 'rejected', label: this.$t('pages.tradeApplications.tabRejected')},
+          {key: 'withdrawn', label: this.$t('pages.tradeApplications.tabWithdrawn')},
           // Personal -> business: immediate, nothing to decide, kept for the record.
-          {key: 'completed', label: 'Business upgrades'},
-          {key: 'all', label: 'All'}
+          {key: 'completed', label: this.$t('pages.tradeApplications.tabCompleted')},
+          {key: 'all', label: this.$t('pages.tradeApplications.tabAll')}
         ]
       }
     },
@@ -488,28 +485,28 @@
 
       accountStatusOf(item) {
         return {
-          active: 'Active',
-          suspended: 'Suspended',
-          pending: 'Pending',
-          rejected: 'Rejected'
-        }[item?.account?.status] || 'Active'
+          active: this.$t('pages.tradeApplications.accActive'),
+          suspended: this.$t('pages.tradeApplications.accSuspended'),
+          pending: this.$t('pages.tradeApplications.accPending'),
+          rejected: this.$t('pages.tradeApplications.accRejected')
+        }[item?.account?.status] || this.$t('pages.tradeApplications.accActive')
       },
 
       verificationOf(item) {
         return {
-          pending: 'Not checked',
-          verified: 'Verified',
-          rejected: 'Rejected',
-          not_required: 'Not required'
-        }[item?.account?.verification_status] || 'Not checked'
+          pending: this.$t('pages.tradeApplications.verNotChecked'),
+          verified: this.$t('pages.tradeApplications.verVerified'),
+          rejected: this.$t('pages.tradeApplications.verRejected'),
+          not_required: this.$t('pages.tradeApplications.verNotRequired')
+        }[item?.account?.verification_status] || this.$t('pages.tradeApplications.verNotChecked')
       },
 
       statusLabel(status) {
         return {
-          pending: 'Pending review',
-          approved: 'Approved',
-          rejected: 'Rejected',
-          suspended: 'Suspended'
+          pending: this.$t('pages.tradeApplications.statusPendingReview'),
+          approved: this.$t('pages.tradeApplications.statusApproved'),
+          rejected: this.$t('pages.tradeApplications.statusRejected'),
+          suspended: this.$t('pages.tradeApplications.statusSuspended')
         }[status] || status || '—'
       },
 
@@ -604,21 +601,21 @@
       },
 
       typeLabel(type) {
-        return {personal: 'Personal', business: 'Business', trade: 'Trade'}[type] || type
+        return {personal: this.$t('pages.tradeApplications.typePersonal'), business: this.$t('pages.tradeApplications.typeBusiness'), trade: this.$t('pages.tradeApplications.typeTrade')}[type] || type
       },
 
       upgradeStatusLabel(status) {
         return {
-          pending: 'Pending review',
-          approved: 'Approved',
-          rejected: 'Rejected',
-          withdrawn: 'Withdrawn',
-          completed: 'Done'
+          pending: this.$t('pages.tradeApplications.statusPendingReview'),
+          approved: this.$t('pages.tradeApplications.statusApproved'),
+          rejected: this.$t('pages.tradeApplications.statusRejected'),
+          withdrawn: this.$t('pages.tradeApplications.statusWithdrawn'),
+          completed: this.$t('pages.tradeApplications.statusDone')
         }[status] || status || '—'
       },
 
       pricingNow(item) {
-        return item?.user?.account?.has_business_pricing ? 'Business pricing' : 'Retail'
+        return item?.user?.account?.has_business_pricing ? this.$t('pages.tradeApplications.pricingBusiness') : this.$t('pages.tradeApplications.pricingRetail')
       },
 
       hasValue(value) {
@@ -631,8 +628,8 @@
       },
 
       showValue(value) {
-        if (value === true) return 'Yes'
-        if (value === false) return 'No'
+        if (value === true) return this.$t('pages.tradeApplications.yes')
+        if (value === false) return this.$t('pages.tradeApplications.no')
 
         return this.hasValue(value) ? value : '—'
       },
@@ -665,7 +662,7 @@
         const date = iso ? new Date(iso) : null
 
         return date && !isNaN(date)
-          ? date.toLocaleString('en-IE', {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'})
+          ? date.toLocaleString(this.$i18n?.locale || 'en', {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'})
           : '—'
       },
 
@@ -715,15 +712,15 @@
        */
       reportDecision(status, notification) {
         const decided = status === 'approved'
-          ? 'Trade application approved successfully.'
+          ? this.$t('pages.tradeApplications.decidedApproved')
           : status === 'rejected'
-            ? 'Trade application rejected successfully.'
-            : 'Trade application updated.'
+            ? this.$t('pages.tradeApplications.decidedRejected')
+            : this.$t('pages.tradeApplications.decidedUpdated')
 
         // A decision that changed nothing - the same status submitted twice.
         if (notification && !notification.triggered) {
           this.$store.dispatch('ui/setToastMessage',
-            `${decided} This was already the status, so no new notification was sent.`)
+            this.$t('pages.tradeApplications.notifyUnchanged', { decided }))
           return
         }
 
@@ -735,8 +732,8 @@
 
         if (notification && notification.delivered) {
           this.$store.dispatch('ui/setToastMessage', notification.queued
-            ? `${decided} Customer notification has been queued.`
-            : `${decided} Customer notification has been sent.`)
+            ? this.$t('pages.tradeApplications.notifyQueued', { decided })
+            : this.$t('pages.tradeApplications.notifySent', { decided }))
           return
         }
 
@@ -746,7 +743,7 @@
          * error, so nobody re-approves an account trying to fix it.
          */
         this.$store.dispatch('ui/setToastError',
-          `${decided} The customer could not be emailed — check their address and the mail log.`)
+          this.$t('pages.tradeApplications.notifyFailed', { decided }))
       },
 
       async getApplications() {

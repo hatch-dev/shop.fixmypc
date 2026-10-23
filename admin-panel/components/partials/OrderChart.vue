@@ -48,9 +48,10 @@
       return {
         months: null,
         selectedMonth: null,
-        monthNames: ["January", "February", "March", "April", "May", "June",
-          "July", "August", "September", "October", "November", "December"
-        ]
+        // Month names in the admin's language (display only; keys stay numeric).
+        monthNames: Array.from({length: 12}, (_, i) =>
+          new Date(2000, i, 1).toLocaleString((this.$i18n && this.$i18n.locale) || 'en', {month: 'long'})
+        )
       }
     },
     props: {
@@ -112,7 +113,7 @@
             labels: chartDate,
             datasets: [
               {
-                label: 'Sell',
+                label: this.$t('cmp.OrderChart.sell'),
                 backgroundColor: "rgba(255, 108, 110, 0.6)",
                 borderColor: "rgba(255, 108, 110, .7)",
                 pointBackgroundColor: "rgba(255, 108, 110, 0.5)",

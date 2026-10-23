@@ -1,7 +1,7 @@
 <template>
   <span class="qty-nav">
     <button
-      aria-label="subtract"
+      :aria-label="$t('cmp.QuantityNav.subtract')"
       @click.prevent="qty(-1)"
     >
       -
@@ -15,7 +15,7 @@
       @change="onChange"
     >
     <button
-      aria-label="add"
+      :aria-label="$t('cmp.QuantityNav.add')"
       @click.prevent="qty(1)"
     >
       +

@@ -46,7 +46,7 @@
         <td>
           <button
             v-if="$can('language', 'edit')"
-            @click.prevent="$refs.listPage.editItem(item.id)" class="lite-btn">Edit
+            @click.prevent="$refs.listPage.editItem(item.id)" class="lite-btn">{{ $t('category.edit') }}
           </button>
           <button
             v-if="$can('language', 'delete')"

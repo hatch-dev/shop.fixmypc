@@ -5,7 +5,7 @@
     delete-api="deleteFlashDiscount"
     route-name="flash-discount"
     empty-store-variable="allFlashDiscounts"
-    name="Flash Discount"
+    :name="$t('pages.flashDiscount.listName')"
     gate="flash_discount"
     @delete-bulk="deleteBulk"
     @list="itemList = $event"
@@ -14,20 +14,20 @@
       <tr class="lite-bold">
         <th><input type="checkbox" @change="checkAll"></th>
         <th class="w-50x mx-w-50x">#</th>
-        <th>Type</th>
-        <th>Value</th>
-        <th>Min Cart</th>
-        <th>Max Discount</th>
-        <th>Start</th>
-        <th>End</th>
-        <th>Status</th>
+        <th>{{ $t('pages.flashDiscount.type') }}</th>
+        <th>{{ $t('pages.flashDiscount.value') }}</th>
+        <th>{{ $t('pages.flashDiscount.minCart') }}</th>
+        <th>{{ $t('pages.flashDiscount.maxDiscount') }}</th>
+        <th>{{ $t('pages.flashDiscount.start') }}</th>
+        <th>{{ $t('pages.flashDiscount.end') }}</th>
+        <th>{{ $t('pages.flashDiscount.status') }}</th>
         <th></th>
       </tr>
 
       <tr v-for="(item, index) in list" :key="item.id">
         <td><input type="checkbox" :value="item.id" v-model="cbList"></td>
         <td class="w-50x mx-w-50x">{{ from + index }}</td>
-        <td>{{ item.type === 'percentage' ? 'Percentage' : 'Fixed' }}</td>
+        <td>{{ item.type === 'percentage' ? $t('pages.flashDiscount.percentage') : $t('pages.flashDiscount.fixed') }}</td>
         <td>{{ displayValue(item) }}</td>
 
         <!--
@@ -49,8 +49,8 @@
           <span :class="statusClass(item)">{{ statusLabel(item) }}</span>
         </td>
         <td>
-          <button class="lite-btn" @click="$refs.listPage.editItem(item.id)">Edit</button>
-          <button class="delete-btn lite-btn" @click="$refs.listPage.deleteItem(item.id)">Delete</button>
+          <button class="lite-btn" @click="$refs.listPage.editItem(item.id)">{{ $t('pages.flashDiscount.edit') }}</button>
+          <button class="delete-btn lite-btn" @click="$refs.listPage.deleteItem(item.id)">{{ $t('pages.flashDiscount.delete') }}</button>
         </td>
       </tr>
     </template>
@@ -64,6 +64,7 @@ import util from "~/mixin/util";
 import ListPage from "~/components/partials/ListPage";
 
 export default {
+  middleware: ['common-middleware', 'auth'],
   mixins: [util, bulkDelete],
   components: { ListPage },
   computed: {
@@ -85,19 +86,23 @@ export default {
         ? Number(item.value) + '%'
         : this.priceFormatting(item.value, 2)
     },
-    statusLabel(item) {
-      if (!item.is_active) return 'Inactive'
-      if (item.live) return 'Live'
+    /** Machine state; the label is translated from it, never compared. */
+    statusKey(item) {
+      if (!item.is_active) return 'inactive'
+      if (item.live) return 'live'
 
-      return new Date(item.start_time) > new Date() ? 'Scheduled' : 'Ended'
+      return new Date(item.start_time) > new Date() ? 'scheduled' : 'ended'
+    },
+    statusLabel(item) {
+      return this.$t('pages.flashDiscount.' + this.statusKey(item))
     },
     statusClass(item) {
-      return this.statusLabel(item) === 'Live' ? 'active' : 'inactive'
+      return this.statusKey(item) === 'live' ? 'active' : 'inactive'
     },
     formatDate(date) {
       if (!date) return '-'
 
-      return new Date(date).toLocaleString('en-IN', {
+      return new Date(date).toLocaleString(this.$i18n?.locale || 'en', {
         day: '2-digit',
         month: 'short',
         year: 'numeric',

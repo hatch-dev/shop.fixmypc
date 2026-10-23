@@ -20,7 +20,7 @@
           class="primary-btn"
           @click.prevent="toggleReviewForm"
         >
-          {{ showReviewForm ? 'Cancel' : 'Add Review' }}
+          {{ showReviewForm ? $t('pages.ratingReviews.cancel') : $t('pages.ratingReviews.addReview') }}
         </button>
       </template>
 
@@ -77,7 +77,7 @@
     <!-- Review Form -->
     <div v-if="showReviewForm" class="review-form-container" ref="reviewFormContainer">
       <div class="review-form-inline">
-        <h3>{{ reviewForm.id ? 'Edit Review' : 'Add New Review' }}</h3>
+        <h3>{{ reviewForm.id ? $t('pages.ratingReviews.editReview') : $t('pages.ratingReviews.addNewReview') }}</h3>
         
         <form class="review-form" @submit.prevent="submitReview">
           <input type="hidden" name="review_id" id="review_id" v-model="reviewForm.id">
@@ -101,12 +101,12 @@
           <!-- Form Fields -->
           <div class="form-row">
             <div class="form-group">
-              <label>Source <span class="required">*</span></label>
+              <label>{{ $t('pages.ratingReviews.source') }} <span class="required">*</span></label>
               <select v-model="reviewForm.source" @change="clearError('source')">
-                <option value="">Select Source</option>
+                <option value="">{{ $t('pages.ratingReviews.selectSource') }}</option>
                 <option value="google">Google</option>
                 <option value="facebook">Facebook</option>
-                <option value="shop">Shop</option>
+                <option value="shop">{{ $t('pages.ratingReviews.shop') }}</option>
               </select>
               <div v-if="formErrors.source" class="error-message">{{ formErrors.source }}</div>
             </div>
@@ -114,7 +114,7 @@
           
           <div class="form-row">
             <div class="form-group">
-              <label>Customer Name <span class="required">*</span></label>
+              <label>{{ $t('pages.ratingReviews.customerName') }} <span class="required">*</span></label>
               <input
                 type="text"
                 v-model="reviewForm.name"
@@ -125,9 +125,9 @@
           </div>
           
           <div class="form-group">
-            <label>Product <span class="required">*</span></label>
+            <label>{{ $t('pages.ratingReviews.product') }} <span class="required">*</span></label>
             <select v-model="reviewForm.product_id" @change="clearError('product_id')">
-              <option value="">Select Product</option>
+              <option value="">{{ $t('pages.ratingReviews.selectProduct') }}</option>
               <option v-for="product in products" :key="product.id" :value="product.id">
                 {{ product.title }}
               </option>
@@ -136,7 +136,7 @@
           </div>
           
           <div class="form-group">
-            <label>Review <span class="required">*</span></label>
+            <label>{{ $t('pages.ratingReviews.review') }} <span class="required">*</span></label>
             <textarea
               v-model="reviewForm.review"
               rows="4"
@@ -152,16 +152,16 @@
                 id="is_verified"
                 v-model="reviewForm.is_verified"
               >
-              <label for="is_verified">Verified Purchase</label>
+              <label for="is_verified">{{ $t('pages.ratingReviews.verifiedPurchase') }}</label>
             </div>
           </div>
           
           <div class="form-actions">
             <button type="button" class="cancel-btn primary-btn" @click="toggleReviewForm">
-              Cancel
+              {{ $t('pages.ratingReviews.cancel') }}
             </button>
             <button type="submit" class="submit-btn primary-btn">
-              {{ reviewForm.id ? 'Update Review' : 'Submit Review' }}
+              {{ reviewForm.id ? $t('pages.ratingReviews.updateReview') : $t('pages.ratingReviews.submitReview') }}
             </button>
           </div>
         </form>
@@ -278,27 +278,27 @@ export default {
       this.formErrors = {};
       
       if (this.reviewForm.rating <= 0) {
-        this.formErrors.rating = 'Please select a rating';
+        this.formErrors.rating = this.$t('pages.ratingReviews.errRating');
         isValid = false;
       }
       
       if (!this.reviewForm.name.trim()) {
-        this.formErrors.name = 'Please enter customer name';
+        this.formErrors.name = this.$t('pages.ratingReviews.errName');
         isValid = false;
       }
       
       if (!this.reviewForm.source) {
-        this.formErrors.source = 'Please select a source';
+        this.formErrors.source = this.$t('pages.ratingReviews.errSource');
         isValid = false;
       }
       
       if (!this.reviewForm.product_id) {
-        this.formErrors.product_id = 'Please select a product';
+        this.formErrors.product_id = this.$t('pages.ratingReviews.errProduct');
         isValid = false;
       }
       
       if (!this.reviewForm.review.trim()) {
-        this.formErrors.review = 'Please enter your review';
+        this.formErrors.review = this.$t('pages.ratingReviews.errReview');
         isValid = false;
       }
       
@@ -339,8 +339,8 @@ export default {
         // Show success message and reload
         alert(
           this.reviewForm.id 
-            ? 'Review updated successfully!'
-            : 'Review added successfully!'
+            ? this.$t('pages.ratingReviews.updatedOk')
+            : this.$t('pages.ratingReviews.addedOk')
         );
         setTimeout(() => {
           location.reload();

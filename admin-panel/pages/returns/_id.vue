@@ -1,8 +1,8 @@
 <template>
   <div class="return-page p-20">
-    <nuxt-link to="/returns" class="rd-back">← Returns</nuxt-link>
+    <nuxt-link to="/returns" class="rd-back">← {{ $t('pages.returns.returns') }}</nuxt-link>
 
-    <div v-if="loading" class="rd-card">Loading…</div>
+    <div v-if="loading" class="rd-card">{{ $t('pages.returns.loading') }}</div>
     <div v-else-if="loadError" class="rd-card rd-error">{{ loadError }}</div>
 
     <template v-else-if="r">
@@ -10,95 +10,95 @@
         <div>
           <h3 class="rd-title">{{ r.rma_number }}</h3>
           <p class="rd-sub">
-            <nuxt-link v-if="r.order" class="link" :to="`/orders/${r.order.id}`">Order #{{ r.order.order }}</nuxt-link>
+            <nuxt-link v-if="r.order" class="link" :to="`/orders/${r.order.id}`">{{ $t('pages.returns.orderNumber', { number: r.order.order }) }}</nuxt-link>
             <template v-if="r.order && r.order.contact_name"> · {{ r.order.contact_name }}</template>
             <template v-if="r.order && r.order.contact_email"> · {{ r.order.contact_email }}</template>
           </p>
         </div>
         <div class="rd-pills">
-          <span v-if="isExchange" class="pill pill-type">Exchange</span>
+          <span v-if="isExchange" class="pill pill-type">{{ $t('pages.returns.exchange') }}</span>
           <span class="pill" :class="pillClass">{{ r.status_label }}</span>
         </div>
       </div>
 
       <p v-if="r.refund_error" class="rd-error-line" role="alert">
-        <strong>{{ r.status === 'refunding' ? 'Refund needs checking:' : 'Last refund attempt failed:' }}</strong>
+        <strong>{{ r.status === 'refunding' ? $t('pages.returns.refundNeedsChecking') : $t('pages.returns.lastRefundFailed') }}</strong>
         {{ r.refund_error }}
       </p>
 
       <div class="rd-grid">
         <div class="rd-card">
-          <h4>Return</h4>
+          <h4>{{ $t('pages.returns.returnHeading') }}</h4>
           <dl class="rd-dl">
-            <dt>Reason</dt><dd>{{ r.reason_label }}</dd>
-            <template v-if="r.customer_note"><dt>Customer said</dt><dd>{{ r.customer_note }}</dd></template>
-            <template v-if="r.staff_note"><dt>Staff note</dt><dd>{{ r.staff_note }}</dd></template>
-            <dt>Opened</dt><dd>{{ dateTime(r.created_at) }}</dd>
-            <template v-if="r.received_at"><dt>Received</dt><dd>{{ dateTime(r.received_at) }}</dd></template>
-            <template v-if="r.refunded_at"><dt>Refunded</dt><dd>{{ dateTime(r.refunded_at) }}</dd></template>
-            <template v-if="r.closed_at && !r.refunded_at"><dt>Closed</dt><dd>{{ dateTime(r.closed_at) }}</dd></template>
+            <dt>{{ $t('pages.returns.reason') }}</dt><dd>{{ r.reason_label }}</dd>
+            <template v-if="r.customer_note"><dt>{{ $t('pages.returns.customerSaid') }}</dt><dd>{{ r.customer_note }}</dd></template>
+            <template v-if="r.staff_note"><dt>{{ $t('pages.returns.staffNote') }}</dt><dd>{{ r.staff_note }}</dd></template>
+            <dt>{{ $t('pages.returns.opened') }}</dt><dd>{{ dateTime(r.created_at) }}</dd>
+            <template v-if="r.received_at"><dt>{{ $t('pages.returns.received') }}</dt><dd>{{ dateTime(r.received_at) }}</dd></template>
+            <template v-if="r.refunded_at"><dt>{{ $t('pages.returns.refunded') }}</dt><dd>{{ dateTime(r.refunded_at) }}</dd></template>
+            <template v-if="r.closed_at && !r.refunded_at"><dt>{{ $t('pages.returns.closed') }}</dt><dd>{{ dateTime(r.closed_at) }}</dd></template>
           </dl>
         </div>
 
         <div v-if="isExchange" class="rd-card">
-          <h4>{{ r.status === 'exchanged' ? 'Exchange made' : 'Exchange' }}</h4>
+          <h4>{{ r.status === 'exchanged' ? $t('pages.returns.exchangeMade') : $t('pages.returns.exchange') }}</h4>
           <dl v-if="r.status === 'exchanged'" class="rd-dl">
             <template v-if="r.replacement_order">
-              <dt>Replacement order</dt>
+              <dt>{{ $t('pages.returns.replacementOrder') }}</dt>
               <dd><nuxt-link class="link" :to="`/orders/${r.replacement_order.id}`">#{{ r.replacement_order.order }}</nuxt-link></dd>
             </template>
-            <dt>Difference</dt><dd>{{ differenceText(r.exchange_difference) }}</dd>
-            <template v-if="r.amount_charged > 0"><dt>Charged</dt><dd>{{ currencyIcon }}{{ money(r.amount_charged) }} <span class="rd-hint-inline">{{ r.payment_reference }}</span></dd></template>
-            <template v-if="r.exchange_difference > 0 && !(r.amount_charged > 0)"><dt>Charged</dt><dd>Nothing (waived)</dd></template>
-            <template v-if="r.refund_amount > 0"><dt>Refunded</dt><dd>{{ currencyIcon }}{{ money(r.refund_amount) }} <span class="rd-hint-inline">{{ methodLabel(r.refund_method) }}</span></dd></template>
-            <template v-if="r.refund_reference"><dt>Reference</dt><dd class="rd-mono">{{ r.refund_reference }}</dd></template>
+            <dt>{{ $t('pages.returns.difference') }}</dt><dd>{{ differenceText(r.exchange_difference) }}</dd>
+            <template v-if="r.amount_charged > 0"><dt>{{ $t('pages.returns.charged') }}</dt><dd>{{ currencyIcon }}{{ money(r.amount_charged) }} <span class="rd-hint-inline">{{ r.payment_reference }}</span></dd></template>
+            <template v-if="r.exchange_difference > 0 && !(r.amount_charged > 0)"><dt>{{ $t('pages.returns.charged') }}</dt><dd>{{ $t('pages.returns.nothingWaived') }}</dd></template>
+            <template v-if="r.refund_amount > 0"><dt>{{ $t('pages.returns.refunded') }}</dt><dd>{{ currencyIcon }}{{ money(r.refund_amount) }} <span class="rd-hint-inline">{{ methodLabel(r.refund_method) }}</span></dd></template>
+            <template v-if="r.refund_reference"><dt>{{ $t('pages.returns.reference') }}</dt><dd class="rd-mono">{{ r.refund_reference }}</dd></template>
           </dl>
           <!-- Waiting on a pay link: the amount asked for, not today's quote (its units are held). -->
           <dl v-else-if="r.status === 'awaiting_payment' && r.pay_link" class="rd-dl">
-            <dt>Difference</dt><dd>{{ differenceText(r.pay_link.amount) }}</dd>
-            <dt>Paying by</dt><dd>Card, by the link below</dd>
+            <dt>{{ $t('pages.returns.difference') }}</dt><dd>{{ differenceText(r.pay_link.amount) }}</dd>
+            <dt>{{ $t('pages.returns.payingBy') }}</dt><dd>{{ $t('pages.returns.cardByLinkBelow') }}</dd>
           </dl>
           <p v-else-if="!r.exchange_quote" class="rd-hint">{{ r.status_label }}.</p>
           <template v-else>
             <dl class="rd-dl">
-              <dt>Difference</dt><dd>{{ differenceText(r.exchange_quote.difference) }}</dd>
-              <template v-if="r.exchange_quote.difference < 0"><dt>Can refund</dt><dd>{{ currencyIcon }}{{ money(r.exchange_quote.refundable) }}</dd></template>
+              <dt>{{ $t('pages.returns.difference') }}</dt><dd>{{ differenceText(r.exchange_quote.difference) }}</dd>
+              <template v-if="r.exchange_quote.difference < 0"><dt>{{ $t('pages.returns.canRefund') }}</dt><dd>{{ currencyIcon }}{{ money(r.exchange_quote.refundable) }}</dd></template>
             </dl>
-            <p class="rd-hint">At today's prices for this customer: the new variant against what they paid for the old one.</p>
-            <p v-if="!r.exchange_quote.in_stock" class="rd-error-line" role="alert">A variant to swap to is out of stock. Restock it, or refund instead.</p>
+            <p class="rd-hint">{{ $t('pages.returns.todaysPricesHint') }}</p>
+            <p v-if="!r.exchange_quote.in_stock" class="rd-error-line" role="alert">{{ $t('pages.returns.swapOutOfStock') }}</p>
           </template>
         </div>
 
         <div v-else class="rd-card">
-          <h4>{{ done ? 'What went back' : 'Refund if accepted' }}</h4>
+          <h4>{{ done ? $t('pages.returns.whatWentBack') : $t('pages.returns.refundIfAccepted') }}</h4>
           <dl v-if="done" class="rd-dl">
-            <dt>Money</dt><dd>{{ currencyIcon }}{{ money(r.refund_amount) }} <span class="rd-hint-inline">{{ methodLabel(r.refund_method) }}</span></dd>
-            <template v-if="r.shipping_refund > 0"><dt>of which delivery</dt><dd>{{ currencyIcon }}{{ money(r.shipping_refund) }}</dd></template>
-            <template v-if="r.gift_card_amount > 0"><dt>To gift card</dt><dd>{{ currencyIcon }}{{ money(r.gift_card_amount) }}</dd></template>
-            <template v-if="r.points_returned > 0"><dt>Points back</dt><dd>{{ r.points_returned }}</dd></template>
-            <template v-if="r.points_taken > 0"><dt>Points taken back</dt><dd>{{ r.points_taken }}</dd></template>
-            <template v-if="r.refund_reference"><dt>Reference</dt><dd class="rd-mono">{{ r.refund_reference }}</dd></template>
+            <dt>{{ $t('pages.returns.money') }}</dt><dd>{{ currencyIcon }}{{ money(r.refund_amount) }} <span class="rd-hint-inline">{{ methodLabel(r.refund_method) }}</span></dd>
+            <template v-if="r.shipping_refund > 0"><dt>{{ $t('pages.returns.ofWhichDelivery') }}</dt><dd>{{ currencyIcon }}{{ money(r.shipping_refund) }}</dd></template>
+            <template v-if="r.gift_card_amount > 0"><dt>{{ $t('pages.returns.toGiftCard') }}</dt><dd>{{ currencyIcon }}{{ money(r.gift_card_amount) }}</dd></template>
+            <template v-if="r.points_returned > 0"><dt>{{ $t('pages.returns.pointsBack') }}</dt><dd>{{ r.points_returned }}</dd></template>
+            <template v-if="r.points_taken > 0"><dt>{{ $t('pages.returns.pointsTakenBack') }}</dt><dd>{{ r.points_taken }}</dd></template>
+            <template v-if="r.refund_reference"><dt>{{ $t('pages.returns.reference') }}</dt><dd class="rd-mono">{{ r.refund_reference }}</dd></template>
           </dl>
           <dl v-else-if="activeQuote" class="rd-dl">
-            <dt>Items</dt><dd>{{ currencyIcon }}{{ money(activeQuote.items_refund) }}</dd>
-            <dt>Delivery</dt><dd>{{ currencyIcon }}{{ money(r.quote.with_shipping.shipping_refund) }} <span class="rd-hint-inline">if refunded</span></dd>
-            <template v-if="activeQuote.gift_card > 0"><dt>To gift card</dt><dd>{{ currencyIcon }}{{ money(activeQuote.gift_card) }}</dd></template>
-            <template v-if="activeQuote.points_returned > 0"><dt>Points back</dt><dd>{{ activeQuote.points_returned }}</dd></template>
-            <template v-if="activeQuote.points_taken > 0"><dt>Points taken back</dt><dd>{{ activeQuote.points_taken }}</dd></template>
-            <dt>Left on the order</dt><dd>{{ currencyIcon }}{{ money(activeQuote.money_left) }}</dd>
+            <dt>{{ $t('pages.returns.items') }}</dt><dd>{{ currencyIcon }}{{ money(activeQuote.items_refund) }}</dd>
+            <dt>{{ $t('pages.returns.delivery') }}</dt><dd>{{ currencyIcon }}{{ money(r.quote.with_shipping.shipping_refund) }} <span class="rd-hint-inline">{{ $t('pages.returns.ifRefunded') }}</span></dd>
+            <template v-if="activeQuote.gift_card > 0"><dt>{{ $t('pages.returns.toGiftCard') }}</dt><dd>{{ currencyIcon }}{{ money(activeQuote.gift_card) }}</dd></template>
+            <template v-if="activeQuote.points_returned > 0"><dt>{{ $t('pages.returns.pointsBack') }}</dt><dd>{{ activeQuote.points_returned }}</dd></template>
+            <template v-if="activeQuote.points_taken > 0"><dt>{{ $t('pages.returns.pointsTakenBack') }}</dt><dd>{{ activeQuote.points_taken }}</dd></template>
+            <dt>{{ $t('pages.returns.leftOnOrder') }}</dt><dd>{{ currencyIcon }}{{ money(activeQuote.money_left) }}</dd>
           </dl>
-          <p v-else class="rd-hint">Nothing to refund.</p>
+          <p v-else class="rd-hint">{{ $t('pages.returns.nothingToRefund') }}</p>
         </div>
       </div>
 
       <div class="rd-card">
-        <h4>Items</h4>
+        <h4>{{ $t('pages.returns.items') }}</h4>
         <table class="rd-table">
           <tr>
-            <th>Item</th><th>Units</th>
-            <th>{{ r.status === 'awaiting_return' ? 'Put back in stock' : 'Back in stock' }}</th>
-            <th v-if="isExchange">Swap to</th>
-            <th v-if="done && !isExchange">Item share</th>
+            <th>{{ $t('pages.returns.item') }}</th><th>{{ $t('pages.returns.units') }}</th>
+            <th>{{ r.status === 'awaiting_return' ? $t('pages.returns.putBackInStock') : $t('pages.returns.backInStock') }}</th>
+            <th v-if="isExchange">{{ $t('pages.returns.swapTo') }}</th>
+            <th v-if="done && !isExchange">{{ $t('pages.returns.itemShare') }}</th>
           </tr>
           <tr v-for="item in r.items" :key="item.id">
             <td>
@@ -108,16 +108,16 @@
             <td>{{ item.quantity }}</td>
             <td>
               <label v-if="r.status === 'awaiting_return' && canEdit" class="rd-check">
-                <input type="checkbox" v-model="restock[item.id]"> Yes
+                <input type="checkbox" v-model="restock[item.id]"> {{ $t('pages.returns.yes') }}
               </label>
               <template v-else-if="item.restock === null">—</template>
-              <template v-else>{{ item.restock ? `Yes (${item.restocked_qty})` : 'No, not sellable' }}</template>
+              <template v-else>{{ item.restock ? $t('pages.returns.yesCount', { count: item.restocked_qty }) : $t('pages.returns.noNotSellable') }}</template>
             </td>
             <td v-if="isExchange">
               {{ item.exchange_label || '—' }}
               <template v-if="exchangeLine(item)">
-                <span class="rd-hint-inline">· {{ currencyIcon }}{{ money(exchangeLine(item).new_unit_price) }} each (paid {{ currencyIcon }}{{ money(exchangeLine(item).old_unit_price) }})</span>
-                <span v-if="!exchangeLine(item).available" class="pill pill-bad">out of stock</span>
+                <span class="rd-hint-inline">· {{ $t('pages.returns.eachPaid', { price: currencyIcon + money(exchangeLine(item).new_unit_price), paid: currencyIcon + money(exchangeLine(item).old_unit_price) }) }}</span>
+                <span v-if="!exchangeLine(item).available" class="pill pill-bad">{{ $t('pages.returns.outOfStock') }}</span>
               </template>
             </td>
             <td v-if="done && !isExchange">{{ currencyIcon }}{{ money(item.line_refund) }}</td>
@@ -127,242 +127,242 @@
 
       <!-- ============================ Actions ============================ -->
       <div v-if="canEdit && r.status === 'requested'" class="rd-card rd-card-attn">
-        <h4>Review this request</h4>
+        <h4>{{ $t('pages.returns.reviewRequest') }}</h4>
         <p class="rd-hint">
-          The customer asked for this from their order page{{ r.customer_note ? ' and told us why' : '' }}.
-          Approving emails them the return number and where to send the {{ isExchange ? 'item' : 'items' }}.
+          {{ r.customer_note ? $t('pages.returns.askedFromOrderPageWhy') : $t('pages.returns.askedFromOrderPage') }}
+          {{ isExchange ? $t('pages.returns.approveEmailsItem') : $t('pages.returns.approveEmailsItems') }}
         </p>
-        <label class="rd-label" for="rt-anote">Note (optional)</label>
+        <label class="rd-label" for="rt-anote">{{ $t('pages.returns.noteOptional') }}</label>
         <input id="rt-anote" v-model="note" type="text" maxlength="400">
         <label class="rd-check rd-gap">
-          <input type="checkbox" v-model="notifyApprove"> Email the customer
+          <input type="checkbox" v-model="notifyApprove"> {{ $t('pages.returns.emailCustomer') }}
         </label>
         <p v-if="actionError" class="rd-error-line" role="alert">{{ actionError }}</p>
         <div class="rd-actions">
-          <button type="button" class="outline-btn rd-danger" :disabled="busy" @click="rejectOpen = true">Reject</button>
-          <button type="button" class="primary-btn" :disabled="busy" @click="approve">{{ busy ? 'Saving…' : 'Approve' }}</button>
+          <button type="button" class="outline-btn rd-danger" :disabled="busy" @click="rejectOpen = true">{{ $t('pages.returns.reject') }}</button>
+          <button type="button" class="primary-btn" :disabled="busy" @click="approve">{{ busy ? $t('pages.returns.saving') : $t('pages.returns.approve') }}</button>
         </div>
       </div>
 
       <div v-if="r.status === 'awaiting_payment' && r.pay_link" class="rd-card rd-card-attn">
-        <h4>Waiting for the customer to pay</h4>
+        <h4>{{ $t('pages.returns.waitingForPayment') }}</h4>
         <dl class="rd-dl">
-          <dt>Amount</dt><dd>{{ currencyIcon }}{{ money(r.pay_link.amount) }} by card ({{ r.pay_link.gateway }})</dd>
-          <dt>Link</dt>
+          <dt>{{ $t('pages.returns.amount') }}</dt><dd>{{ $t('pages.returns.amountByCard', { amount: currencyIcon + money(r.pay_link.amount), gateway: r.pay_link.gateway }) }}</dd>
+          <dt>{{ $t('pages.returns.link') }}</dt>
           <dd class="rd-link-row">
             <span class="rd-mono rd-link-text">{{ r.pay_link.url }}</span>
-            <button type="button" class="outline-btn xs" @click="copyLink">{{ copied ? 'Copied' : 'Copy' }}</button>
+            <button type="button" class="outline-btn xs" @click="copyLink">{{ copied ? $t('pages.returns.copied') : $t('pages.returns.copy') }}</button>
           </dd>
-          <dt>Valid until</dt>
-          <dd>{{ dateTime(r.pay_link.expires_at) }}<span v-if="r.pay_link.status === 'expired'" class="pill pill-bad rd-gap-left">expired</span></dd>
-          <dt>Started</dt><dd>{{ r.pay_link.started ? 'The customer has opened the card form' : 'Not yet' }}</dd>
+          <dt>{{ $t('pages.returns.validUntil') }}</dt>
+          <dd>{{ dateTime(r.pay_link.expires_at) }}<span v-if="r.pay_link.status === 'expired'" class="pill pill-bad rd-gap-left">{{ $t('pages.returns.expired') }}</span></dd>
+          <dt>{{ $t('pages.returns.started') }}</dt><dd>{{ r.pay_link.started ? $t('pages.returns.customerOpenedCardForm') : $t('pages.returns.notYet') }}</dd>
         </dl>
-        <p class="rd-hint">The new {{ r.items.length > 1 ? 'units are' : 'unit is' }} held out of stock. The exchange completes by itself the moment the payment is confirmed.</p>
+        <p class="rd-hint">{{ r.items.length > 1 ? $t('pages.returns.newUnitsHeld') : $t('pages.returns.newUnitHeld') }}</p>
         <p v-if="actionError" class="rd-error-line" role="alert">{{ actionError }}</p>
         <div v-if="canEdit" class="rd-actions">
-          <button type="button" class="outline-btn rd-danger" :disabled="busy" @click="run({ action: 'cancel_pay_link', note })">Cancel link</button>
+          <button type="button" class="outline-btn rd-danger" :disabled="busy" @click="run({ action: 'cancel_pay_link', note })">{{ $t('pages.returns.cancelLink') }}</button>
         </div>
       </div>
       <div v-if="canEdit && r.status === 'awaiting_return'" class="rd-card">
-        <h4>When the parcel arrives</h4>
-        <p class="rd-hint">Tick the units that can be sold again; the rest stay out of stock. You refund in the next step.</p>
-        <label class="rd-label" for="rt-rnote">Note (optional)</label>
-        <input id="rt-rnote" v-model="note" type="text" maxlength="400" placeholder="e.g. Box opened, phone unused">
+        <h4>{{ $t('pages.returns.whenParcelArrives') }}</h4>
+        <p class="rd-hint">{{ $t('pages.returns.tickUnitsHint') }}</p>
+        <label class="rd-label" for="rt-rnote">{{ $t('pages.returns.noteOptional') }}</label>
+        <input id="rt-rnote" v-model="note" type="text" maxlength="400" :placeholder="$t('pages.returns.receiveNotePlaceholder')">
         <p v-if="actionError" class="rd-error-line" role="alert">{{ actionError }}</p>
         <div class="rd-actions">
-          <button type="button" class="outline-btn rd-danger" :disabled="busy" @click="rejectOpen = true">Reject return</button>
-          <button type="button" class="primary-btn" :disabled="busy" @click="receive">{{ busy ? 'Saving…' : 'Mark as received' }}</button>
+          <button type="button" class="outline-btn rd-danger" :disabled="busy" @click="rejectOpen = true">{{ $t('pages.returns.rejectReturn') }}</button>
+          <button type="button" class="primary-btn" :disabled="busy" @click="receive">{{ busy ? $t('pages.returns.saving') : $t('pages.returns.markReceived') }}</button>
         </div>
       </div>
 
       <!-- ========================= Complete exchange ========================= -->
       <div v-if="canEdit && r.status === 'received' && isExchange && r.exchange_quote && !refundInstead" class="rd-card">
-        <h4>Complete the exchange</h4>
-        <p class="rd-hint">Creates the replacement order, confirmed and ready to ship, and takes the new units from stock.</p>
+        <h4>{{ $t('pages.returns.completeTheExchange') }}</h4>
+        <p class="rd-hint">{{ $t('pages.returns.completeExchangeHint') }}</p>
 
         <template v-if="r.exchange_quote.difference > 0">
-          <p class="rd-callout">The customer owes {{ currencyIcon }}{{ money(r.exchange_quote.difference) }}. Take the payment, then record it here.</p>
-          <label class="rd-label" for="ex-amount">Amount taken</label>
+          <p class="rd-callout">{{ $t('pages.returns.customerOwes', { amount: currencyIcon + money(r.exchange_quote.difference) }) }}</p>
+          <label class="rd-label" for="ex-amount">{{ $t('pages.returns.amountTaken') }}</label>
           <div class="rd-inline">
             <input id="ex-amount" v-model="exAmount" type="number" min="0" step="0.01" :max="r.exchange_quote.difference" :placeholder="money(r.exchange_quote.difference)">
-            <span class="rd-hint-inline">Leave empty for the full difference; 0 to waive it.</span>
+            <span class="rd-hint-inline">{{ $t('pages.returns.leaveEmptyDifference') }}</span>
           </div>
           <template v-if="exFigure > 0">
-            <label class="rd-label" for="ex-ref">Where the payment was taken</label>
-            <input id="ex-ref" v-model="exReference" type="text" maxlength="255" placeholder="e.g. card terminal receipt, bank transfer ref">
+            <label class="rd-label" for="ex-ref">{{ $t('pages.returns.wherePaymentTaken') }}</label>
+            <input id="ex-ref" v-model="exReference" type="text" maxlength="255" :placeholder="$t('pages.returns.paymentRefPlaceholder')">
           </template>
         </template>
 
         <template v-else-if="r.exchange_quote.difference < 0">
-          <p class="rd-callout">The new variant is cheaper: the customer is owed {{ currencyIcon }}{{ money(r.exchange_quote.refundable) }}.</p>
-          <div class="rd-methods" role="radiogroup" aria-label="How the difference is refunded">
+          <p class="rd-callout">{{ $t('pages.returns.newVariantCheaper', { amount: currencyIcon + money(r.exchange_quote.refundable) }) }}</p>
+          <div class="rd-methods" role="radiogroup" :aria-label="$t('pages.returns.howDifferenceRefunded')">
             <label class="rd-check" :class="{disabled: r.order && r.order.cash_on_delivery}">
-              <input type="radio" value="original" v-model="exMethod" :disabled="r.order && r.order.cash_on_delivery"> To the original payment
+              <input type="radio" value="original" v-model="exMethod" :disabled="r.order && r.order.cash_on_delivery"> {{ $t('pages.returns.toOriginalPayment') }}
             </label>
-            <label class="rd-check"><input type="radio" value="manual" v-model="exMethod"> Already refunded another way (record it)</label>
-            <label class="rd-check"><input type="radio" value="none" v-model="exMethod"> Do not refund the difference</label>
+            <label class="rd-check"><input type="radio" value="manual" v-model="exMethod"> {{ $t('pages.returns.alreadyRefunded') }}</label>
+            <label class="rd-check"><input type="radio" value="none" v-model="exMethod"> {{ $t('pages.returns.doNotRefundDifference') }}</label>
           </div>
           <template v-if="exMethod !== 'none'">
-            <label class="rd-label" for="ex-ramount">Amount</label>
+            <label class="rd-label" for="ex-ramount">{{ $t('pages.returns.amount') }}</label>
             <div class="rd-inline">
               <input id="ex-ramount" v-model="exAmount" type="number" min="0" step="0.01" :max="r.exchange_quote.refundable" :placeholder="money(r.exchange_quote.refundable)">
-              <span class="rd-hint-inline">Up to {{ currencyIcon }}{{ money(r.exchange_quote.refundable) }}.</span>
+              <span class="rd-hint-inline">{{ $t('pages.returns.upTo', { amount: currencyIcon + money(r.exchange_quote.refundable) }) }}</span>
             </div>
             <template v-if="exMethod === 'manual'">
-              <label class="rd-label" for="ex-rref">Where it was refunded</label>
+              <label class="rd-label" for="ex-rref">{{ $t('pages.returns.whereRefunded') }}</label>
               <input id="ex-rref" v-model="exReference" type="text" maxlength="255">
             </template>
           </template>
         </template>
 
-        <p v-else class="rd-callout">Same price: nothing to pay either way.</p>
+        <p v-else class="rd-callout">{{ $t('pages.returns.samePrice') }}</p>
 
-        <label class="rd-label" for="ex-note">Note (optional)</label>
+        <label class="rd-label" for="ex-note">{{ $t('pages.returns.noteOptional') }}</label>
         <input id="ex-note" v-model="note" type="text" maxlength="400">
 
         <p v-if="actionError" class="rd-error-line" role="alert">{{ actionError }}</p>
         <div class="rd-actions">
-          <button type="button" class="outline-btn" :disabled="busy" @click="refundInstead = true">Refund instead</button>
+          <button type="button" class="outline-btn" :disabled="busy" @click="refundInstead = true">{{ $t('pages.returns.refundInstead') }}</button>
           <button
             v-if="r.exchange_quote.difference >= 0.5 && r.exchange_quote.in_stock"
             type="button" class="outline-btn" :disabled="busy" @click="payLinkOpen = true"
-          >Send payment link</button>
-          <button type="button" class="primary-btn" :disabled="busy || !exchangeValid" @click="exchangeOpen = true">Complete exchange</button>
+          >{{ $t('pages.returns.sendPaymentLink') }}</button>
+          <button type="button" class="primary-btn" :disabled="busy || !exchangeValid" @click="exchangeOpen = true">{{ $t('pages.returns.completeExchange') }}</button>
         </div>
       </div>
 
       <div v-if="canEdit && r.status === 'received' && r.quote && (!isExchange || refundInstead)" class="rd-card">
-        <h4>Refund</h4>
+        <h4>{{ $t('pages.returns.refund') }}</h4>
         <p v-if="isExchange" class="rd-hint">
-          Refunding closes this exchange without a replacement.
-          <button type="button" class="rd-linkbtn" @click="refundInstead = false">Back to the exchange</button>
+          {{ $t('pages.returns.refundClosesExchange') }}
+          <button type="button" class="rd-linkbtn" @click="refundInstead = false">{{ $t('pages.returns.backToExchange') }}</button>
         </p>
 
-        <div class="rd-methods" role="radiogroup" aria-label="How the refund is made">
+        <div class="rd-methods" role="radiogroup" :aria-label="$t('pages.returns.howRefundMade')">
           <label class="rd-check" :class="{disabled: r.order && r.order.cash_on_delivery}">
             <input type="radio" value="original" v-model="method" :disabled="r.order && r.order.cash_on_delivery">
-            To the original payment
-            <span class="rd-hint-inline">{{ r.order && r.order.wallet_amount > 0 ? '(card first, then wallet)' : '' }}</span>
+            {{ $t('pages.returns.toOriginalPayment') }}
+            <span class="rd-hint-inline">{{ r.order && r.order.wallet_amount > 0 ? $t('pages.returns.cardFirstThenWallet') : '' }}</span>
           </label>
           <label class="rd-check">
-            <input type="radio" value="manual" v-model="method"> Already refunded another way (record it)
+            <input type="radio" value="manual" v-model="method"> {{ $t('pages.returns.alreadyRefunded') }}
           </label>
           <label class="rd-check">
-            <input type="radio" value="none" v-model="method"> No refund (close the return)
+            <input type="radio" value="none" v-model="method"> {{ $t('pages.returns.noRefundClose') }}
           </label>
         </div>
-        <p v-if="r.order && r.order.cash_on_delivery" class="rd-hint">Cash on delivery: refund the customer yourself, then record it.</p>
+        <p v-if="r.order && r.order.cash_on_delivery" class="rd-hint">{{ $t('pages.returns.codRefundYourself') }}</p>
 
         <template v-if="method !== 'none'">
           <label v-if="r.quote.with_shipping.shipping_refund > 0" class="rd-check rd-gap">
-            <input type="checkbox" v-model="refundShipping"> Refund delivery too ({{ currencyIcon }}{{ money(r.quote.with_shipping.shipping_refund) }})
+            <input type="checkbox" v-model="refundShipping"> {{ $t('pages.returns.refundDeliveryToo', { amount: currencyIcon + money(r.quote.with_shipping.shipping_refund) }) }}
           </label>
 
-          <label class="rd-label" for="rt-amount">Amount</label>
+          <label class="rd-label" for="rt-amount">{{ $t('pages.returns.amount') }}</label>
           <div class="rd-inline">
             <input id="rt-amount" v-model="amount" type="number" min="0" step="0.01" :max="activeQuote.refund" :placeholder="money(activeQuote.refund)">
-            <span class="rd-hint-inline">Up to {{ currencyIcon }}{{ money(activeQuote.refund) }}. Leave empty for the full amount; lower it for a deduction.</span>
+            <span class="rd-hint-inline">{{ $t('pages.returns.upToDeduction', { amount: currencyIcon + money(activeQuote.refund) }) }}</span>
           </div>
 
           <template v-if="method === 'manual'">
-            <label class="rd-label" for="rt-ref">Where it was refunded</label>
-            <input id="rt-ref" v-model="reference" type="text" maxlength="255" placeholder="e.g. bank transfer ref, till receipt">
+            <label class="rd-label" for="rt-ref">{{ $t('pages.returns.whereRefunded') }}</label>
+            <input id="rt-ref" v-model="reference" type="text" maxlength="255" :placeholder="$t('pages.returns.refundRefPlaceholder')">
           </template>
         </template>
 
-        <label class="rd-label" for="rt-fnote">Note (optional)</label>
+        <label class="rd-label" for="rt-fnote">{{ $t('pages.returns.noteOptional') }}</label>
         <input id="rt-fnote" v-model="note" type="text" maxlength="400">
 
         <p v-if="actionError" class="rd-error-line" role="alert">{{ actionError }}</p>
         <div class="rd-actions">
           <button type="button" class="primary-btn" :disabled="busy || !refundValid" @click="refundOpen = true">
-            {{ method === 'none' ? 'Close without refund' : `Refund ${currencyIcon}${money(refundFigure)}` }}
+            {{ method === 'none' ? $t('pages.returns.closeWithoutRefund') : $t('pages.returns.refundAmount', { amount: currencyIcon + money(refundFigure) }) }}
           </button>
         </div>
       </div>
 
       <div class="rd-card">
-        <h4>History</h4>
+        <h4>{{ $t('pages.returns.history') }}</h4>
         <ul class="rd-history">
           <li v-for="(h, i) in r.history" :key="i">
             <span class="rd-when">{{ dateTime(h.at) }}</span>
             <strong>{{ statusName(h.to) }}</strong>
             <span v-if="h.note"> — {{ h.note }}</span>
-            <span v-if="h.admin" class="rd-hint-inline"> by {{ h.admin }}</span>
+            <span v-if="h.admin" class="rd-hint-inline"> {{ $t('pages.returns.byAdmin', { admin: h.admin }) }}</span>
           </li>
         </ul>
         <div v-if="canEdit" class="rd-inline rd-gap">
-          <input v-model="newNote" type="text" maxlength="400" placeholder="Add a note" aria-label="Add a note">
-          <button type="button" class="outline-btn xs" :disabled="busy || !newNote.trim()" @click="addNote">Add</button>
+          <input v-model="newNote" type="text" maxlength="400" :placeholder="$t('pages.returns.addNote')" :aria-label="$t('pages.returns.addNote')">
+          <button type="button" class="outline-btn xs" :disabled="busy || !newNote.trim()" @click="addNote">{{ $t('pages.returns.add') }}</button>
         </div>
       </div>
     </template>
 
     <confirm-dialog
       :open="refundOpen"
-      :title="method === 'none' ? 'Close this return without a refund?' : 'Make this refund?'"
+      :title="method === 'none' ? $t('pages.returns.closeWithoutRefundTitle') : $t('pages.returns.makeRefundTitle')"
       tone="primary"
       icon="fa-solid fa-rotate-left"
-      :confirm-label="method === 'none' ? 'Close return' : 'Refund'"
-      busy-label="Working…"
+      :confirm-label="method === 'none' ? $t('pages.returns.closeReturn') : $t('pages.returns.refund')"
+      :busy-label="$t('pages.returns.working')"
       :busy="busy"
-      :warning="method === 'original' ? 'Money is sent back through the payment provider straight away. This cannot be undone here.' : ''"
+      :warning="method === 'original' ? $t('pages.returns.refundWarning') : ''"
       @cancel="refundOpen = false"
       @confirm="refund"
     >
       <template v-slot:subject>
-        <template v-if="method === 'none'">The items stay as recorded; the customer gets nothing back.</template>
-        <template v-else>{{ currencyIcon }}{{ money(refundFigure) }} {{ methodLabel(method) }}<template v-if="activeQuote && activeQuote.gift_card > 0">, plus {{ currencyIcon }}{{ money(activeQuote.gift_card) }} back on the gift card</template>.</template>
+        <template v-if="method === 'none'">{{ $t('pages.returns.itemsStayNothingBack') }}</template>
+        <template v-else>{{ currencyIcon }}{{ money(refundFigure) }} {{ methodLabel(method) }}<template v-if="activeQuote && activeQuote.gift_card > 0">{{ $t('pages.returns.plusGiftCard', { amount: currencyIcon + money(activeQuote.gift_card) }) }}</template>.</template>
       </template>
     </confirm-dialog>
 
     <confirm-dialog
       :open="payLinkOpen"
-      title="Email a payment link?"
+      :title="$t('pages.returns.emailPayLinkTitle')"
       tone="primary"
       icon="fa-solid fa-link"
-      confirm-label="Send link"
-      busy-label="Sending…"
+      :confirm-label="$t('pages.returns.sendLink')"
+      :busy-label="$t('pages.returns.sending')"
       :busy="busy"
       @cancel="payLinkOpen = false"
       @confirm="sendPayLink"
     >
       <template v-slot:subject>
-        The customer gets a link to pay {{ currencyIcon }}{{ money(r && r.exchange_quote ? r.exchange_quote.difference : 0) }} by card.
-        The new {{ r && r.items.length > 1 ? 'units are' : 'unit is' }} held until it is paid or you cancel the link, and the exchange completes as soon as it is paid.
+        {{ $t('pages.returns.payLinkBody', { amount: currencyIcon + money(r && r.exchange_quote ? r.exchange_quote.difference : 0) }) }}
+        {{ r && r.items.length > 1 ? $t('pages.returns.payLinkUnitsHeld') : $t('pages.returns.payLinkUnitHeld') }}
       </template>
     </confirm-dialog>
 
     <confirm-dialog
       :open="exchangeOpen"
-      title="Complete this exchange?"
+      :title="$t('pages.returns.completeExchangeTitle')"
       tone="primary"
       icon="fa-solid fa-right-left"
-      confirm-label="Complete exchange"
-      busy-label="Working…"
+      :confirm-label="$t('pages.returns.completeExchange')"
+      :busy-label="$t('pages.returns.working')"
       :busy="busy"
-      :warning="r && r.exchange_quote && r.exchange_quote.difference < 0 && exMethod === 'original' && exFigure > 0 ? 'The difference is refunded through the payment provider straight away.' : ''"
+      :warning="r && r.exchange_quote && r.exchange_quote.difference < 0 && exMethod === 'original' && exFigure > 0 ? $t('pages.returns.exchangeRefundWarning') : ''"
       @cancel="exchangeOpen = false"
       @confirm="completeExchange"
     >
-      <template v-slot:subject>A replacement order is created and the new units leave stock.</template>
+      <template v-slot:subject>{{ $t('pages.returns.exchangeSubject') }}</template>
     </confirm-dialog>
 
     <confirm-dialog
       :open="rejectOpen"
-      title="Reject this return?"
-      confirm-label="Reject"
-      busy-label="Rejecting…"
+      :title="$t('pages.returns.rejectTitle')"
+      :confirm-label="$t('pages.returns.reject')"
+      :busy-label="$t('pages.returns.rejecting')"
       :busy="busy"
       @cancel="rejectOpen = false"
       @confirm="reject"
     >
-      <template v-slot:subject>The units become returnable again on the order.</template>
+      <template v-slot:subject>{{ $t('pages.returns.rejectSubject') }}</template>
       <div class="rd-form">
-        <label class="rd-label" for="rt-jnote">Reason (staff only)</label>
+        <label class="rd-label" for="rt-jnote">{{ $t('pages.returns.reasonStaffOnly') }}</label>
         <input id="rt-jnote" v-model="note" type="text" maxlength="400">
         <label class="rd-check rd-gap">
-          <input type="checkbox" v-model="notifyReject"> Email the customer that the return was not accepted
+          <input type="checkbox" v-model="notifyReject"> {{ $t('pages.returns.emailNotAccepted') }}
         </label>
       </div>
     </confirm-dialog>
@@ -374,17 +374,18 @@ import ConfirmDialog from '~/components/ConfirmDialog'
 import util from '~/mixin/util'
 import { mapGetters, mapActions } from 'vuex'
 
+// i18n keys; translated in statusName()
 const STATUS = {
-  awaiting_return: 'Awaiting return',
-  received: 'Received',
-  refunding: 'Refunding',
-  refunded: 'Refunded',
-  closed: 'Closed',
-  rejected: 'Rejected',
-  exchanged: 'Exchanged',
-  requested: 'Requested',
-  awaiting_payment: 'Awaiting payment',
-  cancelled: 'Cancelled'
+  awaiting_return: 'pages.returns.statusAwaitingReturn',
+  received: 'pages.returns.statusReceived',
+  refunding: 'pages.returns.statusRefunding',
+  refunded: 'pages.returns.statusRefunded',
+  closed: 'pages.returns.statusClosed',
+  rejected: 'pages.returns.statusRejected',
+  exchanged: 'pages.returns.statusExchanged',
+  requested: 'pages.returns.statusRequested',
+  awaiting_payment: 'pages.returns.statusAwaitingPayment',
+  cancelled: 'pages.returns.statusCancelled'
 }
 
 export default {
@@ -483,16 +484,16 @@ export default {
     dateTime(v) {
       if (!v) return ''
       const d = new Date(String(v).replace(' ', 'T'))
-      return isNaN(d.getTime()) ? v : d.toLocaleString('en-IE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      return isNaN(d.getTime()) ? v : d.toLocaleString(this.$i18n?.locale || 'en', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     },
     statusName(s) {
-      return STATUS[s] || s
+      return STATUS[s] ? this.$t(STATUS[s]) : s
     },
     differenceText(v) {
       const n = Number(v || 0)
-      if (n > 0) return `Customer pays ${this.currencyIcon}${this.money(n)}`
-      if (n < 0) return `Customer is owed ${this.currencyIcon}${this.money(-n)}`
-      return 'None (same price)'
+      if (n > 0) return this.$t('pages.returns.customerPays', { amount: this.currencyIcon + this.money(n) })
+      if (n < 0) return this.$t('pages.returns.customerIsOwed', { amount: this.currencyIcon + this.money(-n) })
+      return this.$t('pages.returns.noneSamePrice')
     },
     exchangeLine(item) {
       return this.r?.exchange_quote?.items?.[item.id] || null
@@ -527,7 +528,7 @@ export default {
       if (this.actionError) this.load()
     },
     methodLabel(m) {
-      return { original: 'to the original payment', manual: 'recorded as refunded elsewhere', none: '' }[m] || ''
+      return { original: this.$t('pages.returns.methodOriginal'), manual: this.$t('pages.returns.methodManual'), none: '' }[m] || ''
     },
     show(data) {
       this.r = data
@@ -550,7 +551,7 @@ export default {
       try {
         this.show(await this.getById({ id: this.$route.params.id, params: {}, api: 'getOrderReturn' }))
       } catch (e) {
-        this.loadError = e?.message || 'This return could not be loaded.'
+        this.loadError = e?.message || this.$t('pages.returns.loadFailed')
       } finally {
         this.loading = false
       }
@@ -566,9 +567,9 @@ export default {
         }
         // refused: setById leaves the message in ui/errors and resolves with nothing
         const errors = this.$store.getters['ui/errors']
-        this.actionError = (errors?.form || [])[0] || 'That could not be done.'
+        this.actionError = (errors?.form || [])[0] || this.$t('pages.returns.actionFailed')
       } catch (e) {
-        this.actionError = e?.message || 'That could not be done.'
+        this.actionError = e?.message || this.$t('pages.returns.actionFailed')
       } finally {
         this.busy = false
       }

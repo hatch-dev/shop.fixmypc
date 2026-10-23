@@ -5,7 +5,7 @@
     get-api="getFlashDiscount"
     empty-store-variable="allFlashDiscounts"
     route-name="flash-discount"
-    name="Flash Discount"
+    :name="$t('pages.flashDiscount.listName')"
     gate="flash_discount"
     :validation-keys="['type', 'value', 'start_time', 'end_time']"
     :result="result"
@@ -21,15 +21,15 @@
     <template v-slot:form="{hasError}">
 
       <div class="input-wrapper">
-        <label>Type *</label>
+        <label>{{ $t('pages.flashDiscount.typeRequired') }}</label>
         <select v-model="result.type">
-          <option value="percentage">Percentage</option>
-          <option value="fixed">Fixed</option>
+          <option value="percentage">{{ $t('pages.flashDiscount.percentage') }}</option>
+          <option value="fixed">{{ $t('pages.flashDiscount.fixed') }}</option>
         </select>
       </div>
 
       <div class="input-wrapper">
-        <label>Value *</label>
+        <label>{{ $t('pages.flashDiscount.valueRequired') }}</label>
         <input
           type="number"
           min="0"
@@ -39,26 +39,26 @@
           :class="{invalid: (!result.value && hasError) || !!valueError}"
         >
         <span class="error" v-if="!result.value && hasError">
-          Value is required
+          {{ $t('pages.flashDiscount.valueIsRequired') }}
         </span>
         <span class="error" v-else-if="valueError">
           {{ valueError }}
         </span>
         <span class="field-hint">
           {{ result.type === 'percentage'
-            ? 'Percent off the basket, 1 to 100.'
-            : 'A flat amount off the basket.' }}
+            ? $t('pages.flashDiscount.hintPercent')
+            : $t('pages.flashDiscount.hintFixed') }}
         </span>
       </div>
 
       <div class="input-wrapper">
-        <label>Min Cart Value</label>
+        <label>{{ $t('pages.flashDiscount.minCartValue') }}</label>
         <input type="number" min="0" step="0.01" v-model="result.min_cart_value">
-        <span class="field-hint">Leave empty for no minimum.</span>
+        <span class="field-hint">{{ $t('pages.flashDiscount.hintNoMinimum') }}</span>
       </div>
 
       <div class="input-wrapper">
-        <label>Max Discount</label>
+        <label>{{ $t('pages.flashDiscount.maxDiscount') }}</label>
         <input
           type="number"
           min="0"
@@ -74,11 +74,11 @@
           nothing, while the basket banner still advertised the full discount.
           It starts empty now, and empty means no ceiling all the way through.
         -->
-        <span class="field-hint">Leave empty for no limit on the discount.</span>
+        <span class="field-hint">{{ $t('pages.flashDiscount.hintNoLimit') }}</span>
       </div>
 
       <div class="input-wrapper">
-        <label>Start Time *</label>
+        <label>{{ $t('pages.flashDiscount.startTimeRequired') }}</label>
         <input
           type="datetime-local"
           step="1"
@@ -86,12 +86,12 @@
           :class="{invalid: !result.start_time && hasError}"
         >
         <span class="error" v-if="!result.start_time && hasError">
-          Start time is required
+          {{ $t('pages.flashDiscount.startTimeIsRequired') }}
         </span>
       </div>
 
       <div class="input-wrapper">
-        <label>End Time *</label>
+        <label>{{ $t('pages.flashDiscount.endTimeRequired') }}</label>
         <input
           type="datetime-local"
           step="1"
@@ -99,18 +99,17 @@
           :class="{invalid: (!result.end_time && hasError) || !!windowError}"
         >
         <span class="error" v-if="!result.end_time && hasError">
-          End time is required
+          {{ $t('pages.flashDiscount.endTimeIsRequired') }}
         </span>
         <span class="error" v-else-if="windowError">{{ windowError }}</span>
-        <span class="field-hint">Must come after the start time.</span>
+        <span class="field-hint">{{ $t('pages.flashDiscount.hintAfterStart') }}</span>
       </div>
 
       <div class="input-wrapper">
-        <label>Status</label>
-        <input type="checkbox" v-model="result.is_active"> Active
+        <label>{{ $t('pages.flashDiscount.status') }}</label>
+        <input type="checkbox" v-model="result.is_active"> {{ $t('pages.flashDiscount.active') }}
         <span class="field-hint">
-          Only one discount can be live at a time. Saving a window that
-          overlaps another live discount is refused.
+          {{ $t('pages.flashDiscount.hintOneLive') }}
         </span>
       </div>
 
@@ -123,6 +122,7 @@ import DataPage from "~/components/partials/DataPage";
 import util from "~/mixin/util";
 
 export default {
+  middleware: ['common-middleware', 'auth'],
   components: { DataPage },
   mixins: [util],
   data() {
@@ -151,11 +151,11 @@ export default {
       const value = Number(this.result.value)
 
       if (this.result.value === '' || this.result.value === null) return ''
-      if (isNaN(value)) return 'Value must be a number'
-      if (value <= 0) return 'Value must be greater than zero'
+      if (isNaN(value)) return this.$t('pages.flashDiscount.errValueNumber')
+      if (value <= 0) return this.$t('pages.flashDiscount.errValuePositive')
 
       if (this.result.type === 'percentage' && value > 100) {
-        return 'A percentage discount cannot be greater than 100'
+        return this.$t('pages.flashDiscount.errPercentMax')
       }
 
       return ''
@@ -164,12 +164,12 @@ export default {
       const cap = Number(this.result.max_discount)
 
       if (this.result.max_discount === '' || this.result.max_discount === null) return ''
-      if (isNaN(cap) || cap < 0) return 'Maximum discount cannot be negative'
+      if (isNaN(cap) || cap < 0) return this.$t('pages.flashDiscount.errCapNegative')
 
       // A fixed discount capped below its own value pays out the cap, which is
       // never what was meant.
       if (this.result.type === 'fixed' && cap > 0 && cap < Number(this.result.value)) {
-        return 'The maximum discount cannot be lower than the fixed discount value'
+        return this.$t('pages.flashDiscount.errCapBelowValue')
       }
 
       return ''
@@ -178,7 +178,7 @@ export default {
       if (!this.result.start_time || !this.result.end_time) return ''
 
       return new Date(this.result.end_time) <= new Date(this.result.start_time)
-        ? 'The end time must come after the start time'
+        ? this.$t('pages.flashDiscount.errEndAfterStart')
         : ''
     }
   }

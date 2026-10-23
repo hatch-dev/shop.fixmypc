@@ -17,11 +17,11 @@
           <input type="checkbox" @change="checkAll">
         </th>
         <th class="w-50x mx-w-50x">#</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Address</th>
-        <th>Category</th>
+        <th>{{ $t('pages.procurementSuppliers.name') }}</th>
+        <th>{{ $t('pages.procurementSuppliers.email') }}</th>
+        <th>{{ $t('pages.procurementSuppliers.phone') }}</th>
+        <th>{{ $t('pages.procurementSuppliers.address') }}</th>
+        <th>{{ $t('pages.procurementSuppliers.category') }}</th>
         <th>&nbsp;</th>
       </tr>
 
@@ -65,14 +65,14 @@
             @click.prevent="$refs.listPage.editItem(value.id)"
             class="lite-btn"
           >
-            Edit
+            {{ $t('pages.procurementSuppliers.edit') }}
           </button>
 
           <button
             @click.prevent="$refs.listPage.deleteItem(value.id)"
             class="delete-btn lite-btn"
           >
-            Delete
+            {{ $t('pages.procurementSuppliers.delete') }}
           </button>
         </td>
       </tr>
@@ -98,8 +98,8 @@ export default {
     return {
       itemList: [],
       orderOptions: {
-        name: { title: "Name" },
-        created_at: { title: "Created Date" }
+        name: { title: this.$t('pages.procurementSuppliers.name') },
+        created_at: { title: this.$t('pages.procurementSuppliers.createdDate') }
       }
     }
   },

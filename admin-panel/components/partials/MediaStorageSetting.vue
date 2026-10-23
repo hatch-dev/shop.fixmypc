@@ -39,7 +39,7 @@
         </label>
         <input
           type="text"
-          placeholder="eg. thumb-"
+          :placeholder="$t('cmp.MediaStorageSetting.thumbPrefixPlaceholder')"
           v-model="result.thumbPrefix"
         >
       </div>
@@ -52,7 +52,7 @@
         </label>
         <input
           type="text"
-          placeholder="eg. default-image.webp"
+          :placeholder="$t('cmp.MediaStorageSetting.defaultImagePlaceholder')"
           v-model="result.defaultImage"
         >
       </div>

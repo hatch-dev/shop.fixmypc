@@ -4,7 +4,7 @@
     list-api="getLoyaltyGroups"
     delete-api="deleteLoyaltyGroup"
     route-name="loyalty-groups"
-    :name="'Loyalty Groups'"
+    :name="$t('pages.loyaltyGroups.loyaltyGroups')"
     :order-options="orderOptions"
     @delete-bulk="deleteBulk"
     @list="itemList = $event"
@@ -17,11 +17,11 @@
         </th>
 
         <th class="w-50x mx-w-50x">#</th>
-        <th>Title</th>
-        <th>Discount</th>
-        <th>Validity</th>
-        <th>Members</th>
-        <th>Status</th>
+        <th>{{ $t('index.title') }}</th>
+        <th>{{ $t('pages.loyaltyGroups.discount') }}</th>
+        <th>{{ $t('pages.loyaltyGroups.validity') }}</th>
+        <th>{{ $t('pages.loyaltyGroups.members') }}</th>
+        <th>{{ $t('category.status') }}</th>
         <th>&nbsp;</th>
       </tr>
 
@@ -68,7 +68,7 @@
         <td>
           {{ value.members_count || 0 }}
           <span v-if="value.redeemed_count > 0" class="sub-note">
-            {{ value.redeemed_count }} redeemed
+            {{ $t('pages.loyaltyGroups.redeemedCount', { count: value.redeemed_count }) }}
           </span>
         </td>
 
@@ -92,14 +92,14 @@
             @click.prevent="$refs.listPage.editItem(value.id)"
             class="lite-btn"
           >
-            Edit
+            {{ $t('category.edit') }}
           </button>
 
           <button
             @click.prevent="$refs.listPage.deleteItem(value.id)"
             class="delete-btn lite-btn"
           >
-            Delete
+            {{ $t('category.delete') }}
           </button>
 
         </td>
@@ -134,27 +134,27 @@ export default {
       orderOptions: {
 
         created_at: {
-          title: 'Date'
+          title: this.$t('category.date')
         },
 
         title: {
-          title: 'Title'
+          title: this.$t('index.title')
         },
 
         discount_type: {
-          title: 'Discount Type'
+          title: this.$t('pages.loyaltyGroups.discountType')
         },
 
         discount_value: {
-          title: 'Discount Value'
+          title: this.$t('pages.loyaltyGroups.discountValue')
         },
 
         status: {
-          title: 'Status'
+          title: this.$t('category.status')
         },
 
         validity: {
-          title: 'Validity'
+          title: this.$t('pages.loyaltyGroups.validity')
         }
 
       }
@@ -183,11 +183,11 @@ export default {
       const parts = []
 
       if (Number(group.min_cart_value) > 0) {
-        parts.push(`min ${this.currencyIcon}${Number(group.min_cart_value).toFixed(2)}`)
+        parts.push(this.$t('pages.loyaltyGroups.minAmount', { amount: `${this.currencyIcon}${Number(group.min_cart_value).toFixed(2)}` }))
       }
 
       if (Number(group.max_discount) > 0) {
-        parts.push(`cap ${this.currencyIcon}${Number(group.max_discount).toFixed(2)}`)
+        parts.push(this.$t('pages.loyaltyGroups.capAmount', { amount: `${this.currencyIcon}${Number(group.max_discount).toFixed(2)}` }))
       }
 
       return parts.join(' · ')
@@ -196,18 +196,18 @@ export default {
     validityLabel(group) {
       if (group.validity === 'period') {
         return group.period_days
-          ? `${group.period_days} days from joining`
-          : 'Set period'
+          ? this.$t('pages.loyaltyGroups.daysFromJoining', { days: group.period_days })
+          : this.$t('pages.loyaltyGroups.setPeriod')
       }
 
       if (group.validity === 'date_range') {
         const start = this.dateOnly(group.start_date)
         const end = this.dateOnly(group.end_date)
 
-        return start && end ? `${start} → ${end}` : 'Date range'
+        return start && end ? `${start} → ${end}` : this.$t('pages.loyaltyGroups.dateRange')
       }
 
-      return 'One-time purchase'
+      return this.$t('pages.loyaltyGroups.oneTimePurchase')
     },
 
     dateOnly(value) {
@@ -216,11 +216,11 @@ export default {
 
     statusLabel(group) {
       if (!group.status || Number(group.status) === 0) {
-        return 'Inactive'
+        return this.$t('fSale.inactive')
       }
 
       // Set by the API: active, but its date range has not started or has ended.
-      return group.is_running === false ? 'Scheduled / Expired' : 'Running'
+      return group.is_running === false ? this.$t('pages.loyaltyGroups.scheduledExpired') : this.$t('pages.loyaltyGroups.running')
     },
 
     statusClass(group) {

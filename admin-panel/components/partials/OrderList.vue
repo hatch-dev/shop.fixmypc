@@ -191,13 +191,13 @@
           },
           {
             key: 'bank_transfer',
-            title: 'Bank transfer'
+            title: this.$t('title.bt')
           },
           {
             // Bank transfer, unpaid, not cancelled: the ones to check the
             // bank account for. Includes those with a reference in.
             key: 'awaiting_transfer',
-            title: 'Awaiting transfer'
+            title: this.$t('cmp.OrderList.awaitingTransfer')
           },
           {
             key: 'paid',

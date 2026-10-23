@@ -4,25 +4,25 @@
     <!-- What has been sold, and what is still owed to customers. -->
     <div v-if="summary" class="gc-tiles">
       <div class="gc-tile">
-        <span class="gc-tile-label">Cards sold</span>
+        <span class="gc-tile-label">{{ $t('pages.giftCards.cardsSold') }}</span>
         <strong class="gc-tile-value">{{ summary.cards }}</strong>
       </div>
       <div class="gc-tile">
-        <span class="gc-tile-label">Value sold</span>
+        <span class="gc-tile-label">{{ $t('pages.giftCards.valueSold') }}</span>
         <strong class="gc-tile-value">{{ currencyIcon }}{{ summary.sold }}</strong>
       </div>
       <div class="gc-tile">
-        <span class="gc-tile-label">Spent on orders</span>
+        <span class="gc-tile-label">{{ $t('pages.giftCards.spentOnOrders') }}</span>
         <strong class="gc-tile-value">{{ currencyIcon }}{{ summary.spent }}</strong>
-        <span class="gc-tile-note">{{ summary.added }} of {{ summary.cards }} added to vouchers</span>
+        <span class="gc-tile-note">{{ $t('pages.giftCards.addedOfCards', { added: summary.added, cards: summary.cards }) }}</span>
       </div>
       <div class="gc-tile gc-tile-accent">
-        <span class="gc-tile-label">Outstanding (not yet spent)</span>
+        <span class="gc-tile-label">{{ $t('pages.giftCards.outstanding') }}</span>
         <strong class="gc-tile-value">{{ currencyIcon }}{{ summary.outstanding }}</strong>
       </div>
     </div>
 
-    <div class="gc-filters" role="tablist" aria-label="Filter by status">
+    <div class="gc-filters" role="tablist" :aria-label="$t('pages.giftCards.filterByStatus')">
       <button
         v-for="f in filters"
         :key="f.key"
@@ -41,7 +41,7 @@
       ref="listPage"
       list-api="getGiftCards"
       route-name="gift-cards"
-      :name="'Gift Card Sales'"
+      :name="$t('pages.giftCards.listName')"
       :add-button="false"
       :order-options="orderOptions"
       gate="gift_card"
@@ -50,14 +50,14 @@
       <template v-slot:table="{list, from}">
         <tr class="lite-bold">
           <th class="w-50x mx-w-50x">#</th>
-          <th>Code</th>
-          <th>Value</th>
-          <th>Design</th>
-          <th>Bought by</th>
-          <th>For</th>
-          <th>Status</th>
-          <th>Added to vouchers</th>
-          <th>Bought</th>
+          <th>{{ $t('pages.giftCards.colCode') }}</th>
+          <th>{{ $t('pages.giftCards.colValue') }}</th>
+          <th>{{ $t('pages.giftCards.colDesign') }}</th>
+          <th>{{ $t('pages.giftCards.colBoughtBy') }}</th>
+          <th>{{ $t('pages.giftCards.colFor') }}</th>
+          <th>{{ $t('pages.giftCards.colStatus') }}</th>
+          <th>{{ $t('pages.giftCards.colAddedToVouchers') }}</th>
+          <th>{{ $t('pages.giftCards.colBought') }}</th>
           <th>&nbsp;</th>
         </tr>
 
@@ -75,34 +75,34 @@
               <span class="gc-strong">{{ item.buyer.name }}</span>
               <span class="gc-sub">{{ item.buyer.email }}</span>
             </template>
-            <span v-else class="gc-sub">Account removed</span>
-            <span class="gc-sub">Paid by {{ item.payment_method === 'wallet' ? 'wallet' : 'card' }}</span>
+            <span v-else class="gc-sub">{{ $t('pages.giftCards.accountRemoved') }}</span>
+            <span class="gc-sub">{{ item.payment_method === 'wallet' ? $t('pages.giftCards.paidByWallet') : $t('pages.giftCards.paidByCard') }}</span>
           </td>
 
           <td>
             <template v-if="item.recipient">
-              <span class="gc-strong">{{ item.recipient.name || 'Gift' }}</span>
+              <span class="gc-strong">{{ item.recipient.name || $t('pages.giftCards.gift') }}</span>
               <span class="gc-sub">{{ item.recipient.email }}</span>
               <span v-if="item.message" class="gc-sub gc-msg" :title="item.message">“{{ item.message }}”</span>
             </template>
-            <span v-else class="gc-sub">Themselves</span>
-            <span v-if="item.sent_at" class="gc-sub">Emailed {{ item.sent_at }}</span>
-            <span v-else class="gc-sub gc-warn">Not emailed</span>
+            <span v-else class="gc-sub">{{ $t('pages.giftCards.themselves') }}</span>
+            <span v-if="item.sent_at" class="gc-sub">{{ $t('pages.giftCards.emailedAt', { date: item.sent_at }) }}</span>
+            <span v-else class="gc-sub gc-warn">{{ $t('pages.giftCards.notEmailed') }}</span>
           </td>
 
           <td>
             <span class="gc-pill" :class="`gc-pill-${item.state}`">{{ stateLabel(item.state) }}</span>
             <span v-if="item.state === 'void' && item.void_reason" class="gc-sub">{{ item.void_reason }}</span>
-            <span v-if="item.state === 'available' && item.expires" class="gc-sub">Not added yet · until {{ item.expires }}</span>
+            <span v-if="item.state === 'available' && item.expires" class="gc-sub">{{ $t('pages.giftCards.notAddedUntil', { date: item.expires }) }}</span>
             <template v-if="['in_vouchers', 'partly_used', 'used_up'].includes(item.state)">
               <span class="gc-sub">
-                {{ currencyIcon }}{{ item.spent }} spent · <strong>{{ currencyIcon }}{{ item.left }} left</strong>
+                {{ $t('pages.giftCards.amountSpent', { amount: currencyIcon + item.spent }) }} · <strong>{{ $t('pages.giftCards.amountLeft', { amount: currencyIcon + item.left }) }}</strong>
               </span>
               <span class="gc-meter" aria-hidden="true">
                 <span :style="{ width: Math.min(100, (item.spent / item.amount) * 100) + '%' }"></span>
               </span>
             </template>
-            <span v-if="item.state === 'wallet'" class="gc-sub">Before vouchers: value went to their wallet</span>
+            <span v-if="item.state === 'wallet'" class="gc-sub">{{ $t('pages.giftCards.beforeVouchers') }}</span>
           </td>
 
           <td>
@@ -118,10 +118,10 @@
           <td class="gc-actions">
             <template v-if="item.state === 'available' && $can('gift_card', 'edit')">
               <button type="button" class="lite-btn" :disabled="busyId === item.id" @click="resend(item)">
-                Resend
+                {{ $t('pages.giftCards.resend') }}
               </button>
               <button type="button" class="delete-btn lite-btn" :disabled="busyId === item.id" @click="voidCard(item)">
-                Void
+                {{ $t('pages.giftCards.void') }}
               </button>
             </template>
           </td>
@@ -153,18 +153,18 @@ export default {
       summary: null,
       busyId: null,
       filters: [
-        {key: '', label: 'All'},
-        {key: 'available', label: 'Not added'},
-        {key: 'in_vouchers', label: 'In vouchers'},
-        {key: 'partly_used', label: 'Partly used'},
-        {key: 'used_up', label: 'Used up'},
-        {key: 'void', label: 'Void'},
-        {key: 'expired', label: 'Expired'}
+        {key: '', label: this.$t('pages.giftCards.filterAll')},
+        {key: 'available', label: this.$t('pages.giftCards.stateNotAdded')},
+        {key: 'in_vouchers', label: this.$t('pages.giftCards.stateInVouchers')},
+        {key: 'partly_used', label: this.$t('pages.giftCards.statePartlyUsed')},
+        {key: 'used_up', label: this.$t('pages.giftCards.stateUsedUp')},
+        {key: 'void', label: this.$t('pages.giftCards.stateVoid')},
+        {key: 'expired', label: this.$t('pages.giftCards.stateExpired')}
       ],
       orderOptions: {
-        created_at: {title: 'Date bought'},
-        amount: {title: 'Value'},
-        redeemed_at: {title: 'Date added'}
+        created_at: {title: this.$t('pages.giftCards.orderDateBought')},
+        amount: {title: this.$t('pages.giftCards.orderValue')},
+        redeemed_at: {title: this.$t('pages.giftCards.orderDateAdded')}
       }
     }
   },
@@ -181,14 +181,14 @@ export default {
     ...mapActions('common', ['getRequest', 'setRequest']),
     stateLabel(state) {
       return {
-        available: 'Not added',
-        in_vouchers: 'In vouchers',
-        partly_used: 'Partly used',
-        used_up: 'Used up',
-        wallet: 'Moved to wallet',
-        redeemed: 'Redeemed',
-        void: 'Void',
-        expired: 'Expired'
+        available: this.$t('pages.giftCards.stateNotAdded'),
+        in_vouchers: this.$t('pages.giftCards.stateInVouchers'),
+        partly_used: this.$t('pages.giftCards.statePartlyUsed'),
+        used_up: this.$t('pages.giftCards.stateUsedUp'),
+        wallet: this.$t('pages.giftCards.stateWallet'),
+        redeemed: this.$t('pages.giftCards.stateRedeemed'),
+        void: this.$t('pages.giftCards.stateVoid'),
+        expired: this.$t('pages.giftCards.stateExpired')
       }[state] || state
     },
     async loadSummary() {
@@ -214,7 +214,7 @@ export default {
     },
     async resend(item) {
       const current = item.recipient ? item.recipient.email : item.sent_to
-      const email = prompt('Send this gift card to which address? Change it to correct a typo.', current || '')
+      const email = prompt(this.$t('pages.giftCards.resendPrompt'), current || '')
 
       if (email === null) return
 
@@ -226,13 +226,13 @@ export default {
         })
         await this.refresh()
       } catch (e) {
-        this.$store.dispatch('ui/setToastError', e?.message || 'Could not resend the gift card')
+        this.$store.dispatch('ui/setToastError', e?.message || this.$t('pages.giftCards.resendFailed'))
       } finally {
         this.busyId = null
       }
     },
     async voidCard(item) {
-      const reason = prompt(`Void ${item.code} (${this.currencyIcon}${item.amount})? It will stop working. Reason:`, '')
+      const reason = prompt(this.$t('pages.giftCards.voidPrompt', { code: item.code, amount: this.currencyIcon + item.amount }), '')
 
       if (reason === null) return
 
@@ -241,7 +241,7 @@ export default {
         await this.setRequest({params: {id: item.id, reason: reason.trim()}, api: 'voidGiftCard'})
         await this.refresh()
       } catch (e) {
-        this.$store.dispatch('ui/setToastError', e?.message || 'Could not void the gift card')
+        this.$store.dispatch('ui/setToastError', e?.message || this.$t('pages.giftCards.voidFailed'))
       } finally {
         this.busyId = null
       }

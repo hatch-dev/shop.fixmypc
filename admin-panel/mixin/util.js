@@ -72,8 +72,8 @@ export default {
         'URL': {title: this.$t('admin.url')},
       },
       pageComponent: {
-        Contact: {title: 'Contact'},
-        Sitemap: {title: 'Sitemap'}
+        Contact: {title: this.$t('cmp.util.contact')},
+        Sitemap: {title: this.$t('cmp.util.sitemap')}
       },
       status: {
         PUBLIC: 1,

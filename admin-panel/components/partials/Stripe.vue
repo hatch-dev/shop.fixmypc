@@ -50,7 +50,7 @@
         its signing secret here.
       -->
       <div class="input-wrapper">
-        <label>Webhook Signing Secret</label>
+        <label>{{ $t('cmp.Stripe.webhookSecret') }}</label>
         <input
           type="text"
           placeholder="whsec_..."
@@ -58,8 +58,8 @@
           @input="emitData"
         >
         <span class="field-hint">
-          For memberships. Webhook URL: <code>{{ webhookUrl }}</code><br>
-          Events: customer.subscription.created,
+          {{ $t('cmp.Stripe.forMemberships') }} <code>{{ webhookUrl }}</code><br>
+          {{ $t('cmp.Stripe.events') }} customer.subscription.created,
           customer.subscription.updated, customer.subscription.deleted,
           invoice.paid, invoice.payment_failed
         </span>

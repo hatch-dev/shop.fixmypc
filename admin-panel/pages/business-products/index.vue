@@ -4,7 +4,7 @@
     list-api="getBusinessProducts"
     delete-api="deleteBusinessProduct"
     route-name="business-products"
-    :name="'Business Product'"
+    :name="$t('pages.businessProducts.businessProduct')"
     :order-options="orderOptions"
     @delete-bulk="deleteBulk"
     @list="itemList = $event"
@@ -16,7 +16,7 @@
           <input type="checkbox" @change="checkAll">
         </th>
         <th class="w-50x mx-w-50x">#</th>
-        <th>Product</th>
+        <th>{{ $t('pages.businessProducts.product') }}</th>
         <th>&nbsp;</th>
       </tr>
 
@@ -49,14 +49,14 @@
             @click.prevent="$refs.listPage.editItem(value.product_id)"
             class="lite-btn"
           >
-            Edit
+            {{ $t('category.edit') }}
           </button>
 
           <button
             @click.prevent="$refs.listPage.deleteItem(value.product_id)"
             class="delete-btn lite-btn"
           >
-            Delete
+            {{ $t('category.delete') }}
           </button>
 
         </td>
@@ -90,11 +90,11 @@ export default {
       orderOptions: {
 
         created_at: {
-          title: 'Date'
+          title: this.$t('category.date')
         },
 
         title: {
-          title: 'Title'
+          title: this.$t('index.title')
         },
 
       }

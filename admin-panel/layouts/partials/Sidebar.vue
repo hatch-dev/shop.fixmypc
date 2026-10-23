@@ -63,7 +63,7 @@
             class="user-left"
             >
             <div class="user-avatar">
-                <img :src="userAvatar" alt="User">
+                <img :src="userAvatar" :alt="$t('cmp.Sidebar.userAlt')">
                 <span class="status-dot"></span>
             </div>
             <div class="user-info">
@@ -71,7 +71,7 @@
                 <span>{{ userRole }}</span>
             </div>
         </nuxt-link>
-        <button class="logout-icon" @click.prevent="loggingOut">
+        <button class="logout-icon" :title="$t('cmp.Sidebar.logout')" :aria-label="$t('cmp.Sidebar.logout')" @click.prevent="loggingOut">
             <i class="fa-solid fa-right-from-bracket"></i>
         </button>
     </div>
@@ -115,10 +115,10 @@
           return values.length && values.every(v => v === true)
         },
         userName() {
-            return this.$auth?.user?.name ?? 'Admin'
+            return this.$auth?.user?.name ?? this.$t('cmp.Sidebar.defaultName')
         },
         userRole() {
-            return this.$auth?.user?.role ?? 'Super Admin'
+            return this.$auth?.user?.role ?? this.$t('cmp.Sidebar.defaultRole')
         },
         userAvatar() {
             const image = this.profile?.image || this.$auth?.user?.image

@@ -33,7 +33,7 @@
       </div>
 
       <div class="input-wrapper">
-        <label class="mr-10" for="">Voucher Type</label>
+        <label class="mr-10" for="">{{ $t('pages.vouchers.voucherType') }}</label>
         <dropdown
           :selectedKey="`${result.apply_type}`"
           :options="applyTypeObj"
@@ -45,7 +45,7 @@
         class="input-wrapper"
         v-if="result.apply_type == 2"
       >
-        <label>Select Products</label>
+        <label>{{ $t('pages.vouchers.selectProducts') }}</label>
         <div class="dropdown-checkbox" ref="productDropdownWrapper">
            <div
             class="dropdown-head"
@@ -53,8 +53,8 @@
           >
             {{
               result.product_ids.length
-                ? result.product_ids.length + ' Products Selected'
-                : 'Select Products'
+                ? $t('pages.vouchers.productsSelected', { count: result.product_ids.length })
+                : $t('pages.vouchers.selectProducts')
             }}
           </div>
           <div
@@ -85,7 +85,7 @@
             hasError
           "
         >
-          Please select products
+          {{ $t('pages.vouchers.pleaseSelectProducts') }}
         </span>
       </div>
 
@@ -355,10 +355,10 @@
       applyTypeObj() {
         return {
           1: {
-            title: 'Global'
+            title: this.$t('pages.vouchers.global')
           },
           2: {
-            title: 'Product Wise'
+            title: this.$t('pages.vouchers.productWise')
           }
         }
       },

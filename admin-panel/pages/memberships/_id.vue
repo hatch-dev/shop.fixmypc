@@ -1,17 +1,17 @@
 <template>
   <div class="member-page p-20">
-    <nuxt-link to="/memberships" class="md-back">← Members</nuxt-link>
+    <nuxt-link to="/memberships" class="md-back">← {{ $t('pages.memberships.backToMembers') }}</nuxt-link>
 
-    <div v-if="loading" class="md-card">Loading…</div>
+    <div v-if="loading" class="md-card">{{ $t('pages.memberships.loading') }}</div>
     <div v-else-if="loadError" class="md-card md-error">{{ loadError }}</div>
 
     <template v-else-if="m">
       <div class="md-card md-head">
         <div>
-          <h3 class="md-title">{{ m.user ? m.user.name : 'Customer' }}</h3>
+          <h3 class="md-title">{{ m.user ? m.user.name : $t('pages.memberships.customer') }}</h3>
           <p class="md-sub">
             {{ m.user ? m.user.email : '' }}
-            <span v-if="m.user && m.user.status === 'suspended'" class="pill pill-bad">account suspended</span>
+            <span v-if="m.user && m.user.status === 'suspended'" class="pill pill-bad">{{ $t('pages.memberships.accountSuspended') }}</span>
           </p>
         </div>
         <span class="pill" :class="pillClass">{{ m.status_label }}</span>
@@ -19,91 +19,91 @@
 
       <div class="md-grid">
         <div class="md-card">
-          <h4>Membership</h4>
+          <h4>{{ $t('pages.memberships.membership') }}</h4>
           <dl class="md-dl">
-            <dt>Plan</dt><dd>{{ m.plan ? m.plan.name : '—' }}</dd>
-            <dt>Billing</dt>
+            <dt>{{ $t('pages.memberships.plan') }}</dt><dd>{{ m.plan ? m.plan.name : '—' }}</dd>
+            <dt>{{ $t('pages.memberships.billing') }}</dt>
             <dd v-if="m.source === 'stripe'">{{ currencyIcon }}{{ money(m.price) }} {{ m.interval_label }} (Stripe)</dd>
-            <dd v-else>Granted, no payment</dd>
-            <dt>Benefits now</dt><dd>{{ m.entitled ? 'Yes' : 'No' }}</dd>
-            <dt>Started</dt><dd>{{ date(m.created_at) }}</dd>
-            <dt>{{ m.source === 'stripe' && !m.cancel_at_period_end ? 'Renews' : 'Ends' }}</dt>
-            <dd>{{ m.current_period_end ? date(m.current_period_end) : 'No end date' }}</dd>
-            <template v-if="m.trial_ends_at"><dt>Trial ends</dt><dd>{{ date(m.trial_ends_at) }}</dd></template>
-            <template v-if="m.ended_at"><dt>Ended</dt><dd>{{ date(m.ended_at) }}</dd></template>
-            <template v-if="m.note"><dt>Note</dt><dd>{{ m.note }}</dd></template>
+            <dd v-else>{{ $t('pages.memberships.grantedNoPayment') }}</dd>
+            <dt>{{ $t('pages.memberships.benefitsNow') }}</dt><dd>{{ m.entitled ? $t('pages.memberships.yes') : $t('pages.memberships.no') }}</dd>
+            <dt>{{ $t('pages.memberships.started') }}</dt><dd>{{ date(m.created_at) }}</dd>
+            <dt>{{ m.source === 'stripe' && !m.cancel_at_period_end ? $t('pages.memberships.renews') : $t('pages.memberships.ends') }}</dt>
+            <dd>{{ m.current_period_end ? date(m.current_period_end) : $t('pages.memberships.noEndDate') }}</dd>
+            <template v-if="m.trial_ends_at"><dt>{{ $t('pages.memberships.trialEnds') }}</dt><dd>{{ date(m.trial_ends_at) }}</dd></template>
+            <template v-if="m.ended_at"><dt>{{ $t('pages.memberships.ended') }}</dt><dd>{{ date(m.ended_at) }}</dd></template>
+            <template v-if="m.note"><dt>{{ $t('pages.memberships.note') }}</dt><dd>{{ m.note }}</dd></template>
             <template v-if="m.stripe_subscription_id">
               <dt>Stripe</dt>
               <dd><a :href="m.stripe_url" target="_blank" rel="noopener" class="link">{{ m.stripe_subscription_id }}</a></dd>
-              <dt>Last synced</dt><dd>{{ m.last_synced_at ? dateTime(m.last_synced_at) : 'never' }}</dd>
+              <dt>{{ $t('pages.memberships.lastSynced') }}</dt><dd>{{ m.last_synced_at ? dateTime(m.last_synced_at) : $t('pages.memberships.never') }}</dd>
             </template>
           </dl>
         </div>
 
         <div v-if="$can('membership', 'edit')" class="md-card">
-          <h4>Actions</h4>
+          <h4>{{ $t('pages.memberships.actions') }}</h4>
           <p v-if="actionError" class="md-error-line" role="alert">{{ actionError }}</p>
 
           <template v-if="m.source === 'stripe'">
             <div class="md-actions">
-              <button v-if="m.can_cancel" type="button" class="outline-btn xs" :disabled="busy" @click="run('cancel_at_period_end')">Cancel at period end</button>
-              <button v-if="m.can_resume" type="button" class="outline-btn xs" :disabled="busy" @click="run('resume')">Keep membership (undo cancel)</button>
-              <button v-if="m.status !== 'canceled'" type="button" class="outline-btn xs md-danger" :disabled="busy" @click="confirmEnd = true">End now</button>
-              <button type="button" class="outline-btn xs" :disabled="busy" @click="run('sync')">Re-read from Stripe</button>
+              <button v-if="m.can_cancel" type="button" class="outline-btn xs" :disabled="busy" @click="run('cancel_at_period_end')">{{ $t('pages.memberships.cancelAtPeriodEnd') }}</button>
+              <button v-if="m.can_resume" type="button" class="outline-btn xs" :disabled="busy" @click="run('resume')">{{ $t('pages.memberships.keepMembership') }}</button>
+              <button v-if="m.status !== 'canceled'" type="button" class="outline-btn xs md-danger" :disabled="busy" @click="confirmEnd = true">{{ $t('pages.memberships.endNow') }}</button>
+              <button type="button" class="outline-btn xs" :disabled="busy" @click="run('sync')">{{ $t('pages.memberships.rereadStripe') }}</button>
             </div>
-            <p class="md-hint">Refunds are made in the Stripe dashboard. Ending now stops billing immediately; nothing is refunded automatically.</p>
+            <p class="md-hint">{{ $t('pages.memberships.refundHint') }}</p>
           </template>
 
           <template v-else>
-            <label class="md-label">End date</label>
+            <label class="md-label">{{ $t('pages.memberships.endDate') }}</label>
             <div class="md-inline">
               <input type="date" v-model="endsAt" :min="tomorrow">
               <button type="button" class="outline-btn xs" :disabled="busy" @click="run('extend', {ends_at: endsAt || null})">
-                {{ m.status === 'canceled' ? 'Restart' : 'Save end date' }}
+                {{ m.status === 'canceled' ? $t('pages.memberships.restart') : $t('pages.memberships.saveEndDate') }}
               </button>
             </div>
-            <p class="md-hint">Empty means no end date.</p>
-            <button v-if="m.status !== 'canceled'" type="button" class="outline-btn xs md-danger" :disabled="busy" @click="confirmEnd = true">End now</button>
+            <p class="md-hint">{{ $t('pages.memberships.emptyNoEndDate') }}</p>
+            <button v-if="m.status !== 'canceled'" type="button" class="outline-btn xs md-danger" :disabled="busy" @click="confirmEnd = true">{{ $t('pages.memberships.endNow') }}</button>
           </template>
 
           <template v-if="m.source === 'admin' || m.can_change_plan">
-            <label class="md-label">{{ m.source === 'stripe' ? 'Plan and billing' : 'Plan' }}</label>
+            <label class="md-label">{{ m.source === 'stripe' ? $t('pages.memberships.planAndBilling') : $t('pages.memberships.plan') }}</label>
             <div class="md-inline">
               <select v-model="newChoice">
                 <option v-for="c in choices" :key="c.key" :value="c.key" :disabled="c.key === currentChoice">{{ c.label }}</option>
               </select>
-              <button type="button" class="outline-btn xs" :disabled="busy || newChoice === currentChoice" @click="changeChoice">Change</button>
+              <button type="button" class="outline-btn xs" :disabled="busy || newChoice === currentChoice" @click="changeChoice">{{ $t('pages.memberships.change') }}</button>
             </div>
             <p v-if="m.source === 'stripe'" class="md-hint">
-              Stripe prorates: unused time is credited against the new price. Moving between monthly and yearly starts the new period today and is invoiced straight away.
+              {{ $t('pages.memberships.prorateHint') }}
             </p>
           </template>
         </div>
       </div>
 
       <div v-if="m.source === 'stripe'" class="md-card">
-        <h4>Invoices</h4>
-        <p v-if="!m.invoices.length" class="md-hint">None yet. Stripe reports each invoice to the webhook.</p>
+        <h4>{{ $t('pages.memberships.invoices') }}</h4>
+        <p v-if="!m.invoices.length" class="md-hint">{{ $t('pages.memberships.noInvoices') }}</p>
         <table v-else class="md-table">
-          <tr><th>Period</th><th>Number</th><th>Status</th><th>Paid</th><th>&nbsp;</th></tr>
+          <tr><th>{{ $t('pages.memberships.colPeriod') }}</th><th>{{ $t('pages.memberships.colNumber') }}</th><th>{{ $t('pages.memberships.colStatus') }}</th><th>{{ $t('pages.memberships.colPaid') }}</th><th>&nbsp;</th></tr>
           <tr v-for="inv in m.invoices" :key="inv.id">
             <td>{{ date(inv.period_start) }} – {{ date(inv.period_end) }}</td>
             <td>{{ inv.number || '—' }}</td>
             <td>{{ inv.status }}</td>
-            <td>{{ currencyIcon }}{{ money(inv.amount_paid) }} <span v-if="inv.amount_paid < inv.amount_due" class="md-hint">of {{ money(inv.amount_due) }}</span></td>
-            <td><a v-if="inv.url" :href="inv.url" target="_blank" rel="noopener" class="link">View</a></td>
+            <td>{{ currencyIcon }}{{ money(inv.amount_paid) }} <span v-if="inv.amount_paid < inv.amount_due" class="md-hint">{{ $t('pages.memberships.ofAmount', { amount: money(inv.amount_due) }) }}</span></td>
+            <td><a v-if="inv.url" :href="inv.url" target="_blank" rel="noopener" class="link">{{ $t('pages.memberships.view') }}</a></td>
           </tr>
         </table>
       </div>
 
       <div class="md-card">
-        <h4>History</h4>
+        <h4>{{ $t('pages.memberships.history') }}</h4>
         <ul class="md-history">
           <li v-for="(e, i) in m.events" :key="i">
             <span class="md-when">{{ dateTime(e.at) }}</span>
             <strong>{{ eventLabel(e.action) }}</strong>
             <span v-if="e.detail"> — {{ e.detail }}</span>
-            <span v-if="e.admin" class="md-hint"> by {{ e.admin }}</span>
+            <span v-if="e.admin" class="md-hint"> {{ $t('pages.memberships.byAdmin', { admin: e.admin }) }}</span>
           </li>
         </ul>
       </div>
@@ -111,11 +111,11 @@
 
     <confirm-dialog
       :open="confirmEnd"
-      title="End this membership now?"
-      confirm-label="End now"
-      busy-label="Ending…"
+      :title="$t('pages.memberships.endConfirmTitle')"
+      :confirm-label="$t('pages.memberships.endNow')"
+      :busy-label="$t('pages.memberships.ending')"
       :busy="busy"
-      :warning="m && m.source === 'stripe' ? 'Billing stops and the benefits end immediately. No refund is made.' : 'The benefits end immediately.'"
+      :warning="m && m.source === 'stripe' ? $t('pages.memberships.endWarningStripe') : $t('pages.memberships.endWarning')"
       @cancel="confirmEnd = false"
       @confirm="endNow"
     >
@@ -129,23 +129,12 @@ import ConfirmDialog from '~/components/ConfirmDialog'
 import util from '~/mixin/util'
 import { mapGetters, mapActions } from 'vuex'
 
-const EVENTS = {
-  subscribed: 'Joined',
-  granted: 'Granted',
-  status: 'Status changed',
-  cancel_scheduled: 'Set to end at period end',
-  cancel_withdrawn: 'Cancellation withdrawn',
-  plan_changed: 'Plan changed',
-  billing_changed: 'Billing changed',
-  payment_failed: 'Payment failed',
-  expired: 'Expired',
-  admin_cancel_at_period_end: 'Admin: cancel at period end',
-  admin_resume: 'Admin: kept membership',
-  admin_cancel_now: 'Admin: ended now',
-  admin_change_plan: 'Admin: changed plan',
-  admin_sync: 'Admin: re-read from Stripe',
-  admin_extend: 'Admin: set end date'
-}
+// Event actions with a label; the text lives in pages.memberships.events.<action>
+const EVENTS = [
+  'subscribed', 'granted', 'status', 'cancel_scheduled', 'cancel_withdrawn', 'plan_changed',
+  'billing_changed', 'payment_failed', 'expired', 'admin_cancel_at_period_end', 'admin_resume',
+  'admin_cancel_now', 'admin_change_plan', 'admin_sync', 'admin_extend'
+]
 
 export default {
   name: 'membership-detail',
@@ -174,13 +163,13 @@ export default {
       if (!this.m) return []
       const out = []
       this.m.plans.forEach(plan => {
-        const off = plan.status ? '' : ' (off)'
+        const off = plan.status ? '' : this.$t('pages.memberships.planOff')
         if (this.m.source !== 'stripe') {
           out.push({ key: String(plan.id), label: plan.name + off })
           return
         }
-        if (Number(plan.price) > 0) out.push({ key: `${plan.id}|month`, label: `${plan.name} · ${this.currencyIcon}${this.money(plan.price)} / month${off}` })
-        if (Number(plan.yearly_price) > 0) out.push({ key: `${plan.id}|year`, label: `${plan.name} · ${this.currencyIcon}${this.money(plan.yearly_price)} / year${off}` })
+        if (Number(plan.price) > 0) out.push({ key: `${plan.id}|month`, label: this.$t('pages.memberships.choiceMonth', { name: plan.name, price: this.currencyIcon + this.money(plan.price) }) + off })
+        if (Number(plan.yearly_price) > 0) out.push({ key: `${plan.id}|year`, label: this.$t('pages.memberships.choiceYear', { name: plan.name, price: this.currencyIcon + this.money(plan.yearly_price) }) + off })
       })
       return out
     },
@@ -200,15 +189,15 @@ export default {
     date(v) {
       if (!v) return '—'
       const d = new Date(v)
-      return isNaN(d.getTime()) ? v : d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' })
+      return isNaN(d.getTime()) ? v : d.toLocaleDateString(this.$i18n?.locale || 'en', { day: 'numeric', month: 'short', year: 'numeric' })
     },
     dateTime(v) {
       if (!v) return ''
       const d = new Date(v)
-      return isNaN(d.getTime()) ? v : d.toLocaleString('en-IE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      return isNaN(d.getTime()) ? v : d.toLocaleString(this.$i18n?.locale || 'en', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     },
     eventLabel(action) {
-      return EVENTS[action] || action
+      return EVENTS.includes(action) ? this.$t('pages.memberships.events.' + action) : action
     },
     show(data) {
       this.m = data
@@ -220,7 +209,7 @@ export default {
       try {
         this.show(await this.getById({ id: this.$route.params.id, params: {}, api: 'getMembership' }))
       } catch (e) {
-        this.loadError = e?.message || 'This membership could not be loaded.'
+        this.loadError = e?.message || this.$t('pages.memberships.loadFailed')
       } finally {
         this.loading = false
       }
@@ -236,9 +225,9 @@ export default {
         }
         // refused: setById leaves the message in ui/errors and resolves with nothing
         const errors = this.$store.getters['ui/errors']
-        this.actionError = (errors?.form || [])[0] || 'That could not be done.'
+        this.actionError = (errors?.form || [])[0] || this.$t('pages.memberships.actionFailed')
       } catch (e) {
-        this.actionError = e?.message || 'That could not be done.'
+        this.actionError = e?.message || this.$t('pages.memberships.actionFailed')
       } finally {
         this.busy = false
       }

@@ -5,7 +5,7 @@
         class="button primary-btn"
         @click="goToOnboarding"
       >
-        Onboarding
+        {{ $t('pages.banners.onboarding') }}
       </button>
     </div>
     <list-page

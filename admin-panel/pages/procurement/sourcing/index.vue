@@ -3,10 +3,7 @@
 
     <div class="table-top">
       <h2>{{ $t('procurement.sourcing') }}</h2>
-      <p class="sb-muted">
-        Orders with products to source. Award each line to a supplier, then
-        record the payment when it goes out.
-      </p>
+      <p class="sb-muted">{{ $t('pages.procurementSourcing.intro') }}</p>
     </div>
 
     <!--
@@ -16,49 +13,48 @@
     -->
     <div class="table-top filter-toolbar sb-filters">
       <label class="sb-filter">
-        <span>Order</span>
+        <span>{{ $t('pages.procurementSourcing.order') }}</span>
         <input
           type="search"
           v-model.trim="filters.q"
-          placeholder="Order number"
+          :placeholder="$t('pages.procurementSourcing.orderNumber')"
           @input="debouncedReload"
         >
       </label>
 
       <label class="sb-filter">
-        <span>Supplier</span>
+        <span>{{ $t('pages.procurementSourcing.supplier') }}</span>
         <select v-model="filters.supplier_id" @change="reload">
-          <option value="">Any supplier</option>
+          <option value="">{{ $t('pages.procurementSourcing.anySupplier') }}</option>
           <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
       </label>
 
       <label class="sb-filter">
-        <span>State</span>
+        <span>{{ $t('pages.procurementSourcing.state') }}</span>
         <select v-model="filters.state" @change="reload">
-          <option value="">Anything outstanding</option>
-          <option value="needs_quote">Waiting on quotes</option>
-          <option value="needs_award">Ready to award</option>
-          <option value="unpaid">Awarded, unpaid</option>
-          <option value="settled">Settled</option>
+          <option value="">{{ $t('pages.procurementSourcing.anythingOutstanding') }}</option>
+          <option value="needs_quote">{{ $t('pages.procurementSourcing.waitingOnQuotes') }}</option>
+          <option value="needs_award">{{ $t('pages.procurementSourcing.readyToAward') }}</option>
+          <option value="unpaid">{{ $t('pages.procurementSourcing.awardedUnpaid') }}</option>
+          <option value="settled">{{ $t('pages.procurementSourcing.settled') }}</option>
         </select>
       </label>
 
-      <button v-if="filtered" class="lite-btn" @click="clearFilters">Clear</button>
+      <button v-if="filtered" class="lite-btn" @click="clearFilters">{{ $t('pages.procurementSourcing.clear') }}</button>
     </div>
 
-    <div v-if="loading" class="sb-state-box">Loading…</div>
+    <div v-if="loading" class="sb-state-box">{{ $t('pages.procurementSourcing.loading') }}</div>
 
     <div v-else-if="error" class="sb-state-box sb-state-box--error">{{ error }}</div>
 
     <div v-else-if="!orders.length" class="sb-state-box">
       <template v-if="filtered">
-        No order matches those filters.
-        <button class="lite-btn" @click="clearFilters">Clear filters</button>
+        {{ $t('pages.procurementSourcing.noMatch') }}
+        <button class="lite-btn" @click="clearFilters">{{ $t('pages.procurementSourcing.clearFilters') }}</button>
       </template>
       <template v-else>
-        Nothing to source. An order appears here once suppliers have been asked
-        about one of its products.
+        {{ $t('pages.procurementSourcing.empty') }}
       </template>
     </div>
 
@@ -78,22 +74,22 @@
         -->
         <div class="sb-order-head">
           <div>
-            <strong v-if="order.order_number">Order #{{ order.order_number }}</strong>
-            <strong v-else class="sb-muted">Order no longer exists</strong>
-            <span class="sb-muted">asked {{ formatDate(order.asked_at) }}</span>
+            <strong v-if="order.order_number">{{ $t('pages.procurementSourcing.orderNumberLabel', { number: order.order_number }) }}</strong>
+            <strong v-else class="sb-muted">{{ $t('pages.procurementSourcing.orderGone') }}</strong>
+            <span class="sb-muted">{{ $t('pages.procurementSourcing.askedAt', { date: formatDate(order.asked_at) }) }}</span>
           </div>
 
           <div class="sb-order-state">
             <span class="sb-pill" :class="order.awarded_count === order.line_count ? 'sb-pill--ok' : 'sb-pill--wait'">
-              {{ order.awarded_count }} of {{ order.line_count }} awarded
+              {{ $t('pages.procurementSourcing.awardedOf', { awarded: order.awarded_count, total: order.line_count }) }}
             </span>
             <span v-if="order.total_payable > 0" class="sb-pill sb-pill--owed">
-              {{ money(order.total_payable) }} to pay
+              {{ $t('pages.procurementSourcing.toPay', { amount: money(order.total_payable) }) }}
             </span>
             <span v-else-if="order.settled_count === order.line_count" class="sb-pill sb-pill--ok">
-              Settled
+              {{ $t('pages.procurementSourcing.settled') }}
             </span>
-            <span v-if="order.expired" class="sb-pill sb-pill--off">Links expired</span>
+            <span v-if="order.expired" class="sb-pill sb-pill--off">{{ $t('pages.procurementSourcing.linksExpired') }}</span>
           </div>
         </div>
 
@@ -102,22 +98,22 @@
 
           <div class="sb-line-head">
             <div class="sb-line-what">
-              <strong>{{ line.product ? line.product.title : 'Product removed' }}</strong>
+              <strong>{{ line.product ? line.product.title : $t('pages.procurementSourcing.productRemoved') }}</strong>
               <span class="sb-muted">
-                {{ line.asked_count }} supplier{{ line.asked_count === 1 ? '' : 's' }} asked
-                <template v-if="line.awarded_to"> · awarded to {{ line.awarded_to }}</template>
+                {{ $tc('pages.procurementSourcing.suppliersAsked', line.asked_count, { count: line.asked_count }) }}
+                <template v-if="line.awarded_to"> · {{ $t('pages.procurementSourcing.awardedTo', { name: line.awarded_to }) }}</template>
               </span>
             </div>
 
             <dl class="sb-line-facts">
-              <div><dt>Qty</dt><dd>{{ line.quantity !== null ? line.quantity : '—' }}</dd></div>
-              <div><dt>Sold at</dt><dd>{{ line.sold_price !== null ? money(line.sold_price) : '—' }}</dd></div>
-              <div><dt>Cost now</dt><dd>{{ line.cost_price !== null ? money(line.cost_price) : '—' }}</dd></div>
+              <div><dt>{{ $t('pages.procurementSourcing.qty') }}</dt><dd>{{ line.quantity !== null ? line.quantity : '—' }}</dd></div>
+              <div><dt>{{ $t('pages.procurementSourcing.soldAt') }}</dt><dd>{{ line.sold_price !== null ? money(line.sold_price) : '—' }}</dd></div>
+              <div><dt>{{ $t('pages.procurementSourcing.costNow') }}</dt><dd>{{ line.cost_price !== null ? money(line.cost_price) : '—' }}</dd></div>
             </dl>
           </div>
 
           <p v-if="!line.quotes.length" class="sb-no-quotes">
-            No quotes back yet.
+            {{ $t('pages.procurementSourcing.noQuotes') }}
           </p>
 
           <table v-else class="sb-quotes">
@@ -136,11 +132,11 @@
             header styling this row needs is defined below instead.
           -->
           <tr class="sb-head-row">
-              <th>Supplier</th>
-              <th>Grade</th>
-              <th class="sb-num">Per unit</th>
-              <th class="sb-num">Line total</th>
-              <th class="sb-num">Margin</th>
+              <th>{{ $t('pages.procurementSourcing.supplier') }}</th>
+              <th>{{ $t('pages.procurementSourcing.grade') }}</th>
+              <th class="sb-num">{{ $t('pages.procurementSourcing.perUnit') }}</th>
+              <th class="sb-num">{{ $t('pages.procurementSourcing.lineTotal') }}</th>
+              <th class="sb-num">{{ $t('pages.procurementSourcing.margin') }}</th>
               <th>&nbsp;</th>
             </tr>
 
@@ -150,11 +146,11 @@
               :class="['sb-q-' + quote.status, { 'sb-q-best': isBest(line, quote) }]"
             >
               <td>
-                <span class="sb-sup">{{ quote.supplier ? quote.supplier.name : 'Supplier removed' }}</span>
+                <span class="sb-sup">{{ quote.supplier ? quote.supplier.name : $t('pages.procurementSourcing.supplierRemoved') }}</span>
                 <span class="sb-muted sb-small" v-if="quote.supplier">{{ quote.supplier.email }}</span>
-                <span class="sb-pill sb-pill--ok" v-if="quote.status === 'accepted'">Awarded</span>
-                <span class="sb-pill sb-pill--off" v-else-if="quote.status === 'rejected'">Rejected</span>
-                <span class="sb-pill sb-pill--best" v-else-if="isBest(line, quote)">Lowest</span>
+                <span class="sb-pill sb-pill--ok" v-if="quote.status === 'accepted'">{{ $t('pages.procurementSourcing.awarded') }}</span>
+                <span class="sb-pill sb-pill--off" v-else-if="quote.status === 'rejected'">{{ $t('pages.procurementSourcing.rejected') }}</span>
+                <span class="sb-pill sb-pill--best" v-else-if="isBest(line, quote)">{{ $t('pages.procurementSourcing.lowest') }}</span>
               </td>
 
               <td>{{ quote.grade }}</td>
@@ -168,42 +164,42 @@
                 <span
                   v-else
                   class="sb-muted"
-                  title="This line was sold VAT-inclusive, so it cannot be compared with an ex-VAT quote."
-                >n/a</span>
+                  :title="$t('pages.procurementSourcing.marginNaTitle')"
+                >{{ $t('pages.procurementSourcing.notApplicable') }}</span>
               </td>
 
               <td class="sb-actions">
                 <template v-if="quote.paid_at">
                   <span class="sb-paid">
-                    Paid {{ money(quote.paid_amount) }} · {{ quote.payment_method }}
+                    {{ $t('pages.procurementSourcing.paidAmount', { amount: money(quote.paid_amount) }) }} · {{ methodLabel(quote.payment_method) }}
                     <template v-if="quote.payment_reference">· {{ quote.payment_reference }}</template>
                   </span>
                   <button class="lite-btn" :disabled="busy === quote.id" @click="reversePayment(quote)">
-                    Undo payment
+                    {{ $t('pages.procurementSourcing.undoPayment') }}
                   </button>
                 </template>
 
                 <template v-else-if="quote.status === 'accepted'">
                   <button class="lite-btn primary" :disabled="busy === quote.id" @click="openPayment(line, quote)">
-                    Record payment
+                    {{ $t('pages.procurementSourcing.recordPayment') }}
                   </button>
                   <button class="lite-btn" :disabled="busy === quote.id" @click="decide(quote, 'rejected')">
-                    Undo award
+                    {{ $t('pages.procurementSourcing.undoAward') }}
                   </button>
                 </template>
 
                 <template v-else-if="quote.status === 'pending'">
                   <button class="lite-btn primary" :disabled="busy === quote.id" @click="decide(quote, 'accepted')">
-                    Award
+                    {{ $t('pages.procurementSourcing.award') }}
                   </button>
                   <button class="lite-btn" :disabled="busy === quote.id" @click="decide(quote, 'rejected')">
-                    Reject
+                    {{ $t('pages.procurementSourcing.reject') }}
                   </button>
                 </template>
 
                 <template v-else>
                   <button class="lite-btn" :disabled="busy === quote.id" @click="decide(quote, 'accepted')">
-                    Award anyway
+                    {{ $t('pages.procurementSourcing.awardAnyway') }}
                   </button>
                 </template>
               </td>
@@ -217,32 +213,32 @@
           -->
           <form v-if="paying && paying.lineKey === line.key" class="sb-pay-form" @submit.prevent="submitPayment">
             <div class="sb-pay-field">
-              <label :for="`amt-${paying.quote.id}`">Amount paid</label>
+              <label :for="`amt-${paying.quote.id}`">{{ $t('pages.procurementSourcing.amountPaid') }}</label>
               <input :id="`amt-${paying.quote.id}`" type="number" step="0.01" min="0.01" v-model="paying.amount">
             </div>
             <div class="sb-pay-field">
-              <label :for="`mth-${paying.quote.id}`">Method</label>
+              <label :for="`mth-${paying.quote.id}`">{{ $t('pages.procurementSourcing.method') }}</label>
               <select :id="`mth-${paying.quote.id}`" v-model="paying.method">
-                <option v-for="m in methods" :key="m" :value="m">{{ m }}</option>
+                <option v-for="m in methods" :key="m" :value="m">{{ methodLabel(m) }}</option>
               </select>
             </div>
             <div class="sb-pay-field sb-pay-field--wide">
-              <label :for="`ref-${paying.quote.id}`">Reference</label>
+              <label :for="`ref-${paying.quote.id}`">{{ $t('pages.procurementSourcing.reference') }}</label>
               <input
                 :id="`ref-${paying.quote.id}`"
                 type="text"
                 maxlength="120"
                 v-model="paying.reference"
-                placeholder="Invoice or transfer reference"
+                :placeholder="$t('pages.procurementSourcing.referencePlaceholder')"
               >
             </div>
             <div class="sb-pay-field">
-              <label :for="`on-${paying.quote.id}`">Paid on</label>
+              <label :for="`on-${paying.quote.id}`">{{ $t('pages.procurementSourcing.paidOn') }}</label>
               <input :id="`on-${paying.quote.id}`" type="date" :max="today" v-model="paying.paid_on">
             </div>
             <div class="sb-pay-actions">
-              <button type="submit" class="lite-btn primary" :disabled="busy === paying.quote.id">Save</button>
-              <button type="button" class="lite-btn" @click="paying = null">Cancel</button>
+              <button type="submit" class="lite-btn primary" :disabled="busy === paying.quote.id">{{ $t('pages.procurementSourcing.save') }}</button>
+              <button type="button" class="lite-btn" @click="paying = null">{{ $t('pages.procurementSourcing.cancel') }}</button>
             </div>
             <p v-if="paying.error" class="sb-pay-error">{{ paying.error }}</p>
           </form>
@@ -257,8 +253,8 @@
       -->
       <div class="sb-pager">
         <span class="sb-count">
-          {{ total }} order{{ total === 1 ? '' : 's' }}
-          <template v-if="lastPage > 1">· page {{ page }} of {{ lastPage }}</template>
+          {{ $tc('pages.procurementSourcing.orderCount', total, { count: total }) }}
+          <template v-if="lastPage > 1">· {{ $t('pages.procurementSourcing.pageOf', { page, last: lastPage }) }}</template>
         </span>
 
         <pagination
@@ -356,6 +352,22 @@ export default {
       return Math.min(...open.map(q => Number(q.price))) === Number(quote.price)
     },
 
+    /*
+     * The method is stored and sent in English; only its label is translated.
+     * Anything unknown (older rows) shows as stored.
+     */
+    methodLabel(m) {
+      const keys = {
+        'Bank transfer': 'methodBankTransfer',
+        'Card': 'methodCard',
+        'Cash': 'methodCash',
+        'Credit note': 'methodCreditNote',
+        'Other': 'methodOther'
+      }
+
+      return keys[m] ? this.$t('pages.procurementSourcing.' + keys[m]) : m
+    },
+
     money(value) {
       return `€${Number(value || 0).toFixed(2)}`
     },
@@ -389,7 +401,7 @@ export default {
          * payload rather than caught.
          */
         if (body.status !== 200) {
-          this.error = body.message || 'You do not have access to this page.'
+          this.error = body.message || this.$t('pages.procurementSourcing.noAccess')
           this.orders = []
           return
         }
@@ -400,7 +412,7 @@ export default {
         this.suppliers = body.data.suppliers || []
 
       } catch (e) {
-        this.error = 'Could not load the sourcing board.'
+        this.error = this.$t('pages.procurementSourcing.loadFailed')
       } finally {
         this.loading = false
       }
@@ -446,11 +458,11 @@ export default {
      * it is confirmed rather than done on a single click.
      */
     async decide(quote, decision) {
-      const supplier = quote.supplier ? quote.supplier.name : 'this supplier'
+      const supplier = quote.supplier ? quote.supplier.name : this.$t('pages.procurementSourcing.thisSupplier')
 
       const ask = decision === 'accepted'
-        ? `Award this line to ${supplier} at ${this.money(quote.payable)}?\n\nEvery other quote for the line will be rejected, and the order line's cost becomes ${this.money(quote.price)} per unit.`
-        : `Reject the quote from ${supplier}?`
+        ? this.$t('pages.procurementSourcing.confirmAward', { supplier, total: this.money(quote.payable), unit: this.money(quote.price) })
+        : this.$t('pages.procurementSourcing.confirmReject', { supplier })
 
       if (!window.confirm(ask)) return
 
@@ -464,7 +476,7 @@ export default {
         const body = await this.decideProcurementQuote({ id: quote.id, decision, reason })
 
         if (body.status !== 200) {
-          this.toast(body, 'That decision could not be saved.')
+          this.toast(body, this.$t('pages.procurementSourcing.decisionFailed'))
           return
         }
 
@@ -472,7 +484,7 @@ export default {
         await this.load()
 
       } catch (e) {
-        this.$store.dispatch('ui/setToastError', 'That decision could not be saved.', { root: true })
+        this.$store.dispatch('ui/setToastError', this.$t('pages.procurementSourcing.decisionFailed'), { root: true })
       } finally {
         this.busy = null
       }
@@ -507,7 +519,7 @@ export default {
         })
 
         if (body.status !== 200) {
-          this.paying.error = this.firstError(body) || 'That payment could not be recorded.'
+          this.paying.error = this.firstError(body) || this.$t('pages.procurementSourcing.paymentFailed')
           return
         }
 
@@ -516,14 +528,14 @@ export default {
         await this.load()
 
       } catch (e) {
-        this.paying.error = 'That payment could not be recorded.'
+        this.paying.error = this.$t('pages.procurementSourcing.paymentFailed')
       } finally {
         this.busy = null
       }
     },
 
     async reversePayment(quote) {
-      if (!window.confirm('Remove the payment record for this quote?\n\nThis does not move any money; it only clears what was recorded here.')) {
+      if (!window.confirm(this.$t('pages.procurementSourcing.confirmReversePayment'))) {
         return
       }
 
@@ -533,7 +545,7 @@ export default {
         const body = await this.payProcurementQuote({ id: quote.id, reverse: 1 })
 
         if (body.status !== 200) {
-          this.toast(body, 'That payment record could not be removed.')
+          this.toast(body, this.$t('pages.procurementSourcing.reverseFailed'))
           return
         }
 
@@ -541,7 +553,7 @@ export default {
         await this.load()
 
       } catch (e) {
-        this.$store.dispatch('ui/setToastError', 'That payment record could not be removed.', { root: true })
+        this.$store.dispatch('ui/setToastError', this.$t('pages.procurementSourcing.reverseFailed'), { root: true })
       } finally {
         this.busy = null
       }

@@ -141,7 +141,12 @@ export default {
     },
     lazy: false,
     langDir: 'lang/',
-    defaultLocale: 'en'
+    defaultLocale: 'en',
+    vueI18n: {
+      // A key missing from the chosen language shows the English text, never the raw key
+      fallbackLocale: 'en',
+      silentFallbackWarn: true
+    }
   },
   build: {
     transpile: ['vue-multiselect']

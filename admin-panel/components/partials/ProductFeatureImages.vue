@@ -29,7 +29,7 @@
         v-if="!featureImages.length"
         class="mlr-5"
       >
-        No Feature Images
+        {{ $t('cmp.ProductFeatureImages.noFeatureImages') }}
       </p>
 
       <div
@@ -53,8 +53,8 @@
         type="button"
         color="primary"
         class="outline-btn w-100 centered"
-        text="Upload Feature Images"
-        loading-text="Uploading"
+        :text="$t('cmp.ProductFeatureImages.uploadFeatureImages')"
+        :loading-text="$t('error.up')"
         :fetching-data="uploading"
       />
     </div>

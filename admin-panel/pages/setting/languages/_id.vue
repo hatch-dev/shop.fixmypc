@@ -98,8 +98,8 @@
       return {
 
         directionObj: {
-          'ltr': {title: 'LTR'},
-          'rtl': {title: 'RTL'},
+          'ltr': {title: this.$t('pages.settingLanguages.ltr')},
+          'rtl': {title: this.$t('pages.settingLanguages.rtl')},
 
         },
         result: {

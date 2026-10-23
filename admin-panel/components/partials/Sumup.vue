@@ -25,7 +25,7 @@
     <div class="payment-form-wrap" v-if="showForm">
 
       <div class="input-wrapper">
-        <label>API Key</label>
+        <label>{{ $t('cmp.Sumup.apiKey') }}</label>
         <input
           type="text"
           v-model="paymentData.sumup_api_key"
@@ -34,7 +34,7 @@
       </div>
 
       <div class="input-wrapper">
-        <label>Merchant Email</label>
+        <label>{{ $t('cmp.Sumup.merchantEmail') }}</label>
         <input
           type="text"
           v-model="paymentData.sumup_merchant_email"
@@ -43,7 +43,7 @@
       </div>
 
       <div class="input-wrapper">
-        <label>Merchant Code</label>
+        <label>{{ $t('cmp.Sumup.merchantCode') }}</label>
         <input
           type="text"
           v-model="paymentData.sumup_merchant_code"

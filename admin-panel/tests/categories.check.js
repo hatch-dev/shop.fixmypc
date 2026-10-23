@@ -11,6 +11,7 @@
  * Run from admin-panel/: npm run check:categories
  */
 const fs = require('fs')
+const { translate, translateCount } = require('./i18n-en')
 const path = require('path')
 const { JSDOM } = require('jsdom')
 
@@ -88,7 +89,7 @@ function loadComponent(file) {
     mapActions: () => ({}),
     mapGetters: () => ({}),
     util: {},
-    DataPage: {}, Dropdown: {}, ListPage: {}, LazyImage: {}, TreeNode: {},
+    DataPage: {}, Dropdown: {}, ListPage: {}, LazyImage: {}, TreeNode: {}, ConfirmDialog: {}, FieldError: {}, SkeletonBlock: {}, Shimmer: {}, ImageInput: {}, FileUpload: {}, Spinner: {},
     Intl, URL, Blob, document, navigator, window, setTimeout, clearTimeout
   })
 
@@ -177,7 +178,8 @@ function makeHarness(options, overrides = {}) {
   }))
 
   Component.prototype.$can = () => true
-  Component.prototype.$t = (key) => key
+  Component.prototype.$t = translate
+  Component.prototype.$tc = translateCount
 
   const vm = new Component({
     // Nuxt/i18n/router/store surface the pages touch.
@@ -185,7 +187,8 @@ function makeHarness(options, overrides = {}) {
   })
 
   vm.$can = () => true
-  vm.$t = (key) => key
+  vm.$t = translate
+  vm.$tc = translateCount
   vm.$route = { params: { id: '1' }, query: {} }
   vm.$router = { push: (to) => calls.push({ api: 'router.push', params: to }) }
   vm.$store = {

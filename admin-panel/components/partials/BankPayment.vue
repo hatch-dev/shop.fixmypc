@@ -75,7 +75,7 @@
         <label>BIC / SWIFT</label>
         <input
           type="text"
-          placeholder="e.g. AIBKIE2D"
+          :placeholder="$t('cmp.BankPayment.bicPlaceholder')"
           v-model="paymentData.bic_swift"
           @input="emitData"
         >

@@ -19,10 +19,10 @@
           </th>
           <th class="w-50x mx-w-50x">#</th>
           <th>{{ $t('index.title') }}</th>
-          <th>Products</th>
-          <th>Total Price</th>
-          <th>Discount</th>
-          <th>Final Price</th>
+          <th>{{ $t('pages.bundleDeals.products') }}</th>
+          <th>{{ $t('pages.bundleDeals.totalPrice') }}</th>
+          <th>{{ $t('pages.bundleDeals.discount') }}</th>
+          <th>{{ $t('pages.bundleDeals.finalPrice') }}</th>
           <th>{{ $t('category.created') }}</th>
           <th>&nbsp;</th>
         </tr>
@@ -55,7 +55,7 @@
                 class="product-badge product-badge--more"
                 :title="value.products.slice(2).map(p => p.title).join(', ')"
               >
-                +{{ value.products.length - 2 }} more
+                {{ $t('pages.bundleDeals.more', { count: value.products.length - 2 }) }}
               </span>
             </div>
             <span v-else>-</span>
@@ -78,9 +78,9 @@
             <span
               v-if="value.sellable === false"
               class="bundle-not-live"
-              title="An item in this bundle is unpublished or out of stock, so the bundle is not shown on the storefront."
+              :title="$t('pages.bundleDeals.notShowingTitle')"
             >
-              not showing
+              {{ $t('pages.bundleDeals.notShowing') }}
             </span>
           </td>
           <td>{{ value.created }}</td>

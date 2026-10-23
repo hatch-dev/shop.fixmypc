@@ -19,8 +19,8 @@
           </th>
           <th class="w-50x mx-w-50x">#</th>
           <th>{{ $t('index.title') }}</th>
-          <th>Price</th>
-          <th>Created</th>
+          <th>{{ $t('brand.price') }}</th>
+          <th>{{ $t('category.created') }}</th>
           <th>&nbsp;</th>
         </tr>
 

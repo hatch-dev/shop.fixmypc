@@ -132,11 +132,11 @@
 
       <div class="input-wrapper">
         <label>
-          API Key
+          {{ $t('cmp.SmtpSetting.apiKey') }}
         </label>
         <input
           type="text"
-          placeholder="Enter API Key"
+          :placeholder="$t('cmp.SmtpSetting.apiKeyPlaceholder')"
           v-model="result.apiKey"
           :class="{invalid: !result.apiKey && hasError}"
         >
@@ -144,7 +144,7 @@
           class="error"
           v-if="!result.apiKey && hasError"
         >
-          API Key is required
+          {{ $t('cmp.SmtpSetting.apiKeyRequired') }}
         </span>
       </div>
 

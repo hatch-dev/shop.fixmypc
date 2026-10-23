@@ -1,14 +1,14 @@
 <template>
     <div class="onboarding-page">
         <div class="header">
-            <h2>Onboarding</h2>
+            <h2>{{ $t('pages.onboarding.title') }}</h2>
         </div>
         <div class="empty-box">
             <button
             class="lite-btn"
             @click="createOnboarding"
             >
-            Create Onboarding
+            {{ $t('pages.onboarding.createOnboarding') }}
             </button>
         </div>
     </div>

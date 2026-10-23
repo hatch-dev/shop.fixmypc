@@ -5,7 +5,7 @@
     set-api="setLoyaltyGroup"
     get-api="getLoyaltyGroup"
     route-name="loyalty-groups"
-    name="Loyalty Group"
+    :name="$t('pages.loyaltyGroups.loyaltyGroup')"
     :validation-keys="validationKeys"
     :result="result"
     @result="settingResult"
@@ -29,9 +29,9 @@
           :class="['lg-tab', {active: detailsVisible(hasError)}]"
           @click="activeTab = 'details'"
         >
-          Group Details
+          {{ $t('pages.loyaltyGroups.groupDetails') }}
           <!-- A validation failure must be findable from the other tab. -->
-          <span v-if="hasError" class="lg-tab-dot" aria-label="has errors"></span>
+          <span v-if="hasError" class="lg-tab-dot" :aria-label="$t('pages.loyaltyGroups.hasErrors')"></span>
         </button>
 
         <button
@@ -41,7 +41,7 @@
           :class="['lg-tab', {active: !detailsVisible(hasError)}]"
           @click="activeTab = 'redemptions'"
         >
-          Redemptions
+          {{ $t('pages.loyaltyGroups.redemptions') }}
           <span v-if="redemptionCount" class="lg-tab-count">{{ redemptionCount }}</span>
         </button>
       </div>
@@ -58,30 +58,30 @@
         <div class="row-fields">
 
           <div class="input-wrapper half">
-            <label>Title *</label>
+            <label>{{ $t('pages.loyaltyGroups.titleRequiredLabel') }}</label>
             <input
               type="text"
-              placeholder="Group title"
+              :placeholder="$t('pages.loyaltyGroups.groupTitle')"
               v-model="result.title"
               :class="{invalid: !result.title && hasError}"
             >
             <span class="error" v-if="!result.title && hasError">
-              Title is required
+              {{ $t('pages.loyaltyGroups.titleIsRequired') }}
             </span>
             <span class="field-hint">
-              Internal only. Customers never see this.
+              {{ $t('pages.loyaltyGroups.internalOnly') }}
             </span>
           </div>
 
           <div class="input-wrapper half">
-            <label>Status</label>
+            <label>{{ $t('category.status') }}</label>
             <dropdown
               :selectedKey="result.status ? 'active' : 'inactive'"
               :options="statusOptions"
               @clicked="statusSelected"
             />
             <span class="field-hint">
-              An inactive group keeps its members but discounts nothing.
+              {{ $t('pages.loyaltyGroups.inactiveHint') }}
             </span>
           </div>
 
@@ -93,34 +93,33 @@
           summary, which is how a customer's basket read "Group 1  - €250.00".
         -->
         <div class="input-wrapper">
-          <label>Label Shown To Customers</label>
+          <label>{{ $t('pages.loyaltyGroups.labelShownToCustomers') }}</label>
           <input
             type="text"
             maxlength="100"
-            placeholder="Loyalty Discount"
+            :placeholder="$t('pages.loyaltyGroups.loyaltyDiscount')"
             v-model="result.customer_label"
           >
           <span class="field-hint">
-            Appears on the basket and order summary, e.g. “Gold Member Discount”.
-            Leave blank to show “Loyalty Discount”.
+            {{ $t('pages.loyaltyGroups.customerLabelHint') }}
           </span>
         </div>
 
         <!-- DISCOUNT -->
         <div class="row-fields">
           <div class="input-wrapper half">
-            <label>Discount Value *</label>
+            <label>{{ $t('pages.loyaltyGroups.discountValueRequiredLabel') }}</label>
             <input
               type="number"
               step="0.01"
               min="0"
-              placeholder="Enter discount value"
+              :placeholder="$t('pages.loyaltyGroups.enterDiscountValue')"
               v-model="result.discount_value"
               @blur="formatDiscount"
               :class="{invalid: (!result.discount_value && hasError) || !!discountError}"
             >
             <span class="error" v-if="!result.discount_value && hasError">
-              Discount value is required
+              {{ $t('pages.loyaltyGroups.discountValueRequired') }}
             </span>
             <span class="error" v-else-if="discountError">
               {{ discountError }}
@@ -128,7 +127,7 @@
           </div>
 
           <div class="input-wrapper half">
-            <label>Discount Type</label>
+            <label>{{ $t('pages.loyaltyGroups.discountType') }}</label>
             <dropdown
               :selectedKey="result.discount_type"
               :options="discountTypes"
@@ -143,26 +142,26 @@
         -->
         <div class="row-fields">
           <div class="input-wrapper half">
-            <label>Minimum Cart Value</label>
+            <label>{{ $t('pages.loyaltyGroups.minimumCartValue') }}</label>
             <input
               type="number"
               step="0.01"
               min="0"
-              placeholder="No minimum"
+              :placeholder="$t('pages.loyaltyGroups.noMinimum')"
               v-model="result.min_cart_value"
             >
             <span class="field-hint">
-              Orders below this get no discount.
+              {{ $t('pages.loyaltyGroups.ordersBelowNoDiscount') }}
             </span>
           </div>
 
           <div class="input-wrapper half">
-            <label>Maximum Discount</label>
+            <label>{{ $t('pages.loyaltyGroups.maximumDiscount') }}</label>
             <input
               type="number"
               step="0.01"
               min="0"
-              placeholder="No cap"
+              :placeholder="$t('pages.loyaltyGroups.noCap')"
               v-model="result.max_discount"
               :class="{invalid: !!capError}"
             >
@@ -170,14 +169,14 @@
               {{ capError }}
             </span>
             <span class="field-hint" v-else>
-              The most this group can ever take off one order.
+              {{ $t('pages.loyaltyGroups.capHint') }}
             </span>
           </div>
         </div>
 
         <!-- VALIDITY PERIOD -->
         <div class="input-wrapper">
-          <label>Validity Period</label>
+          <label>{{ $t('pages.loyaltyGroups.validityPeriod') }}</label>
 
           <div class="validity-options">
 
@@ -194,8 +193,8 @@
                 @change="selectValidity('one_time')"
               >
               <div>
-                <strong>One-time purchase</strong>
-                <p>Valid for the member's next order only</p>
+                <strong>{{ $t('pages.loyaltyGroups.oneTimePurchase') }}</strong>
+                <p>{{ $t('pages.loyaltyGroups.nextOrderOnly') }}</p>
               </div>
             </div>
 
@@ -212,11 +211,11 @@
                 @change="selectValidity('period')"
               >
               <div>
-                <strong>Set period</strong>
+                <strong>{{ $t('pages.loyaltyGroups.setPeriod') }}</strong>
                 <p v-if="result.validity === 'period' && result.period_days">
-                  {{ result.period_days }} days
+                  {{ $t('pages.loyaltyGroups.daysCount', { days: result.period_days }) }}
                 </p>
-                <p v-else>e.g. 30 days</p>
+                <p v-else>{{ $t('pages.loyaltyGroups.eg30Days') }}</p>
               </div>
 
               <div
@@ -224,21 +223,21 @@
                 class="mini-popup"
                 @click.stop
               >
-                <div class="mini-popup-title">Set Validity Period</div>
+                <div class="mini-popup-title">{{ $t('pages.loyaltyGroups.setValidityPeriod') }}</div>
                 <input
                   type="number"
                   min="1"
                   max="3650"
                   v-model="periodDays"
-                  placeholder="Enter days"
+                  :placeholder="$t('pages.loyaltyGroups.enterDays')"
                   @keyup.enter.stop="confirmPeriod"
                 />
                 <span class="error" v-if="periodPopupError">
                   {{ periodPopupError }}
                 </span>
                 <div class="mini-popup-actions">
-                  <button type="button" class="cancel-btn" @click.stop="cancelPeriodPopup">Cancel</button>
-                  <button type="button" class="apply-btn primary-btn" @click.stop="confirmPeriod">Apply</button>
+                  <button type="button" class="cancel-btn" @click.stop="cancelPeriodPopup">{{ $t('index.cancelBtn') }}</button>
+                  <button type="button" class="apply-btn primary-btn" @click.stop="confirmPeriod">{{ $t('pages.loyaltyGroups.apply') }}</button>
                 </div>
               </div>
             </div>
@@ -256,11 +255,11 @@
                 @change="selectValidity('date_range')"
               >
               <div>
-                <strong>Date Range</strong>
+                <strong>{{ $t('pages.loyaltyGroups.dateRangeTitle') }}</strong>
                 <p v-if="result.validity === 'date_range' && result.start_date && result.end_date">
-                  {{ result.start_date }} to {{ result.end_date }}
+                  {{ $t('pages.loyaltyGroups.dateToDate', { start: result.start_date, end: result.end_date }) }}
                 </p>
-                <p v-else>Specific start/end dates</p>
+                <p v-else>{{ $t('pages.loyaltyGroups.specificDates') }}</p>
               </div>
 
               <div
@@ -268,15 +267,15 @@
                 class="mini-popup"
                 @click.stop
               >
-                <div class="mini-popup-title">Select Date Range</div>
+                <div class="mini-popup-title">{{ $t('pages.loyaltyGroups.selectDateRange') }}</div>
                 <input type="date" v-model="startDate">
                 <input type="date" v-model="endDate" :min="startDate || null">
                 <span class="error" v-if="datePopupError">
                   {{ datePopupError }}
                 </span>
                 <div class="mini-popup-actions">
-                  <button type="button" class="cancel-btn" @click.stop="cancelDatePopup">Cancel</button>
-                  <button type="button" class="apply-btn primary-btn" @click.stop="confirmDateRange">Apply</button>
+                  <button type="button" class="cancel-btn" @click.stop="cancelDatePopup">{{ $t('index.cancelBtn') }}</button>
+                  <button type="button" class="apply-btn primary-btn" @click.stop="confirmDateRange">{{ $t('pages.loyaltyGroups.apply') }}</button>
                 </div>
               </div>
             </div>
@@ -284,10 +283,10 @@
           </div>
 
           <span class="error" v-if="periodInvalid && hasError">
-            Set how many days the discount lasts
+            {{ $t('pages.loyaltyGroups.periodRequired') }}
           </span>
           <span class="error" v-else-if="dateRangeInvalid && hasError">
-            Set a start and end date, with the end on or after the start
+            {{ $t('pages.loyaltyGroups.dateRangeRequired') }}
           </span>
         </div>
 
@@ -296,20 +295,20 @@
           <div class="users-header">
 
             <div class="users-header-left">
-              <div class="users-title">Select Users</div>
+              <div class="users-title">{{ $t('pages.loyaltyGroups.selectUsers') }}</div>
               <div class="users-subtitle">
-                Filter and add users to this loyalty group.
-                <strong>{{ result.users.length }}</strong> selected.
+                {{ $t('pages.loyaltyGroups.filterAddUsers') }}
+                <strong>{{ result.users.length }}</strong> {{ $t('pages.loyaltyGroups.selectedSuffix') }}
               </div>
             </div>
 
             <div class="users-header-actions">
               <button type="button" @click="selectAllShown">
-                Select All Shown
+                {{ $t('pages.loyaltyGroups.selectAllShown') }}
               </button>
 
               <button type="button" @click="clearUsers">
-                Clear
+                {{ $t('pages.loyaltyGroups.clear') }}
               </button>
             </div>
 
@@ -319,33 +318,33 @@
 
             <div class="filter-header">
               <span class="arrow"><i class="fa fa-filter"></i></span>
-              <span class="title">Advanced Filters</span>
+              <span class="title">{{ $t('pages.loyaltyGroups.advancedFilters') }}</span>
             </div>
 
             <div class="filter-grid">
 
               <div class="filter-field">
-                <label>Total Spend ({{ currencyIcon || '$' }})</label>
+                <label>{{ $t('pages.loyaltyGroups.totalSpendCurrency', { currency: currencyIcon || '$' }) }}</label>
                 <div class="min-max">
-                  <input type="number" min="0" placeholder="Min" v-model="filters.spend_min">
+                  <input type="number" min="0" :placeholder="$t('pages.loyaltyGroups.min')" v-model="filters.spend_min">
                   <span class="seperate">-</span>
-                  <input type="number" min="0" placeholder="Max" v-model="filters.spend_max">
+                  <input type="number" min="0" :placeholder="$t('pages.loyaltyGroups.max')" v-model="filters.spend_max">
                 </div>
               </div>
 
               <div class="filter-field">
-                <label>Registered On Or After</label>
+                <label>{{ $t('pages.loyaltyGroups.registeredOnOrAfter') }}</label>
                 <input type="date" v-model="filters.registration">
               </div>
 
               <div class="filter-field">
-                <label>Orders Last 30d</label>
-                <input type="number" min="0" placeholder="Any amount" v-model="filters.orders">
+                <label>{{ $t('pages.loyaltyGroups.ordersLast30d') }}</label>
+                <input type="number" min="0" :placeholder="$t('pages.loyaltyGroups.anyAmount')" v-model="filters.orders">
               </div>
 
               <div class="filter-field">
-                <label>Loyalty Points</label>
-                <input type="number" min="0" placeholder="Min pts" v-model="filters.points">
+                <label>{{ $t('pages.loyaltyGroups.loyaltyPoints') }}</label>
+                <input type="number" min="0" :placeholder="$t('pages.loyaltyGroups.minPts')" v-model="filters.points">
               </div>
 
               <div class="filter-action">
@@ -355,7 +354,7 @@
                   :disabled="loadingUsers"
                   @click="applyFilters"
                 >
-                  {{ loadingUsers ? 'Loading…' : 'Apply' }}
+                  {{ loadingUsers ? $t('pages.loyaltyGroups.loading') : $t('pages.loyaltyGroups.apply') }}
                 </button>
                 <button
                   type="button"
@@ -363,7 +362,7 @@
                   :disabled="loadingUsers"
                   @click="resetFilters"
                 >
-                  Reset
+                  {{ $t('pages.loyaltyGroups.reset') }}
                 </button>
               </div>
 
@@ -378,9 +377,7 @@
             silently dropped every member who did not match the new filter.
           -->
           <div v-if="hiddenSelectedCount > 0" class="selection-note">
-            {{ hiddenSelectedCount }} selected
-            {{ hiddenSelectedCount === 1 ? 'customer is' : 'customers are' }}
-            not shown by the current filter. They stay in the group.
+            {{ hiddenSelectedCount === 1 ? $t('pages.loyaltyGroups.hiddenSelectedOne', { count: hiddenSelectedCount }) : $t('pages.loyaltyGroups.hiddenSelectedMany', { count: hiddenSelectedCount }) }}
           </div>
 
           <div class="users-table">
@@ -393,10 +390,10 @@
                   @change="toggleAllShown"
                 >
               </div>
-              <div class="user-col">User</div>
-              <div class="spend-col">Total Spend</div>
-              <div class="orders-col">Orders 30d</div>
-              <div class="points-col">Points</div>
+              <div class="user-col">{{ $t('pages.loyaltyGroups.user') }}</div>
+              <div class="spend-col">{{ $t('pages.loyaltyGroups.totalSpend') }}</div>
+              <div class="orders-col">{{ $t('pages.loyaltyGroups.orders30d') }}</div>
+              <div class="points-col">{{ $t('pages.loyaltyGroups.points') }}</div>
             </div>
 
             <!--
@@ -407,11 +404,11 @@
             <div class="users-table-body">
 
               <div v-if="loadingUsers" class="user-row empty">
-                Loading customers…
+                {{ $t('pages.loyaltyGroups.loadingCustomers') }}
               </div>
 
               <div v-else-if="!users.length" class="user-row empty">
-                No customers match these filters.
+                {{ $t('pages.loyaltyGroups.noCustomersMatch') }}
               </div>
 
               <div
@@ -473,50 +470,50 @@
 
         <div class="redemptions-head">
           <div>
-            <div class="users-title">Redemptions</div>
+            <div class="users-title">{{ $t('pages.loyaltyGroups.redemptions') }}</div>
             <div class="users-subtitle">
-              Customers who have used this discount on an order.
+              {{ $t('pages.loyaltyGroups.redemptionsSubtitle') }}
             </div>
           </div>
 
           <div class="redemption-search">
             <input
               type="text"
-              placeholder="Search name, email or order"
+              :placeholder="$t('pages.loyaltyGroups.searchRedemptions')"
               v-model="redemptionSearch"
               @keyup.enter="loadRedemptions(1)"
             >
             <button type="button" class="apply-filter primary-btn" @click="loadRedemptions(1)">
-              Search
+              {{ $t('pages.loyaltyGroups.search') }}
             </button>
           </div>
         </div>
 
         <div class="redemption-stats">
           <div class="redemption-stat">
-            <span class="redemption-stat-label">Times redeemed</span>
+            <span class="redemption-stat-label">{{ $t('pages.loyaltyGroups.timesRedeemed') }}</span>
             <strong>{{ redemptionCount }}</strong>
           </div>
           <div class="redemption-stat">
-            <span class="redemption-stat-label">Customers</span>
+            <span class="redemption-stat-label">{{ $t('pages.loyaltyGroups.customers') }}</span>
             <strong>{{ redemptionCustomers }}</strong>
           </div>
           <div class="redemption-stat">
-            <span class="redemption-stat-label">Total discounted</span>
+            <span class="redemption-stat-label">{{ $t('pages.loyaltyGroups.totalDiscounted') }}</span>
             <strong>{{ currencyIcon }}{{ Number(redemptionTotal || 0).toFixed(2) }}</strong>
           </div>
         </div>
 
         <div v-if="loadingRedemptions" class="redemption-empty">
-          Loading redemptions…
+          {{ $t('pages.loyaltyGroups.loadingRedemptions') }}
         </div>
 
         <div v-else-if="!redemptions.length" class="redemption-empty">
           <template v-if="redemptionSearch">
-            No redemptions match that search.
+            {{ $t('pages.loyaltyGroups.noRedemptionsMatch') }}
           </template>
           <template v-else>
-            Nobody has used this discount yet.
+            {{ $t('pages.loyaltyGroups.noRedemptionsYet') }}
           </template>
         </div>
 
@@ -524,11 +521,11 @@
           <div class="redemption-table">
 
             <div class="redemption-row header">
-              <div>Customer</div>
-              <div>Order</div>
-              <div>Date</div>
-              <div class="ta-right">Discount</div>
-              <div>Order status</div>
+              <div>{{ $t('pages.loyaltyGroups.customer') }}</div>
+              <div>{{ $t('pages.loyaltyGroups.order') }}</div>
+              <div>{{ $t('category.date') }}</div>
+              <div class="ta-right">{{ $t('pages.loyaltyGroups.discount') }}</div>
+              <div>{{ $t('pages.loyaltyGroups.orderStatus') }}</div>
             </div>
 
             <div
@@ -536,12 +533,12 @@
               :key="row.id"
               class="redemption-row"
             >
-              <div data-label="Customer" class="redemption-user">
-                <strong>{{ row.user_name || 'Deleted customer' }}</strong>
+              <div :data-label="$t('pages.loyaltyGroups.customer')" class="redemption-user">
+                <strong>{{ row.user_name || $t('pages.loyaltyGroups.deletedCustomer') }}</strong>
                 <span v-if="row.user_email">{{ row.user_email }}</span>
               </div>
 
-              <div data-label="Order">
+              <div :data-label="$t('pages.loyaltyGroups.order')">
                 <nuxt-link
                   v-if="row.order_id"
                   class="link"
@@ -551,13 +548,13 @@
                 </nuxt-link>
               </div>
 
-              <div data-label="Date">{{ redemptionDate(row.created_at) }}</div>
+              <div :data-label="$t('category.date')">{{ redemptionDate(row.created_at) }}</div>
 
-              <div data-label="Discount" class="ta-right redemption-amount">
+              <div :data-label="$t('pages.loyaltyGroups.discount')" class="ta-right redemption-amount">
                 - {{ currencyIcon }}{{ Number(row.discount || 0).toFixed(2) }}
               </div>
 
-              <div data-label="Order status">
+              <div :data-label="$t('pages.loyaltyGroups.orderStatus')">
                 <span class="pill" :class="orderStatusPill(row.order_status)">
                   {{ orderStatusLabel(row.order_status) }}
                 </span>
@@ -572,17 +569,17 @@
               :disabled="redemptionPage <= 1 || loadingRedemptions"
               @click="loadRedemptions(redemptionPage - 1)"
             >
-              Previous
+              {{ $t('pages.loyaltyGroups.previous') }}
             </button>
 
-            <span>Page {{ redemptionPage }} of {{ redemptionLastPage }}</span>
+            <span>{{ $t('pages.loyaltyGroups.pageOf', { page: redemptionPage, last: redemptionLastPage }) }}</span>
 
             <button
               type="button"
               :disabled="redemptionPage >= redemptionLastPage || loadingRedemptions"
               @click="loadRedemptions(redemptionPage + 1)"
             >
-              Next
+              {{ $t('pages.loyaltyGroups.next') }}
             </button>
           </div>
         </template>
@@ -658,12 +655,12 @@ export default {
        * selectable and silently never apply.
        */
       statusOptions: {
-        active: { title: 'Active' },
-        inactive: { title: 'Inactive' }
+        active: { title: this.$t('fSale.active') },
+        inactive: { title: this.$t('fSale.inactive') }
       },
       discountTypes: {
-        fixed: { title: 'Fixed Amount' },
-        percentage: { title: 'Percentage (%)' }
+        fixed: { title: this.$t('pages.loyaltyGroups.fixedAmount') },
+        percentage: { title: this.$t('pages.loyaltyGroups.percentagePct') }
       },
       result: {
         id: '',
@@ -726,11 +723,11 @@ export default {
       }
 
       if (value < 0) {
-        return 'Discount cannot be negative'
+        return this.$t('pages.loyaltyGroups.discountNegative')
       }
 
       if (this.result.discount_type === 'percentage' && value > 100) {
-        return 'A percentage discount cannot exceed 100%'
+        return this.$t('pages.loyaltyGroups.percentOver100')
       }
 
       return ''
@@ -745,7 +742,7 @@ export default {
       }
 
       if (this.result.discount_type === 'fixed' && value > 0 && cap < value) {
-        return 'The cap cannot be lower than the fixed discount value'
+        return this.$t('pages.loyaltyGroups.capBelowFixed')
       }
 
       return ''
@@ -817,12 +814,12 @@ export default {
       const days = Number(this.periodDays)
 
       if (!(days > 0)) {
-        this.periodPopupError = 'Enter a number of days greater than zero'
+        this.periodPopupError = this.$t('pages.loyaltyGroups.daysGreaterThanZero')
         return
       }
 
       if (days > 3650) {
-        this.periodPopupError = 'That is over ten years; enter 3650 days or fewer'
+        this.periodPopupError = this.$t('pages.loyaltyGroups.daysTooMany')
         return
       }
 
@@ -842,12 +839,12 @@ export default {
 
     confirmDateRange() {
       if (!this.startDate || !this.endDate) {
-        this.datePopupError = 'Both a start and an end date are required'
+        this.datePopupError = this.$t('pages.loyaltyGroups.bothDatesRequired')
         return
       }
 
       if (new Date(this.endDate) < new Date(this.startDate)) {
-        this.datePopupError = 'The end date cannot be before the start date'
+        this.datePopupError = this.$t('pages.loyaltyGroups.endBeforeStart')
         return
       }
 
@@ -932,10 +929,12 @@ export default {
      * most wants to spot.
      */
     orderStatusLabel(status) {
-      return {
-        1: 'Pending', 2: 'Confirmed', 3: 'Picked up', 4: 'On the way',
-        5: 'Delivered', 6: 'Cancelled', 7: 'Returned', 8: 'Refunded'
-      }[parseInt(status)] || 'Unknown'
+      const key = {
+        1: 'statusPending', 2: 'statusConfirmed', 3: 'statusPickedUp', 4: 'statusOnTheWay',
+        5: 'statusDelivered', 6: 'statusCancelled', 7: 'statusReturned', 8: 'statusRefunded'
+      }[parseInt(status)] || 'statusUnknown'
+
+      return this.$t('pages.loyaltyGroups.' + key)
     },
 
     orderStatusPill(status) {
@@ -962,7 +961,7 @@ export default {
 
       return isNaN(d.getTime())
         ? String(value).substring(0, 10)
-        : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+        : d.toLocaleDateString(this.$i18n?.locale || 'en', { day: '2-digit', month: 'short', year: 'numeric' })
     },
 
     async loadRedemptions(page = 1) {
@@ -993,7 +992,7 @@ export default {
 
       } catch (e) {
         this.redemptions = []
-        this.setToastError(e?.message || 'Could not load redemptions')
+        this.setToastError(e?.message || this.$t('pages.loyaltyGroups.couldNotLoadRedemptions'))
       } finally {
         this.loadingRedemptions = false
       }
@@ -1041,7 +1040,7 @@ export default {
 
       } catch (e) {
         this.users = []
-        this.setToastError(e?.message || 'Could not load customers')
+        this.setToastError(e?.message || this.$t('pages.loyaltyGroups.couldNotLoadCustomers'))
       } finally {
         this.loadingUsers = false
       }

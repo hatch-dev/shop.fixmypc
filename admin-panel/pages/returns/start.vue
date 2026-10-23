@@ -1,17 +1,17 @@
 <template>
   <div class="return-start p-20">
-    <nuxt-link v-if="orderId" :to="`/orders/${orderId}`" class="rd-back">← Order</nuxt-link>
-    <nuxt-link v-else to="/returns" class="rd-back">← Returns</nuxt-link>
+    <nuxt-link v-if="orderId" :to="`/orders/${orderId}`" class="rd-back">← {{ $t('pages.returns.order') }}</nuxt-link>
+    <nuxt-link v-else to="/returns" class="rd-back">← {{ $t('pages.returns.returns') }}</nuxt-link>
 
-    <div v-if="loading" class="rd-card">Loading…</div>
+    <div v-if="loading" class="rd-card">{{ $t('pages.returns.loading') }}</div>
     <div v-else-if="loadError" class="rd-card rd-error">{{ loadError }}</div>
 
     <template v-else-if="info">
       <div class="rd-card rd-head">
         <div>
-          <h3 class="rd-title">{{ isExchange ? 'Start an exchange' : 'Start a return' }}</h3>
+          <h3 class="rd-title">{{ isExchange ? $t('pages.returns.startExchange') : $t('pages.returns.startReturn') }}</h3>
           <p class="rd-sub">
-            Order #{{ info.order.order }}
+            {{ $t('pages.returns.orderNumber', { number: info.order.order }) }}
             <template v-if="info.order.contact && info.order.contact.name"> · {{ info.order.contact.name }}</template>
             <template v-if="info.order.contact && info.order.contact.email"> · {{ info.order.contact.email }}</template>
           </p>
@@ -22,32 +22,30 @@
 
       <template v-else>
         <p v-if="info.eligibility.within_window === false" class="rd-warning" role="alert">
-          Delivered {{ info.eligibility.days_since_delivery }} days ago, past the {{ info.eligibility.window_days }}-day return window.
-          You can still open the return.
+          {{ $t('pages.returns.pastWindow', { days: info.eligibility.days_since_delivery, window: info.eligibility.window_days }) }}
         </p>
 
         <div class="rd-card">
-          <div class="rd-type" role="radiogroup" aria-label="Return or exchange">
+          <div class="rd-type" role="radiogroup" :aria-label="$t('pages.returns.returnOrExchange')">
             <label class="rd-type-option" :class="{active: type === 'return'}">
-              <input type="radio" value="return" v-model="type"> Return for a refund
+              <input type="radio" value="return" v-model="type"> {{ $t('pages.returns.returnForRefund') }}
             </label>
-            <label class="rd-type-option" :class="{active: type === 'exchange'}" :title="canExchange ? '' : 'No other variants to swap to'">
-              <input type="radio" value="exchange" v-model="type" :disabled="!canExchange"> Exchange for another variant
+            <label class="rd-type-option" :class="{active: type === 'exchange'}" :title="canExchange ? '' : $t('pages.returns.noVariantsToSwap')">
+              <input type="radio" value="exchange" v-model="type" :disabled="!canExchange"> {{ $t('pages.returns.exchangeForVariant') }}
             </label>
           </div>
           <p v-if="isExchange" class="rd-hint rd-gap-bottom">
-            The replacement goes out on a new order once the old item has arrived. If it costs more, you take the
-            difference from the customer and record it; if it costs less, the difference is refunded.
+            {{ $t('pages.returns.exchangeExplainer') }}
           </p>
 
-          <h4>Items</h4>
+          <h4>{{ $t('pages.returns.items') }}</h4>
           <table class="rd-table">
-            <tr><th>Item</th><th>Bought</th><th>Already returning</th><th>{{ isExchange ? 'Exchange' : 'Return' }}</th><th v-if="isExchange">Swap to</th></tr>
+            <tr><th>{{ $t('pages.returns.item') }}</th><th>{{ $t('pages.returns.bought') }}</th><th>{{ $t('pages.returns.alreadyReturning') }}</th><th>{{ isExchange ? $t('pages.returns.exchange') : $t('pages.returns.returnHeading') }}</th><th v-if="isExchange">{{ $t('pages.returns.swapTo') }}</th></tr>
             <tr v-for="line in info.lines" :key="line.ordered_product_id">
               <td>
                 <strong>{{ line.title }}</strong>
                 <span v-if="line.variant" class="rd-hint-inline"> · {{ line.variant }}</span>
-                <span v-if="!line.refundable" class="pill pill-wait">marked non-refundable</span>
+                <span v-if="!line.refundable" class="pill pill-wait">{{ $t('pages.returns.markedNonRefundable') }}</span>
               </td>
               <td>{{ line.quantity }}</td>
               <td>{{ line.returned_quantity || '—' }}</td>
@@ -57,10 +55,10 @@
                   v-model.number="quantities[line.ordered_product_id]"
                   type="number" min="0" :max="line.returnable_quantity" step="1"
                   class="rd-qty"
-                  :aria-label="`Units of ${line.title} to return`"
+                  :aria-label="$t('pages.returns.unitsToReturnAria', { title: line.title })"
                   @input="clamp(line)"
                 >
-                <span v-else class="rd-hint-inline">none left</span>
+                <span v-else class="rd-hint-inline">{{ $t('pages.returns.noneLeft') }}</span>
               </td>
               <td v-if="isExchange">
                 <template v-if="Number(quantities[line.ordered_product_id]) > 0">
@@ -68,14 +66,14 @@
                     v-if="line.variants && line.variants.length"
                     v-model="exchangeFor[line.ordered_product_id]"
                     class="rd-select rd-select-sm"
-                    :aria-label="`Variant to swap ${line.title} for`"
+                    :aria-label="$t('pages.returns.variantToSwapAria', { title: line.title })"
                   >
-                    <option value="">Choose a variant</option>
+                    <option value="">{{ $t('pages.returns.chooseVariant') }}</option>
                     <option v-for="v in line.variants" :key="v.inventory_id" :value="v.inventory_id" :disabled="!v.available">
-                      {{ v.label }} · {{ currencyIcon }}{{ money(v.unit_price) }}{{ v.available ? '' : ' · out of stock' }}
+                      {{ v.label }} · {{ currencyIcon }}{{ money(v.unit_price) }}{{ v.available ? '' : ' · ' + $t('pages.returns.outOfStock') }}
                     </option>
                   </select>
-                  <span v-else class="rd-hint-inline">no other variants</span>
+                  <span v-else class="rd-hint-inline">{{ $t('pages.returns.noOtherVariants') }}</span>
                 </template>
                 <span v-else class="rd-hint-inline">—</span>
               </td>
@@ -85,26 +83,26 @@
 
         <div class="rd-grid">
           <div class="rd-card">
-            <h4>Details</h4>
-            <label class="rd-label" for="rt-reason">Reason</label>
+            <h4>{{ $t('pages.returns.details') }}</h4>
+            <label class="rd-label" for="rt-reason">{{ $t('pages.returns.reason') }}</label>
             <select id="rt-reason" v-model="reason" class="rd-select">
-              <option value="">Choose a reason</option>
+              <option value="">{{ $t('pages.returns.chooseReason') }}</option>
               <option v-for="(label, key) in info.reasons" :key="key" :value="key">{{ label }}</option>
             </select>
 
-            <label class="rd-label" for="rt-cnote">What the customer said (optional)</label>
+            <label class="rd-label" for="rt-cnote">{{ $t('pages.returns.customerSaidOptional') }}</label>
             <textarea id="rt-cnote" v-model="customerNote" rows="3" maxlength="2000"></textarea>
 
-            <label class="rd-label" for="rt-snote">Staff note (optional, never shown to the customer)</label>
+            <label class="rd-label" for="rt-snote">{{ $t('pages.returns.staffNoteOptional') }}</label>
             <textarea id="rt-snote" v-model="staffNote" rows="2" maxlength="2000"></textarea>
 
             <label class="rd-check">
               <input type="checkbox" v-model="notify">
-              Email the customer the return number and where to send it
+              {{ $t('pages.returns.emailReturnNumber') }}
             </label>
 
             <template v-if="notify && info.languages && info.languages.length > 1">
-              <label class="rd-label" for="rt-lang">Email language</label>
+              <label class="rd-label" for="rt-lang">{{ $t('pages.returns.emailLanguage') }}</label>
               <select id="rt-lang" v-model="emailLang" class="rd-select">
                 <option v-for="l in info.languages" :key="l.code" :value="l.code">{{ l.name }}</option>
               </select>
@@ -112,31 +110,30 @@
           </div>
 
           <div class="rd-card">
-            <h4>{{ isExchange ? 'Difference' : 'Refund if accepted' }}</h4>
-            <p v-if="!units" class="rd-hint">Choose the units being {{ isExchange ? 'exchanged' : 'returned' }} to see the {{ isExchange ? 'difference' : 'refund' }}.</p>
+            <h4>{{ isExchange ? $t('pages.returns.difference') : $t('pages.returns.refundIfAccepted') }}</h4>
+            <p v-if="!units" class="rd-hint">{{ isExchange ? $t('pages.returns.chooseUnitsExchange') : $t('pages.returns.chooseUnitsReturn') }}</p>
             <template v-else-if="isExchange">
-              <p v-if="!exchangeComplete" class="rd-hint">Choose a variant for every unit being exchanged.</p>
+              <p v-if="!exchangeComplete" class="rd-hint">{{ $t('pages.returns.chooseVariantEveryUnit') }}</p>
               <template v-else>
                 <dl class="rd-dl">
-                  <dt>{{ exchangeDifference > 0 ? 'Customer pays' : exchangeDifference < 0 ? 'Customer gets back' : 'Difference' }}</dt>
+                  <dt>{{ exchangeDifference > 0 ? $t('pages.returns.customerPaysLabel') : exchangeDifference < 0 ? $t('pages.returns.customerGetsBack') : $t('pages.returns.difference') }}</dt>
                   <dd>{{ currencyIcon }}{{ money(Math.abs(exchangeDifference)) }}</dd>
                 </dl>
-                <p class="rd-hint">At today's prices for this customer. It is worked out again when the exchange is completed.</p>
+                <p class="rd-hint">{{ $t('pages.returns.todaysPricesRecalc') }}</p>
               </template>
             </template>
             <template v-else-if="quote">
               <dl class="rd-dl">
-                <dt>Items</dt><dd>{{ currencyIcon }}{{ money(quote.items_refund) }}</dd>
-                <template v-if="quote.gift_card > 0"><dt>To gift card</dt><dd>{{ currencyIcon }}{{ money(quote.gift_card) }}</dd></template>
-                <template v-if="quote.points_returned > 0"><dt>Points back</dt><dd>{{ quote.points_returned }}</dd></template>
-                <template v-if="quote.points_taken > 0"><dt>Points taken back</dt><dd>{{ quote.points_taken }}</dd></template>
+                <dt>{{ $t('pages.returns.items') }}</dt><dd>{{ currencyIcon }}{{ money(quote.items_refund) }}</dd>
+                <template v-if="quote.gift_card > 0"><dt>{{ $t('pages.returns.toGiftCard') }}</dt><dd>{{ currencyIcon }}{{ money(quote.gift_card) }}</dd></template>
+                <template v-if="quote.points_returned > 0"><dt>{{ $t('pages.returns.pointsBack') }}</dt><dd>{{ quote.points_returned }}</dd></template>
+                <template v-if="quote.points_taken > 0"><dt>{{ $t('pages.returns.pointsTakenBack') }}</dt><dd>{{ quote.points_taken }}</dd></template>
               </dl>
               <p class="rd-hint">
-                Order discounts are shared across the items by price, so this is what these units actually cost.
-                Delivery can be added when the refund is made.
+                {{ $t('pages.returns.discountsShared') }}
               </p>
             </template>
-            <p v-else class="rd-hint">Working it out…</p>
+            <p v-else class="rd-hint">{{ $t('pages.returns.workingItOut') }}</p>
           </div>
         </div>
 
@@ -144,7 +141,7 @@
 
         <div class="rd-actions">
           <button type="button" class="primary-btn" :disabled="busy || !units || !reason || (isExchange && !exchangeComplete)" @click="submit">
-            {{ busy ? 'Opening…' : `Open ${isExchange ? 'exchange' : 'return'} for ${units} unit${units === 1 ? '' : 's'}` }}
+            {{ busy ? $t('pages.returns.opening') : isExchange ? $tc('pages.returns.openExchangeUnits', units, { count: units }) : $tc('pages.returns.openReturnUnits', units, { count: units }) }}
           </button>
         </div>
       </template>
@@ -253,7 +250,7 @@ export default {
     },
     async load() {
       if (!this.orderId) {
-        this.loadError = 'No order was given. Open the order and choose Start a return.'
+        this.loadError = this.$t('pages.returns.noOrderGiven')
         this.loading = false
         return
       }
@@ -266,7 +263,7 @@ export default {
         this.exchangeFor = exchangeFor
         if (this.$route.query.type === 'exchange' && this.canExchange) this.type = 'exchange'
       } catch (e) {
-        this.loadError = e?.message || 'This order could not be loaded.'
+        this.loadError = e?.message || this.$t('pages.returns.orderLoadFailed')
       } finally {
         this.loading = false
       }
@@ -296,12 +293,12 @@ export default {
         })
         // setRequest hands a refusal back as the response body (status 201)
         if (!data || data.status === 201) {
-          this.error = data?.message || (data?.data?.form || [])[0] || `The ${this.type} was not opened.`
+          this.error = data?.message || (data?.data?.form || [])[0] || (this.type === 'exchange' ? this.$t('pages.returns.exchangeNotOpened') : this.$t('pages.returns.returnNotOpened'))
           return
         }
         this.$router.push(`/returns/${data.id}`)
       } catch (e) {
-        this.error = e?.message || 'The return was not opened.'
+        this.error = e?.message || this.$t('pages.returns.returnNotOpened')
       } finally {
         this.busy = false
       }

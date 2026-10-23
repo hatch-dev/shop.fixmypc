@@ -20,7 +20,7 @@
           class="border p-2 custom-dropdown"
           @change="applyFilters"
         >
-          <option value="">All Categories</option>
+          <option value="">{{ $t('pages.products.allCategories') }}</option>
           <option
             v-for="cat in categories"
             :key="cat.id"
@@ -36,7 +36,7 @@
           class="border p-2 custom-dropdown"
           @change="applyFilters"
         >
-          <option value="">All Subcategories</option>
+          <option value="">{{ $t('pages.products.allSubcategories') }}</option>
           <option
             v-for="sub in subcategories"
             :key="sub.id"
@@ -51,12 +51,12 @@
           class="border p-2 custom-dropdown"
           @change="applyFilters"
         >
-          <option value="">All Status</option>
+          <option value="">{{ $t('pages.products.allStatus') }}</option>
           <!-- "Draft" everywhere: the editor badge and the status dropdown in
                the sidebar both call status 2 a draft, and this list was the
                only place calling the same thing Private. -->
-          <option value="1">Public</option>
-          <option value="2">Draft</option>
+          <option value="1">{{ $t('pages.products.public') }}</option>
+          <option value="2">{{ $t('pages.products.draft') }}</option>
         </select>
 
         <div class="stock-filters">
@@ -66,7 +66,7 @@
               :checked="filters.stock === 'in'"
               @change="toggleStock('in')"
             />
-            <span>In Stock</span>
+            <span>{{ $t('pages.products.inStock') }}</span>
           </label>
 
           <label class="stock-chip">
@@ -75,7 +75,7 @@
               :checked="filters.stock === 'out'"
               @change="toggleStock('out')"
             />
-            <span>Out of Stock</span>
+            <span>{{ $t('pages.products.outOfStock') }}</span>
           </label>
       </div>
 
@@ -88,7 +88,7 @@
             @click.stop="toggleColumnSelector"
           >
             <i class="fa-solid fa-table-columns" aria-hidden="true"></i>
-            <span>Custom Grid</span>
+            <span>{{ $t('pages.products.customGrid') }}</span>
             <span class="grid-tool-count">{{ visibleColumns.length }}</span>
           </button>
 
@@ -98,8 +98,8 @@
             @click.stop
           >
             <div class="grid-column-head">
-              <strong>Choose Columns</strong>
-              <span>Pick the fields shown on the product grid. Drag to reorder.</span>
+              <strong>{{ $t('pages.products.chooseColumns') }}</strong>
+              <span>{{ $t('pages.products.chooseColumnsHint') }}</span>
             </div>
 
             <div class="grid-column-list">
@@ -127,7 +127,7 @@
 
             <div class="grid-column-actions">
               <button type="button" class="grid-btn ghost xs" @click="resetColumns">
-                Reset Default
+                {{ $t('pages.products.resetDefault') }}
               </button>
             </div>
           </div>
@@ -148,7 +148,7 @@
           >
             {{ col.label }}
           </th>
-          <th>Actions</th>
+          <th>{{ $t('pages.products.actions') }}</th>
         </tr>
 
         <tr v-for="(value, index) in list" :key="index">
@@ -232,7 +232,7 @@
                 class="grid-pill"
                 :class="value.procurement == 1 ? 'grid-pill--yes' : 'grid-pill--no'"
               >
-                {{ value.procurement == 1 ? 'Yes' : 'No' }}
+                {{ value.procurement == 1 ? $t('prod.yes') : $t('prod.no') }}
               </span>
             </template>
 
@@ -242,7 +242,7 @@
             </template>
 
             <template v-else-if="col.key === 'discount_type'">
-              {{ value.discount_type === 'percentage' ? 'Percentage' : 'Fixed' }}
+              {{ value.discount_type === 'percentage' ? $t('pages.products.percentage') : $t('pages.products.fixed') }}
             </template>
 
             <template v-else>
@@ -307,7 +307,7 @@
                   class="dropdown-item"
                   @click="handleAction('seo', value.id)"
                 >
-                  SEO
+                  {{ $t('pages.products.seo') }}
                 </button>
 
                 <button
@@ -315,14 +315,14 @@
                   class="dropdown-item"
                   @click="handleAction('draft', value.id)"
                 >
-                  {{ value.status == 1 ? 'Move to Draft' : 'Publish' }}
+                  {{ value.status == 1 ? $t('pages.products.moveToDraft') : $t('pages.products.publish') }}
                 </button>
 
                 <button
                   class="dropdown-item"
                   @click="handleAction('embed', value.id)"
                 >
-                  Embed
+                  {{ $t('pages.products.embed') }}
                 </button>
 
               </div>
@@ -339,8 +339,8 @@
 
       <!-- Header -->
       <div class="embed-header">
-        <h2>Product Preview</h2>
-        <button class="close-btn" @click="closeEmbed">✕</button>
+        <h2>{{ $t('pages.products.productPreview') }}</h2>
+        <button class="close-btn" :aria-label="$t('pages.products.close')" @click="closeEmbed">✕</button>
       </div>
 
       <div class="embed-body">
@@ -360,23 +360,23 @@
 
           <!-- Configuration -->
           <div class="config-box">
-            <h3>Configuration</h3>
+            <h3>{{ $t('pages.products.configuration') }}</h3>
             <div class="config-options">
               <label>
                 <input type="radio" value="none" v-model="borderType" />
-                No Border
+                {{ $t('pages.products.noBorder') }}
               </label>
 
               <label>
                 <input type="radio" value="solid" v-model="borderType" />
-                Have Border
+                {{ $t('pages.products.haveBorder') }}
               </label>
             </div>
           </div>
 
           <!-- Code Box -->
           <div class="code-box">
-            <h3>Code</h3>
+            <h3>{{ $t('pages.products.code') }}</h3>
 
             <textarea
               readonly
@@ -490,7 +490,7 @@
       defaultGridColumns() {
         return [
           { key: 'title', label: this.$t('index.title'), visible: true, locked: true },
-          { key: 'slug', label: 'Slug', visible: false },
+          { key: 'slug', label: this.$t('pages.products.slug'), visible: false },
           { key: 'status', label: this.$t('category.status'), visible: true },
           { key: 'brand_id', label: this.$t('prod.brand'), visible: true },
           { key: 'categories', label: this.$t('error.cat'), visible: true },
@@ -498,10 +498,10 @@
           { key: 'purchased', label: this.$t('prod.purchased'), currency: true, visible: true },
           { key: 'selling', label: this.$t('prod.selling'), currency: true, visible: true },
           { key: 'offered', label: this.$t('prod.offered'), currency: true, visible: true },
-          { key: 'discount_type', label: 'Discount Type', visible: false },
-          { key: 'discount_value', label: 'Discount Value', visible: false },
-          { key: 'unit', label: 'Unit', visible: false },
-          { key: 'procurement', label: 'Procurement', visible: false },
+          { key: 'discount_type', label: this.$t('pages.products.discountType'), visible: false },
+          { key: 'discount_value', label: this.$t('pages.products.discountValue'), visible: false },
+          { key: 'unit', label: this.$t('pages.products.unit'), visible: false },
+          { key: 'procurement', label: this.$t('pages.products.procurement'), visible: false },
           { key: 'views', label: this.$t('prod.views'), visible: true },
           { key: 'created', label: this.$t('category.created'), visible: true }
         ]
@@ -675,7 +675,7 @@
 
       copyGeneratedCode() {
         navigator.clipboard.writeText(this.generatedIframeCode)
-        this.showAlert('Embed code copied!')
+        this.showAlert(this.$t('pages.products.embedCopied'))
       },
       async duplicateProduct(productId) {
         if (!confirm(this.$t('prod.confirmDuplicate'))) return;
@@ -694,11 +694,11 @@
           const duplicateProductId = response.data && response.data.id;
 
           if (!duplicateProductId) {
-            this.showAlert(response.data?.message || 'You cannot duplicate this product', 'error');
+            this.showAlert(response.data?.message || this.$t('pages.products.cannotDuplicate'), 'error');
             return;
           }
 
-          this.showAlert('Product duplicated successfully!');
+          this.showAlert(this.$t('pages.products.duplicated'));
 
           // Redirect to the duplicated product after a short delay
           setTimeout(() => {
@@ -706,7 +706,7 @@
           }, 2000);
         } catch (error) {
           console.error('Error duplicating product:', error);
-          this.showAlert('Error duplicating product', 'error');
+          this.showAlert(this.$t('pages.products.duplicateError'), 'error');
         } finally {
           this.loading = false;
         }
@@ -730,15 +730,15 @@
           )
 
           if (Number(data.status) !== 200) {
-            this.showAlert(data.message || 'Could not change the status', 'error')
+            this.showAlert(data.message || this.$t('pages.products.statusChangeFailed'), 'error')
             return
           }
 
-          this.showAlert(next === 1 ? 'Product published' : 'Product moved to draft')
+          this.showAlert(next === 1 ? this.$t('pages.products.published') : this.$t('pages.products.movedToDraft'))
 
           await this.$refs.listPage.fetchingData()
         } catch (e) {
-          this.showAlert('Could not change the status', 'error')
+          this.showAlert(this.$t('pages.products.statusChangeFailed'), 'error')
         } finally {
           this.loading = false
         }

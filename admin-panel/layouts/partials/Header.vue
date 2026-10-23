@@ -15,7 +15,7 @@
             class="expand-btn"
             :class="{ active: sectionsExpanded }"
             @click="toggleAllSections"
-            :title="sectionsExpanded ? 'Collapse all' : 'Expand all'"
+            :title="sectionsExpanded ? $t('sidebar.collapseAll') : $t('sidebar.expandAll')"
         >
             <i
               class="fa-solid"
@@ -25,7 +25,7 @@
         <button
             class="toggle-menu-btn"
             :class="{ active: sidebarOpen }"
-            :title="sidebarOpen ? 'Collapse menu' : 'Expand menu'"
+            :title="sidebarOpen ? $t('sidebar.collapseMenu') : $t('sidebar.expandMenu')"
             @click.prevent="leftMenuToggle"
         >
             <i

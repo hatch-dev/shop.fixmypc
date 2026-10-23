@@ -5,7 +5,7 @@
     list-api="getMembershipPlans"
     delete-api="deleteMembershipPlan"
     route-name="membership-plans"
-    name="Membership Plans"
+    :name="$t('pages.membershipPlans.title')"
     gate="membership"
     :add-button="canAdd"
     :order-options="orderOptions"
@@ -19,11 +19,11 @@
           <input type="checkbox" @change="checkAll">
         </th>
         <th class="w-50x mx-w-50x">#</th>
-        <th>Plan</th>
-        <th>Price</th>
-        <th>Benefits</th>
-        <th>Members</th>
-        <th>Status</th>
+        <th>{{ $t('pages.membershipPlans.plan') }}</th>
+        <th>{{ $t('pages.membershipPlans.price') }}</th>
+        <th>{{ $t('pages.membershipPlans.benefits') }}</th>
+        <th>{{ $t('pages.membershipPlans.members') }}</th>
+        <th>{{ $t('category.status') }}</th>
         <th>&nbsp;</th>
       </tr>
 
@@ -42,9 +42,9 @@
         </td>
 
         <td>
-          <span v-if="Number(value.price) > 0" class="plan-price">{{ currencyIcon }}{{ money(value.price) }} <small>/ month</small></span>
-          <span v-if="Number(value.yearly_price) > 0" class="plan-price">{{ currencyIcon }}{{ money(value.yearly_price) }} <small>/ year</small></span>
-          <span v-if="value.trial_days > 0" class="sub-note">{{ value.trial_days }}-day free trial</span>
+          <span v-if="Number(value.price) > 0" class="plan-price">{{ currencyIcon }}{{ money(value.price) }} <small>{{ $t('pages.membershipPlans.perMonth') }}</small></span>
+          <span v-if="Number(value.yearly_price) > 0" class="plan-price">{{ currencyIcon }}{{ money(value.yearly_price) }} <small>{{ $t('pages.membershipPlans.perYear') }}</small></span>
+          <span v-if="value.trial_days > 0" class="sub-note">{{ $t('pages.membershipPlans.trialDays', { days: value.trial_days }) }}</span>
         </td>
 
         <td>{{ value.benefits_count || 0 }}</td>
@@ -64,8 +64,8 @@
         </td>
 
         <td>
-          <button @click.prevent="$refs.listPage.editItem(value.id)" class="lite-btn">Edit</button>
-          <button @click.prevent="$refs.listPage.deleteItem(value.id)" class="delete-btn lite-btn">Delete</button>
+          <button @click.prevent="$refs.listPage.editItem(value.id)" class="lite-btn">{{ $t('category.edit') }}</button>
+          <button @click.prevent="$refs.listPage.deleteItem(value.id)" class="delete-btn lite-btn">{{ $t('category.delete') }}</button>
         </td>
       </tr>
 
@@ -76,8 +76,8 @@
   <div v-if="planCount !== null && !canAdd" class="mp-one-plan">
     <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
     <div>
-      <strong>One membership plan at a time</strong>
-      <span>To change the price or benefits, edit the plan above. Existing members keep the price they signed up at.</span>
+      <strong>{{ $t('pages.membershipPlans.onePlanTitle') }}</strong>
+      <span>{{ $t('pages.membershipPlans.onePlanBody') }}</span>
     </div>
   </div>
   </div>
@@ -101,11 +101,11 @@ export default {
       planCount: null,
       maxPlans: 1,
       orderOptions: {
-        sort_order: { title: 'Display order' },
-        created_at: { title: 'Date' },
-        name: { title: 'Name' },
-        price: { title: 'Price' },
-        status: { title: 'Status' }
+        sort_order: { title: this.$t('pages.membershipPlans.displayOrder') },
+        created_at: { title: this.$t('category.date') },
+        name: { title: this.$t('pages.membershipPlans.name') },
+        price: { title: this.$t('pages.membershipPlans.price') },
+        status: { title: this.$t('category.status') }
       }
     }
   },
@@ -137,8 +137,8 @@ export default {
         && (!(Number(plan.yearly_price) > 0) || !!plan.stripe_yearly_price_id)
     },
     statusLabel(plan) {
-      if (!plan.status) return 'Off'
-      return this.synced(plan) ? 'On sale' : 'Not synced to Stripe'
+      if (!plan.status) return this.$t('pages.membershipPlans.statusOff')
+      return this.synced(plan) ? this.$t('pages.membershipPlans.statusOnSale') : this.$t('pages.membershipPlans.statusNotSynced')
     },
     statusClass(plan) {
       if (!plan.status) return 'pill-off'

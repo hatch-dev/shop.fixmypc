@@ -4,10 +4,10 @@
     set-api="setMembershipPlan"
     get-api="getMembershipPlan"
     route-name="membership-plans"
-    name="Membership Plan"
+    :name="$t('pages.membershipPlans.singular')"
     gate="membership"
     :validation-keys="['name']"
-    :validation-labels="{name: 'Plan name'}"
+    :validation-labels="{name: $t('pages.membershipPlans.planName')}"
     :result="result"
     @result="settingResult"
   >
@@ -26,26 +26,26 @@
         <div class="mp-section-head">
           <span class="mp-step">1</span>
           <div>
-            <h3 class="mp-section-title">Plan details</h3>
-            <p class="mp-section-sub">The name and line customers see on the Savers Club page.</p>
+            <h3 class="mp-section-title">{{ $t('pages.membershipPlans.planDetails') }}</h3>
+            <p class="mp-section-sub">{{ $t('pages.membershipPlans.planDetailsSub') }}</p>
           </div>
         </div>
 
         <div class="input-wrapper" data-field="name">
-          <label for="mp-name">Plan name</label>
-          <input id="mp-name" v-model="result.name" type="text" maxlength="100" placeholder="e.g. Premium"
+          <label for="mp-name">{{ $t('pages.membershipPlans.planName') }}</label>
+          <input id="mp-name" v-model="result.name" type="text" maxlength="100" :placeholder="$t('pages.membershipPlans.namePlaceholder')"
                  :class="{invalid: !result.name && hasError}">
           <div class="mp-field-foot">
-            <span v-if="!result.name && hasError" class="error">Give the plan a name.</span>
+            <span v-if="!result.name && hasError" class="error">{{ $t('pages.membershipPlans.nameRequired') }}</span>
             <field-error v-else :messages="fieldErrors && fieldErrors.name" />
             <span class="mp-count">{{ (result.name || '').length }}/100</span>
           </div>
         </div>
 
         <div class="input-wrapper" data-field="tagline">
-          <label for="mp-tagline">Tagline <span class="mp-optional">optional</span></label>
+          <label for="mp-tagline">{{ $t('pages.membershipPlans.tagline') }} <span class="mp-optional">{{ $t('pages.membershipPlans.optional') }}</span></label>
           <input id="mp-tagline" v-model="result.tagline" type="text" maxlength="255"
-                 placeholder="e.g. Unlock exclusive benefits and special discounts">
+                 :placeholder="$t('pages.membershipPlans.taglinePlaceholder')">
           <div class="mp-field-foot">
             <field-error :messages="fieldErrors && fieldErrors.tagline" />
             <span class="mp-count">{{ (result.tagline || '').length }}/255</span>
@@ -58,38 +58,38 @@
         <div class="mp-section-head">
           <span class="mp-step">2</span>
           <div>
-            <h3 class="mp-section-title">Pricing</h3>
-            <p class="mp-section-sub">Offer monthly, yearly or both; customers choose when they join. Billed by Stripe, cancel any time.</p>
+            <h3 class="mp-section-title">{{ $t('pages.membershipPlans.pricing') }}</h3>
+            <p class="mp-section-sub">{{ $t('pages.membershipPlans.pricingSub') }}</p>
           </div>
         </div>
 
         <div class="mp-grid">
           <div class="mp-field" data-field="price">
-            <label for="mp-price">Monthly price <span class="mp-optional">leave blank to not offer</span></label>
+            <label for="mp-price">{{ $t('pages.membershipPlans.monthlyPrice') }} <span class="mp-optional">{{ $t('pages.membershipPlans.leaveBlank') }}</span></label>
             <div class="mp-affix" :class="{invalid: noPrice && hasError}">
               <span class="mp-affix-text">{{ currencyIcon }}</span>
               <input id="mp-price" v-model="result.price" type="number" min="0.5" step="0.01" inputmode="decimal" placeholder="9.99">
-              <span class="mp-affix-text mp-affix-after">/ month</span>
+              <span class="mp-affix-text mp-affix-after">{{ $t('pages.membershipPlans.perMonth') }}</span>
             </div>
             <field-error :messages="fieldErrors && fieldErrors.price" />
           </div>
 
           <div class="mp-field" data-field="yearly_price">
-            <label for="mp-yearly">Yearly price <span class="mp-optional">leave blank to not offer</span></label>
+            <label for="mp-yearly">{{ $t('pages.membershipPlans.yearlyPrice') }} <span class="mp-optional">{{ $t('pages.membershipPlans.leaveBlank') }}</span></label>
             <div class="mp-affix" :class="{invalid: noPrice && hasError}">
               <span class="mp-affix-text">{{ currencyIcon }}</span>
               <input id="mp-yearly" v-model="result.yearly_price" type="number" min="0.5" step="0.01" inputmode="decimal" placeholder="99.00">
-              <span class="mp-affix-text mp-affix-after">/ year</span>
+              <span class="mp-affix-text mp-affix-after">{{ $t('pages.membershipPlans.perYear') }}</span>
             </div>
             <span v-if="yearlySaving" class="mp-saving">
-              <i class="fa-solid fa-tag" aria-hidden="true"></i> Saves {{ yearlySaving }}% against paying monthly
+              <i class="fa-solid fa-tag" aria-hidden="true"></i> {{ $t('pages.membershipPlans.savesAgainstMonthly', { pct: yearlySaving }) }}
             </span>
-            <span v-else-if="yearlyCostsMore" class="mp-error">Costs more than twelve monthly payments.</span>
+            <span v-else-if="yearlyCostsMore" class="mp-error">{{ $t('pages.membershipPlans.costsMore') }}</span>
             <field-error :messages="fieldErrors && fieldErrors.yearly_price" />
           </div>
         </div>
 
-        <p v-if="noPrice && hasError" class="mp-error mp-error-block">Enter a monthly price, a yearly price, or both.</p>
+        <p v-if="noPrice && hasError" class="mp-error mp-error-block">{{ $t('pages.membershipPlans.enterPrice') }}</p>
 
         <p v-if="!noPrice" class="mp-summary">
           <i class="fa-regular fa-circle-check" aria-hidden="true"></i>
@@ -97,7 +97,7 @@
         </p>
         <p v-if="isEditing && priceChanged" class="mp-hint mp-hint-warn">
           <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-          Saving creates new Stripe prices for new members. Existing members keep paying what they signed up at.
+          {{ $t('pages.membershipPlans.priceChangeWarn') }}
         </p>
       </section>
 
@@ -106,9 +106,9 @@
         <div class="mp-section-head">
           <span class="mp-step">3</span>
           <div>
-            <h3 class="mp-section-title">Benefits</h3>
+            <h3 class="mp-section-title">{{ $t('pages.membershipPlans.benefits') }}</h3>
             <p class="mp-section-sub">
-              Free delivery and the discount are applied at checkout; early access emails members about new products. Display lines are wording only.
+              {{ $t('pages.membershipPlans.benefitsSub') }}
             </p>
           </div>
         </div>
@@ -125,26 +125,26 @@
               </span>
 
               <button type="button" class="mp-benefit-main" :aria-expanded="openUid === b.uid ? 'true' : 'false'" @click="toggle(b)">
-                <span class="mp-benefit-title">{{ b.title || 'Untitled benefit' }}</span>
+                <span class="mp-benefit-title">{{ b.title || $t('pages.membershipPlans.untitledBenefit') }}</span>
                 <span class="mp-benefit-sub">{{ b.subtitle || typeInfo[b.type].hint }}</span>
               </button>
 
               <span class="mp-badge" :class="'mp-badge-' + b.type">{{ badge(b) }}</span>
-              <span v-if="b.highlight" class="mp-tile-flag" title="Shown as a tile">
+              <span v-if="b.highlight" class="mp-tile-flag" :title="$t('pages.membershipPlans.shownAsTile')">
                 <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i>
               </span>
 
               <div class="mp-tools">
-                <button type="button" class="mp-icon-btn" :disabled="index === 0" aria-label="Move up" @click="move(index, -1)">
+                <button type="button" class="mp-icon-btn" :disabled="index === 0" :aria-label="$t('pages.membershipPlans.moveUp')" @click="move(index, -1)">
                   <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="mp-icon-btn" :disabled="index === result.benefits.length - 1" aria-label="Move down" @click="move(index, 1)">
+                <button type="button" class="mp-icon-btn" :disabled="index === result.benefits.length - 1" :aria-label="$t('pages.membershipPlans.moveDown')" @click="move(index, 1)">
                   <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="mp-icon-btn mp-icon-danger" aria-label="Remove benefit" @click="remove(index)">
+                <button type="button" class="mp-icon-btn mp-icon-danger" :aria-label="$t('pages.membershipPlans.removeBenefit')" @click="remove(index)">
                   <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="mp-icon-btn" :aria-label="openUid === b.uid ? 'Close' : 'Edit'" @click="toggle(b)">
+                <button type="button" class="mp-icon-btn" :aria-label="openUid === b.uid ? $t('pages.membershipPlans.close') : $t('category.edit')" @click="toggle(b)">
                   <i class="fa-solid" :class="openUid === b.uid ? 'fa-chevron-up' : 'fa-pen'" aria-hidden="true"></i>
                 </button>
               </div>
@@ -153,59 +153,59 @@
             <div v-if="openUid === b.uid" class="mp-benefit-edit">
               <div class="mp-grid mp-grid-2">
                 <div class="mp-field">
-                  <label>Title</label>
-                  <input v-model="b.title" type="text" maxlength="100" placeholder="e.g. Free Shipping"
+                  <label>{{ $t('index.title') }}</label>
+                  <input v-model="b.title" type="text" maxlength="100" :placeholder="$t('pages.membershipPlans.benefitTitlePlaceholder')"
                          :class="{invalid: !b.title && hasError}">
-                  <span v-if="!b.title && hasError" class="mp-error">Every benefit needs a title.</span>
+                  <span v-if="!b.title && hasError" class="mp-error">{{ $t('pages.membershipPlans.benefitTitleRequired') }}</span>
                 </div>
                 <div class="mp-field">
-                  <label>Subtitle <span class="mp-optional">optional</span></label>
-                  <input v-model="b.subtitle" type="text" maxlength="255" placeholder="e.g. On all orders, no minimum">
+                  <label>{{ $t('pages.membershipPlans.subtitle') }} <span class="mp-optional">{{ $t('pages.membershipPlans.optional') }}</span></label>
+                  <input v-model="b.subtitle" type="text" maxlength="255" :placeholder="$t('pages.membershipPlans.subtitlePlaceholder')">
                 </div>
               </div>
 
               <div class="mp-field">
-                <label>Icon</label>
+                <label>{{ $t('pages.membershipPlans.icon') }}</label>
                 <div class="mp-icons">
                   <button v-for="icon in iconChoices" :key="icon" type="button" class="mp-icon-choice"
                           :class="{active: b.icon === icon}" :aria-label="icon" @click="b.icon = icon">
                     <i v-if="isFaIcon(icon)" :class="faClass(icon)" aria-hidden="true"></i>
                     <span v-else>{{ icon }}</span>
                   </button>
-                  <input v-model="b.icon" type="text" maxlength="60" class="mp-icon-input" placeholder="fa-… or symbol" aria-label="Custom icon">
+                  <input v-model="b.icon" type="text" maxlength="60" class="mp-icon-input" :placeholder="$t('pages.membershipPlans.iconPlaceholder')" :aria-label="$t('pages.membershipPlans.customIcon')">
                 </div>
               </div>
 
               <div v-if="b.type === 'percent_discount'" class="mp-grid">
                 <div class="mp-field">
-                  <label>Discount</label>
+                  <label>{{ $t('pages.membershipPlans.discount') }}</label>
                   <div class="mp-affix mp-affix-end" :class="{invalid: !(Number(b.percent) > 0) && hasError}">
                     <input v-model="b.percent" type="number" min="0.01" max="100" step="0.01" placeholder="10">
                     <span class="mp-affix-text">%</span>
                   </div>
                 </div>
                 <div class="mp-field">
-                  <label>Most off one order <span class="mp-optional">optional</span></label>
+                  <label>{{ $t('pages.membershipPlans.maxDiscount') }} <span class="mp-optional">{{ $t('pages.membershipPlans.optional') }}</span></label>
                   <div class="mp-affix">
                     <span class="mp-affix-text">{{ currencyIcon }}</span>
-                    <input v-model="b.max_discount" type="number" min="0" step="0.01" placeholder="No limit">
+                    <input v-model="b.max_discount" type="number" min="0" step="0.01" :placeholder="$t('pages.membershipPlans.noLimit')">
                   </div>
                 </div>
                 <div class="mp-field">
-                  <label>Minimum order <span class="mp-optional">optional</span></label>
+                  <label>{{ $t('pages.membershipPlans.minOrder') }} <span class="mp-optional">{{ $t('pages.membershipPlans.optional') }}</span></label>
                   <div class="mp-affix">
                     <span class="mp-affix-text">{{ currencyIcon }}</span>
-                    <input v-model="b.min_order" type="number" min="0" step="0.01" placeholder="None">
+                    <input v-model="b.min_order" type="number" min="0" step="0.01" :placeholder="$t('pages.membershipPlans.none')">
                   </div>
                 </div>
               </div>
 
               <div v-if="b.type === 'free_shipping'" class="mp-grid">
                 <div class="mp-field">
-                  <label>Minimum order <span class="mp-optional">optional</span></label>
+                  <label>{{ $t('pages.membershipPlans.minOrder') }} <span class="mp-optional">{{ $t('pages.membershipPlans.optional') }}</span></label>
                   <div class="mp-affix">
                     <span class="mp-affix-text">{{ currencyIcon }}</span>
-                    <input v-model="b.min_order" type="number" min="0" step="0.01" placeholder="None">
+                    <input v-model="b.min_order" type="number" min="0" step="0.01" :placeholder="$t('pages.membershipPlans.none')">
                   </div>
                 </div>
               </div>
@@ -214,32 +214,32 @@
                 <template v-if="b.type === 'percent_discount'">
                   <div class="mp-switch-row">
                     <div>
-                      <strong>Include sale items</strong>
-                      <span>Also discount items already reduced by a flash sale or clearance.</span>
+                      <strong>{{ $t('pages.membershipPlans.includeSaleItems') }}</strong>
+                      <span>{{ $t('pages.membershipPlans.includeSaleItemsSub') }}</span>
                     </div>
                     <button type="button" class="mp-switch" role="switch" :aria-checked="b.include_sale_items ? 'true' : 'false'"
-                            aria-label="Include sale items" @click="b.include_sale_items = !b.include_sale_items">
+                            :aria-label="$t('pages.membershipPlans.includeSaleItems')" @click="b.include_sale_items = !b.include_sale_items">
                       <span class="mp-switch-knob"></span>
                     </button>
                   </div>
                   <div class="mp-switch-row">
                     <div>
-                      <strong>Include business prices</strong>
-                      <span>Also discount lines charged at a business or trade band price.</span>
+                      <strong>{{ $t('pages.membershipPlans.includeBusinessPrices') }}</strong>
+                      <span>{{ $t('pages.membershipPlans.includeBusinessPricesSub') }}</span>
                     </div>
                     <button type="button" class="mp-switch" role="switch" :aria-checked="b.include_business_prices ? 'true' : 'false'"
-                            aria-label="Include business prices" @click="b.include_business_prices = !b.include_business_prices">
+                            :aria-label="$t('pages.membershipPlans.includeBusinessPrices')" @click="b.include_business_prices = !b.include_business_prices">
                       <span class="mp-switch-knob"></span>
                     </button>
                   </div>
                 </template>
                 <div class="mp-switch-row">
                   <div>
-                    <strong>Show as a tile</strong>
-                    <span>An icon across the top of the membership box. Every benefit is also listed under the plan's benefits.</span>
+                    <strong>{{ $t('pages.membershipPlans.showAsTile') }}</strong>
+                    <span>{{ $t('pages.membershipPlans.showAsTileSub') }}</span>
                   </div>
                   <button type="button" class="mp-switch" role="switch" :aria-checked="b.highlight ? 'true' : 'false'"
-                          aria-label="Show as a tile" @click="b.highlight = !b.highlight">
+                          :aria-label="$t('pages.membershipPlans.showAsTile')" @click="b.highlight = !b.highlight">
                     <span class="mp-switch-knob"></span>
                   </button>
                 </div>
@@ -252,13 +252,13 @@
             </div>
           </li>
         </ul>
-        <p v-else class="mp-empty">No benefits yet. Add at least one so customers know what they are paying for.</p>
+        <p v-else class="mp-empty">{{ $t('pages.membershipPlans.noBenefits') }}</p>
 
         <div class="mp-add">
-          <span class="mp-add-label">Add</span>
+          <span class="mp-add-label">{{ $t('pages.membershipPlans.add') }}</span>
           <button v-for="(info, type) in typeInfo" :key="type" type="button" class="mp-preset"
                   :disabled="type !== 'display' && hasType(type)"
-                  :title="type !== 'display' && hasType(type) ? 'A plan can have only one of these' : ''"
+                  :title="type !== 'display' && hasType(type) ? $t('pages.membershipPlans.onlyOne') : ''"
                   @click="addBenefit(type)">
             <i :class="'fa-solid ' + info.icon" aria-hidden="true"></i> {{ info.title }}
           </button>
@@ -273,24 +273,24 @@
         <div class="mp-side-card">
           <div class="mp-side-row">
             <div>
-              <h4 class="mp-side-title">On sale</h4>
+              <h4 class="mp-side-title">{{ $t('pages.membershipPlans.statusOnSale') }}</h4>
               <p class="mp-side-sub">
-                {{ result.status ? 'Offered on the Savers Club page.' : 'Hidden from customers. Existing members keep their plan.' }}
+                {{ result.status ? $t('pages.membershipPlans.offeredOnPage') : $t('pages.membershipPlans.hiddenFromCustomers') }}
               </p>
             </div>
             <button type="button" class="mp-switch" role="switch" :aria-checked="result.status ? 'true' : 'false'"
-                    aria-label="On sale" @click="result.status = result.status ? 0 : 1">
+                    :aria-label="$t('pages.membershipPlans.statusOnSale')" @click="result.status = result.status ? 0 : 1">
               <span class="mp-switch-knob"></span>
             </button>
           </div>
         </div>
 
         <div class="mp-side-card">
-          <h4 class="mp-side-title">Customer preview</h4>
+          <h4 class="mp-side-title">{{ $t('pages.membershipPlans.customerPreview') }}</h4>
           <div class="mp-preview" :class="{off: !result.status}">
             <div class="mp-preview-head">
-              <strong>{{ (result.name || 'Plan') + ' Membership' }}</strong>
-              <span>{{ result.tagline || 'Unlock exclusive benefits and special discounts' }}</span>
+              <strong>{{ $t('pages.membershipPlans.previewMembership', { name: result.name || $t('pages.membershipPlans.plan') }) }}</strong>
+              <span>{{ result.tagline || $t('pages.membershipPlans.defaultTagline') }}</span>
             </div>
             <div v-if="previewTiles.length" class="mp-preview-tiles">
               <div v-for="b in previewTiles" :key="b.uid" class="mp-preview-tile">
@@ -298,21 +298,21 @@
                   <i v-if="isFaIcon(b.icon)" :class="faClass(b.icon)" aria-hidden="true"></i>
                   <span v-else>{{ b.icon || '•' }}</span>
                 </span>
-                <b>{{ b.title || 'Untitled' }}</b>
+                <b>{{ b.title || $t('pages.membershipPlans.untitled') }}</b>
                 <small>{{ b.subtitle }}</small>
               </div>
             </div>
-            <div v-if="offered.length > 1" class="mp-preview-toggle" role="radiogroup" aria-label="Preview billing">
+            <div v-if="offered.length > 1" class="mp-preview-toggle" role="radiogroup" :aria-label="$t('pages.membershipPlans.previewBilling')">
               <button v-for="i in offered" :key="i" type="button" role="radio"
                       :aria-checked="shownInterval === i ? 'true' : 'false'" @click="previewInterval = i">
-                {{ i === 'year' ? 'Yearly' : 'Monthly' }}
+                {{ i === 'year' ? $t('pages.membershipPlans.yearly') : $t('pages.membershipPlans.monthly') }}
                 <em v-if="i === 'year' && yearlySaving">-{{ yearlySaving }}%</em>
               </button>
             </div>
             <div class="mp-preview-plan">
               <div class="mp-preview-plan-top">
                 <div>
-                  <b>{{ result.name || 'Plan' }}</b>
+                  <b>{{ result.name || $t('pages.membershipPlans.plan') }}</b>
                   <small>{{ previewBilled }}</small>
                 </div>
                 <div class="mp-preview-price">
@@ -320,31 +320,31 @@
                   <small>{{ perLabel }}</small>
                 </div>
               </div>
-              <span class="mp-preview-join">{{ 'Join ' + (result.name || 'plan') }}</span>
+              <span class="mp-preview-join">{{ $t('pages.membershipPlans.joinPlan', { name: result.name || $t('pages.membershipPlans.planLower') }) }}</span>
             </div>
           </div>
-          <p v-if="!result.status" class="mp-side-sub mt-8">Customers will not see this until the plan is on sale.</p>
+          <p v-if="!result.status" class="mp-side-sub mt-8">{{ $t('pages.membershipPlans.notOnSaleNote') }}</p>
         </div>
 
         <div v-if="isEditing" class="mp-side-card">
           <div class="mp-side-row">
             <h4 class="mp-side-title">Stripe</h4>
             <span class="mp-chip" :class="synced ? 'ok' : 'wait'">
-              {{ synced ? 'Synced' : 'Not synced' }}
+              {{ synced ? $t('pages.membershipPlans.synced') : $t('pages.membershipPlans.notSynced') }}
             </span>
           </div>
           <dl class="mp-dl">
-            <dt>Product</dt><dd>{{ result.stripe_product_id || '—' }}</dd>
-            <dt>Monthly</dt><dd>{{ result.stripe_price_id || (Number(result.price) > 0 ? 'Not created yet' : 'Not offered') }}</dd>
-            <dt>Yearly</dt><dd>{{ result.stripe_yearly_price_id || (Number(result.yearly_price) > 0 ? 'Not created yet' : 'Not offered') }}</dd>
-            <dt>Members</dt>
-            <dd><nuxt-link :to="`/memberships?plan_id=${result.id}`" class="link">{{ result.members_count || 0 }} with benefits</nuxt-link></dd>
+            <dt>{{ $t('pages.membershipPlans.product') }}</dt><dd>{{ result.stripe_product_id || '—' }}</dd>
+            <dt>{{ $t('pages.membershipPlans.monthly') }}</dt><dd>{{ result.stripe_price_id || (Number(result.price) > 0 ? $t('pages.membershipPlans.notCreatedYet') : $t('pages.membershipPlans.notOffered')) }}</dd>
+            <dt>{{ $t('pages.membershipPlans.yearly') }}</dt><dd>{{ result.stripe_yearly_price_id || (Number(result.yearly_price) > 0 ? $t('pages.membershipPlans.notCreatedYet') : $t('pages.membershipPlans.notOffered')) }}</dd>
+            <dt>{{ $t('pages.membershipPlans.members') }}</dt>
+            <dd><nuxt-link :to="`/memberships?plan_id=${result.id}`" class="link">{{ $t('pages.membershipPlans.withBenefits', { count: result.members_count || 0 }) }}</nuxt-link></dd>
           </dl>
           <button type="button" class="mp-btn mp-btn-ghost mp-btn-block" :disabled="syncing" @click="syncStripe">
             <i class="fa-solid fa-rotate" :class="{'fa-spin': syncing}" aria-hidden="true"></i>
-            {{ syncing ? 'Syncing…' : 'Sync with Stripe' }}
+            {{ syncing ? $t('pages.membershipPlans.syncing') : $t('pages.membershipPlans.syncWithStripe') }}
           </button>
-          <p class="mp-side-sub mt-8">Happens on every save while the plan is on sale.</p>
+          <p class="mp-side-sub mt-8">{{ $t('pages.membershipPlans.syncNote') }}</p>
         </div>
 
       </div>
@@ -402,28 +402,28 @@ export default {
       previewInterval: 'month',
       typeInfo: {
         free_shipping: {
-          title: 'Free delivery',
+          title: this.$t('pages.membershipPlans.freeDelivery'),
           icon: 'fa-truck',
-          hint: 'Delivery is free at checkout',
-          note: 'Delivery costs nothing at checkout. Collection keeps its own price.'
+          hint: this.$t('pages.membershipPlans.freeDeliveryHint'),
+          note: this.$t('pages.membershipPlans.freeDeliveryNote')
         },
         percent_discount: {
-          title: 'Percentage discount',
+          title: this.$t('pages.membershipPlans.percentDiscount'),
           icon: 'fa-percent',
-          hint: 'Taken off the order at checkout',
-          note: 'Never combined with a loyalty group discount: the customer gets whichever is bigger. Vouchers and points still apply.'
+          hint: this.$t('pages.membershipPlans.percentDiscountHint'),
+          note: this.$t('pages.membershipPlans.percentDiscountNote')
         },
         early_access: {
-          title: 'Early access',
+          title: this.$t('pages.membershipPlans.earlyAccess'),
           icon: 'fa-star',
-          hint: 'Emailed when new products arrive',
-          note: 'Members are emailed whenever new products go on sale (products published together come in one email). Anyone can buy them as normal. Members can turn the emails off.'
+          hint: this.$t('pages.membershipPlans.earlyAccessHint'),
+          note: this.$t('pages.membershipPlans.earlyAccessNote')
         },
         display: {
-          title: 'Display line',
+          title: this.$t('pages.membershipPlans.displayLine'),
           icon: 'fa-align-left',
-          hint: 'Wording only',
-          note: 'Wording only. Nothing is applied at checkout.'
+          hint: this.$t('pages.membershipPlans.wordingOnly'),
+          note: this.$t('pages.membershipPlans.displayLineNote')
         }
       },
       iconChoices: ['fa-truck', '%', 'fa-star', 'fa-bolt', 'fa-gift', 'fa-headset', 'fa-crown', 'fa-tag', 'fa-shield-halved', 'fa-rotate-left'],
@@ -480,19 +480,18 @@ export default {
       return m > 0 && y > 0 && y > m * 12
     },
     perLabel() {
-      return this.shownInterval === 'year' ? 'per year' : 'per month'
+      return this.shownInterval === 'year' ? this.$t('pages.membershipPlans.perYearWord') : this.$t('pages.membershipPlans.perMonthWord')
     },
     previewBilled() {
-      const every = this.shownInterval === 'year' ? 'yearly' : 'monthly'
-      return `Billed ${every}. Cancel anytime.`
+      return this.shownInterval === 'year' ? this.$t('pages.membershipPlans.billedYearly') : this.$t('pages.membershipPlans.billedMonthly')
     },
     priceSummary() {
-      const m = Number(this.result.price) > 0 ? `${this.currencyIcon}${this.money(this.result.price)} per month` : null
-      const y = Number(this.result.yearly_price) > 0 ? `${this.currencyIcon}${this.money(this.result.yearly_price)} per year` : null
+      const m = Number(this.result.price) > 0 ? this.$t('pages.membershipPlans.pricePerMonth', { price: `${this.currencyIcon}${this.money(this.result.price)}` }) : null
+      const y = Number(this.result.yearly_price) > 0 ? this.$t('pages.membershipPlans.pricePerYear', { price: `${this.currencyIcon}${this.money(this.result.yearly_price)}` }) : null
       if (m && y) {
-        return `Customers choose ${m} or ${y}${this.yearlySaving ? ` (saves ${this.yearlySaving}%)` : ''}.`
+        return this.$t('pages.membershipPlans.summaryBoth', { m, y, saving: this.yearlySaving ? this.$t('pages.membershipPlans.summarySaves', { pct: this.yearlySaving }) : '' })
       }
-      return `Members pay ${m || y}, until they cancel.`
+      return this.$t('pages.membershipPlans.summaryOne', { price: m || y })
     },
     previewTiles() {
       return this.result.benefits.filter(b => b.highlight).slice(0, 3)
@@ -557,10 +556,10 @@ export default {
       return this.result.benefits.some(b => b.type === type)
     },
     badge(b) {
-      if (b.type === 'percent_discount') return Number(b.percent) > 0 ? `${Number(b.percent)}% off` : 'Discount'
-      if (b.type === 'free_shipping') return 'Free delivery'
-      if (b.type === 'early_access') return 'New product emails'
-      return 'Display'
+      if (b.type === 'percent_discount') return Number(b.percent) > 0 ? this.$t('pages.membershipPlans.percentOff', { pct: Number(b.percent) }) : this.$t('pages.membershipPlans.discount')
+      if (b.type === 'free_shipping') return this.$t('pages.membershipPlans.freeDelivery')
+      if (b.type === 'early_access') return this.$t('pages.membershipPlans.newProductEmails')
+      return this.$t('pages.membershipPlans.display')
     },
     toggle(b) {
       this.openUid = this.openUid === b.uid ? null : b.uid
@@ -592,13 +591,13 @@ export default {
         const data = await this.setById({ id: this.result.id, params: {}, api: 'syncMembershipPlan' })
         if (data) {
           this.settingResult(data)
-          this.setToastMessage('Synced with Stripe')
+          this.setToastMessage(this.$t('pages.membershipPlans.syncedToast'))
         } else {
           const errors = this.$store.getters['ui/errors']
-          this.stripeWarning = (errors?.form || [])[0] || 'Stripe did not accept this plan.'
+          this.stripeWarning = (errors?.form || [])[0] || this.$t('pages.membershipPlans.stripeRejected')
         }
       } catch (e) {
-        this.setToastError(e?.message || 'Stripe did not accept this plan')
+        this.setToastError(e?.message || this.$t('pages.membershipPlans.stripeRejectedShort'))
       } finally {
         this.syncing = false
       }
@@ -609,7 +608,7 @@ export default {
         const data = await this.getRequest({ api: 'getMembershipPlans', params: { page: 1 } })
         const existing = (data?.data || [])[0]
         if (existing && Number(data.plan_count) >= Number(data.max_plans || 1)) {
-          this.setToastMessage('There is already a membership plan. Edit it here.')
+          this.setToastMessage(this.$t('pages.membershipPlans.alreadyExists'))
           this.$router.replace(`/membership-plans/${existing.id}`)
         }
       } catch (e) {

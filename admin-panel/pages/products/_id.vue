@@ -18,10 +18,10 @@
           class="btn secondary-btn pv2-back"
           @click.prevent="goBack"
         >
-          <i class="fas fa-arrow-left mr-5" /> Back
+          <i class="fas fa-arrow-left mr-5" /> {{ $t('pages.products.back') }}
         </button>
         <span class="pv2-divider" />
-        <h4 class="pv2-title">{{ isAdding ? 'New Product' : (result.title || 'Product') }}</h4>
+        <h4 class="pv2-title">{{ isAdding ? $t('pages.products.newProduct') : (result.title || $t('pages.products.product')) }}</h4>
         <span
           class="pv2-badge"
           :class="statusBadgeClass"
@@ -34,18 +34,18 @@
         <button
           class="btn secondary-btn"
           @click.prevent="goBack"
-        >Discard</button>
+        >{{ $t('pages.products.discard') }}</button>
         <ajax-button
           name="save-edit"
           class="secondary-btn"
-          text="Save Draft"
+          :text="$t('pages.products.saveDraft')"
           :fetching-data="formSubmitting && !redirect"
           @click.native="submitAll('save-edit')"
         />
         <ajax-button
           name="save"
           class="primary-btn"
-          :text="isAdding ? 'Publish' : 'Update'"
+          :text="isAdding ? $t('pages.products.publish') : $t('pages.products.update')"
           :fetching-data="formSubmitting && redirect"
           @click.native="submitAll('save')"
         />
@@ -92,7 +92,7 @@
           class="pv2-err-banner"
         >
           <i class="fas fa-exclamation-circle" />
-          <span>Please fix <strong>{{ errorCount }}</strong> required field{{ errorCount > 1 ? 's' : '' }} — highlighted tabs are marked in the sidebar.</span>
+          <span>{{ $t('pages.products.pleaseFix') }} <strong>{{ errorCount }}</strong> {{ errorCount > 1 ? $t('pages.products.requiredFieldsMany') : $t('pages.products.requiredFieldsOne') }}</span>
         </div>
 
         <error-formatter />
@@ -102,7 +102,7 @@
           <!-- ==================== BASIC INFO ==================== -->
           <section v-show="activeTab === 'basic'">
             <div class="pv2-card">
-              <h5 class="pv2-ctitle">Product Information</h5>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.productInformation') }}</h5>
 
               <div class="input-wrapper">
                 <label>{{ $t('index.title') }}</label>
@@ -122,10 +122,10 @@
               </div>
 
               <div class="input-wrapper">
-                <label>Short Heading</label>
+                <label>{{ $t('pages.products.shortHeading') }}</label>
                 <input
                   type="text"
-                  placeholder="Short Heading"
+                  :placeholder="$t('pages.products.shortHeading')"
                   v-model="result.short_heading"
                   :class="{invalid: !result.short_heading && hasError}"
                 >
@@ -133,7 +133,7 @@
                   class="error"
                   v-if="!result.short_heading && hasError"
                 >
-                  {{ $t('category.req', { type: 'Short Heading' }) }}
+                  {{ $t('category.req', { type: $t('pages.products.shortHeading') }) }}
                 </span>
               </div>
 
@@ -184,8 +184,8 @@
             </div>
 
             <div class="pv2-card">
-              <h5 class="pv2-ctitle">Variant Type</h5>
-              <p class="pv2-help">Does this product have multiple options (colour, storage, size)?</p>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.variantType') }}</h5>
+              <p class="pv2-help">{{ $t('pages.products.variantTypeHelp') }}</p>
               <div class="pv2-type-grid two">
                 <div
                   class="pv2-type"
@@ -193,8 +193,8 @@
                   @click="uiVariable = false"
                 >
                   <i class="fas fa-box" />
-                  <div class="pv2-type-l">Simple Product</div>
-                  <div class="pv2-type-d">One SKU, one price</div>
+                  <div class="pv2-type-l">{{ $t('pages.products.simpleProduct') }}</div>
+                  <div class="pv2-type-d">{{ $t('pages.products.simpleProductDesc') }}</div>
                 </div>
                 <div
                   class="pv2-type"
@@ -202,8 +202,8 @@
                   @click="setVariable"
                 >
                   <i class="fas fa-sitemap" />
-                  <div class="pv2-type-l">Variable Product</div>
-                  <div class="pv2-type-d">Multiple options &amp; SKUs</div>
+                  <div class="pv2-type-l">{{ $t('pages.products.variableProduct') }}</div>
+                  <div class="pv2-type-d">{{ $t('pages.products.variableProductDesc') }}</div>
                 </div>
               </div>
             </div>
@@ -212,7 +212,7 @@
           <!-- ==================== CONTENT ==================== -->
           <section v-show="activeTab === 'content'">
             <div class="pv2-card">
-              <h5 class="pv2-ctitle">Overview &amp; Description</h5>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.overviewDescription') }}</h5>
               <div
                 class="input-wrapper"
                 :class="{'whysigwyg-error': !!!result.overview && hasError}"
@@ -249,7 +249,7 @@
             </div>
 
             <div class="pv2-card">
-              <h5 class="pv2-ctitle">Technical Specifications</h5>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.technicalSpecifications') }}</h5>
 
               <div
                 class="pv2-spec-box"
@@ -257,18 +257,18 @@
                 :key="groupIndex"
               >
                 <div class="pv2-spec-cat">
-                  <label class="pv2-spec-label">Spec Category</label>
+                  <label class="pv2-spec-label">{{ $t('pages.products.specCategory') }}</label>
                   <div class="pv2-spec-row">
                     <input
                       type="text"
                       class="pv2-spec-input"
-                      placeholder="e.g. Display, Processor, Battery"
+                      :placeholder="$t('pages.products.specCategoryPlaceholder')"
                       v-model="group.group"
                     >
                     <button
                       class="pv2-spec-del"
                       @click.prevent="removeGroup(groupIndex)"
-                      title="Remove category"
+                      :title="$t('pages.products.removeCategory')"
                     >
                       <i class="fas fa-trash"></i>
                     </button>
@@ -283,13 +283,13 @@
                   <input
                     type="text"
                     class="pv2-spec-input"
-                    placeholder="Enter specification"
+                    :placeholder="$t('pages.products.enterSpecification')"
                     v-model="item.value"
                   >
                   <button
                     class="pv2-spec-del"
                     @click.prevent="removeItem(groupIndex, itemIndex)"
-                    title="Remove specification"
+                    :title="$t('pages.products.removeSpecification')"
                   >
                     <i class="fas fa-trash"></i>
                   </button>
@@ -299,7 +299,7 @@
                   class="pv2-spec-add"
                   @click.prevent="addItem(groupIndex)"
                 >
-                  <i class="fas fa-plus mr-5" /> Add Spec
+                  <i class="fas fa-plus mr-5" /> {{ $t('pages.products.addSpec') }}
                 </button>
               </div>
 
@@ -307,7 +307,7 @@
                 class="primary-btn pv2-spec-addcat"
                 @click.prevent="addGroup"
               >
-                <i class="fas fa-plus mr-5" /> Add Spec Category
+                <i class="fas fa-plus mr-5" /> {{ $t('pages.products.addSpecCategory') }}
               </button>
             </div>
           </section>
@@ -405,7 +405,7 @@
               class="pv2-card"
               v-if="!isAdding"
             >
-              <h5 class="pv2-ctitle">Product Feature Images</h5>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.productFeatureImages') }}</h5>
               <product-feature-images
                 :feature-images="result.feature_images"
                 @result="featureImagesResult"
@@ -417,7 +417,7 @@
               v-if="isAdding"
             >
               <i class="fas fa-info-circle mr-5" />
-              Gallery &amp; feature images become available after the product is first saved.
+              {{ $t('pages.products.galleryAfterSave') }}
             </div>
           </section>
 
@@ -439,7 +439,7 @@
             </div>
 
             <div class="pv2-card">
-              <h5 class="pv2-ctitle">Pricing</h5>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.pricing') }}</h5>
               <div class="pv2-grid c3">
                 <!--
                   A "Wholesale Price" and "Discount" pair used to sit here,
@@ -451,11 +451,10 @@
                   price anywhere, which is worse than having no field at all.
                 -->
                 <div class="input-wrapper pv2-span-2">
-                  <label>Wholesale &amp; trade pricing</label>
+                  <label>{{ $t('pages.products.wholesaleTradePricing') }}</label>
                   <p class="pv2-field-note">
-                    Quantity bands for business and trade accounts are set per
-                    product under
-                    <nuxt-link class="link" to="/business-products">Business Products</nuxt-link>.
+                    {{ $t('pages.products.quantityBandsNote') }}
+                    <nuxt-link class="link" to="/business-products">{{ $t('pages.products.businessProducts') }}</nuxt-link>.
                   </p>
                 </div>
 
@@ -506,50 +505,49 @@
             </div>
 
             <div class="pv2-card pv2-profit">
-              <h5 class="pv2-ctitle">Live Profit Calculator</h5>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.liveProfitCalculator') }}</h5>
               <div class="pv2-profit-grid">
                 <div>
-                  <div class="pv2-profit-l">Cost</div>
+                  <div class="pv2-profit-l">{{ $t('pages.products.cost') }}</div>
                   <div class="pv2-profit-v">{{ currencyIcon }}{{ uiCost.toFixed(2) }}</div>
                 </div>
                 <div>
                   <!-- the price a customer pays: the offer when there is one -->
                   <div class="pv2-profit-l">
-                    Price
-                    <span v-if="result.offered > 0 && result.offered < result.selling" class="pv2-profit-note">offer</span>
+                    {{ $t('pages.products.price') }}
+                    <span v-if="result.offered > 0 && result.offered < result.selling" class="pv2-profit-note">{{ $t('pages.products.offer') }}</span>
                   </div>
                   <div class="pv2-profit-v">{{ currencyIcon }}{{ uiPrice.toFixed(2) }}</div>
                 </div>
                 <div v-if="uiPriceIncludesVat">
                   <!-- VAT is collected on Revenue's behalf, so it is not income -->
-                  <div class="pv2-profit-l">Ex&#8209;VAT <span class="pv2-profit-note">&minus;{{ uiVatRate }}%</span></div>
+                  <div class="pv2-profit-l">{{ $t('pages.products.exVat') }} <span class="pv2-profit-note">&minus;{{ uiVatRate }}%</span></div>
                   <div class="pv2-profit-v">{{ currencyIcon }}{{ uiNetRevenue.toFixed(2) }}</div>
                 </div>
                 <div>
-                  <div class="pv2-profit-l">Profit</div>
+                  <div class="pv2-profit-l">{{ $t('pages.products.profit') }}</div>
                   <div class="pv2-profit-v" :style="{color: uiProfit >= 0 ? '#059669' : '#dc2626'}">{{ currencyIcon }}{{ uiProfit.toFixed(2) }}</div>
                 </div>
                 <div>
-                  <div class="pv2-profit-l">Margin</div>
+                  <div class="pv2-profit-l">{{ $t('pages.products.margin') }}</div>
                   <div class="pv2-profit-v" :style="{color: marginColor}">{{ uiMargin.toFixed(1) }}%</div>
                 </div>
                 <div>
-                  <div class="pv2-profit-l">ROI</div>
+                  <div class="pv2-profit-l">{{ $t('pages.products.roi') }}</div>
                   <div class="pv2-profit-v" style="color:#7c3aed">{{ uiCost > 0 ? uiRoi.toFixed(0) + '%' : '—' }}</div>
                 </div>
               </div>
 
               <p v-if="uiCost <= 0" class="pv2-profit-hint">
-                Set a <strong>Purchased</strong> cost to see profit and ROI.
+                {{ $t('pages.products.setA') }} <strong>{{ $t('pages.products.purchased') }}</strong> {{ $t('pages.products.costToSeeProfit') }}
               </p>
               <p v-else-if="uiVariable" class="pv2-profit-hint">
-                Figures use the product price. Variations priced differently in
-                the Inventory tab will earn more or less than this.
+                {{ $t('pages.products.figuresUseProductPrice') }}
               </p>
             </div>
 
             <div class="pv2-card">
-              <h5 class="pv2-ctitle">Tax</h5>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.tax') }}</h5>
               <div class="pv2-grid c3">
                 <div class="input-wrapper">
                   <label class="block">{{ $t('prod.tRule') }}</label>
@@ -627,7 +625,7 @@
 
               <div v-else class="pv2-note">
                 <i class="fas fa-info-circle mr-5" />
-                <span>Save the product first, then add its variants on the Inventory tab. Upgrades are worked out from those.</span>
+                <span>{{ $t('pages.products.saveFirstUpgrades') }}</span>
               </div>
             </div>
           </section>
@@ -640,21 +638,19 @@
               Rules page; all a product can say is where it may be sold.
             -->
             <div class="pv2-card">
-              <h5 class="pv2-ctitle">Where this product can be sold</h5>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.whereSold') }}</h5>
               <p class="pv2-help">
-                Delivery and collection prices come from the customer&rsquo;s address and the
-                Shipping Rules, not from the product. Limit this product only if it must not be
-                sold everywhere you deliver.
+                {{ $t('pages.products.deliveryPricesHelp') }}
               </p>
 
-              <div class="pv2-chip-group" role="radiogroup" aria-label="Where this product can be sold">
+              <div class="pv2-chip-group" role="radiogroup" :aria-label="$t('pages.products.whereSold')">
                 <label class="pv2-chk-chip" :class="{active: !sellRestricted}">
                   <input type="radio" name="sell-where" :checked="!sellRestricted" @change="setSellRestricted(false)">
-                  Anywhere we deliver
+                  {{ $t('pages.products.anywhereWeDeliver') }}
                 </label>
                 <label class="pv2-chk-chip" :class="{active: sellRestricted}">
                   <input type="radio" name="sell-where" :checked="sellRestricted" @change="setSellRestricted(true)">
-                  Only in selected countries
+                  {{ $t('pages.products.onlySelectedCountries') }}
                 </label>
               </div>
 
@@ -670,7 +666,7 @@
                       href="#"
                       role="button"
                       class="pv2-chip-remove"
-                      :aria-label="`Remove ${countryName(code)}`"
+                      :aria-label="$t('pages.products.removeCountry', { name: countryName(code) })"
                       @click.prevent="removeSellCountry(code)"
                     >&times;</a>
                   </span>
@@ -679,38 +675,38 @@
                 <div class="input-wrapper pv2-sell-add">
                   <select
                     v-model="sellCountryToAdd"
-                    aria-label="Add a country"
+                    :aria-label="$t('pages.products.addCountry')"
                     @change="addSellCountry"
                   >
-                    <option value="">Add a country&hellip;</option>
+                    <option value="">{{ $t('pages.products.addCountryEllipsis') }}</option>
                     <option v-for="c in countryOptions" :key="c.code" :value="c.code">{{ c.name }}</option>
                   </select>
                 </div>
 
                 <p v-if="!sellCountryCodes.length" class="pv2-help pv2-sell-warn">
-                  Add at least one country. With none selected, the product is sold anywhere you deliver.
+                  {{ $t('pages.products.addAtLeastOneCountry') }}
                 </p>
               </div>
             </div>
 
             <div class="pv2-card">
-              <h5 class="pv2-ctitle">Dimensions</h5>
-              <p class="pv2-help">Optional — used to estimate parcel size for carriers.</p>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.dimensions') }}</h5>
+              <p class="pv2-help">{{ $t('pages.products.dimensionsHelp') }}</p>
               <div class="pv2-grid c4">
                 <div class="input-wrapper">
-                  <label>Length (cm)</label>
+                  <label>{{ $t('pages.products.lengthCm') }}</label>
                   <input type="number" step="any" placeholder="0" v-model="result.length">
                 </div>
                 <div class="input-wrapper">
-                  <label>Width (cm)</label>
+                  <label>{{ $t('pages.products.widthCm') }}</label>
                   <input type="number" step="any" placeholder="0" v-model="result.width">
                 </div>
                 <div class="input-wrapper">
-                  <label>Height (cm)</label>
+                  <label>{{ $t('pages.products.heightCm') }}</label>
                   <input type="number" step="any" placeholder="0" v-model="result.height">
                 </div>
                 <div class="input-wrapper">
-                  <label>Weight (kg)</label>
+                  <label>{{ $t('pages.products.weightKg') }}</label>
                   <input type="number" step="any" placeholder="0" v-model="result.weight">
                 </div>
               </div>
@@ -720,11 +716,11 @@
           <!-- ==================== SEO & META ==================== -->
           <section v-show="activeTab === 'seo'">
             <div class="pv2-card">
-              <h5 class="pv2-ctitle">Focus Keyphrase</h5>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.focusKeyphrase') }}</h5>
               <div class="input-wrapper">
                 <input
                   type="text"
-                  placeholder="e.g. dell latitude 3520 laptop ireland"
+                  :placeholder="$t('pages.products.focusKeyphrasePlaceholder')"
                   v-model="uiFocusKw"
                 >
                 <!--
@@ -733,22 +729,22 @@
                   an SEO score that silently resets to 33% every time.
                 -->
                 <p class="pv2-field-note">
-                  Used to score the checks below. Not saved with the product.
+                  {{ $t('pages.products.focusKeyphraseNote') }}
                 </p>
               </div>
             </div>
 
             <div class="pv2-grid c2 pv2-seo-row">
               <div class="pv2-card">
-                <h5 class="pv2-ctitle">Google Preview</h5>
+                <h5 class="pv2-ctitle">{{ $t('pages.products.googlePreview') }}</h5>
                 <div class="pv2-google">
-                  <div class="pv2-google-t">{{ result.meta_title || result.title || 'Meta title | FixMyPC' }}</div>
+                  <div class="pv2-google-t">{{ result.meta_title || result.title || $t('pages.products.metaTitlePreview') }}</div>
                   <div class="pv2-google-u">shop.fixmypc.ie/product/{{ result.slug || '...' }}</div>
-                  <div class="pv2-google-d">{{ result.meta_description || 'Add a meta description to improve click-through rate...' }}</div>
+                  <div class="pv2-google-d">{{ result.meta_description || $t('pages.products.metaDescriptionPreview') }}</div>
                 </div>
               </div>
               <div class="pv2-card">
-                <h5 class="pv2-ctitle">SEO Score — {{ seoScore }}%</h5>
+                <h5 class="pv2-ctitle">{{ $t('pages.products.seoScore', { score: seoScore }) }}</h5>
                 <div
                   v-for="(c, i) in seoChecks"
                   :key="i"
@@ -764,7 +760,7 @@
             </div>
 
             <div class="pv2-card">
-              <h5 class="pv2-ctitle">Meta Fields</h5>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.metaFields') }}</h5>
               <div class="input-wrapper">
                 <label>{{ $t('category.mTitle') }}</label>
                 <input
@@ -818,16 +814,16 @@
           <!-- ==================== ORGANISATION ==================== -->
           <section v-show="activeTab === 'organisation'">
             <div class="pv2-card">
-              <h5 class="pv2-ctitle">Relationships</h5>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.relationships') }}</h5>
               <div class="pv2-grid c3">
                 <div class="input-wrapper pos-rel">
-                <label class="block">Bundle Deals</label>
+                <label class="block">{{ $t('pages.products.bundleDeals') }}</label>
                 <div
                   class="custom-dropdown cp"
                   @click="showBundleDeals = !showBundleDeals"
                 >
                   <span>
-                    Select Bundles
+                    {{ $t('pages.products.selectBundles') }}
                     <i
                       class="icon black"
                       :class="showBundleDeals ? 'arrow-up' : 'arrow-down'"
@@ -876,7 +872,7 @@
             </div>
 
             <div class="pv2-card">
-              <h5 class="pv2-ctitle">Collections</h5>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.collections') }}</h5>
               <div class="pv2-chip-group">
                 <label
                   v-for="(item, index) in allProductCollections"
@@ -933,19 +929,19 @@
             </div>
 
             <div class="pv2-card">
-              <h5 class="pv2-ctitle">Purchase Note</h5>
-              <p class="pv2-help">Shown to the customer after they complete their purchase.</p>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.purchaseNote') }}</h5>
+              <p class="pv2-help">{{ $t('pages.products.purchaseNoteHelp') }}</p>
               <div class="input-wrapper">
                 <textarea
                   rows="3"
-                  placeholder="e.g. Thank you! Your warranty is automatically registered."
+                  :placeholder="$t('pages.products.purchaseNotePlaceholder')"
                   v-model="result.purchase_note"
                 />
               </div>
             </div>
 
             <div class="pv2-card">
-              <h5 class="pv2-ctitle">Page Templates</h5>
+              <h5 class="pv2-ctitle">{{ $t('pages.products.pageTemplates') }}</h5>
               <div class="input-wrapper">
                 <label for="templateDropdown">{{ $t('templates.select_template') }}</label>
                 <div class="pv2-inline pv2-tpl-row">
@@ -969,7 +965,7 @@
                     class="btn primary-btn pv2-tpl-add"
                     :disabled="!selectedTemplateId"
                     @click.prevent="addSelectedTemplate"
-                    title="Add template"
+                    :title="$t('pages.products.addTemplate')"
                   >
                     +
                   </button>
@@ -1020,11 +1016,11 @@
             :options="productStatusObj"
             @clicked="dropdownSelected"
           />
-          <div class="pv2-side-note">{{ `${result.status}` === '1' ? 'Live on storefront' : 'Not visible to customers' }}</div>
+          <div class="pv2-side-note">{{ `${result.status}` === '1' ? $t('pages.products.liveOnStorefront') : $t('pages.products.notVisibleToCustomers') }}</div>
         </div>
 
         <div class="pv2-side-card">
-          <div class="pv2-side-title">Brand &amp; Category</div>
+          <div class="pv2-side-title">{{ $t('pages.products.brandCategory') }}</div>
           <div class="input-wrapper">
             <label class="block">{{ $t('prod.brand') }}</label>
             <dropdown
@@ -1109,7 +1105,7 @@
         </div>
 
         <div class="pv2-side-card">
-          <div class="pv2-side-title">Featured Image</div>
+          <div class="pv2-side-title">{{ $t('pages.products.featuredImage') }}</div>
           <div class="pv2-thumb">
             <img
               v-if="result.image"
@@ -1117,14 +1113,14 @@
             >
             <i v-else class="fas fa-image" />
           </div>
-          <div class="pv2-side-note">Manage in the Media tab</div>
+          <div class="pv2-side-note">{{ $t('pages.products.manageInMediaTab') }}</div>
         </div>
 
         <div class="pv2-side-card">
-          <div class="pv2-side-title">Quick Info</div>
+          <div class="pv2-side-title">{{ $t('pages.products.quickInfo') }}</div>
           <!-- "Price", not "Selling": this is the offer price when one is set -->
-          <div class="pv2-kv"><span class="k">Price</span><span class="v">{{ currencyIcon }}{{ uiPrice.toFixed(2) }}</span></div>
-          <div class="pv2-kv"><span class="k">Margin</span><span class="v" :style="{color: marginColor}">{{ uiMargin.toFixed(1) }}%</span></div>
+          <div class="pv2-kv"><span class="k">{{ $t('pages.products.price') }}</span><span class="v">{{ currencyIcon }}{{ uiPrice.toFixed(2) }}</span></div>
+          <div class="pv2-kv"><span class="k">{{ $t('pages.products.margin') }}</span><span class="v" :style="{color: marginColor}">{{ uiMargin.toFixed(1) }}%</span></div>
           <!--
             A "Condition" row used to sit here reading uiCondition, which was
             the hardcoded string 'New'. There is no condition on a product, so
@@ -1132,8 +1128,8 @@
             itself as new. A stated fact that is not read from anything is
             worse than no row.
           -->
-          <div class="pv2-kv"><span class="k">Variant</span><span class="v">{{ uiVariable ? 'Variable' : 'Simple' }}</span></div>
-          <div class="pv2-kv"><span class="k">Categories</span><span class="v">{{ result.product_categories.length }}</span></div>
+          <div class="pv2-kv"><span class="k">{{ $t('pages.products.variant') }}</span><span class="v">{{ uiVariable ? $t('pages.products.variable') : $t('pages.products.simple') }}</span></div>
+          <div class="pv2-kv"><span class="k">{{ $t('pages.products.categories') }}</span><span class="v">{{ result.product_categories.length }}</span></div>
         </div>
       </aside>
     </div>
@@ -1191,29 +1187,29 @@
         // ---- Tabbed UI state ----
         activeTab: 'basic',
         tabGroups: [
-          {g: 'PRODUCT', items: [
-            {k: 'basic', l: 'Basic Info', ic: 'fa-info-circle'},
-            {k: 'content', l: 'Content', ic: 'fa-align-left'},
-            {k: 'media', l: 'Media', ic: 'fa-images'}
+          {g: this.$t('pages.products.groupProduct'), items: [
+            {k: 'basic', l: this.$t('pages.products.tabBasic'), ic: 'fa-info-circle'},
+            {k: 'content', l: this.$t('pages.products.tabContent'), ic: 'fa-align-left'},
+            {k: 'media', l: this.$t('pages.products.tabMedia'), ic: 'fa-images'}
           ]},
-          {g: 'COMMERCE', items: [
-            {k: 'pricing', l: 'Pricing & Tax', ic: 'fa-tags'},
-            {k: 'inventory', l: 'Inventory', ic: 'fa-boxes'},
+          {g: this.$t('pages.products.groupCommerce'), items: [
+            {k: 'pricing', l: this.$t('pages.products.tabPricing'), ic: 'fa-tags'},
+            {k: 'inventory', l: this.$t('pages.products.tabInventory'), ic: 'fa-boxes'},
             // How this product upgrades between its own variants. Under
             // Commerce rather than Marketing: it is part of what the product
             // IS, and it is derived from the variants on the tab above it.
-            {k: 'upgrades', l: 'Upgrades', ic: 'fa-arrow-up-right-dots'},
-            {k: 'shipping', l: 'Shipping', ic: 'fa-truck'}
+            {k: 'upgrades', l: this.$t('pages.products.tabUpgrades'), ic: 'fa-arrow-up-right-dots'},
+            {k: 'shipping', l: this.$t('pages.products.tabShipping'), ic: 'fa-truck'}
           ]},
-          {g: 'MARKETING', items: [
-            {k: 'seo', l: 'SEO & Meta', ic: 'fa-search'},
+          {g: this.$t('pages.products.groupMarketing'), items: [
+            {k: 'seo', l: this.$t('pages.products.tabSeo'), ic: 'fa-search'},
             // Cross-sell is assigned on Organisation, beside Bundle Deals:
             // both answer "what else goes with this", and a rail entry of its
             // own put one relationship a click away from the other.
-            {k: 'organisation', l: 'Organisation', ic: 'fa-sitemap'}
+            {k: 'organisation', l: this.$t('pages.products.tabOrganisation'), ic: 'fa-sitemap'}
           ]},
-          {g: 'SETTINGS', items: [
-            {k: 'advanced', l: 'Advanced', ic: 'fa-cog'}
+          {g: this.$t('pages.products.groupSettings'), items: [
+            {k: 'advanced', l: this.$t('pages.products.tabAdvanced'), ic: 'fa-cog'}
           ]}
         ],
         fieldTabMap: {
@@ -1420,8 +1416,8 @@
        */
       productStatusObj() {
         return {
-          1: {title: 'Public'},
-          2: {title: 'Draft'}
+          1: {title: this.$t('pages.products.statusPublic')},
+          2: {title: this.$t('pages.products.statusDraft')}
         }
       },
       statusBadgeClass() {
@@ -1433,12 +1429,12 @@
         const kw = (this.uiFocusKw || '').toLowerCase()
         const slug = (this.result.slug || '').toLowerCase()
         return [
-          {l: 'Focus keyword set', ok: !!kw},
-          {l: 'Keyword in meta title', ok: !!kw && mt.toLowerCase().includes(kw)},
-          {l: 'Keyword in slug', ok: !!kw && slug.includes(kw.replace(/\s+/g, '-'))},
-          {l: 'Meta title 50–60 chars', ok: mt.length >= 50 && mt.length <= 60},
-          {l: 'Meta description 120–160', ok: md.length >= 120 && md.length <= 160},
-          {l: 'Meta keywords added', ok: !!(this.result.meta_keywords || '').trim()}
+          {l: this.$t('pages.products.seoFocusSet'), ok: !!kw},
+          {l: this.$t('pages.products.seoKwTitle'), ok: !!kw && mt.toLowerCase().includes(kw)},
+          {l: this.$t('pages.products.seoKwSlug'), ok: !!kw && slug.includes(kw.replace(/\s+/g, '-'))},
+          {l: this.$t('pages.products.seoTitleLength'), ok: mt.length >= 50 && mt.length <= 60},
+          {l: this.$t('pages.products.seoDescLength'), ok: md.length >= 120 && md.length <= 160},
+          {l: this.$t('pages.products.seoKeywordsAdded'), ok: !!(this.result.meta_keywords || '').trim()}
         ]
       },
       seoScore() {
@@ -1514,7 +1510,7 @@
       },
       statusLabel(s) {
         const option = this.productStatusObj[`${s}`] || this.productStatusObj[s]
-        return option ? option.title : 'Draft'
+        return option ? option.title : this.$t('pages.products.statusDraft')
       },
       featureImagesResult(data) {
         this.result.feature_images = data
@@ -2000,7 +1996,7 @@
 
           this.templates = response.data;
         } catch (error) {
-          this.templateError = 'Failed to load templates';
+          this.templateError = this.$t('pages.products.failedLoadTemplates');
           console.error('Error loading templates:', error);
         } finally {
           this.isLoadingTemplates = false;

@@ -5,7 +5,7 @@
         set-api="setBusinessProduct"
         get-api="getBusinessProduct"
         route-name="business-products"
-        name="Business Product"
+        :name="$t('pages.businessProducts.businessProduct')"
         :validation-keys="['product_id', 'pricing']"
         :result="result"
         @result="settingResult"
@@ -14,7 +14,7 @@
             <!-- PRODUCT SELECT -->
             <div class="card">
             <div class="input-wrapper">
-                <label>Select Product</label>
+                <label>{{ $t('pages.businessProducts.selectProduct') }}</label>
                 <div
                     class="product-select"
                     :class="{open: productListOpen}"
@@ -33,7 +33,7 @@
                             ref="productSearch"
                             type="text"
                             class="product-input"
-                            placeholder="Search products by name"
+                            :placeholder="$t('pages.businessProducts.searchProductsPlaceholder')"
                             autocomplete="off"
                             v-model="productQuery"
                             @focus="openProductList"
@@ -47,7 +47,7 @@
                             v-if="productQuery"
                             type="button"
                             class="field-btn clear"
-                            title="Clear"
+                            :title="$t('pages.businessProducts.clear')"
                             @click.stop="clearProduct"
                         >
                             <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -73,8 +73,7 @@
                             v-if="filteredProducts.length"
                             class="options-head"
                         >
-                            {{ filteredProducts.length }}
-                            {{ filteredProducts.length === 1 ? 'product' : 'products' }}
+                            {{ $tc('pages.businessProducts.productCount', filteredProducts.length, { count: filteredProducts.length }) }}
                         </div>
 
                         <ul
@@ -109,7 +108,7 @@
                                 <circle cx="9" cy="9" r="5.5" />
                                 <line x1="13.2" y1="13.2" x2="17" y2="17" />
                             </svg>
-                            <p>No products match &ldquo;{{ productQuery.trim() }}&rdquo;</p>
+                            <p>{{ $t('pages.businessProducts.noProductsMatch', { query: productQuery.trim() }) }}</p>
                         </div>
                     </div>
                 </div>
@@ -123,11 +122,11 @@
 
                 <!-- HEADER -->
                 <div class="pricing-row header">
-                <div>Quantity Range</div>
-                <div>Offered Price</div>
-                <div>Discount Type</div>
-                <div>Discount Value</div>
-                <div>Final Price</div>
+                <div>{{ $t('pages.businessProducts.quantityRange') }}</div>
+                <div>{{ $t('pages.businessProducts.offeredPrice') }}</div>
+                <div>{{ $t('pages.businessProducts.discountType') }}</div>
+                <div>{{ $t('pages.businessProducts.discountValue') }}</div>
+                <div>{{ $t('pages.businessProducts.finalPrice') }}</div>
                 </div>
 
                 <!-- ROWS -->
@@ -151,7 +150,7 @@
                         type="number"
                         min="1"
                         v-model="row.min"
-                        placeholder="Min"
+                        :placeholder="$t('pages.businessProducts.min')"
                     />
                     <span class="dash">&ndash;</span>
 
@@ -160,20 +159,20 @@
                         type="number"
                         min="1"
                         v-model="row.max"
-                        placeholder="Max"
+                        :placeholder="$t('pages.businessProducts.max')"
                     />
-                    <span v-else class="no-limit">No limit</span>
+                    <span v-else class="no-limit">{{ $t('pages.businessProducts.noLimit') }}</span>
 
                     <label
                         class="limit-toggle"
-                        title="Charge this rate for every larger order. Only the final band can be open-ended."
+                        :title="$t('pages.businessProducts.noLimitTitle')"
                     >
                         <input
                             type="checkbox"
                             :checked="isOpenEnded(row)"
                             @change="setOpenEnded(row, $event.target.checked)"
                         />
-                        <span>No limit</span>
+                        <span>{{ $t('pages.businessProducts.noLimit') }}</span>
                     </label>
 
                     <span class="range-label">{{ rangeLabel(row) }}</span>
@@ -190,8 +189,8 @@
                 <!-- TYPE -->
                 <div class="select-wrapper">
                     <select v-model="row.discount_type" @change="calculate(row)">
-                        <option value="percentage">Percentage</option>
-                        <option value="fixed">Fixed</option>
+                        <option value="percentage">{{ $t('pages.businessProducts.percentage') }}</option>
+                        <option value="fixed">{{ $t('pages.businessProducts.fixed') }}</option>
                     </select>
                     <span class="arrow">⌄</span>
                 </div>
@@ -222,7 +221,7 @@
 
             <!-- ADD ROW -->
             <button type="button" class="add-row-btn" @click="addRow()">
-                + Add Row
+                {{ $t('pages.businessProducts.addRow') }}
             </button>
 
             <!--
@@ -249,10 +248,9 @@
                 what BusinessProductPricing::coversQuantity reads as "and over".
             -->
             <p class="range-hint">
-                Tick <strong>No limit</strong> on the highest band to make it
-                open-ended, so every larger order gets that rate. Without it,
-                orders above that quantity are charged the full retail price
-                instead of a bulk rate.
+                <i18n path="pages.businessProducts.rangeHint" tag="span">
+                    <template v-slot:noLimit><strong>{{ $t('pages.businessProducts.noLimit') }}</strong></template>
+                </i18n>
             </p>
 
             </div>
@@ -328,14 +326,14 @@ export default {
         if (row.min === '' || row.min === null) continue
 
         if (!Number.isFinite(min) || min < 1) {
-          return [`Row ${line}: the minimum quantity must be at least 1.`]
+          return [this.$t('pages.businessProducts.issueMinAtLeastOne', { line })]
         }
 
         const open = this.isOpenEnded(row)
         const max = parseInt(row.max, 10)
 
         if (!open && max < min) {
-          return [`Row ${line}: the maximum quantity is below the minimum.`]
+          return [this.$t('pages.businessProducts.issueMaxBelowMin', { line })]
         }
 
         bands.push({line, min, max: open ? 0 : max, open})
@@ -345,8 +343,7 @@ export default {
 
       if (openBands.length > 1) {
         return [
-          `Rows ${openBands[0].line} and ${openBands[1].line} both have no maximum `
-          + 'quantity. Only the final band can be open-ended.'
+          this.$t('pages.businessProducts.issueTwoOpen', { first: openBands[0].line, second: openBands[1].line })
         ]
       }
 
@@ -356,9 +353,7 @@ export default {
 
         if (above) {
           return [
-            `Row ${top.line} has no maximum quantity, so it covers every order of `
-            + `${top.min} or more and row ${above.line} could never apply. An `
-            + 'open-ended band must be the final one.'
+            this.$t('pages.businessProducts.issueOpenNotLast', { line: top.line, min: top.min, above: above.line })
           ]
         }
       }
@@ -371,7 +366,7 @@ export default {
           const thisMax = band.open ? Infinity : band.max
 
           if (band.min <= otherMax && other.min <= thisMax) {
-            return [`Row ${band.line}: this quantity range overlaps row ${other.line}.`]
+            return [this.$t('pages.businessProducts.issueOverlap', { line: band.line, other: other.line })]
           }
         }
       }
@@ -386,13 +381,11 @@ export default {
         if (current.min > expected) {
           const missingTo = current.min - 1
           const missing = expected === missingTo
-            ? `${expected} unit${expected === 1 ? '' : 's'}`
-            : `${expected}-${missingTo} units`
+            ? this.$t(expected === 1 ? 'pages.businessProducts.unitOne' : 'pages.businessProducts.unitMany', { count: expected })
+            : this.$t('pages.businessProducts.unitRange', { from: expected, to: missingTo })
 
           return [
-            `Row ${current.line} starts at ${current.min} but row ${previous.line} `
-            + `ends at ${previous.max}, so an order of ${missing} would be charged `
-            + 'the full retail price. Bands must run on from one another without a gap.'
+            this.$t('pages.businessProducts.issueGap', { line: current.line, min: current.min, previous: previous.line, max: previous.max, missing })
           ]
         }
       }
@@ -403,9 +396,7 @@ export default {
         const top = bands.reduce((a, b) => (b.min > a.min ? b : a))
 
         return [
-          `The highest band stops at ${top.max}, so an order of ${top.max + 1} or `
-          + `more is charged the full retail price. Tick No limit on row ${top.line} `
-          + 'to give it that rate too.'
+          this.$t('pages.businessProducts.issueNoOpenTop', { max: top.max, next: top.max + 1, line: top.line })
         ]
       }
 
@@ -596,12 +587,11 @@ export default {
       const openIndex = this.result.pricing.findIndex(row => this.isOpenEnded(row));
 
       if (openIndex !== -1) {
-          const label = this.rangeLabel(this.result.pricing[openIndex]) || 'the open-ended band';
+          const label = this.rangeLabel(this.result.pricing[openIndex]) || this.$t('pages.businessProducts.theOpenEndedBand');
 
           this.$store.dispatch(
               'ui/setToastError',
-              `An open-ended pricing tier must be the final tier. Set a maximum `
-              + `quantity on ${label} before adding another tier.`
+              this.$t('pages.businessProducts.openTierNotLast', { label })
           );
 
           return;

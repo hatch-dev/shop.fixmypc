@@ -7,9 +7,9 @@
     </div>
 
     <div v-else-if="!result.id" class="cust-empty">
-      <b>Customer not found</b>
-      <span>This customer may have been deleted.</span>
-      <nuxt-link to="/registered-users" class="lite-btn">Back to customers</nuxt-link>
+      <b>{{ $t('pages.registeredUsers.notFound') }}</b>
+      <span>{{ $t('pages.registeredUsers.notFoundSub') }}</span>
+      <nuxt-link to="/registered-users" class="lite-btn">{{ $t('pages.registeredUsers.backToCustomers') }}</nuxt-link>
     </div>
 
     <template v-else>
@@ -17,7 +17,7 @@
       <!-- ============ OVERVIEW ============ -->
       <div class="cust-top">
 
-        <nuxt-link to="/registered-users" class="cust-back">&larr; All customers</nuxt-link>
+        <nuxt-link to="/registered-users" class="cust-back">&larr; {{ $t('pages.registeredUsers.allCustomers') }}</nuxt-link>
 
         <div class="cust-ident">
 
@@ -42,11 +42,11 @@
             </span>
 
             <span class="badge" :class="'tone-' + statusTone">
-              Account: {{ statusLabel }}
+              {{ $t('pages.registeredUsers.badgeAccount', { label: statusLabel }) }}
             </span>
 
             <span class="badge" :class="'tone-' + verificationTone">
-              Verification: {{ verificationLabel }}
+              {{ $t('pages.registeredUsers.badgeVerification', { label: verificationLabel }) }}
             </span>
 
             <!-- Trade status is a trade-only fact and is shown only there. -->
@@ -55,7 +55,7 @@
               class="badge"
               :class="'tone-' + tradeTone"
             >
-              Trade: {{ tradeLabel }}
+              {{ $t('pages.registeredUsers.badgeTrade', { label: tradeLabel }) }}
             </span>
 
           </div>
@@ -64,20 +64,20 @@
 
         <dl class="cust-meta">
           <div>
-            <dt>Registered</dt>
+            <dt>{{ $t('pages.registeredUsers.registered') }}</dt>
             <dd>{{ result.created || '—' }}</dd>
           </div>
           <div>
-            <dt>Last updated</dt>
+            <dt>{{ $t('pages.registeredUsers.lastUpdated') }}</dt>
             <dd>{{ lastUpdated }}</dd>
           </div>
           <div>
-            <dt>Customer ID</dt>
+            <dt>{{ $t('pages.registeredUsers.customerId') }}</dt>
             <dd>#{{ result.id }}</dd>
           </div>
           <div>
-            <dt>Business pricing</dt>
-            <dd>{{ account.has_business_pricing ? 'Entitled' : 'Not entitled' }}</dd>
+            <dt>{{ $t('pages.registeredUsers.businessPricing') }}</dt>
+            <dd>{{ account.has_business_pricing ? $t('pages.registeredUsers.entitled') : $t('pages.registeredUsers.notEntitled') }}</dd>
           </div>
         </dl>
 
@@ -89,15 +89,15 @@
           read back as something the customer told us.
         -->
         <p v-if="account.status_note" class="cust-internal">
-          <b>Internal status note:</b> {{ account.status_note }}
+          <b>{{ $t('pages.registeredUsers.internalStatusNote') }}</b> {{ account.status_note }}
         </p>
 
       </div>
 
       <!-- ============ VIEW DETAILS ============ -->
       <div class="cust-band cust-band-view">
-        <h3>View details</h3>
-        <span>Read-only. Everything this customer submitted, shown for a {{ typeLabel.toLowerCase() }} account.</span>
+        <h3>{{ $t('pages.registeredUsers.viewDetails') }}</h3>
+        <span>{{ $t('pages.registeredUsers.viewDetailsSub', { type: typeLabel.toLowerCase() }) }}</span>
       </div>
 
       <section
@@ -124,11 +124,11 @@
             <dd>
               <template v-if="field.kind === 'bool'">
                 <span class="pill" :class="field.value ? 'pill-yes' : 'pill-no'">
-                  {{ field.value ? 'Yes' : 'No' }}
+                  {{ field.value ? $t('pages.registeredUsers.yes') : $t('pages.registeredUsers.no') }}
                 </span>
               </template>
               <template v-else-if="field.provided">{{ field.value }}</template>
-              <template v-else><i class="cust-none">Not provided</i></template>
+              <template v-else><i class="cust-none">{{ $t('pages.registeredUsers.notProvided') }}</i></template>
             </dd>
           </div>
         </dl>
@@ -139,19 +139,18 @@
       <section v-if="deliveryAddresses.length" class="cust-card">
 
         <button class="cust-card-head" @click="toggle('delivery')">
-          <h3>Delivery addresses <small>({{ deliveryAddresses.length }})</small></h3>
+          <h3>{{ $t('pages.registeredUsers.deliveryAddresses') }} <small>({{ deliveryAddresses.length }})</small></h3>
           <span class="cust-chev">{{ isOpen('delivery') ? '−' : '+' }}</span>
         </button>
 
         <div v-show="isOpen('delivery')" class="cust-addr-wrap">
           <p class="cust-hint cust-hint-block">
-            Added by the customer after registration. Registration itself collects only the
-            billing address above.
+            {{ $t('pages.registeredUsers.deliveryAddressesHint') }}
           </p>
           <div v-for="addr in deliveryAddresses" :key="addr.id" class="cust-addr">
             <b>
               {{ addr.name || result.name }}
-              <span v-if="parseInt(addr.default)" class="pill pill-yes">Default</span>
+              <span v-if="parseInt(addr.default)" class="pill pill-yes">{{ $t('pages.registeredUsers.default') }}</span>
             </b>
             <span>{{ addressLine(addr) }}</span>
             <small v-if="addr.phone">{{ addr.phone }}</small>
@@ -168,7 +167,7 @@
       <section v-if="upgradeRequests.length" class="cust-card">
 
         <button class="cust-card-head" @click="toggle('upgrades')">
-          <h3>Account type changes <small>({{ upgradeRequests.length }})</small></h3>
+          <h3>{{ $t('pages.registeredUsers.accountTypeChanges') }} <small>({{ upgradeRequests.length }})</small></h3>
           <span class="cust-chev">{{ isOpen('upgrades') ? '−' : '+' }}</span>
         </button>
 
@@ -179,18 +178,18 @@
               <span class="pill" :class="upgradePill(u.status)">{{ upgradeStatusName(u.status) }}</span>
             </b>
             <span>
-              Requested {{ upgradeWhen(u.created_at) }}
+              {{ $t('pages.registeredUsers.requestedAt', { date: upgradeWhen(u.created_at) }) }}
               <template v-if="u.reviewed_at">
-                · decided {{ upgradeWhen(u.reviewed_at) }}<template v-if="u.reviewer"> by {{ u.reviewer.name }}</template>
+                · {{ $t('pages.registeredUsers.decidedAt', { date: upgradeWhen(u.reviewed_at) }) }}<template v-if="u.reviewer"> {{ $t('pages.registeredUsers.byName', { name: u.reviewer.name }) }}</template>
               </template>
             </span>
-            <small v-if="u.review_note">Note to the customer: {{ u.review_note }}</small>
+            <small v-if="u.review_note">{{ $t('pages.registeredUsers.noteToCustomer', { note: u.review_note }) }}</small>
             <nuxt-link
               v-if="u.status === 'pending'"
               to="/trade-applications?mode=upgrades"
               class="cust-upgrade-link"
             >
-              Review in Trade applications &rarr;
+              {{ $t('pages.registeredUsers.reviewInTradeApps') }} &rarr;
             </nuxt-link>
           </div>
         </div>
@@ -200,7 +199,7 @@
       <!-- What registration never asked for, said plainly. -->
       <section v-if="notCollected.length" class="cust-card cust-card-quiet">
         <button class="cust-card-head" @click="toggle('gaps')">
-          <h3>Not collected at registration</h3>
+          <h3>{{ $t('pages.registeredUsers.notCollected') }}</h3>
           <span class="cust-chev">{{ isOpen('gaps') ? '−' : '+' }}</span>
         </button>
         <ul v-show="isOpen('gaps')" class="cust-gaps">
@@ -210,8 +209,8 @@
 
       <!-- ============ ADMIN ACTIONS ============ -->
       <div v-if="$can('user', 'edit')" class="cust-band cust-band-act">
-        <h3>Admin actions</h3>
-        <span>These change the customer's account. Everything above is read-only.</span>
+        <h3>{{ $t('pages.registeredUsers.adminActions') }}</h3>
+        <span>{{ $t('pages.registeredUsers.adminActionsSub') }}</span>
       </div>
 
       <section v-if="$can('user', 'edit')" class="cust-card cust-actions">
@@ -221,15 +220,15 @@
         <!-- Trade decision -->
         <div v-if="accountType === 'trade'" class="cust-act-row">
           <div class="cust-act-label">
-            <b>Trade application</b>
-            <small>Approving switches trade pricing on and marks the company details verified.</small>
+            <b>{{ $t('pages.registeredUsers.tradeApplication') }}</b>
+            <small>{{ $t('pages.registeredUsers.tradeApplicationSub') }}</small>
           </div>
           <div class="cust-act-controls">
             <input
               v-model.trim="tradeNote"
               class="cust-input"
               maxlength="600"
-              placeholder="Note to the customer (optional) — shown on their account and in the decision email"
+              :placeholder="$t('pages.registeredUsers.tradeNotePlaceholder')"
             >
             <div class="cust-act-btns">
               <button
@@ -237,25 +236,25 @@
                 class="lite-btn act-approve"
                 :disabled="!!saving"
                 @click="reviewTrade('approved')"
-              >Approve</button>
+              >{{ $t('pages.registeredUsers.approve') }}</button>
               <button
                 v-if="tradeStatus !== 'rejected'"
                 class="lite-btn act-reject"
                 :disabled="!!saving"
                 @click="reviewTrade('rejected')"
-              >Reject</button>
+              >{{ $t('pages.registeredUsers.reject') }}</button>
               <button
                 v-if="tradeStatus === 'approved'"
                 class="lite-btn act-suspend"
                 :disabled="!!saving"
                 @click="reviewTrade('suspended')"
-              >Suspend trade pricing</button>
+              >{{ $t('pages.registeredUsers.suspendTradePricing') }}</button>
               <button
                 v-if="tradeStatus === 'rejected'"
                 class="lite-btn"
                 :disabled="!!saving"
                 @click="reviewTrade('pending')"
-              >Back to pending</button>
+              >{{ $t('pages.registeredUsers.backToPending') }}</button>
             </div>
           </div>
         </div>
@@ -269,22 +268,22 @@
         -->
         <div class="cust-act-row">
           <div class="cust-act-label">
-            <b>Orders</b>
-            <small>Everything this customer has ordered, newest first.</small>
+            <b>{{ $t('pages.registeredUsers.orders') }}</b>
+            <small>{{ $t('pages.registeredUsers.ordersSub') }}</small>
           </div>
           <div class="cust-act-btns">
             <router-link
               class="lite-btn"
               :to="`/orders?user_id=${id}&orderBy=created_at&orderByType=desc`"
-            >View orders</router-link>
+            >{{ $t('pages.registeredUsers.viewOrders') }}</router-link>
           </div>
         </div>
 
         <!-- Company-details verification -->
         <div v-if="accountType !== 'personal'" class="cust-act-row">
           <div class="cust-act-label">
-            <b>Company details check</b>
-            <small>Records whether staff have checked the VAT and company numbers. Separate from pricing.</small>
+            <b>{{ $t('pages.registeredUsers.companyCheck') }}</b>
+            <small>{{ $t('pages.registeredUsers.companyCheckSub') }}</small>
           </div>
           <div class="cust-act-btns">
             <button
@@ -292,27 +291,27 @@
               class="lite-btn act-approve"
               :disabled="!!saving"
               @click="setVerification('verified')"
-            >Mark verified</button>
+            >{{ $t('pages.registeredUsers.markVerified') }}</button>
             <button
               v-if="verificationStatus !== 'rejected'"
               class="lite-btn act-reject"
               :disabled="!!saving"
               @click="setVerification('rejected')"
-            >Mark rejected</button>
+            >{{ $t('pages.registeredUsers.markRejected') }}</button>
             <button
               v-if="verificationStatus !== 'pending'"
               class="lite-btn"
               :disabled="!!saving"
               @click="setVerification('pending')"
-            >Back to unchecked</button>
+            >{{ $t('pages.registeredUsers.backToUnchecked') }}</button>
           </div>
         </div>
 
         <!-- Account status -->
         <div class="cust-act-row">
           <div class="cust-act-label">
-            <b>Account status</b>
-            <small>Suspending stops new orders. The customer can still sign in and see past orders.</small>
+            <b>{{ $t('pages.registeredUsers.accountStatus') }}</b>
+            <small>{{ $t('pages.registeredUsers.accountStatusSub') }}</small>
           </div>
           <div class="cust-act-btns">
             <button
@@ -320,15 +319,15 @@
               class="lite-btn act-suspend"
               :disabled="!!saving"
               @click="setStatus('suspended')"
-            >Suspend account</button>
+            >{{ $t('pages.registeredUsers.suspendAccount') }}</button>
             <button
               v-if="accountStatus === 'suspended'"
               class="lite-btn act-approve"
               :disabled="!!saving"
               @click="setStatus('active')"
-            >Reactivate account</button>
+            >{{ $t('pages.registeredUsers.reactivateAccount') }}</button>
             <span v-if="accountStatus === 'rejected'" class="cust-none">
-              A rejected account cannot be reactivated.
+              {{ $t('pages.registeredUsers.rejectedCannotReactivate') }}
             </span>
           </div>
         </div>
@@ -434,14 +433,18 @@
       },
 
       typeLabel() {
-        return {personal: 'Personal', business: 'Business', trade: 'Trade'}[this.accountType] || 'Personal'
+        return {
+        personal: this.$t('pages.registeredUsers.typePersonal'),
+        business: this.$t('pages.registeredUsers.typeBusiness'),
+        trade: this.$t('pages.registeredUsers.typeTrade')
+      }[this.accountType] || this.$t('pages.registeredUsers.typePersonal')
       },
 
       statusLabel() {
         return {
-          active: 'Active', suspended: 'Suspended',
-          pending: 'Pending', rejected: 'Rejected'
-        }[this.accountStatus] || 'Active'
+          active: this.$t('pages.registeredUsers.statusActive'), suspended: this.$t('pages.registeredUsers.statusSuspended'),
+          pending: this.$t('pages.registeredUsers.statusPending'), rejected: this.$t('pages.registeredUsers.statusRejected')
+        }[this.accountStatus] || this.$t('pages.registeredUsers.statusActive')
       },
 
       statusTone() {
@@ -452,11 +455,11 @@
 
       verificationLabel() {
         return {
-          not_required: 'Not required',
-          pending: 'Not checked',
-          verified: 'Verified',
-          rejected: 'Rejected'
-        }[this.verificationStatus] || 'Not checked'
+          not_required: this.$t('pages.registeredUsers.verNotRequired'),
+          pending: this.$t('pages.registeredUsers.verNotChecked'),
+          verified: this.$t('pages.registeredUsers.verVerified'),
+          rejected: this.$t('pages.registeredUsers.statusRejected')
+        }[this.verificationStatus] || this.$t('pages.registeredUsers.verNotChecked')
       },
 
       verificationTone() {
@@ -468,9 +471,9 @@
 
       tradeLabel() {
         return {
-          pending: 'Pending', approved: 'Approved',
-          rejected: 'Rejected', suspended: 'Suspended'
-        }[this.tradeStatus] || 'Pending'
+          pending: this.$t('pages.registeredUsers.statusPending'), approved: this.$t('pages.registeredUsers.statusApproved'),
+          rejected: this.$t('pages.registeredUsers.statusRejected'), suspended: this.$t('pages.registeredUsers.statusSuspended')
+        }[this.tradeStatus] || this.$t('pages.registeredUsers.statusPending')
       },
 
       tradeTone() {
@@ -483,16 +486,20 @@
     methods: {
 
       upgradeTypeName(type) {
-        return {personal: 'Personal', business: 'Business', trade: 'Trade'}[type] || type
+        return {
+        personal: this.$t('pages.registeredUsers.typePersonal'),
+        business: this.$t('pages.registeredUsers.typeBusiness'),
+        trade: this.$t('pages.registeredUsers.typeTrade')
+      }[type] || type
       },
 
       upgradeStatusName(status) {
         return {
-          pending: 'Waiting for review',
-          completed: 'Done',
-          approved: 'Approved',
-          rejected: 'Rejected',
-          withdrawn: 'Withdrawn by customer'
+          pending: this.$t('pages.registeredUsers.upgradeWaiting'),
+          completed: this.$t('pages.registeredUsers.upgradeDone'),
+          approved: this.$t('pages.registeredUsers.statusApproved'),
+          rejected: this.$t('pages.registeredUsers.statusRejected'),
+          withdrawn: this.$t('pages.registeredUsers.upgradeWithdrawn')
         }[status] || status
       },
 
@@ -509,7 +516,7 @@
         const date = iso ? new Date(iso) : null
 
         return date && !isNaN(date)
-          ? date.toLocaleString('en-IE', {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'})
+          ? date.toLocaleString(this.$i18n?.locale || 'en', {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'})
           : '—'
       },
 
@@ -533,7 +540,7 @@
             id: this.id, params: {}, api: 'getUser'
           }) || {})
         } catch (e) {
-          this.error = e?.message || 'Unable to load this customer'
+          this.error = e?.message || this.$t('pages.registeredUsers.loadFailed')
         } finally {
           this.loading = false
         }
@@ -556,8 +563,8 @@
 
       async setStatus(status) {
         const wording = status === 'suspended'
-          ? 'Suspend this account? They will be able to sign in and see past orders, but not place new ones.'
-          : 'Reactivate this account?'
+          ? this.$t('pages.registeredUsers.suspendConfirm')
+          : this.$t('pages.registeredUsers.reactivateConfirm')
 
         if (!confirm(wording)) {
           return
@@ -576,10 +583,10 @@
 
       async reviewTrade(status) {
         const wording = {
-          approved: 'Approve this trade application? Trade pricing switches on immediately and the customer is emailed.',
-          rejected: 'Reject this trade application? The customer is emailed and keeps retail pricing.',
-          suspended: 'Suspend trade pricing for this customer?',
-          pending: 'Put this application back to pending?'
+          approved: this.$t('pages.registeredUsers.confirmApproveTrade'),
+          rejected: this.$t('pages.registeredUsers.confirmRejectTrade'),
+          suspended: this.$t('pages.registeredUsers.confirmSuspendTrade'),
+          pending: this.$t('pages.registeredUsers.confirmPendingTrade')
         }[status]
 
         if (!confirm(wording)) {
@@ -603,7 +610,7 @@
           // so re-read rather than patching fields one at a time.
           await this.fetchCustomer()
         } catch (e) {
-          this.error = e?.message || this.$t('error.err') || 'That change was not accepted'
+          this.error = e?.message || this.$t('error.err') || this.$t('pages.registeredUsers.changeRejected')
         } finally {
           this.saving = null
         }

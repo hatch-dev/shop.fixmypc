@@ -27,11 +27,11 @@
           <div class="inv-mode-hint" :class="isVariable ? 'is-variable' : 'is-simple'">
             <template v-if="isVariable">
               <i class="fas fa-sitemap mr-5" />
-              <span><strong>Variable product</strong> — tick attributes below to generate variant rows.</span>
+              <i18n path="cmp.ProductInventory.variableHint" tag="span"><template v-slot:label><strong>{{ $t('cmp.ProductInventory.variableProduct') }}</strong></template></i18n>
             </template>
             <template v-else>
               <i class="fas fa-box mr-5" />
-              <span><strong>Simple product</strong> — a single stock entry, no variants. Switch to <strong>Variable</strong> in Basic Info to add options.</span>
+              <i18n path="cmp.ProductInventory.simpleHint" tag="span"><template v-slot:label><strong>{{ $t('cmp.ProductInventory.simpleProduct') }}</strong></template><template v-slot:variable><strong>{{ $t('cmp.ProductInventory.variable') }}</strong></template></i18n>
             </template>
           </div>
 
@@ -81,7 +81,7 @@
             class="variant-empty"
           >
             <i class="fas fa-layer-group mr-5" />
-            Tick attribute values above to generate variant rows.
+            {{ $t('cmp.ProductInventory.tickToGenerate') }}
           </div>
           <div
             v-if="combinations.length"
@@ -90,20 +90,20 @@
             <div class="inventory-toolbar">
               <span class="inventory-count">
                 <i class="fas fa-boxes mr-5" />
-                {{ combinations.length }} {{ isVariable ? 'variant' : 'stock' }} row{{ combinations.length > 1 ? 's' : '' }}
+                {{ $tc(isVariable ? 'cmp.ProductInventory.variantRows' : 'cmp.ProductInventory.stockRows', combinations.length, { count: combinations.length }) }}
               </span>
             </div>
             <div class="inventory-scroll">
             <div class="dply-felx f-column gap-15 inventory-table">
               <div class="inventory-row header">
-                  <div>Back Order</div>
+                  <div>{{ $t('cmp.ProductInventory.backOrder') }}</div>
                   <div class="col-attr">{{ $t('list.attr') }}</div>
-                  <div>Images</div>
+                  <div>{{ $t('cmp.ProductInventory.images') }}</div>
                   <div>{{ $t('title.sku') }}</div>
                   <div>{{ $t('brand.price') }}({{currencyIcon}})</div>
                   <div>{{ $t('fSale.qty') }}</div>
-                  <div>IMEI / S.No</div>
-                  <div>Barcode</div>
+                  <div>{{ $t('cmp.ProductInventory.imeiSerial') }}</div>
+                  <div>{{ $t('cmp.ProductInventory.barcode') }}</div>
               </div>
               <div
                 v-for="(item, index) in combinations"
@@ -125,7 +125,7 @@
                     {{ renderLabel(item.values || []) }}
                   </h5>
                   <h5 v-else>
-                    {{ isVariable ? $t('list.aq') : 'Default' }}
+                    {{ isVariable ? $t('list.aq') : $t('cmp.ProductInventory.default') }}
                   </h5>
                   <span v-if="rowError(index, 'values')" class="field-error">
                     {{ rowError(index, 'values') }}
@@ -151,7 +151,7 @@
                   <input
                     type="text"
                     v-model="item.sku"
-                    placeholder="SKU"
+                    :placeholder="$t('cmp.ProductInventory.sku')"
                     :class="{ 'has-error': rowError(index, 'sku') }"
                     @input="clearRowError(index, 'sku')"
                   >
@@ -189,9 +189,9 @@
                   </span>
                 </div>
 
-                <input type="text" v-model="item.imei" placeholder="IMEI">
+                <input type="text" v-model="item.imei" :placeholder="$t('cmp.ProductInventory.imei')">
 
-                <input type="text" v-model="item.barcode" placeholder="Barcode">
+                <input type="text" v-model="item.barcode" :placeholder="$t('cmp.ProductInventory.barcode')">
 
               </div>
             </div>
@@ -225,7 +225,7 @@
       <div class="image-manager">
 
         <div class="image-manager-body">
-          <h2 class="image-manager-title">Variant Images</h2>
+          <h2 class="image-manager-title">{{ $t('cmp.ProductInventory.variantImages') }}</h2>
 
           <div class="image-grid">
 
@@ -252,7 +252,7 @@
         <div class="image-manager-footer">
 
           <label class="add-image-btn">
-            + Add Variant Image
+            {{ $t('cmp.ProductInventory.addVariantImage') }}
             <input
               type="file"
               accept="image/*"
@@ -264,11 +264,11 @@
 
           <div class="footer-actions">
               <button class="btn-cancel" @click="showVariantImageModal = false">
-                Cancel
+                {{ $t('cmp.ProductInventory.cancel') }}
               </button>
 
               <button class="button primary-btn" @click="applyVariantImage">
-                Save Selection
+                {{ $t('cmp.ProductInventory.saveSelection') }}
               </button>
           </div>
         </div>
@@ -416,17 +416,17 @@
           const errors = {}
 
           if (!row.sku || !String(row.sku).trim()) {
-            errors.sku = 'SKU is required'
+            errors.sku = this.$t('cmp.ProductInventory.skuRequired')
           }
 
           if (row.quantity === '' || row.quantity === null || row.quantity === undefined ||
             !Number.isInteger(Number(row.quantity)) || Number(row.quantity) < 0) {
-            errors.quantity = 'Quantity must be a whole number, 0 or more'
+            errors.quantity = this.$t('cmp.ProductInventory.quantityInvalid')
           }
 
           if (row.price === '' || row.price === null || isNaN(Number(row.price)) ||
             Number(row.price) < 0) {
-            errors.price = 'Price must be 0 or more'
+            errors.price = this.$t('cmp.ProductInventory.priceInvalid')
           }
 
           if (Object.keys(errors).length) {
@@ -443,14 +443,14 @@
           !this.selectedAttributeValues ||
           !this.selectedAttributeValues.length
         ) {
-          this.sectionError = 'Please select inventory attributes'
+          this.sectionError = this.$t('cmp.ProductInventory.selectInventoryAttributes')
           this.$emit('has-error')
           return false
         }
 
         // Require combinations
         if (!this.combinations || !this.combinations.length) {
-          this.sectionError = 'Please create inventory combinations'
+          this.sectionError = this.$t('cmp.ProductInventory.createCombinations')
           this.$emit('has-error')
           return false
         }
@@ -461,21 +461,21 @@
           const errors = {}
 
           if (!combo.values || !combo.values.length) {
-            errors.values = 'Select attribute values'
+            errors.values = this.$t('cmp.ProductInventory.selectAttributeValues')
           }
 
           if (!combo.sku || !combo.sku.trim()) {
-            errors.sku = 'SKU is required'
+            errors.sku = this.$t('cmp.ProductInventory.skuRequired')
           }
 
           if (combo.quantity === '' || combo.quantity === null ||
             !Number.isInteger(Number(combo.quantity)) || Number(combo.quantity) < 0) {
-            errors.quantity = 'Quantity must be a whole number, 0 or more'
+            errors.quantity = this.$t('cmp.ProductInventory.quantityInvalid')
           }
 
           if (combo.price === '' || combo.price === null || isNaN(Number(combo.price)) ||
             Number(combo.price) < 0) {
-            errors.price = 'Price must be 0 or more'
+            errors.price = this.$t('cmp.ProductInventory.priceInvalid')
           }
 
           if (Object.keys(errors).length) hasError = true
@@ -488,9 +488,9 @@
         )
         skuList.forEach((sku, index) => {
           if (sku && skuList.indexOf(sku) !== index) {
-            rowErrors[index].sku = 'Duplicate SKU'
+            rowErrors[index].sku = this.$t('cmp.ProductInventory.duplicateSku')
             const first = skuList.indexOf(sku)
-            rowErrors[first].sku = rowErrors[first].sku || 'Duplicate SKU'
+            rowErrors[first].sku = rowErrors[first].sku || this.$t('cmp.ProductInventory.duplicateSku')
             hasError = true
           }
         })
@@ -525,11 +525,11 @@
 
           await this.fetchVariantImages(this.productId)
 
-          this.$toast.success("Images uploaded successfully")
+          this.$toast.success(this.$t('cmp.ProductInventory.imagesUploaded'))
 
         } catch (e) {
           console.error(e)
-          this.$toast.error("Upload failed")
+          this.$toast.error(this.$t('cmp.ProductInventory.uploadFailed'))
         }
 
         e.target.value = ''
@@ -697,7 +697,7 @@
       },
       async submitInventory() {
         if (!this.productId) {
-          this.$toast.error('Please save product details first')
+          this.$toast.error(this.$t('cmp.ProductInventory.saveProductFirst'))
           return false
         }
 
@@ -710,7 +710,7 @@
             this.selectedAttributes.length &&
             !this.selectedAttributeValues.length
           ) {
-            this.$toast.error('Please select inventory attributes')
+            this.$toast.error(this.$t('cmp.ProductInventory.selectInventoryAttributes'))
             this.$emit('has-error')
             return
           }
@@ -718,7 +718,7 @@
             !(combo.values && combo.values.length)
           )
           if (invalidCombination) {
-            this.$toast.error('Inventory attribute combination is required')
+            this.$toast.error(this.$t('cmp.ProductInventory.combinationRequired'))
             this.$emit('has-error')
             return
           }

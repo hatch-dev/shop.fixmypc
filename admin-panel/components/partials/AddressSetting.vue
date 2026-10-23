@@ -58,12 +58,12 @@
 
     <div class="input-wrapper">
       <label>
-        WhatsApp Number
+        {{ $t('cmp.AddressSetting.whatsappNumber') }}
       </label>
 
       <input
         type="text"
-        placeholder="WhatsApp Number"
+        :placeholder="$t('cmp.AddressSetting.whatsappNumber')"
         v-model="result.whatsapp"
       >
     </div>

@@ -18,6 +18,7 @@
  *     Pricing::flashDiscount
  */
 const assert = require('assert')
+const { translate, translateCount } = require('./i18n-en')
 const path = require('path')
 const fs = require('fs')
 
@@ -55,7 +56,8 @@ Vue.prototype.$store = { state: { defaultImage: '', imgSrcUrl: '', thumbPrefix: 
 
 // The util mixin's data() is full of this.$t() titles, so every component
 // that mixes it in needs one before it can even be constructed.
-Vue.prototype.$t = key => key
+Vue.prototype.$t = translate
+Vue.prototype.$tc = translateCount
 
 let renderError = null
 Vue.config.errorHandler = (err) => { renderError = err }

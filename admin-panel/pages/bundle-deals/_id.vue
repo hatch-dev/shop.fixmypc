@@ -34,18 +34,18 @@
       </div>
 
       <div class="input-wrapper">
-        <label>Description</label>
+        <label>{{ $t('pages.bundleDeals.description') }}</label>
         <textarea
           name="description"
           v-model="result.description"
-          placeholder="Enter bundle description"
+          :placeholder="$t('pages.bundleDeals.descriptionPlaceholder')"
           :class="{invalid: !!!result.description && hasError}"
         ></textarea>
         <span
           class="error"
           v-if="!!!result.description && hasError"
         >
-          Description is required
+          {{ $t('pages.bundleDeals.descriptionRequired') }}
         </span>
       </div>
 
@@ -75,6 +75,7 @@
               <button
                 type="button"
                 class="remove-btn"
+                :aria-label="$t('pages.bundleDeals.removeProduct')"
                 @click="removeBundleProduct(index)"
               >
                 ×
@@ -95,32 +96,32 @@
           class="error"
           v-if="result.products.length < 2 && hasError"
         >
-          Please add at least two products to create a bundle
+          {{ $t('pages.bundleDeals.atLeastTwo') }}
         </div>
       </div>
 
       <div class="input-wrapper">
         <div class="bundle-summary">
           <div class="summary-row">
-            <span>Total Price:</span>
+            <span>{{ $t('pages.bundleDeals.totalPriceLabel') }}</span>
             <strong>{{ formatCurrency(totalPrice) }}</strong>
           </div>
           <div class="summary-row discount-row">
             <select v-model="result.discount_type" class="discount-select">
-              <option value="fixed">Fixed</option>
-              <option value="percentage">Percentage</option>
+              <option value="fixed">{{ $t('pages.bundleDeals.fixed') }}</option>
+              <option value="percentage">{{ $t('pages.bundleDeals.percentage') }}</option>
             </select>
             <input
               type="number"
               step="0.01"
               min="0"
               v-model.number="result.discount_value"
-              placeholder="Discount"
+              :placeholder="$t('pages.bundleDeals.discount')"
               class="discount-input"
             />
           </div>
           <div class="summary-row final-price">
-            <span>Final Price:</span>
+            <span>{{ $t('pages.bundleDeals.finalPriceLabel') }}</span>
             <strong>{{ formatCurrency(finalPrice) }}</strong>
           </div>
         </div>

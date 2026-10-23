@@ -6,7 +6,7 @@
     route-name="wallet-overview"
     table-class="wallet-overview-table"
     empty-store-variable="allWalletOverview"
-    name="Wallet Overview"
+    :name="$t('pages.walletOverview.listName')"
     gate="wallet_log"
     @list="handleList"
   >
@@ -20,13 +20,13 @@
           <th class="w-50x mx-w-50x">
             <input type="checkbox" @change="checkAll">
           </th>
-          <th>User</th>
-          <th>Email</th>
-          <th>Amount</th>
-          <th>Cherry Points</th>
-          <th>Type</th>
-          <th>Source</th>
-          <th>Date</th>
+          <th>{{ $t('pages.walletOverview.colUser') }}</th>
+          <th>{{ $t('pages.walletOverview.colEmail') }}</th>
+          <th>{{ $t('pages.walletOverview.colAmount') }}</th>
+          <th>{{ $t('pages.walletOverview.colCherryPoints') }}</th>
+          <th>{{ $t('pages.walletOverview.colType') }}</th>
+          <th>{{ $t('pages.walletOverview.colSource') }}</th>
+          <th>{{ $t('pages.walletOverview.colDate') }}</th>
         </tr>
 
         <!-- ROWS -->
@@ -38,8 +38,8 @@
                 <strong>{{ row.user }}</strong>
                 <span class="text-muted">({{ row.email }})</span>
                 <div class="user-summary">
-                    Wallet: €{{ row.wallet_balance }}
-                    | Points: {{ row.cherry_points }}
+                    {{ $t('pages.walletOverview.walletSummary', { balance: '€' + row.wallet_balance }) }}
+                    | {{ $t('pages.walletOverview.pointsSummary', { points: row.cherry_points }) }}
                 </div>
                 <span style="float:right">
                     {{ collapsedUsers[row.user_id] ? '+' : '-' }}
@@ -71,7 +71,7 @@
 
             <td>
               <span :class="row.type === 'credit' ? 'badge bg-success' : 'badge bg-danger'">
-                {{ row.type }}
+                {{ row.type === 'credit' ? $t('pages.walletOverview.typeCredit') : (row.type === 'debit' ? $t('pages.walletOverview.typeDebit') : row.type) }}
               </span>
             </td>
 

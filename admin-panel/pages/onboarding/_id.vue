@@ -3,12 +3,12 @@
   <div class="onboarding-form">
 
     <h2 class="mb-20">
-      Onboarding
+      {{ $t('pages.onboarding.title') }}
     </h2>
 
     <div class="input-wrapper">
 
-      <label>Upload Images</label>
+      <label>{{ $t('pages.onboarding.uploadImages') }}</label>
 
       <input
         type="file"
@@ -36,7 +36,7 @@
           class="delete-btn"
           @click="removeImage(index)"
         >
-          Remove
+          {{ $t('pages.onboarding.remove') }}
         </button>
 
       </div>
@@ -47,7 +47,7 @@
       class="lite-btn mt-20"
       @click="saveOnboarding"
     >
-      Save
+      {{ $t('pages.onboarding.save') }}
     </button>
 
   </div>

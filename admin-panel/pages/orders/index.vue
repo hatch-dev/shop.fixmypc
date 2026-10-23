@@ -186,7 +186,7 @@
             <td class="mn-w-120x">
               <span class="state-pill" :class="'is-' + orderTone(item)">{{ orderStateLabel(item) }}</span>
               <span v-if="item.state && item.state.return" class="state-pill is-warn" :class="{ 'is-good': item.state.return.key === 'completed', 'is-muted': ['rejected', 'withdrawn'].includes(item.state.return.key) }">
-                {{ item.state.return.type === 'exchange' ? 'Exchange' : 'Return' }}: {{ returnLabels[item.state.return.key] || item.state.return.key }}
+                {{ item.state.return.type === 'exchange' ? $t('pages.orders.exchange') : $t('pages.orders.returnCol') }}: {{ returnLabels[item.state.return.key] || item.state.return.key }}
               </span>
               <span v-if="item.state && item.state.refund" class="state-pill" :class="'is-' + ({ completed: 'good', partial: 'good', failed: 'bad' }[item.state.refund.key] || 'warn')">
                 {{ refundLabels[item.state.refund.key] }}
@@ -267,11 +267,11 @@
         },
         checkedFilter:[],
         returnLabels: {
-          requested: 'To review', approved: 'Awaiting return', item_received: 'Received', awaiting_payment: 'Awaiting payment',
-          completed: 'Completed', rejected: 'Rejected', withdrawn: 'Withdrawn'
+          requested: this.$t('pages.orders.returnToReview'), approved: this.$t('pages.orders.returnAwaitingReturn'), item_received: this.$t('pages.orders.returnReceived'), awaiting_payment: this.$t('pages.orders.returnAwaitingPayment'),
+          completed: this.$t('pages.orders.returnCompleted'), rejected: this.$t('pages.orders.returnRejected'), withdrawn: this.$t('pages.orders.returnWithdrawn')
         },
         refundLabels: {
-          pending: 'Refund pending', processing: 'Refund processing', completed: 'Refunded', partial: 'Partly refunded', failed: 'Refund failed'
+          pending: this.$t('pages.orders.refundStatePending'), processing: this.$t('pages.orders.refundStateProcessing'), completed: this.$t('pages.orders.refundCompleted'), partial: this.$t('pages.orders.refundPartial'), failed: this.$t('pages.orders.refundStateFailed')
         },
         filterOptions:[
           {
@@ -281,7 +281,7 @@
           {
             // return/exchange cases, returned orders, and cancelled orders with money owed or sent back
             key: 'returns',
-            title: 'Returns & refunds'
+            title: this.$t('pages.orders.filterReturnsRefunds')
           },
           {
             key: 'cash_on_delivery',
@@ -297,13 +297,13 @@
           },
           {
             key: 'bank_transfer',
-            title: 'Bank transfer'
+            title: this.$t('pages.orders.filterBankTransfer')
           },
           {
             // Bank transfer, unpaid, not cancelled: the ones to check the
             // bank account for. Includes those with a reference in.
             key: 'awaiting_transfer',
-            title: 'Awaiting transfer'
+            title: this.$t('pages.orders.filterAwaitingTransfer')
           },
           {
             key: 'paid',

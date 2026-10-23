@@ -35,7 +35,7 @@
         </label>
         <input
           type="text"
-          placeholder="eg. 3454245344554"
+          :placeholder="$t('pages.withdrawalAccounts.accountNumberPlaceholder')"
           v-model="result.account_number"
           :class="{invalid: !result.account_number && hasError}"
         >

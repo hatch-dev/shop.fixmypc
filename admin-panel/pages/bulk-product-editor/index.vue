@@ -8,21 +8,21 @@
         <div class="filter-left">
             <!-- Status -->
             <select v-model="filters.status" class="filter-pill">
-              <option value="">Any Status</option>
-              <option value="1">Public</option>
-              <option value="2">Private</option>
+              <option value="">{{ $t('pages.bulkProductEditor.anyStatus') }}</option>
+              <option value="1">{{ $t('pages.bulkProductEditor.public') }}</option>
+              <option value="2">{{ $t('pages.bulkProductEditor.private') }}</option>
             </select>
 
             <!-- Stock -->
             <select v-model="filters.stock" class="filter-pill">
-              <option value="">Any Stock</option>
-              <option value="in">In Stock</option>
-              <option value="out">Out of Stock</option>
+              <option value="">{{ $t('pages.bulkProductEditor.anyStock') }}</option>
+              <option value="in">{{ $t('pages.bulkProductEditor.inStock') }}</option>
+              <option value="out">{{ $t('pages.bulkProductEditor.outOfStock') }}</option>
             </select>
 
             <!-- Brands -->
             <select v-model="filters.brand" class="filter-pill">
-              <option value="">All Brand</option>
+              <option value="">{{ $t('pages.bulkProductEditor.allBrand') }}</option>
               <option v-for="brand in brands" :key="brand.id" :value="brand.id">
                   {{ brand.title }}
                 </option>
@@ -33,42 +33,42 @@
               <input
                 type="text"
                 v-model="filters.q"
-                placeholder="Search name, SKU, barcode..."
+                :placeholder="$t('pages.bulkProductEditor.searchPlaceholder')"
               />
             </div>
 
             <button class="btn-reset" @click="resetFilters">
               <i class="fa-solid fa-rotate-right"></i>
-               Reset
+               {{ $t('pages.bulkProductEditor.reset') }}
             </button>
         </div>
         <div class="filter-right">
           <button type="button" class="btn-advance" @click="showAdvanced = !showAdvanced">
             <i class="fa-solid fa-sliders"></i>
-            Advance Filters
+            {{ $t('pages.bulkProductEditor.advanceFilters') }}
           </button>
           <button class="btn-outline">
             <i class="fa-solid fa-bullhorn"></i>
-            SEO
+            {{ $t('pages.bulkProductEditor.seo') }}
           </button>
           <button
             class="button custom-grid-btn"
             @click.stop="showColumnSelector = !showColumnSelector"
           >
             <i class="fa-solid fa-table-columns"></i>
-            Custom Grid
+            {{ $t('pages.bulkProductEditor.customGrid') }}
           </button>
           <button
             class="btn-primary"
             @click="toggleBulkPreview"
           >
-            {{ showBulkPreview ? 'Clear Action' : `Bulk Action (${selectedProducts.length})` }}
+            {{ showBulkPreview ? $t('pages.bulkProductEditor.clearAction') : $t('pages.bulkProductEditor.bulkAction', { count: selectedProducts.length }) }}
           </button>
           <button
             class="button focus-btn"
             @click="toggleFocusMode"
           >
-            <i class="fa-solid" :class="isFocusMode ? 'fa-compress' : 'fa-expand'"></i> <span>Focus Mode</span>
+            <i class="fa-solid" :class="isFocusMode ? 'fa-compress' : 'fa-expand'"></i> <span>{{ $t('pages.bulkProductEditor.focusMode') }}</span>
           </button>
         </div>
       </div>
@@ -77,7 +77,7 @@
         <div v-if="showAdvanced || hasActiveAdvancedFilters" class="advanced-card">
 
           <div class="advanced-header">
-            <span>Advanced Filters</span>
+            <span>{{ $t('pages.bulkProductEditor.advancedFilters') }}</span>
           </div>
 
           <div class="advanced-row">
@@ -85,7 +85,7 @@
             <!-- Selects -->
             <div class="advanced-selects">
               <select v-model="filters.category_id" class="filter-select">
-                <option value="">All Categories</option>
+                <option value="">{{ $t('pages.bulkProductEditor.allCategories') }}</option>
                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">
                   {{ cat.title }}
                 </option>
@@ -96,28 +96,28 @@
                 v-model="filters.subcategory_id"
                 class="filter-select"
               >
-                <option value="">All Sub Categories</option>
+                <option value="">{{ $t('pages.bulkProductEditor.allSubCategories') }}</option>
                 <option v-for="sub in subcategories" :key="sub.id" :value="sub.id">
                   {{ sub.title }}
                 </option>
               </select>
 
               <select v-model="filters.product_id" class="filter-select">
-                <option value="">All Products</option>
+                <option value="">{{ $t('pages.bulkProductEditor.allProducts') }}</option>
                 <option v-for="product in products" :key="product.id" :value="product.id">
                   <span class="truncate">{{ product.title }}</span>
                 </option>
               </select>
 
               <select v-model="filters.collection_id" class="filter-select">
-                <option value="">All Collections</option>
+                <option value="">{{ $t('pages.bulkProductEditor.allCollections') }}</option>
                 <option v-for="col in collections" :key="col.id" :value="col.id">
                   {{ col.title }}
                 </option>
               </select>
 
               <select v-model="filters.crosssell_id" class="filter-select">
-                <option value="">Cross Sell</option>
+                <option value="">{{ $t('pages.bulkProductEditor.crossSell') }}</option>
                 <option
                   v-for="(item, key) in allUpsells"
                   :key="key"
@@ -130,10 +130,10 @@
 
             <!-- Checkboxes -->
             <div class="advanced-checkboxes">
-              <label><input type="checkbox" v-model="filters.onlyVariants"> Only with Variants</label>
-              <label><input type="checkbox" v-model="filters.recentlyAdded"> Recently Added</label>
-              <label><input type="checkbox" v-model="filters.highReturn"> High Return</label>
-              <label><input type="checkbox" v-model="filters.deadStock"> Dead Stock</label>
+              <label><input type="checkbox" v-model="filters.onlyVariants"> {{ $t('pages.bulkProductEditor.onlyWithVariants') }}</label>
+              <label><input type="checkbox" v-model="filters.recentlyAdded"> {{ $t('pages.bulkProductEditor.recentlyAdded') }}</label>
+              <label><input type="checkbox" v-model="filters.highReturn"> {{ $t('pages.bulkProductEditor.highReturn') }}</label>
+              <label><input type="checkbox" v-model="filters.deadStock"> {{ $t('pages.bulkProductEditor.deadStock') }}</label>
             </div>
 
           </div>
@@ -164,7 +164,7 @@
                   :class="allVariantsExpanded ? 'fa-angles-up' : 'fa-angles-down'"
                 ></i>
 
-                {{ allVariantsExpanded ? 'Collapse All' : 'Expand All' }}
+                {{ allVariantsExpanded ? $t('pages.bulkProductEditor.collapseAll') : $t('pages.bulkProductEditor.expandAll') }}
               </button>
             </div>
 
@@ -207,7 +207,7 @@
                   <div class="bulk-preview-left">
                     <i class="fa-solid fa-layer-group"></i>
                     <span>
-                      Selected Products Preview
+                      {{ $t('pages.bulkProductEditor.selectedProductsPreview') }}
                       ({{ selectedProducts.length }})
                     </span>
                   </div>
@@ -217,14 +217,14 @@
                       class="button primary-btn"
                       @click="confirmBulkChanges"
                     >
-                      Apply
+                      {{ $t('pages.bulkProductEditor.apply') }}
                     </button>
 
                     <button
                       class="btn-cancel"
                       @click="toggleBulkPreview"
                     >
-                      Cancel
+                      {{ $t('pages.bulkProductEditor.cancel') }}
                     </button>
                   </div>
 
@@ -246,7 +246,7 @@
 
                 <!-- Title -->
                 <template v-else-if="col.key === 'title'">
-                  <span class="bulk-label">Bulk Edit →</span>
+                  <span class="bulk-label">{{ $t('pages.bulkProductEditor.bulkEdit') }}</span>
                 </template>
 
                 <!-- Slug -->
@@ -265,12 +265,12 @@
                       <span v-if="bulkData.tempCategoryIds.length">
                         {{ bulkData.tempCategoryIds.length }}
                       </span>
-                      <span v-else class="placeholder">Choose</span>
+                      <span v-else class="placeholder">{{ $t('pages.bulkProductEditor.choose') }}</span>
                       <i class="fa-solid fa-chevron-down"></i>
                     </div>
 
                     <div v-if="activeBulkCategory" class="category-popup">
-                      <div class="popup-header">Select Categories</div>
+                      <div class="popup-header">{{ $t('pages.bulkProductEditor.selectCategories') }}</div>
 
                       <div class="category-list">
                         <div
@@ -317,7 +317,7 @@
                       <span v-if="bulkData.tempPrimaryCategoryId">
                         {{ findCategoryTitle(bulkData.tempPrimaryCategoryId) }}
                       </span>
-                      <span v-else class="placeholder">Choose</span>
+                      <span v-else class="placeholder">{{ $t('pages.bulkProductEditor.choose') }}</span>
                       <i class="fa-solid fa-chevron-down"></i>
                     </div>
 
@@ -348,7 +348,7 @@
                       <span v-if="bulkData.tempCollectionIds.length">
                         {{ bulkData.tempCollectionIds.length }}
                       </span>
-                      <span v-else class="placeholder">Choose</span>
+                      <span v-else class="placeholder">{{ $t('pages.bulkProductEditor.choose') }}</span>
                       <i class="fa-solid fa-chevron-down"></i>
                     </div>
 
@@ -418,11 +418,11 @@
                       <span v-if="bulkData.bundle_deal_ids?.length">
                         {{ bulkData.bundle_deal_ids.length }}
                       </span>
-                      <span v-else class="placeholder">Choose</span>
+                      <span v-else class="placeholder">{{ $t('pages.bulkProductEditor.choose') }}</span>
                       <i class="fa-solid fa-chevron-down"></i>
                     </div>
                     <div v-if="activeBulkBundle" class="collection-popup">
-                      <div class="popup-header">Select Bundles</div>
+                      <div class="popup-header">{{ $t('pages.bulkProductEditor.selectBundles') }}</div>
 
                       <div class="collection-list">
                         <label
@@ -459,11 +459,11 @@
                       @click="activeBulkProcurement = !activeBulkProcurement"
                     >
                       <span v-if="bulkData.procurement !== null">
-                        {{ bulkData.procurement == 1 ? 'true' : 'false' }}
+                        {{ bulkData.procurement == 1 ? $t('pages.bulkProductEditor.trueLabel') : $t('pages.bulkProductEditor.falseLabel') }}
                       </span>
 
                       <span v-else class="placeholder">
-                        Choose
+                        {{ $t('pages.bulkProductEditor.choose') }}
                       </span>
 
                       <i class="fa-solid fa-chevron-down"></i>
@@ -480,7 +480,7 @@
                           :value="1"
                           v-model="bulkData.procurement"
                         />
-                        true
+                        {{ $t('pages.bulkProductEditor.trueLabel') }}
                       </label>
 
                       <label class="primary-option">
@@ -489,7 +489,7 @@
                           :value="0"
                           v-model="bulkData.procurement"
                         />
-                        false
+                        {{ $t('pages.bulkProductEditor.falseLabel') }}
                       </label>
                     </div>
 
@@ -602,7 +602,7 @@
                     class="status-badge"
                     :class="product.procurement == 1 ? 'status-public' : 'status-private'"
                   >
-                    {{ product.procurement == 1 ? 'true' : 'false' }}
+                    {{ product.procurement == 1 ? $t('pages.bulkProductEditor.trueLabel') : $t('pages.bulkProductEditor.falseLabel') }}
                   </span>
                 </template>
               </td>
@@ -705,7 +705,7 @@
                 <!-- Editor -->
 
                 <template v-if="col.key === 'editor'">
-                  <button class="content-btn" @click="openEditorModal(value)" > Editor </button>
+                  <button class="content-btn" @click="openEditorModal(value)" > {{ $t('pages.bulkProductEditor.editor') }} </button>
                 </template>
 
                 <!-- Category -->
@@ -722,7 +722,7 @@
                         {{ value.selectedCategories.length }}
                       </span>
                       <span v-else class="placeholder">
-                        Choose
+                        {{ $t('pages.bulkProductEditor.choose') }}
                       </span>
 
                       <i class="fa-solid fa-chevron-down"></i>
@@ -749,7 +749,7 @@
                       class="category-popup"
                     >
                       <div class="popup-header">
-                        Select Categories
+                        {{ $t('pages.bulkProductEditor.selectCategories') }}
                       </div>
 
                       <div class="category-list">
@@ -790,13 +790,13 @@
 
                       <div class="popup-actions">
                         <button @click="cancelCategories(value)">
-                          Cancel
+                          {{ $t('pages.bulkProductEditor.cancel') }}
                         </button>
                         <button
                           class="primary-btn"
                           @click="applyCategories(value)"
                         >
-                          Apply
+                          {{ $t('pages.bulkProductEditor.apply') }}
                         </button>
                       </div>
                     </div>
@@ -822,7 +822,7 @@
                       </span>
 
                       <span v-else class="placeholder">
-                        Choose
+                        {{ $t('pages.bulkProductEditor.choose') }}
                       </span>
 
                       <i class="fa-solid fa-chevron-down"></i>
@@ -834,7 +834,7 @@
                       class="primary-popup"
                     >
                       <div class="popup-header">
-                        Select Primary Category
+                        {{ $t('pages.bulkProductEditor.selectPrimaryCategory') }}
                       </div>
 
                       <div class="primary-list">
@@ -855,13 +855,13 @@
 
                       <div class="popup-actions">
                         <button @click="cancelPrimary(value)">
-                          Cancel
+                          {{ $t('pages.bulkProductEditor.cancel') }}
                         </button>
                         <button
                           class="primary-btn"
                           @click="applyPrimary(value)"
                         >
-                          Apply
+                          {{ $t('pages.bulkProductEditor.apply') }}
                         </button>
                       </div>
                     </div>
@@ -883,7 +883,7 @@
                       </span>
 
                       <span v-else class="placeholder">
-                        Choose
+                        {{ $t('pages.bulkProductEditor.choose') }}
                       </span>
 
                       <i class="fa-solid fa-chevron-down"></i>
@@ -908,7 +908,7 @@
                       class="collection-popup"
                     >
                       <div class="popup-header">
-                        Select Collections
+                        {{ $t('pages.bulkProductEditor.selectCollections') }}
                       </div>
 
                       <div class="collection-list">
@@ -928,13 +928,13 @@
 
                       <div class="popup-actions">
                         <button @click="activeCollectionRow = null">
-                          Cancel
+                          {{ $t('pages.bulkProductEditor.cancel') }}
                         </button>
                         <button
                           class="primary-btn"
                           @click="applyCollections(value)"
                         >
-                          Apply
+                          {{ $t('pages.bulkProductEditor.apply') }}
                         </button>
                       </div>
                     </div>
@@ -965,7 +965,7 @@
                           class="discount-calc-btn"
                           :class="{ active: activeDiscountRow === value.id }"
                           @click.stop="toggleDiscountPopup(value.id)"
-                          title="Open discount calculator"
+                          :title="$t('pages.bulkProductEditor.openDiscountCalculator')"
                         >
                           <i class="fa-solid fa-calculator"></i>
                         </button>
@@ -977,14 +977,14 @@
                       class="discount-popup"
                     >
                       <div class="popup-header">
-                        <span>Discount Operation</span>
+                        <span>{{ $t('pages.bulkProductEditor.discountOperation') }}</span>
                       </div>
 
                       <div class="discount-popup-row">
                         <input
                           type="number"
                           v-model.number="value.tempDiscount"
-                          placeholder="Enter value"
+                          :placeholder="$t('pages.bulkProductEditor.enterValue')"
                           class="discount-popup-input"
                         />
 
@@ -995,16 +995,16 @@
                       </div>
 
                       <div class="popup-preview">
-                        Final Price:
+                        {{ $t('pages.bulkProductEditor.finalPriceLabel') }}
                         <strong>{{ calculateFinalProductPrice(value) }}</strong>
                       </div>
 
                       <div class="discount-popup-actions">
                         <button class="popup-cancel" @click="activeDiscountRow = null">
-                          Cancel
+                          {{ $t('pages.bulkProductEditor.cancel') }}
                         </button>
                         <button class="popup-button primary-btn" @click="applyDiscount(value)">
-                          Apply
+                          {{ $t('pages.bulkProductEditor.apply') }}
                         </button>
                       </div>
                     </div>
@@ -1045,7 +1045,7 @@
                       </span>
 
                       <span v-else class="placeholder">
-                        Choose
+                        {{ $t('pages.bulkProductEditor.choose') }}
                       </span>
 
                       <i class="fa-solid fa-chevron-down"></i>
@@ -1071,7 +1071,7 @@
                       class="collection-popup"
                     >
                       <div class="popup-header">
-                        Select Bundles
+                        {{ $t('pages.bulkProductEditor.selectBundles') }}
                       </div>
 
                       <div class="collection-list">
@@ -1091,13 +1091,13 @@
 
                       <div class="popup-actions">
                         <button @click="activeBundleRow = null">
-                          Cancel
+                          {{ $t('pages.bulkProductEditor.cancel') }}
                         </button>
                         <button
                           class="primary-btn"
                           @click="applyBundles(value)"
                         >
-                          Apply
+                          {{ $t('pages.bulkProductEditor.apply') }}
                         </button>
                       </div>
                     </div>
@@ -1122,11 +1122,11 @@
                       @click.stop="toggleProcurementPopup(value.id)"
                     >
                       <span v-if="value.procurement !== null">
-                        {{ value.procurement == 1 ? 'true' : 'false' }}
+                        {{ value.procurement == 1 ? $t('pages.bulkProductEditor.trueLabel') : $t('pages.bulkProductEditor.falseLabel') }}
                       </span>
 
                       <span v-else class="placeholder">
-                        Choose
+                        {{ $t('pages.bulkProductEditor.choose') }}
                       </span>
 
                       <i class="fa-solid fa-chevron-down"></i>
@@ -1143,7 +1143,7 @@
                           v-model="value.procurement"
                           @change="applyProcurement(value)"
                         />
-                        true
+                        {{ $t('pages.bulkProductEditor.trueLabel') }}
                       </label>
 
                       <label class="primary-option">
@@ -1154,7 +1154,7 @@
                           v-model="value.procurement"
                           @change="applyProcurement(value)"
                         />
-                        false
+                        {{ $t('pages.bulkProductEditor.falseLabel') }}
                       </label>
                     </div>
                   </div>
@@ -1172,13 +1172,13 @@
                 <div class="variant-box">
 
                   <div class="variant-header-clean">
-                    <span>Image</span>
-                    <span>Attributes</span>
-                    <span>SKU</span>
-                    <span>Price</span>
-                    <span>Qty</span>
-                    <span>IMEI / S.No</span>
-                    <span>Barcode</span>
+                    <span>{{ $t('pages.bulkProductEditor.image') }}</span>
+                    <span>{{ $t('pages.bulkProductEditor.attributes') }}</span>
+                    <span>{{ $t('pages.bulkProductEditor.sku') }}</span>
+                    <span>{{ $t('pages.bulkProductEditor.price') }}</span>
+                    <span>{{ $t('pages.bulkProductEditor.qty') }}</span>
+                    <span>{{ $t('pages.bulkProductEditor.imeiSerial') }}</span>
+                    <span>{{ $t('pages.bulkProductEditor.barcode') }}</span>
                   </div>
 
                   <div
@@ -1236,7 +1236,7 @@
                       type="text"
                       v-model="variant.imei"
                       class="admin-input small"
-                      placeholder="IMEI"
+                      :placeholder="$t('pages.bulkProductEditor.imei')"
                       @input="autoSave(value)"
                     />
 
@@ -1244,7 +1244,7 @@
                       type="text"
                       v-model="variant.barcode"
                       class="admin-input small"
-                      placeholder="Barcode"
+                      :placeholder="$t('pages.bulkProductEditor.barcode')"
                       @input="autoSave(value)"
                     />
                   </div>
@@ -1259,7 +1259,7 @@
 
       <div v-if="showContentModal" class="modal-overlay">
         <div class="modal-box">
-          <h3>Edit {{ editingField }}</h3>
+          <h3>{{ editingField === 'slug' ? $t('pages.bulkProductEditor.editSlug') : $t('pages.bulkProductEditor.editTitle') }}</h3>
 
           <textarea
             v-model="editingValue"
@@ -1268,10 +1268,10 @@
 
           <div class="modal-actions">
             <button @click="closeContentModal" class="btn-cancel">
-              Cancel
+              {{ $t('pages.bulkProductEditor.cancel') }}
             </button>
             <button @click="saveContentModal" class="button primary-btn">
-              Save
+              {{ $t('pages.bulkProductEditor.save') }}
             </button>
           </div>
         </div>
@@ -1281,25 +1281,25 @@
 
       <div v-if="showBulkModal" class="modal-overlay">
         <div class="modal-box bulk-action-modal">
-          <h3>Bulk Actions</h3>
+          <h3>{{ $t('pages.bulkProductEditor.bulkActions') }}</h3>
 
           <p>
-            {{ selectedProducts.length }} product(s) selected
+            {{ $t('pages.bulkProductEditor.productsSelected', { count: selectedProducts.length }) }}
           </p>
 
           <div class="bulk-table-wrapper">
             <table class="admin-table">
               <thead>
                 <tr class="admin-header">
-                  <th>Image</th>
-                  <th>Title</th>
-                  <th>Category</th>
-                  <th>Primary</th>
-                  <th>Collections</th>
-                  <th>Selling (€)</th>
-                  <th>Discount (€)</th>
-                  <th>Cross Sell</th>
-                  <th>Status</th>
+                  <th>{{ $t('pages.bulkProductEditor.image') }}</th>
+                  <th>{{ $t('pages.bulkProductEditor.title') }}</th>
+                  <th>{{ $t('pages.bulkProductEditor.category') }}</th>
+                  <th>{{ $t('pages.bulkProductEditor.primary') }}</th>
+                  <th>{{ $t('pages.bulkProductEditor.collections') }}</th>
+                  <th>{{ $t('pages.bulkProductEditor.sellingEur') }}</th>
+                  <th>{{ $t('pages.bulkProductEditor.discountEur') }}</th>
+                  <th>{{ $t('pages.bulkProductEditor.crossSell') }}</th>
+                  <th>{{ $t('pages.bulkProductEditor.status') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1322,7 +1322,7 @@
                       {{ product.title }}
                     </div>
                     <div class="bulk-id">
-                      ID: {{ product.id }}
+                      {{ $t('pages.bulkProductEditor.idLabel', { id: product.id }) }}
                     </div>
                   </td>
 
@@ -1375,7 +1375,7 @@
                         }}
                       </span>
                       <div class="final-price">
-                        Final: €{{ calculateFinalProductPrice(product) }}
+                        {{ $t('pages.bulkProductEditor.finalLabel', { price: calculateFinalProductPrice(product) }) }}
                       </div>
                     </div>
                     <span v-else class="muted">—</span>
@@ -1405,12 +1405,12 @@
 
           <div class="bulk-editor-card">
             <div class="bulk-editor-header">
-              Apply Changes To Selected Products
+              {{ $t('pages.bulkProductEditor.applyChangesToSelected') }}
             </div>
             <div class="bulk-editor-grid">
               <!-- CATEGORY -->
               <div class="bulk-field">
-                <label>Category</label>
+                <label>{{ $t('pages.bulkProductEditor.category') }}</label>
                 <div class="category-cell-wrapper">
                   <div
                     class="category-trigger"
@@ -1419,12 +1419,12 @@
                     <span v-if="bulkData.tempCategoryIds.length">
                       {{ bulkData.tempCategoryIds.length }}
                     </span>
-                    <span v-else class="placeholder">Choose</span>
+                    <span v-else class="placeholder">{{ $t('pages.bulkProductEditor.choose') }}</span>
                     <i class="fa-solid fa-chevron-down"></i>
                   </div>
 
                   <div v-if="activeBulkCategory" class="category-popup">
-                    <div class="popup-header">Select Categories</div>
+                    <div class="popup-header">{{ $t('pages.bulkProductEditor.selectCategories') }}</div>
 
                     <div class="category-list">
                       <div
@@ -1459,7 +1459,7 @@
                     </div>
 
                     <div class="popup-actions">
-                      <button @click="activeBulkCategory = false">Close</button>
+                      <button @click="activeBulkCategory = false">{{ $t('pages.bulkProductEditor.close') }}</button>
                     </div>
                   </div>
                 </div>
@@ -1467,7 +1467,7 @@
 
               <!-- PRIMARY -->
               <div class="bulk-field">
-                <label>Primary</label>
+                <label>{{ $t('pages.bulkProductEditor.primary') }}</label>
                 <div class="primary-cell-wrapper">
                   <div
                     class="primary-trigger"
@@ -1476,12 +1476,12 @@
                     <span v-if="bulkData.tempPrimaryCategoryId">
                       {{ findCategoryTitle(bulkData.tempPrimaryCategoryId) }}
                     </span>
-                    <span v-else class="placeholder">Choose</span>
+                    <span v-else class="placeholder">{{ $t('pages.bulkProductEditor.choose') }}</span>
                     <i class="fa-solid fa-chevron-down"></i>
                   </div>
 
                   <div v-if="activeBulkPrimary" class="primary-popup">
-                    <div class="popup-header">Select Primary</div>
+                    <div class="popup-header">{{ $t('pages.bulkProductEditor.selectPrimary') }}</div>
 
                     <div class="primary-list">
                       <label
@@ -1499,7 +1499,7 @@
                     </div>
 
                     <div class="popup-actions">
-                      <button @click="activeBulkPrimary = false">Close</button>
+                      <button @click="activeBulkPrimary = false">{{ $t('pages.bulkProductEditor.close') }}</button>
                     </div>
                   </div>
                 </div>
@@ -1507,7 +1507,7 @@
 
               <!-- COLLECTIONS -->
               <div class="bulk-field">
-                <label>Collections</label>
+                <label>{{ $t('pages.bulkProductEditor.collections') }}</label>
                 <div class="collection-cell-wrapper">
                   <div
                     class="collection-trigger"
@@ -1516,12 +1516,12 @@
                     <span v-if="bulkData.tempCollectionIds.length">
                       {{ bulkData.tempCollectionIds.length }}
                     </span>
-                    <span v-else class="placeholder">Choose</span>
+                    <span v-else class="placeholder">{{ $t('pages.bulkProductEditor.choose') }}</span>
                     <i class="fa-solid fa-chevron-down"></i>
                   </div>
 
                   <div v-if="activeBulkCollection" class="collection-popup">
-                    <div class="popup-header">Select Collections</div>
+                    <div class="popup-header">{{ $t('pages.bulkProductEditor.selectCollections') }}</div>
 
                     <div class="collection-list">
                       <label
@@ -1539,7 +1539,7 @@
                     </div>
 
                     <div class="popup-actions">
-                      <button @click="activeBulkCollection = false">Close</button>
+                      <button @click="activeBulkCollection = false">{{ $t('pages.bulkProductEditor.close') }}</button>
                     </div>
                   </div>
                 </div>
@@ -1547,7 +1547,7 @@
 
               <!-- SELLING -->
               <div class="bulk-field">
-                <label>Selling Price</label>
+                <label>{{ $t('pages.bulkProductEditor.sellingPrice') }}</label>
                 <input
                   type="number"
                   v-model="bulkData.selling"
@@ -1559,7 +1559,7 @@
 
               <!-- DISCOUNT -->
               <div class="bulk-field">
-                <label>Discount</label>
+                <label>{{ $t('pages.bulkProductEditor.discount') }}</label>
                 <div class="discount-popup-row">
                   <input
                     type="number"
@@ -1580,7 +1580,7 @@
 
               <!-- CROSSSELL -->
               <div class="bulk-field">
-                <label>Cross Sell</label>
+                <label>{{ $t('pages.bulkProductEditor.crossSell') }}</label>
                 <dropdown
                   :selectedKey="bulkData.upsell_id"
                   :options="allUpsells"
@@ -1590,7 +1590,7 @@
 
               <!-- STATUS -->
               <div class="bulk-field">
-                <label>Status</label>
+                <label>{{ $t('pages.bulkProductEditor.status') }}</label>
                 <dropdown
                   :selectedKey="String(bulkData.status)"
                   :options="statusObj"
@@ -1601,10 +1601,10 @@
           </div>
           <div class="modal-actions">
             <button @click="closeBulkModal" class="btn-cancel">
-              Cancel
+              {{ $t('pages.bulkProductEditor.cancel') }}
             </button>
             <button class="button primary-btn" @click="confirmBulkChanges">
-              Apply Changes
+              {{ $t('pages.bulkProductEditor.applyChanges') }}
             </button>
           </div>
         </div>
@@ -1617,7 +1617,7 @@
           <div class="image-manager-body">
 
             <h2 class="image-manager-title">
-              {{ editingVariant ? 'Variant Images' : 'Product Images' }}
+              {{ editingVariant ? $t('pages.bulkProductEditor.variantImages') : $t('pages.bulkProductEditor.productImages') }}
             </h2>
 
             <div class="image-grid">
@@ -1648,7 +1648,7 @@
           <div class="image-manager-footer">
 
             <label class="add-image-btn">
-              + Add {{ editingVariant ? 'Variant' : 'Product' }} Image
+              {{ editingVariant ? $t('pages.bulkProductEditor.addVariantImage') : $t('pages.bulkProductEditor.addProductImage') }}
               <input
                 type="file"
                 accept="image/*"
@@ -1660,14 +1660,14 @@
 
             <div class="footer-actions">
               <button @click="closeImageManager" class="btn-cancel">
-                Cancel
+                {{ $t('pages.bulkProductEditor.cancel') }}
               </button>
 
               <button
                 class="button primary-btn"
                 @click="applySelectedImage"
               >
-                Save {{ editingVariant ? 'Variant' : 'Product' }} Image
+                {{ editingVariant ? $t('pages.bulkProductEditor.saveVariantImage') : $t('pages.bulkProductEditor.saveProductImage') }}
               </button>
             </div>
 
@@ -1681,8 +1681,8 @@
       <div v-if="showColumnSelector" class="column-selector" @click.stop>
         <div class="column-box">
           <div class="column-header">
-            <strong>Choose Columns</strong>
-            <span>To show on the bulk editor grid</span>
+            <strong>{{ $t('pages.bulkProductEditor.chooseColumns') }}</strong>
+            <span>{{ $t('pages.bulkProductEditor.chooseColumnsHint') }}</span>
           </div>
 
           <div class="column-list">
@@ -1703,7 +1703,7 @@
           <div class="column-actions">
              <button class="btn-reset" @click="resetColumns">
               <i class="fa-solid fa-rotate-right"></i>
-               Reset Default
+               {{ $t('pages.bulkProductEditor.resetDefault') }}
             </button>
           </div>
         </div>
@@ -1717,17 +1717,14 @@
             <i class="fa-solid fa-triangle-exclamation"></i>
           </div>
 
-          <h3>Confirm Bulk Update</h3>
+          <h3>{{ $t('pages.bulkProductEditor.confirmBulkUpdate') }}</h3>
 
-          <p>
-            You are about to update 
-            <strong>{{ selectedProducts.length }}</strong> 
-            product(s).
-          </p>
+          <i18n path="pages.bulkProductEditor.aboutToUpdate" tag="p">
+            <template v-slot:count><strong>{{ selectedProducts.length }}</strong></template>
+          </i18n>
 
           <p class="confirm-warning">
-            This action will overwrite existing values.  
-            Are you sure you want to continue?
+            {{ $t('pages.bulkProductEditor.overwriteWarning') }}
           </p>
 
           <div class="modal-actions">
@@ -1735,14 +1732,14 @@
               class="btn-cancel"
               @click="showBulkConfirm = false"
             >
-              Cancel
+              {{ $t('pages.bulkProductEditor.cancel') }}
             </button>
 
             <button
               class="button primary-btn"
               @click="executeBulkUpdate"
             >
-              Yes, Apply Changes
+              {{ $t('pages.bulkProductEditor.yesApplyChanges') }}
             </button>
           </div>
 
@@ -1755,7 +1752,7 @@
         <div class="editor-modal">
 
           <h2 class="editor-title">
-            Product Details Editor
+            {{ $t('pages.bulkProductEditor.productDetailsEditor') }}
           </h2>
 
           <div class="editor-layout">
@@ -1763,35 +1760,35 @@
             <div class="editor-left">
 
               <div class="editor-card">
-                <h3>Basic Information</h3>
+                <h3>{{ $t('pages.bulkProductEditor.basicInformation') }}</h3>
 
                 <div class="editor-field">
-                  <label>Title</label>
+                  <label>{{ $t('pages.bulkProductEditor.title') }}</label>
                   <input type="text" v-model="editorTitle" class="admin-input" />
                 </div>
 
                 <div class="editor-field">
-                  <label>Slug</label>
+                  <label>{{ $t('pages.bulkProductEditor.slug') }}</label>
                   <input type="text" v-model="editorSlug" class="admin-input" />
                 </div>
               </div>
 
 
               <div class="editor-card">
-                <h3>SEO Settings</h3>
+                <h3>{{ $t('pages.bulkProductEditor.seoSettings') }}</h3>
 
                 <div class="editor-field">
-                  <label>Meta Title</label>
+                  <label>{{ $t('pages.bulkProductEditor.metaTitle') }}</label>
                   <input type="text" v-model="editorMetaTitle" class="admin-input" />
                 </div>
 
                 <div class="editor-field">
-                  <label>Meta Keywords</label>
+                  <label>{{ $t('pages.bulkProductEditor.metaKeywords') }}</label>
                   <textarea v-model="editorMetaKeywords" class="admin-textarea"></textarea>
                 </div>
 
                 <div class="editor-field">
-                  <label>Meta Description</label>
+                  <label>{{ $t('pages.bulkProductEditor.metaDescription') }}</label>
                   <textarea v-model="editorMetaDescription" class="admin-textarea"></textarea>
                 </div>
 
@@ -1802,20 +1799,20 @@
             <div class="editor-right">
 
               <div class="editor-card">
-                <h3>Overview</h3>
+                <h3>{{ $t('pages.bulkProductEditor.overview') }}</h3>
 
                 <WYSIWYGEditor
-                  title="Overview"
+                  :title="$t('pages.bulkProductEditor.overview')"
                   :description="editorOverview"
                   @change="editorOverview = $event"
                 />
               </div>
 
               <div class="editor-card">
-                <h3>Description</h3>
+                <h3>{{ $t('pages.bulkProductEditor.description') }}</h3>
 
                 <WYSIWYGEditor
-                  title="Description"
+                  :title="$t('pages.bulkProductEditor.description')"
                   :description="editorDescription"
                   @change="editorDescription = $event"
                 />
@@ -1828,14 +1825,14 @@
               class="btn-cancel"
               @click="closeEditorModal"
             >
-              Cancel
+              {{ $t('pages.bulkProductEditor.cancel') }}
             </button>
 
             <button
               class="button primary-btn"
               @click="saveEditorModal"
             >
-              Save
+              {{ $t('pages.bulkProductEditor.save') }}
             </button>
           </div>
 
@@ -1859,6 +1856,7 @@ import WYSIWYGEditor from '~/components/WYSIWYGEditor'
 import { update } from 'lodash'
 
 export default {
+  middleware: ['common-middleware', 'auth'],
   mixins: [util],
   components: { ListPage, Multiselect, draggable, WYSIWYGEditor},
   data() {
@@ -1909,8 +1907,8 @@ export default {
       bundles: [],
       loadingUpsells: false,
       statusObj: {
-        1: { title: 'Public' },
-        2: { title: 'Private' }
+        1: { title: this.$t('pages.bulkProductEditor.public') },
+        2: { title: this.$t('pages.bulkProductEditor.private') }
       },
       activeCollectionRow: null,
       activeProcurementRow: null,
@@ -1948,19 +1946,19 @@ export default {
       imageGallery: [],
       selectedImageIds: [],
       columnOptions: [
-        { key: 'image', label: 'Image', visible: true },
-        { key: 'title', label: 'Title', visible: true },
-        { key: 'slug', label: 'Slug', visible: false },
-        { key: 'editor', label: 'Editor', visible: false },
-        { key: 'category', label: 'Category', visible: true },
-        { key: 'primary', label: 'Primary', visible: true },
-        { key: 'collection', label: 'Collection', visible: true },
-        { key: 'selling', label: 'Selling', visible: true },
-        { key: 'discount', label: 'Discount', visible: true },
-        { key: 'crosssell', label: 'Cross Sell', visible: true },
-        { key: 'bundle', label: 'Bundle', visible: true },
-        { key: 'status', label: 'Status', visible: true },
-        { key: 'procurement', label: 'Procurement', visible: true },
+        { key: 'image', label: this.$t('pages.bulkProductEditor.image'), visible: true },
+        { key: 'title', label: this.$t('pages.bulkProductEditor.title'), visible: true },
+        { key: 'slug', label: this.$t('pages.bulkProductEditor.slug'), visible: false },
+        { key: 'editor', label: this.$t('pages.bulkProductEditor.editor'), visible: false },
+        { key: 'category', label: this.$t('pages.bulkProductEditor.category'), visible: true },
+        { key: 'primary', label: this.$t('pages.bulkProductEditor.primary'), visible: true },
+        { key: 'collection', label: this.$t('pages.bulkProductEditor.collection'), visible: true },
+        { key: 'selling', label: this.$t('pages.bulkProductEditor.selling'), visible: true },
+        { key: 'discount', label: this.$t('pages.bulkProductEditor.discount'), visible: true },
+        { key: 'crosssell', label: this.$t('pages.bulkProductEditor.crossSell'), visible: true },
+        { key: 'bundle', label: this.$t('pages.bulkProductEditor.bundle'), visible: true },
+        { key: 'status', label: this.$t('pages.bulkProductEditor.status'), visible: true },
+        { key: 'procurement', label: this.$t('pages.bulkProductEditor.procurement'), visible: true },
       ],
       showColumnSelector: false,
       showAdvanced: false,
@@ -1973,7 +1971,7 @@ export default {
 
     bundleOptions() {
       return [
-        { key: '', title: 'Select Bundle' },
+        { key: '', title: this.$t('pages.bulkProductEditor.selectBundle') },
         ...this.bundles.map(b => ({
           key: String(b.id),
           title: b.title
@@ -2145,7 +2143,7 @@ export default {
         return
       }
       if (!this.selectedProducts.length) {
-        this.$toast.warning("Please select at least one product")
+        this.$toast.warning(this.$t('pages.bulkProductEditor.selectAtLeastOne'))
         return
       }
 
@@ -2220,7 +2218,7 @@ export default {
     },
     confirmBulkChanges() {
       if (!this.selectedProducts.length) {
-        this.$toast.warning("No products selected")
+        this.$toast.warning(this.$t('pages.bulkProductEditor.noProductsSelected'))
         return
       }
 
@@ -2311,7 +2309,7 @@ export default {
     },
     async applySelectedImage() {
       if(!this.selectedImageIds?.length){
-        this.$toast.warning("Please select image(s)")
+        this.$toast.warning(this.$t('pages.bulkProductEditor.selectImages'))
         return
       }
 
@@ -2357,11 +2355,11 @@ export default {
         }
         
         this.closeImageManager()
-        this.$toast.success("Image updated")
+        this.$toast.success(this.$t('pages.bulkProductEditor.imageUpdated'))
 
       } catch (e) {
         console.error(e)
-        this.$toast.error("Failed to update image")
+        this.$toast.error(this.$t('pages.bulkProductEditor.imageUpdateFailed'))
       }
     },
     async uploadNewImages(e) {
@@ -2385,11 +2383,11 @@ export default {
 
         await this.fetchProductImages(this.editingImageProduct.id)
 
-        this.$toast.success("Images uploaded successfully")
+        this.$toast.success(this.$t('pages.bulkProductEditor.imagesUploaded'))
 
       } catch (e) {
         console.error(e)
-        this.$toast.error("Upload failed")
+        this.$toast.error(this.$t('pages.bulkProductEditor.uploadFailed'))
       }
 
       e.target.value = ''
@@ -2552,7 +2550,7 @@ export default {
     },
     openBulkModal() {
       if (!this.selectedProducts.length) {
-        this.$toast.warning("Please select at least one product")
+        this.$toast.warning(this.$t('pages.bulkProductEditor.selectAtLeastOne'))
         return
       }
       this.resetBulkData() 
@@ -2607,7 +2605,7 @@ export default {
       let toastId
 
       try {
-        toastId = this.$toast.warning("Applying bulk update...", {
+        toastId = this.$toast.warning(this.$t('pages.bulkProductEditor.applyingBulkUpdate'), {
           duration: 0
         })
 
@@ -2676,12 +2674,12 @@ export default {
          * when that happens, and the response names the rows at fault.
          */
         if (!this.reportBulkRefusal(data)) {
-          this.$toast.success("Bulk update successful")
+          this.$toast.success(this.$t('pages.bulkProductEditor.bulkUpdateSuccess'))
         }
 
       } catch (e) {
         this.$toast.dismiss(toastId)
-        this.$toast.error("Bulk update failed")
+        this.$toast.error(this.$t('pages.bulkProductEditor.bulkUpdateFailed'))
         console.error(e)
       }
     },
@@ -2705,12 +2703,12 @@ export default {
 
       const reasons = (data.data && data.data.form) || []
 
-      this.$toast.error(data.message || "Bulk update failed")
+      this.$toast.error(data.message || this.$t('pages.bulkProductEditor.bulkUpdateFailed'))
 
       reasons.slice(0, 5).forEach(reason => this.$toast.error(reason))
 
       if (reasons.length > 5) {
-        this.$toast.error(`...and ${reasons.length - 5} more.`)
+        this.$toast.error(this.$t('pages.bulkProductEditor.andMore', { count: reasons.length - 5 }))
       }
 
       this.refusedRowIds = Object.keys((data.data && data.data.rows) || {})
@@ -2724,7 +2722,7 @@ export default {
         product._debouncedSave = debounce(async () => {
           let toastId;
           try {
-            toastId = this.$toast.warning("Saving changes...", {
+            toastId = this.$toast.warning(this.$t('pages.bulkProductEditor.savingChanges'), {
               duration: 0
             })
             const baseUrl = this.apiBase();
@@ -2778,12 +2776,12 @@ export default {
 
             // Same as the full save: a refusal arrives with HTTP 200.
             if (!this.reportBulkRefusal(data)) {
-              this.$toast.success("Changes saved", {
+              this.$toast.success(this.$t('pages.bulkProductEditor.changesSaved'), {
                 duration: 2000
               })
             }
           } catch (e) {
-            this.$toast.error("Changes failed")
+            this.$toast.error(this.$t('pages.bulkProductEditor.changesFailed'))
           }
         }, 800)
       }
@@ -2897,7 +2895,7 @@ export default {
     },
     saveContentModal() {
       if (!this.editingValue?.trim()) {
-        this.$toast.error("Value cannot be empty")
+        this.$toast.error(this.$t('pages.bulkProductEditor.valueEmpty'))
         return
       }
       if (this.editingProduct && this.editingField) {
