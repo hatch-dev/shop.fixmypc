@@ -30,7 +30,8 @@
     "check:bundle-stock": "node tests/bundle-stock.check.js",
     "check:recommendations": "node tests/recommendations.check.js",
     "check:cart-mobile-summary": "node tests/cart-mobile-summary.check.js",
-    "check:flash-discount": "node tests/flash-discount.check.js"
+    "check:flash-discount": "node tests/flash-discount.check.js",
+    "check:my-orders-race": "node tests/my-orders-race.check.js"
   },
   "dependencies": {
     "@glidejs/glide": "^3.4.1",

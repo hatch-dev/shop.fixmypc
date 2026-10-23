@@ -62,7 +62,7 @@ class CustomerReturnsController extends Controller
             return $this->refused($request, __('lang.not_order', [], $lang));
         }
 
-        $eligible = OrderReturns::eligibility($order);
+        $eligible = OrderReturns::eligibility($order, $lang);
         $lines = ReturnRefundCalculator::lines($order);
         $details = OrderReturns::itemDetails(array_keys($lines));
         $variants = OrderExchanges::variantsFor($order);

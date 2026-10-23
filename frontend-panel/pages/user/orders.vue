@@ -805,7 +805,9 @@
               q: this.searchText,
               user_token: await this.getUserToken(),
             },
-            lang: this.langCode
+            lang: this.langCode,
+            // an older request's answer is dropped, not stored over a newer one
+            isCurrent: () => seq === this.requestSeq
           })
 
           if (seq !== this.requestSeq) return
@@ -813,9 +815,6 @@
           if (data?.status !== 200) {
             this.loadError = true
             this.hasError(data)
-          } else if (this.orderedList && this.orderedList.tab !== this.activeTab) {
-            // an older request's answer was committed last: ask again for this tab
-            return this.fetchingData()
           }
         } catch (e) {
           if (seq === this.requestSeq) this.loadError = true
@@ -1262,6 +1261,12 @@
 
 .ord-step.is-done:not(:last-child)::after { background: var(--brand); }
 
+/* right to left (body.rtl): the next step sits to the left */
+.rtl .ord-step:not(:last-child)::after {
+  left: calc(-50% + 10px);
+  right: calc(50% + 10px);
+}
+
 .ord-step-dot {
   width: 15px;
   height: 15px;
@@ -1442,6 +1447,8 @@
   .ord-steps { margin-bottom: 22px; }
   .ord-step:first-child.is-current .ord-step-label { left: 0; text-align: left; }
   .ord-step:last-child.is-current .ord-step-label { right: 0; text-align: right; }
+  .rtl .ord-step:first-child.is-current .ord-step-label { left: auto; right: 0; text-align: right; }
+  .rtl .ord-step:last-child.is-current .ord-step-label { right: auto; left: 0; text-align: left; }
 
   /* actions full width, links above them */
   .ord-card-foot {

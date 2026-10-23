@@ -1408,4 +1408,168 @@ class AfterShipTrackingTest extends TestCase
         }
         $this->assertArrayNotHasKey('destination_postal_code', $create, 'An Post does not require it');
     }
+
+    // ------------------------------------------------------------------
+    // Cases docs/AfterShip_Test_Cases.xlsx marked "Manual only" (2026-10-22).
+    // Each test name starts with the case id it automates.
+    // ------------------------------------------------------------------
+
+    /** One delivery line, so isCollection() has something to read. */
+    private function withLine(Order $order, $shippingType)
+    {
+        $inventory = \App\Models\UpdatedInventory::first();
+
+        \App\Models\OrderedProduct::create([
+            'order_id' => $order->id,
+            'product_id' => $inventory->product_id,
+            'inventory_id' => $inventory->id,
+            'quantity' => 1,
+            'selling' => 10,
+            'shipping_place_id' => \DB::table('shipping_places')->value('id'),
+            'shipping_type' => $shippingType,
+        ]);
+
+        return $order;
+    }
+
+    public function test_AS_SHP_02_a_picked_up_order_ships_like_a_confirmed_one()
+    {
+        $order = $this->order($this->s('PICKED_UP'));
+
+        $res = $this->ship($order, 'testing-courier', 'ITD-2-223456789');
+
+        $res->assertJsonPath('status', 200);
+        $this->assertSame('shipped', $res->json('data.notified'));
+        $this->assertSame($this->s('ON_THE_WAY'), (int)$order->fresh()->status);
+        $this->assertSame('Awaiting courier scan', $res->json('data.shipment.tag_label'));
+        $this->assertCount(1, $this->messagesTo($order->contact_email));
+    }
+
+    public function test_AS_SHP_05_a_spaced_lower_case_number_is_stored_normalised_and_counts_as_the_same()
+    {
+        $order = $this->order($this->s('CONFIRMED'));
+
+        $this->ship($order, 'testing-courier', 'itd 1 123456789')->assertJsonPath('status', 200);
+        $this->assertSame('ITD1123456789', OrderShipment::where('order_id', $order->id)->value('tracking_number'));
+        $this->assertSame('ITD1123456789', $this->calls[0][2]['tracking_number'], 'AfterShip gets the clean number too');
+
+        $this->calls = [];
+        $this->mails()->flush();
+        $res = $this->ship($order, 'testing-courier', 'itd 1 123456789');
+
+        $this->assertSame('unchanged', $res->json('data.notified'));
+        $this->assertCount(0, $this->calls);
+        $this->assertCount(0, $this->messagesTo($order->contact_email));
+    }
+
+    public function test_AS_SHP_11_a_click_and_collect_order_is_refused()
+    {
+        $order = $this->withLine($this->order($this->s('CONFIRMED')), 2);
+
+        $res = $this->ship($order);
+
+        $this->assertSame('This is a Click & Collect order; there is no parcel to track.',
+            $res->json('fields.tracking_number') ?? $res->json('message'));
+        $this->assertCount(0, $this->calls);
+        $this->assertSame(0, OrderShipment::where('order_id', $order->id)->count());
+        $this->assertSame($this->s('CONFIRMED'), (int)$order->fresh()->status);
+
+        // The same order delivered to an address is accepted.
+        $home = $this->withLine($this->order($this->s('CONFIRMED')), 1);
+        $this->ship($home)->assertJsonPath('status', 200);
+    }
+
+    public function test_AS_EDT_02_changing_only_the_courier_saves_it_and_emails_nobody()
+    {
+        list($order) = $this->shipped();
+
+        $res = $this->ship($order, 'dpd-ireland', 'CE123456789IE');
+
+        $res->assertJsonPath('status', 200);
+        $this->assertSame('corrected', $res->json('data.notified'));
+        $row = OrderShipment::where('order_id', $order->id)->firstOrFail();
+        $this->assertSame(['dpd-ireland', 'DPD Ireland'], [$row->courier_slug, $row->courier_name]);
+        $this->assertSame(1, OrderShipment::where('order_id', $order->id)->count());
+        $this->assertCount(0, $this->messagesTo($order->contact_email));
+    }
+
+    public function test_AS_EML_01_the_track_button_opens_the_full_parcel()
+    {
+        $order = $this->order($this->s('CONFIRMED'));
+        $this->ship($order, 'an-post', 'CE123456789IE')->assertJsonPath('status', 200);
+
+        $html = $this->messagesTo($order->contact_email)[0]->getBody();
+        $this->assertStringContainsString('Track your parcel', $html);
+        $this->assertStringContainsString('An Post', $html);
+        $this->assertStringContainsString('CE123456789IE', $html);
+
+        // Follow the button's own href, as the customer would.
+        $this->assertSame(1, preg_match('#href="([^"]*/track-order\?[^"]+)"#', $html, $m), 'the button links to /track-order');
+        parse_str(parse_url(html_entity_decode($m[1]), PHP_URL_QUERY), $q);
+        $this->app['auth']->forgetGuards();
+
+        $parcel = $this->getJson('/api/v1/track-order?tracking_id=' . $q['order_id'] . '&t=' . $q['t'])->json('data.shipment');
+        $this->assertTrue($parcel['full']);
+        $this->assertSame('CE123456789IE', $parcel['tracking_number']);
+        $this->assertSame('An Post', $parcel['courier']);
+    }
+
+    /**
+     * AfterShip emails or texts a customer only when the tracking carries
+     * their contact details. None may be sent, or the customer gets its
+     * branded emails on top of ours.
+     */
+    public function test_AS_EML_07_nothing_that_lets_aftership_contact_the_customer_is_sent()
+    {
+        $order = $this->order($this->s('CONFIRMED'));
+        $this->ship($order)->assertJsonPath('status', 200);
+
+        $create = $this->calls[0][2];
+        foreach (['emails', 'smses', 'customers', 'customer_name', 'order_promised_delivery_date'] as $key) {
+            $this->assertArrayNotHasKey($key, $create);
+        }
+        $sent = json_encode($create);
+        $this->assertStringNotContainsString($order->contact_email, $sent);
+        $this->assertStringNotContainsString('871234567', $sent);
+    }
+
+    public function test_AS_EML_08_with_a_real_queue_the_email_waits_for_the_worker()
+    {
+        // A queue of its own: the dev database holds a backlog on the real one,
+        // and a worker takes the oldest job first.
+        config(['queue.default' => 'database', 'mail.order_queue' => 'emails-test-' . uniqid()]);
+        $order = $this->order($this->s('CONFIRMED'));
+
+        $this->ship($order)->assertJsonPath('status', 200);
+
+        $log = OrderEmailLog::where('order_id', $order->id)->where('event', 'order_shipped')->firstOrFail();
+        $this->assertSame('queued', $log->status);
+        $this->assertCount(0, $this->messagesTo($order->contact_email), 'nothing sent until a worker runs');
+        $this->assertTrue(\DB::table('jobs')->where('queue', \App\Models\Helper\OrderEmailDispatcher::queueName())->exists());
+
+        // A worker starts: the email goes out once.
+        \Artisan::call('queue:work', ['--once' => true, '--queue' => \App\Models\Helper\OrderEmailDispatcher::queueName()]);
+        $this->assertSame('sent', $log->fresh()->status);
+        $this->assertCount(1, $this->messagesTo($order->contact_email));
+    }
+
+    public function test_AS_CUS_03_a_link_with_one_character_changed_is_treated_as_unsigned()
+    {
+        list($order) = $this->shipped();
+        parse_str(parse_url(ShipmentTracking::trackUrl($order), PHP_URL_QUERY), $q);
+        $t = $q['t'];
+        $tampered = substr($t, 0, -1) . ($t[strlen($t) - 1] === 'a' ? 'b' : 'a');
+        $this->app['auth']->forgetGuards();
+
+        $parcel = $this->getJson('/api/v1/track-order?tracking_id=' . $order->order . '&t=' . $tampered)->json('data.shipment');
+
+        $this->assertFalse($parcel['full']);
+        $this->assertStringNotContainsString('CE1234567', $parcel['tracking_number']);
+        $this->assertArrayNotHasKey('checkpoints', $parcel);
+
+        // Neither a case change nor an empty t passes.
+        $this->assertFalse(ShipmentTracking::verifySignature($order, strtoupper($t)));
+        $this->assertFalse(ShipmentTracking::verifySignature($order, ''));
+        $this->assertFalse(ShipmentTracking::verifySignature($order, ['array']));
+    }
 }

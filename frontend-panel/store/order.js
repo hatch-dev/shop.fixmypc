@@ -54,9 +54,14 @@ const actions = {
     const {data} = await Service.voucherValidity(payload, bearer || null, lang)
     return data
   },
-  async getOrderByUser ({ commit }, {payload, lang}) {
+  // isCurrent: given, an answer is kept only while it is still the latest ask,
+  // so a slow older answer never replaces a newer one (My Orders tabs, search, pages).
+  async getOrderByUser ({ commit }, {payload, lang, isCurrent}) {
     commit('EMPTY_ORDERED')
     const {data} = await Service.orderByUser(payload, this.$auth.strategy.token.get(), lang)
+    if (isCurrent && !isCurrent()) {
+      return data
+    }
     if(data?.status === 200){
       if(!payload.order_id){
         commit('SET_ORDERED_LIST', data.data)

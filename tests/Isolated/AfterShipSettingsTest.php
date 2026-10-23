@@ -96,6 +96,18 @@ class AfterShipSettingsTest extends IsolatedTestCase
         $this->assertSame('9876', $response->json('data.api_key.hint'));
     }
 
+    /** AS-SET-01: what the Settings > AfterShip tab is built from. */
+    public function test_AS_SET_01_the_tab_gets_every_section_and_the_webhook_url()
+    {
+        $response = $this->asAdmin()->getJson("/api/admin/setting/aftership");
+
+        $this->assertApiOk($response);
+        foreach (["api_key", "webhook_secret", "auto_deliver", "sync_minutes", "sync_minutes_auto", "webhook_url"] as $key) {
+            $this->assertArrayHasKey($key, $response->json("data"));
+        }
+        $this->assertStringEndsWith("/api/v1/aftership/webhook", $response->json("data.webhook_url"));
+        $this->assertSame(["set" => true, "source" => "env", "hint" => "0000"], $response->json("data.api_key"));
+    }
     public function test_the_page_never_returns_a_secret()
     {
         $this->save(['api_key' => 'asat_live_key_9876', 'webhook_secret' => 'whsec-abcd']);

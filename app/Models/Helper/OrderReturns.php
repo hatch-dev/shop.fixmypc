@@ -45,7 +45,7 @@ class OrderReturns
     /**
      * Can a return be opened on this order, and how long ago was it delivered.
      */
-    public static function eligibility(Order $order)
+    public static function eligibility(Order $order, $lang = null)
     {
         $deliveredAt = OrderStatusHistory::where('order_id', $order->id)
             ->where('to_status', (int)Config::get('constants.orderStatus.DELIVERED'))
@@ -56,11 +56,11 @@ class OrderReturns
         $reason = null;
 
         if ((int)$order->status !== (int)Config::get('constants.orderStatus.DELIVERED')) {
-            $reason = 'Only a delivered order can be returned.';
+            $reason = __('lang.return_not_delivered', [], $lang);
         } elseif ((int)$order->payment_done !== 1) {
-            $reason = 'This order is not marked as paid.';
+            $reason = __('lang.return_not_paid', [], $lang);
         } elseif ($order->isCancelled()) {
-            $reason = 'This order was cancelled.';
+            $reason = __('lang.return_order_cancelled', [], $lang);
         }
 
         return [
@@ -87,23 +87,25 @@ class OrderReturns
         $lang = self::language($lang);
         $exchangeFor = array_filter(array_map('intval', $exchangeFor));
         $type = $exchangeFor ? OrderReturn::TYPE_EXCHANGE : OrderReturn::TYPE_RETURN;
+        // A refusal reaches the customer in their language; staff screens stay English.
+        $msgLang = $byCustomer ? $lang : null;
 
         if (!array_key_exists($reason, OrderReturn::REASONS)) {
-            throw new ReturnRefused('Choose a reason for the return.');
+            throw new ReturnRefused(__('lang.return_choose_reason', [], $msgLang));
         }
 
         $quantities = array_filter(array_map('intval', $quantities), function ($q) { return $q > 0; });
 
         if (!$quantities) {
-            throw new ReturnRefused('Choose at least one item to return.');
+            throw new ReturnRefused(__('lang.return_choose_items', [], $msgLang));
         }
 
-        $return = DB::transaction(function () use ($order, $quantities, $reason, $customerNote, $staffNote, $adminId, $lang, $type, $exchangeFor, $byCustomer, $startStatus) {
+        $return = DB::transaction(function () use ($order, $quantities, $reason, $customerNote, $staffNote, $adminId, $lang, $type, $exchangeFor, $byCustomer, $startStatus, $msgLang) {
 
             // Two staff opening a return on the same order at once must not both get the last unit.
             $order = Order::where('id', $order->id)->lockForUpdate()->first();
 
-            $eligible = self::eligibility($order);
+            $eligible = self::eligibility($order, $msgLang);
             if (!$eligible['ok']) {
                 throw new ReturnRefused($eligible['reason']);
             }
@@ -117,10 +119,10 @@ class OrderReturns
 
             foreach ($quantities as $id => $qty) {
                 if (!isset($lines[$id])) {
-                    throw new ReturnRefused('An item is not on this order.');
+                    throw new ReturnRefused(__('lang.return_item_not_on_order', [], $msgLang));
                 }
                 if ($qty > $lines[$id]['returnable_quantity']) {
-                    throw new ReturnRefused('More units chosen than are left to return on one of the items.');
+                    throw new ReturnRefused(__('lang.return_too_many_units', [], $msgLang));
                 }
                 /*
                  * A product marked non-refundable is not taken back for a refund
@@ -137,7 +139,7 @@ class OrderReturns
                 if ($type === OrderReturn::TYPE_EXCHANGE) {
                     $line = OrderedProduct::find($id);
                     if (empty($exchangeFor[$id]) || !OrderExchanges::validTarget($line, $exchangeFor[$id])) {
-                        throw new ReturnRefused('Choose another variant of the same product for every item being exchanged.');
+                        throw new ReturnRefused(__('lang.return_exchange_variant', [], $msgLang));
                     }
                 }
             }
