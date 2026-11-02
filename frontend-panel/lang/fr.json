@@ -2106,6 +2106,39 @@
       "daysLeft": " · encore {days} jours",
       "incVat": "TTC",
       "exVat": "HT",
+      "totalCharges": "Total des frais pour tous les produits",
+      "includesVat": "Dont {vat} de TVA",
+      "includesVatSplit": "Dont {vat} de TVA ({included} incluse + {added} ajoutée)",
+      "discounts": "Remises",
+      "finalPayable": "Montant final à payer (TTC)",
+      "finalPayableShort": "Montant final à payer",
+      "savedOnList": "Vous économisez {amount} sur les prix catalogue (déjà déduit des prix ci-dessus)",
+      "groups": {
+        "none": {
+          "title": "Produits sans TVA",
+          "tag": "TVA non applicable (0 %)"
+        },
+        "included": {
+          "title": "Produits TVA incluse",
+          "tag": "La TVA est déjà comprise dans le prix"
+        },
+        "added": {
+          "title": "Produits avec TVA ajoutée au paiement",
+          "tag": "Prix affichés hors TVA"
+        },
+        "items": "{count} article | {count} articles",
+        "each": "{price} l’unité",
+        "lineIncluded": "Prix HT {ex} · TVA {rate} incluse {vat}",
+        "lineAdded": "+ TVA {rate} ajoutée {vat} → {inc} TTC",
+        "peekIncluded": "dont TVA {vat}",
+        "peekAdded": "{ex} + TVA {vat}",
+        "subtotalWithoutVat": "Sous-total (sans TVA)",
+        "subtotalIncVat": "Sous-total (TTC)",
+        "subtotalExVat": "Sous-total (HT)",
+        "vatIncludedInPrices": "TVA incluse dans ces prix",
+        "vatAdded": "TVA ajoutée",
+        "atRate": "TVA à {rate}"
+      },
       "explain": {
         "atPricesShown": "Aux prix affichés",
         "lessVatInside": "Moins la TVA incluse dans les prix TTC",

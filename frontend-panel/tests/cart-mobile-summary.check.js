@@ -107,11 +107,31 @@ options.mixins = [loadMixin('productPriceHelper'), {
   },
 }]
 
+const PriceFormatStub = {
+  props: ['price', 'decimals'],
+  template: '<span class="pf">€{{ Number(price || 0).toFixed(2) }}</span>',
+}
+
+/*
+ * The product groups are loaded for real, template and all: the card and the
+ * fold both render them, and a stub here would let the two drift apart
+ * without a check noticing.
+ */
+const groupsFile = path.join(ROOT, 'components/SummaryProductGroups.vue')
+const groupsParsed = compiler.parseComponent(fs.readFileSync(groupsFile, 'utf8'))
+const gm = { exports: {} }
+
+// eslint-disable-next-line no-new-func
+new Function('module', 'exports', 'require', transform(groupsParsed.script.content, 'SummaryProductGroups.vue'))(
+  gm, gm.exports, () => ({}))
+
+const groupsOptions = gm.exports.default || gm.exports
+groupsOptions.template = groupsParsed.template.content
+groupsOptions.components = { PriceFormat: PriceFormatStub }
+
 options.components = {
-  PriceFormat: {
-    props: ['price', 'decimals'],
-    template: '<span class="pf">€{{ Number(price || 0).toFixed(2) }}</span>',
-  },
+  PriceFormat: PriceFormatStub,
+  SummaryProductGroups: groupsOptions,
   InfoPopover: { template: '<span class="ip"></span>' },
   AjaxButton: {
     props: ['text', 'disabled', 'fetchingData', 'type', 'loadingText', 'color'],
@@ -288,16 +308,88 @@ check('the total under the button is the card total, to the cent', () => {
   assert.strictEqual(bar[0], 3386.06)
 })
 
-check('the breakdown restates the card row for row', () => {
+check('the breakdown restates the card group for group', () => {
   const r = mount({ mobileBar: true })
+  const card = r.host.$el.querySelector('.summary')
   const panel = r.host.$el.querySelector('.mfs-panel')
 
-  // You Save, Products Total (Ex-VAT), VAT (added + inside Inc-VAT prices).
-  // Shipping is free, so it states no figure.
-  assert.deepStrictEqual(amounts(panel), [176, 2752.89, 633.17])
-  assert.ok(/You Save/.test(text(panel)))
-  assert.ok(/VAT \(23%\)/.test(text(panel)), 'the rate label is missing')
+  const keys = (el) => Array.prototype.slice.call(el.querySelectorAll('.spg-group'))
+    .map((g) => g.className.replace(/.*is-(\w+).*/, '$1'))
+
+  // The Samsung's VAT is inside its price, the iPhone's is added.
+  assert.deepStrictEqual(keys(card), ['included', 'added'])
+  assert.deepStrictEqual(keys(panel), keys(card), 'the fold lists different groups')
+
+  // Each closed group in the fold stands on its inc-VAT subtotal.
+  const heads = Array.prototype.slice.call(panel.querySelectorAll('.spg-head-value'))
+    .map((n) => amounts(n)[0])
+  assert.deepStrictEqual(heads, [899, 2487.06])
+
+  // Total charges: the same figure in both, and the two groups add up to it.
+  const charges = (el) => amounts(el.querySelector('.sum-charges .sum-value'))[0]
+  assert.strictEqual(charges(panel), charges(card))
+  assert.strictEqual(charges(card), Number((899 + 2487.06).toFixed(2)))
+
+  assert.ok(/Products with VAT included/.test(text(panel)))
+  assert.ok(/Products with VAT added at checkout/.test(text(panel)))
+  assert.ok(/Includes €633\.17 VAT/.test(text(panel)), 'the VAT is not stated')
   assert.ok(/Free/.test(text(panel)), 'shipping is not stated')
+})
+
+check('the card reads groups, total charges, shipping, discounts, final amount', () => {
+  const r = mount({ mobileBar: true }, { loyaltyDiscount: { amount: 20 } })
+  const card = r.host.$el.querySelector('.summary')
+
+  const order = ['.spg', '.sum-charges', '.sum-discounts', '.sum-total']
+    .map((selector) => card.querySelector(selector))
+
+  order.forEach((el, i) => assert.ok(el, `${['groups', 'total charges', 'discounts', 'final'][i]} missing`))
+
+  for (let i = 1; i < order.length; i++) {
+    assert.ok(order[i - 1].compareDocumentPosition(order[i]) & 4, // FOLLOWING
+      'the sections are out of order')
+  }
+
+  assert.ok(/Final amount payable \(incl\. VAT\)/.test(text(card.querySelector('.sum-total'))))
+  assert.strictEqual(amounts(card.querySelector('.sum-total'))[0], Number((3386.06 - 20).toFixed(2)))
+})
+
+check('the card groups are all open; the fold opens one at a time', async () => {
+  const r = mount({ mobileBar: true })
+  const card = r.host.$el.querySelector('.summary')
+  const panel = r.host.$el.querySelector('.mfs-panel')
+
+  assert.strictEqual(card.querySelector('button.spg-head'), null, 'the card is not a disclosure')
+  Array.prototype.forEach.call(card.querySelectorAll('.spg-body'),
+    (b) => assert.notStrictEqual(b.style.display, 'none'))
+
+  const toggles = panel.querySelectorAll('button.spg-head')
+  assert.strictEqual(toggles.length, 2)
+  assert.strictEqual(toggles[0].getAttribute('aria-expanded'), 'false')
+
+  toggles[0].click()
+  await Vue.nextTick()
+
+  assert.strictEqual(toggles[0].getAttribute('aria-expanded'), 'true')
+  assert.strictEqual(toggles[1].getAttribute('aria-expanded'), 'false', 'opening one opened both')
+
+  const body = panel.querySelector('#' + toggles[0].getAttribute('aria-controls'))
+  assert.ok(body, 'aria-controls points at nothing')
+  assert.notStrictEqual(body.style.display, 'none')
+})
+
+check('no discount applied, no discounts section', () => {
+  const r = mount({ mobileBar: true })
+  assert.strictEqual(r.host.$el.querySelector('.sum-discounts'), null)
+})
+
+check('the groups follow the page direction in Arabic', () => {
+  // `.rtl { direction: rtl }` is the storefront's RTL switch, so the groups
+  // use logical properties and never a physical left or right.
+  const css = groupsParsed.styles.map((s) => s.content).join('\n')
+
+  assert.ok(!/(margin|padding)-(left|right)|text-align:\s*(left|right)|\b(left|right):/.test(css),
+    'a physical left/right would not flip in Arabic')
 })
 
 check('an order-wide discount reaches the bar as its own row', () => {
@@ -523,7 +615,7 @@ check('it names the action without replacing the amount it is attached to', () =
 
   assert.strictEqual(toggle.getAttribute('aria-label'), null,
     'an aria-label here would hide the total from a screen reader')
-  assert.ok(/Total \(Inc-VAT\)/.test(text(toggle)))
+  assert.ok(/Final amount payable/.test(text(toggle)))
   assert.ok(/Show price breakdown/.test(text(toggle)))
 })
 

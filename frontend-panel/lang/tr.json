@@ -2106,6 +2106,39 @@
       "daysLeft": " · {days} gün kaldı",
       "incVat": "KDV dahil",
       "exVat": "KDV hariç",
+      "totalCharges": "Tüm ürünlerin toplam tutarı",
+      "includesVat": "{vat} KDV dahil",
+      "includesVatSplit": "{vat} KDV dahil ({included} fiyata dahil + {added} eklenen)",
+      "discounts": "İndirimler",
+      "finalPayable": "Ödenecek son tutar (KDV dahil)",
+      "finalPayableShort": "Ödenecek son tutar",
+      "savedOnList": "Liste fiyatlarına göre {amount} tasarruf ettiniz (yukarıdaki fiyatlara zaten yansıtıldı)",
+      "groups": {
+        "none": {
+          "title": "KDV'siz ürünler",
+          "tag": "KDV uygulanmaz (%0)"
+        },
+        "included": {
+          "title": "KDV dahil ürünler",
+          "tag": "KDV fiyata zaten dahildir"
+        },
+        "added": {
+          "title": "Ödemede KDV eklenen ürünler",
+          "tag": "Fiyatlar KDV hariç gösterilir"
+        },
+        "items": "{count} ürün | {count} ürün",
+        "each": "Birim fiyat {price}",
+        "lineIncluded": "KDV hariç fiyat {ex} · Dahil KDV ({rate}) {vat}",
+        "lineAdded": "+ Eklenen KDV ({rate}) {vat} → KDV dahil {inc}",
+        "peekIncluded": "Dahil KDV {vat}",
+        "peekAdded": "{ex} + KDV {vat}",
+        "subtotalWithoutVat": "Ara toplam (KDV'siz)",
+        "subtotalIncVat": "Ara toplam (KDV dahil)",
+        "subtotalExVat": "Ara toplam (KDV hariç)",
+        "vatIncludedInPrices": "Bu fiyatlara dahil KDV",
+        "vatAdded": "Eklenen KDV",
+        "atRate": "KDV ({rate})"
+      },
       "explain": {
         "atPricesShown": "Gösterilen fiyatlarla",
         "lessVatInside": "Eksi KDV dahil fiyatlardaki KDV",

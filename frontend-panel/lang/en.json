@@ -2231,6 +2231,39 @@
       "daysLeft": " · {days} days left",
       "incVat": "Inc-VAT",
       "exVat": "Ex-VAT",
+      "totalCharges": "Total charges for all products",
+      "includesVat": "Includes {vat} VAT",
+      "includesVatSplit": "Includes {vat} VAT ({included} included + {added} added)",
+      "discounts": "Discounts",
+      "finalPayable": "Final amount payable (incl. VAT)",
+      "finalPayableShort": "Final amount payable",
+      "savedOnList": "You saved {amount} on list prices (already reflected in the prices above)",
+      "groups": {
+        "none": {
+          "title": "Products without VAT",
+          "tag": "VAT not applicable (0%)"
+        },
+        "included": {
+          "title": "Products with VAT included",
+          "tag": "VAT is already in the price"
+        },
+        "added": {
+          "title": "Products with VAT added at checkout",
+          "tag": "Prices shown excluding VAT"
+        },
+        "items": "{count} item | {count} items",
+        "each": "{price} each",
+        "lineIncluded": "Price excl. VAT {ex} · VAT {rate} included {vat}",
+        "lineAdded": "+ VAT {rate} added {vat} → {inc} incl. VAT",
+        "peekIncluded": "incl. VAT {vat}",
+        "peekAdded": "{ex} + VAT {vat}",
+        "subtotalWithoutVat": "Subtotal (without VAT)",
+        "subtotalIncVat": "Subtotal (including VAT)",
+        "subtotalExVat": "Subtotal (excluding VAT)",
+        "vatIncludedInPrices": "VAT included in these prices",
+        "vatAdded": "VAT added",
+        "atRate": "VAT at {rate}"
+      },
       "explain": {
         "atPricesShown": "At the prices shown",
         "lessVatInside": "Less VAT inside Inc-VAT prices",

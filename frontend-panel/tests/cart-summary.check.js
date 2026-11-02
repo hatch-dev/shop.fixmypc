@@ -448,29 +448,18 @@ check('the base totals as displayed, and VAT is not applied to that total', () =
 })
 
 /*
- * Since 2026-09-26 the Products Total row is net whenever the basket carries
- * VAT, so the single VAT row under it can hold all of it (added AND inside the
- * Inc-VAT prices). The popover bridges the card prices to that net figure.
+ * Since 2026-11-02 the summary opens with the three VAT groups and closes them
+ * on "Total charges for all products". That figure has to be the same sum
+ * totalPrice starts from, or the rows and the amount charged are two routes to
+ * two numbers.
  */
-check('the products popover lists each line with the basis it is priced on', () => {
+check('total charges are the cards plus the VAT added, and hold all the VAT', () => {
   const vm = summaryVm(BASKET)
 
-  assert.deepStrictEqual(vm.productsExplainerRows, [
-    { label: 'Apple iPhone 15 Pro (Ex-VAT)', value: '€674.00 × 3' },
-    { label: 'Samsung Galaxy A05s (Inc-VAT)', value: '€899.00 × 1' },
-    { label: 'At the prices shown', value: '€2921.00' },
-    { label: 'Less VAT inside Inc-VAT prices', value: '-€168.11' },
-    { label: 'Products total (Ex-VAT)', value: '€2752.89', strong: true },
-  ])
-})
-
-check('net products + all VAT is exactly what the cards add up to plus VAT added', () => {
-  const vm = summaryVm(BASKET)
-
-  close(vm.productsNet, 2752.89, 'Products Total (Ex-VAT)')
-  close(vm.vatTotal, 633.17, 'the single VAT row')
-  close(vm.productsNet + vm.vatTotal,
+  close(vm.productsCharge, 3386.06, 'Total charges for all products')
+  close(vm.productsCharge,
     vm.cartPrice.totalPriceWithOffer + vm.cartPrice.exclusiveTax, 'the rows no longer add up')
+  close(vm.vatTotal, 633.17, 'the VAT stated under it')
 })
 
 console.log('\nwhat the info icons open')
@@ -612,6 +601,231 @@ check('a genuinely zero-rated line is NOT treated as stale', () => {
 
 check('a complete basket is never flagged', () => {
   assert.strictEqual(summaryVm(BASKET).hasStaleLines, false)
+})
+
+/*
+ * The three-group summary, on the reference basket from the 2026-11-02 brief.
+ *
+ * Every line figure below is what Pricing::vatBreakdown returns for that line
+ * (checked by running it: 1,000 inc-VAT at 23% -> 813.01 + 186.99), so these
+ * pin the component against the server's own split rather than against
+ * numbers worked out by hand.
+ *
+ *   ① Products 1, 2   0%                      300.00
+ *   ② Products 3, 4   23%, VAT inside         1,500.00  (VAT 280.49)
+ *   ③ Product 5       23%, VAT added          200.00 + 46.00 = 246.00
+ *   Total charges                             2,046.00  (VAT 326.49)
+ *   + shipping 32.00 - voucher 50.00 - loyalty 20.00 = 2,008.00
+ *   - wallet 500.00                           = 1,508.00 left to pay
+ */
+console.log('\nthe three VAT groups (reference basket)')
+
+function line(id, title, price, rate, inclusive, split, extra) {
+  return Object.assign({
+    id,
+    quantity: 1,
+    vat_rate: rate,
+    vat_inclusive: inclusive,
+    original_price: price,
+    unit_price: price,
+    line_list: price,
+    line_ex_vat: split[0], line_vat: split[1], line_inc_vat: split[2],
+    line_list_inc_vat: split[2],
+    flash_product: { title },
+  }, extra || {})
+}
+
+const P1 = line(11, 'Product 1', 100, 0, false, [100, 0, 100])
+const P2 = line(12, 'Product 2', 200, 0, false, [200, 0, 200])
+const P3 = line(13, 'Product 3', 1000, 23, true, [813.01, 186.99, 1000])
+const P4 = line(14, 'Product 4', 500, 23, true, [406.5, 93.5, 500])
+const P5 = line(15, 'Product 5', 200, 23, false, [200, 46, 246])
+
+// Deliberately out of order: the groups must not follow the basket's order.
+const REFERENCE = [P5, P3, P1, P4, P2]
+
+function groupOf(vm, key) {
+  return vm.productGroups.find(g => g.key === key)
+}
+
+check('groups always come out without VAT, VAT included, VAT added', () => {
+  assert.deepStrictEqual(summaryVm(REFERENCE).productGroups.map(g => g.key),
+    ['none', 'included', 'added'])
+})
+
+check('① products without VAT: 300.00, no VAT', () => {
+  const g = groupOf(summaryVm(REFERENCE), 'none')
+
+  assert.deepStrictEqual(g.lines.map(l => l.title), ['Product 1', 'Product 2'])
+  close(g.inc, 300, 'subtotal (without VAT)')
+  close(g.vat, 0, 'VAT')
+  assert.strictEqual(g.lines[0].rateLabel, '', 'a 0% line prints no rate')
+})
+
+check('② products with VAT included: 1,500.00 holding 280.49', () => {
+  const g = groupOf(summaryVm(REFERENCE), 'included')
+
+  assert.deepStrictEqual(g.lines.map(l => l.title), ['Product 3', 'Product 4'])
+  close(g.lines[0].amount, 1000, 'Product 3 as priced')
+  close(g.lines[0].vat, 186.99, 'Product 3 VAT included')
+  close(g.lines[0].ex, 813.01, 'Product 3 excl. VAT')
+  close(g.lines[1].vat, 93.5, 'Product 4 VAT included')
+  assert.strictEqual(g.lines[0].rateLabel, '23%')
+  close(g.inc, 1500, 'subtotal (including VAT)')
+  close(g.vat, 280.49, 'VAT included in these prices')
+})
+
+check('③ products with VAT added: 200.00 + 46.00 = 246.00', () => {
+  const g = groupOf(summaryVm(REFERENCE), 'added')
+
+  close(g.lines[0].amount, 200, 'shown at its ex-VAT price')
+  close(g.lines[0].vat, 46, 'VAT added')
+  close(g.lines[0].inc, 246, 'incl. VAT')
+  close(g.ex, 200, 'subtotal (excluding VAT)')
+  close(g.vat, 46, 'VAT added')
+  close(g.inc, 246, 'subtotal (including VAT)')
+})
+
+check('total charges 2,046.00 = the three groups = the existing sum', () => {
+  const vm = summaryVm(REFERENCE)
+  const groups = vm.productGroups.reduce((s, g) => s + g.inc, 0)
+
+  close(groups, 2046, 'the groups')
+  close(vm.productsCharge, 2046, 'Total charges for all products')
+  close(vm.cartPrice.totalPriceWithOffer + vm.cartPrice.exclusiveTax, 2046,
+    'what totalPrice has always started from')
+})
+
+check('total VAT 326.49 = 280.49 included + 46.00 added', () => {
+  const vm = summaryVm(REFERENCE)
+
+  close(vm.vatIncluded, 280.49, 'inside VAT-inclusive prices')
+  close(vm.cartPrice.exclusiveTax, 46, 'added at checkout')
+  close(vm.vatTotal, 326.49, 'total VAT')
+})
+
+check('VAT is never added to the VAT-included products', () => {
+  // Only ③ moves the amount charged; ② on its own adds nothing at all.
+  close(summaryVm([P3, P4]).cartPrice.exclusiveTax, 0, 'VAT added for ② alone')
+  close(summaryVm([P3, P4]).totalPrice, 1500, '② is charged as priced')
+})
+
+check('shipping, voucher, loyalty and wallet give 2,008.00 and 1,508.00', () => {
+  const vm = summaryVm(REFERENCE, {
+    shippingQuote: { ok: true, price: 32 },
+    voucherResult: { offered: 50 },
+    loyaltyDiscount: 20,
+    walletApplied: 500,
+  })
+
+  close(vm.cartPrice.shippingPrice, 32, 'shipping')
+  assert.strictEqual(vm.isFreeShipping, false)
+  close(vm.totalPrice, 2008, 'final amount payable')
+  close(vm.productsCharge + vm.cartPrice.shippingPrice
+    - vm.discountRows.reduce((s, r) => s + r.amount, 0), vm.totalPrice,
+  'Total charges + Shipping - Discounts = Final amount payable')
+  close(vm.amountLeftToPay, 1508, 'left to pay')
+})
+
+check('only the discounts actually applied get a row', () => {
+  const vm = summaryVm(REFERENCE, {
+    voucherResult: { offered: 50 },
+    loyaltyDiscount: 20,
+  })
+
+  assert.deepStrictEqual(vm.discountRows.map(r => r.key), ['voucher', 'loyalty'])
+  assert.deepStrictEqual(vm.discountRows.map(r => r.label), ['Voucher', 'Loyalty Discount'])
+  assert.deepStrictEqual(summaryVm(REFERENCE).discountRows, [], 'no discount, no rows')
+})
+
+check('free shipping is free, and the total is the products total', () => {
+  const vm = summaryVm(REFERENCE, { shippingQuote: { ok: true, price: 0 } })
+
+  assert.strictEqual(vm.isFreeShipping, true)
+  close(vm.totalPrice, 2046, 'final amount payable')
+})
+
+check('a 0% line is never "VAT added", whatever vat_inclusive says', () => {
+  // vat_inclusive is false on a zero-rated line too; only the rate decides.
+  const zero = line(21, 'Zero', 50, 0, false, [50, 0, 50])
+  const zeroFlagged = line(22, 'Zero, inclusive flag', 50, 0, true, [50, 0, 50])
+
+  assert.deepStrictEqual(summaryVm([zero, zeroFlagged]).productGroups.map(g => g.key), ['none'])
+})
+
+check('two rates in one group each get their own VAT row, highest first', () => {
+  const reduced = line(23, 'Reduced rate', 113.5, 13.5, true, [100, 13.5, 113.5])
+  const g = groupOf(summaryVm([reduced, P3]), 'included')
+
+  assert.deepStrictEqual(g.rates.map(r => r.rateLabel), ['23%', '13.5%'])
+  close(g.rates[0].vat, 186.99, 'VAT at 23%')
+  close(g.rates[1].vat, 13.5, 'VAT at 13.5%')
+  close(g.vat, 200.49, 'the group VAT is the sum of its rates')
+  assert.deepStrictEqual(g.lines.map(l => l.rateLabel), ['13.5%', '23%'], 'each line names its own rate')
+})
+
+check('a quantity of two shows the unit price and the line total', () => {
+  const two = line(24, 'Two of them', 1000, 23, true, [1626.02, 373.98, 2000], {
+    quantity: 2, line_list: 2000, line_list_inc_vat: 2000,
+  })
+  const vm = summaryVm([two])
+  const l = groupOf(vm, 'included').lines[0]
+
+  close(l.amount, 2000, 'line total')
+  close(l.unit, 1000, 'each')
+  close(l.vat, 373.98, 'VAT on the whole line')
+  close(vm.totalPrice, 2000, 'final amount payable')
+})
+
+check('a line with free bundle units shows no "each" that would not multiply out', () => {
+  // 3 ordered, 1 free: charged for 2, so 1,000 x 3 is not the line.
+  const bundled = line(25, 'Bundle', 1000, 23, true, [1626.02, 373.98, 2000], {
+    quantity: 3, flash_product: { title: 'Bundle', bundle_deal: { buy: 3, free: 1 } },
+  })
+  const vm = summaryVm([bundled])
+
+  assert.strictEqual(groupOf(vm, 'included').lines[0].unit, null)
+  close(vm.productsCharge, 2000, 'total charges follow the units paid for')
+})
+
+check('a line still waiting for its prices is in no group', () => {
+  const stale = { id: 26, quantity: 1, unit_price: 699, flash_product: { title: 'Waiting' } }
+  const vm = summaryVm([stale, P1])
+
+  assert.deepStrictEqual(vm.productGroups.map(g => g.key), ['none'])
+  assert.strictEqual(vm.hasStaleLines, true, 'and the summary shows a dash')
+})
+
+check('an empty basket has no groups and totals nothing', () => {
+  const vm = summaryVm([])
+
+  assert.deepStrictEqual(vm.productGroups, [])
+  close(vm.productsCharge, 0, 'total charges')
+  close(vm.totalPrice, 0, 'final amount payable')
+  assert.deepStrictEqual(vm.discountRows, [])
+})
+
+check('the group labels exist in all five languages', () => {
+  const keys = [
+    'totalCharges', 'includesVat', 'includesVatSplit', 'discounts', 'finalPayable',
+    'finalPayableShort', 'savedOnList',
+    'groups.none.title', 'groups.none.tag', 'groups.included.title', 'groups.included.tag',
+    'groups.added.title', 'groups.added.tag', 'groups.items', 'groups.each',
+    'groups.lineIncluded', 'groups.lineAdded', 'groups.peekIncluded', 'groups.peekAdded',
+    'groups.subtotalWithoutVat', 'groups.subtotalIncVat', 'groups.subtotalExVat',
+    'groups.vatIncludedInPrices', 'groups.vatAdded', 'groups.atRate',
+  ]
+
+  // Built at run time (`groups.${key}.title`) or used through <i18n path>, so
+  // the i18n-keys scan cannot see them: listed here instead.
+  for (const code of ['en', 'fr', 'tr', 'hi', 'ar']) {
+    const bundle = JSON.parse(fs.readFileSync(path.join(ROOT, `lang/${code}.json`), 'utf8'))
+
+    for (const key of keys) {
+      const value = `ui.checkoutSummary.${key}`.split('.').reduce((n, p) => (n ? n[p] : undefined), bundle)
+      assert.strictEqual(typeof value, 'string', `${code}: ui.checkoutSummary.${key} is missing`)
+    }
+  }
 })
 
 console.log('\nthe mixed-basis notice')

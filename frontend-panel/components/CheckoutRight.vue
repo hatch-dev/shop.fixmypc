@@ -20,125 +20,33 @@
         </h5>
 
         <!--
-          One flow, and VAT stated once at the end of it:
+          The Order Summary, top to bottom:
 
-            Products Total + VAT + Shipping = Total (Inc-VAT)
+            ① Products without VAT         0% - zero-rated or margin scheme
+            ② Products with VAT included   the VAT is already in the price
+            ③ Products with VAT added      ex-VAT price, VAT added at checkout
+            Total charges for all products ① + ② + ③, every one inc-VAT
+            + Shipping
+            - each discount that applies, on its own row
+            = Final amount payable
 
-          The "Original Products" list that used to open this panel is gone. It
-          restated the cart line for line, immediately beside the cart itself,
-          and then closed with a "Total" that was the same figure as the
-          "Products Total" row directly under it -- the identical number twice,
-          five lines apart, inviting the reader to look for the difference
-          between them. On a three-item basket it was the tallest thing in the
-          summary and said nothing the list on the left had not already said.
+          Which group a line belongs to is the server's answer, not this
+          component's: vat_rate and vat_inclusive come from
+          CartsController::repriceForCustomer, and so does every line's ex /
+          VAT / inc split (Pricing::vatBreakdown). productGroups only sorts
+          the lines and adds those figures up.
 
-          What it was there for survives in two better places: the per-line
-          original price and its Ex-VAT / Inc-VAT badge are on the cart card
-          itself, and the working behind the saving is in the popover on the
-          "You Save" row. originalTotal is still computed -- it is the base
-          that saving is measured against -- it is simply no longer printed as
-          a list.
+          Nothing is added to ② - its tax is inside the price already. Only
+          ③'s VAT is added, and that is the exclusiveTax totalPrice has always
+          added, so "Total charges" is literally totalPriceWithOffer +
+          exclusiveTax and the final figure is the same totalPrice the order
+          is charged.
 
-          Every figure down to "Products Total" is a price AS DISPLAYED - the
-          number on the product's card, which for an ex-VAT product is net and
-          for an inc-VAT product is gross. They add up because VAT is then
-          added exactly once, and only to the lines that do not already carry
-          it:
-
-            2,921.00  products total, as displayed
-            + 465.06  VAT, added for the ex-VAT lines only
-            = 3,386.06
-
-          A product quoted gross has nothing added to it and its VAT is already
-          inside its own figure. A product quoted net has its VAT in the VAT
-          row. Adding VAT to both would tax the gross one twice - which is the
-          one error this arrangement exists to prevent.
-
-          This is also literally what totalPrice computes:
-          totalPriceWithOffer + exclusiveTax, where exclusiveTax is summed
-          only over lines with vat_inclusive false. The rows and the amount
-          charged are the same arithmetic rather than two routes to one number.
-
-          The caveat is the VAT row: it is the VAT ADDED, not the VAT contained
-          in the order, which is larger once the gross lines' own tax is
-          counted. The icon on that row carries both, because an invoice needs
-          the second figure.
+          The VAT stated is the VAT before the order-wide discounts below,
+          because that is how the order records it (OrderSummary::for).
         -->
 
-        <template v-if="formatPrice(productsDiscount) > 0">
-
-        <div class="sum-row">
-          <span class="sum-label">
-            {{ $t('ui.checkoutSummary.youSave') }}
-            <!--
-              Click to open the figure behind the row. A popover rather than a
-              title attribute: these explanations carry amounts worth reading,
-              and a native tooltip is unreachable on a touch screen.
-            -->
-            <info-popover
-              :title="$t('ui.checkoutSummary.savingsTitle')"
-              :label="$t('ui.checkoutSummary.savingsLabel')"
-              :lede="$t('ui.checkoutSummary.savingsLede')"
-              :groups="savingsExplainerGroups"
-              :rows="savingsExplainerRows"
-              :note="savingsExplainerNote"
-            />
-          </span>
-          <span class="sum-value text-success">
-            -<price-format :price="formatPrice(productsDiscount)" :decimals="2" />
-          </span>
-        </div>
-
-        <div class="sum-rule"></div>
-
-        </template>
-
-        <!--
-          The goods, net of VAT whenever the basket carries any, so the one
-          VAT row below can hold all of it: VAT added for Ex-VAT products and
-          VAT already inside Inc-VAT prices. Net + VAT + Shipping = Total.
-        -->
-        <div class="sum-row">
-          <span class="sum-label">
-            {{ $t('ui.checkoutSummary.productsTotal') }}<template v-if="hasVat"> {{ $t('ui.checkoutSummary.exVatParen') }}</template>
-            <info-popover
-              :title="$t('ui.checkoutSummary.productsTitle')"
-              :label="$t('ui.checkoutSummary.productsLabel')"
-              :lede="hasVat ? $t('ui.checkoutSummary.productsLedeVat') : $t('ui.checkoutSummary.productsLede')"
-              :rows="productsExplainerRows"
-            />
-          </span>
-          <span class="sum-value">
-            <price-format v-if="!hasStaleLines" :price="formatPrice(productsNet)" :decimals="2" />
-            <span v-else class="sum-pending">&mdash;</span>
-          </span>
-        </div>
-
-        <!--
-          All the VAT on the order, in one row: the VAT added to Ex-VAT
-          products and the VAT inside Inc-VAT prices. The Products Total above
-          is net for exactly this reason, so it is still counted only once.
-
-          The rate is named here only when the whole basket shares one; with
-          two in play there is no single percentage to print, and the icon
-          lists each rate separately.
-        -->
-        <div class="sum-row">
-          <span class="sum-label">
-            {{ $t('ui.checkoutSummary.vat') }}<template v-if="vatRateLabel"> ({{ vatRateLabel }})</template>
-            <info-popover
-              :title="$t('ui.checkoutSummary.vatTitle')"
-              :label="$t('ui.checkoutSummary.vatLabel')"
-              :lede="$t('ui.checkoutSummary.vatLede')"
-              :rows="vatExplainerRows"
-              :note="vatExplainerNote"
-            />
-          </span>
-          <span class="sum-value">
-            <price-format v-if="!hasStaleLines" :price="formatPrice(vatTotal)" :decimals="2" />
-            <span v-else class="sum-pending">&mdash;</span>
-          </span>
-        </div>
+        <summary-product-groups v-if="!hasStaleLines" :groups="productGroups" />
 
         <!--
           The moment between a basket being restored and its prices arriving.
@@ -175,69 +83,46 @@
           </span>
         </p>
 
-        <div v-if="formatPrice(flashDiscount) > 0" class="sum-row">
-          <span class="sum-label">{{ $t('ui.checkoutSummary.flashDiscount') }}</span>
-          <span class="sum-value text-success">
-            - <price-format :price="formatPrice(flashDiscount)" :decimals="2" />
-          </span>
-        </div>
-
-        <div v-if="formatPrice(voucherResult?.offered) > 0" class="sum-row">
-          <span class="sum-label">{{ $t('ui.checkoutSummary.voucher') }}</span>
-          <span class="sum-value text-success">
-            - <price-format :price="formatPrice(voucherResult?.offered || 0)" :decimals="2" />
-          </span>
-        </div>
-
         <!--
-          The label is the merchant's customer-facing copy, defaulting to
-          "Loyalty Discount". It is never the group's internal admin title,
-          which is how a shopper's basket came to read "Group 1  - €250.00".
+          ① + ② + ③, with the order's VAT stated under it: the part inside
+          the ② prices and the part added for ③. The icon carries the full
+          VAT working, rate by rate where there is more than one.
         -->
-        <div v-if="formatPrice(loyaltyDiscount) > 0" class="sum-row">
-          <span class="sum-label">
-            {{ loyaltyLabel }}
-            <small v-if="loyaltyBenefit" class="sum-note">
-              {{ loyaltyBenefit }}{{ loyaltyExpiryNote }}
-            </small>
-          </span>
-          <span class="sum-value text-success">
-            - <price-format :price="formatPrice(loyaltyDiscount)" :decimals="2" />
-          </span>
-        </div>
-
-        <!--
-          One row per Essentials Bundle, named, because this discount is the
-          only one on the list a shopper can lose by editing their basket:
-          removing a single item of a bundle ends the set price for the rest
-          of it. An unlabelled "Bundle saving" that quietly disappeared would
-          read as the total going wrong.
-        -->
-        <div
-          v-for="bundle in bundleDiscounts"
-          :key="`bundle-saving-${bundle.id}`"
-          class="sum-row"
-        >
-          <span class="sum-label">
-            {{ bundle.title || $t('ui.checkoutSummary.bundleSaving') }}
-            <small class="sum-note">{{ $t('ui.checkoutSummary.bundleNote') }}</small>
-          </span>
-          <span class="sum-value text-success">
-            - <price-format :price="formatPrice(bundle.discount)" :decimals="2" />
-          </span>
-        </div>
-
-        <div v-if="formatPrice(pointsDiscount) > 0" class="sum-row">
-          <span class="sum-label">{{ $t('ui.checkoutSummary.cherryPoints') }}</span>
-          <span class="sum-value text-success">
-            - <price-format :price="formatPrice(pointsDiscount)" :decimals="2" />
-          </span>
+        <div class="sum-charges">
+          <div class="sum-row">
+            <span class="sum-label">{{ $t('ui.checkoutSummary.totalCharges') }}</span>
+            <span class="sum-value">
+              <price-format v-if="!hasStaleLines" :price="formatPrice(productsCharge)" :decimals="2" />
+              <span v-else class="sum-pending">&mdash;</span>
+            </span>
+          </div>
+          <div v-if="!hasStaleLines && vatTotal > 0.004" class="sum-charges-vat">
+            <i18n v-if="vatIncluded > 0.004 && cartPrice.exclusiveTax > 0.004" path="ui.checkoutSummary.includesVatSplit" tag="span">
+              <template #vat><price-format :price="formatPrice(vatTotal)" :decimals="2" /></template>
+              <template #included><price-format :price="formatPrice(vatIncluded)" :decimals="2" /></template>
+              <template #added><price-format :price="formatPrice(cartPrice.exclusiveTax)" :decimals="2" /></template>
+            </i18n>
+            <i18n v-else path="ui.checkoutSummary.includesVat" tag="span">
+              <template #vat><price-format :price="formatPrice(vatTotal)" :decimals="2" /></template>
+            </i18n>
+            <!--
+              A popover rather than a title attribute: it carries amounts
+              worth reading, and a native tooltip is unreachable on a touch
+              screen.
+            -->
+            <info-popover
+              :title="$t('ui.checkoutSummary.vatTitle')"
+              :label="$t('ui.checkoutSummary.vatLabel')"
+              :lede="$t('ui.checkoutSummary.vatLede')"
+              :rows="vatExplainerRows"
+              :note="vatExplainerNote"
+            />
+          </div>
         </div>
 
         <!--
           Always stated, because "no shipping row" and "shipping is free" look
-          identical and only one of them is reassuring. Last before the total,
-          since it is the only thing added to the goods.
+          identical and only one of them is reassuring.
         -->
         <div class="sum-row">
           <span class="sum-label">
@@ -253,9 +138,26 @@
           </span>
         </div>
 
+        <!--
+          Each discount on its own row, and only one that is actually taking
+          money off: see discountRows.
+        -->
+        <div v-if="discountRows.length" class="sum-discounts">
+          <div class="sum-discounts-head">{{ $t('ui.checkoutSummary.discounts') }}</div>
+          <div v-for="row in discountRows" :key="row.key" class="sum-row">
+            <span class="sum-label">
+              {{ row.label }}
+              <small v-if="row.note" class="sum-note">{{ row.note }}</small>
+            </span>
+            <span class="sum-value text-success">
+              &minus; <price-format :price="formatPrice(row.amount)" :decimals="2" />
+            </span>
+          </div>
+        </div>
+
         <!-- .sum-total carries the second rule as its own top border -->
         <div class="sum-total">
-          <span class="sum-total-label">{{ $t('ui.checkoutSummary.totalIncVat') }}</span>
+          <span class="sum-total-label">{{ $t('ui.checkoutSummary.finalPayable') }}</span>
           <span class="sum-total-value">
             <price-format v-if="!hasStaleLines" :price="formatPrice(totalPrice)" :decimals="2" />
             <span v-else class="sum-pending">&mdash;</span>
@@ -279,6 +181,25 @@
               <price-format :price="formatPrice(amountLeftToPay)" :decimals="2" />
             </span>
           </div>
+        </div>
+
+        <!--
+          The saving against list prices. Information, not a deduction: the
+          prices in the groups above are already the reduced ones, so it is
+          stated under the total rather than subtracted on the way to it.
+        -->
+        <div v-if="!hasStaleLines && formatPrice(productsDiscount) > 0" class="sum-saved">
+          <i18n path="ui.checkoutSummary.savedOnList" tag="span">
+            <template #amount><strong><price-format :price="formatPrice(productsDiscount)" :decimals="2" /></strong></template>
+          </i18n>
+          <info-popover
+            :title="$t('ui.checkoutSummary.savingsTitle')"
+            :label="$t('ui.checkoutSummary.savingsLabel')"
+            :lede="$t('ui.checkoutSummary.savingsLede')"
+            :groups="savingsExplainerGroups"
+            :rows="savingsExplainerRows"
+            :note="savingsExplainerNote"
+          />
         </div>
 
         <!--
@@ -422,73 +343,22 @@
           <div v-show="mobileOpen" id="mobile-summary-panel" class="mfs-panel">
             <div class="mfs-panel-inner">
 
-              <div v-if="formatPrice(productsDiscount) > 0" class="sum-row">
-                <span class="sum-label">{{ $t('ui.checkoutSummary.youSave') }}</span>
-                <span class="sum-value text-success">
-                  -<price-format :price="formatPrice(productsDiscount)" :decimals="2" />
-                </span>
-              </div>
+              <!-- The card's groups, each opening from its subtotal. -->
+              <summary-product-groups v-if="!hasStaleLines" collapsible :groups="productGroups" />
 
-              <div class="sum-row">
-                <span class="sum-label">
-                  {{ $t('ui.checkoutSummary.productsTotal') }}<template v-if="hasVat"> {{ $t('ui.checkoutSummary.exVatParen') }}</template>
-                </span>
-                <span class="sum-value">
-                  <price-format v-if="!hasStaleLines" :price="formatPrice(productsNet)" :decimals="2" />
-                  <span v-else class="sum-pending">&mdash;</span>
-                </span>
-              </div>
-
-              <!-- VAT ADDED, for the Ex-VAT lines only - an Inc-VAT line
-                   already carries its own. Same rule, same figure, same
-                   rate label as the card. -->
-              <div class="sum-row">
-                <span class="sum-label">
-                  {{ $t('ui.checkoutSummary.vat') }}<template v-if="vatRateLabel"> ({{ vatRateLabel }})</template>
-                </span>
-                <span class="sum-value">
-                  <price-format v-if="!hasStaleLines" :price="formatPrice(vatTotal)" :decimals="2" />
-                  <span v-else class="sum-pending">&mdash;</span>
-                </span>
-              </div>
-
-              <div v-if="formatPrice(flashDiscount) > 0" class="sum-row">
-                <span class="sum-label">{{ $t('ui.checkoutSummary.flashDiscount') }}</span>
-                <span class="sum-value text-success">
-                  - <price-format :price="formatPrice(flashDiscount)" :decimals="2" />
-                </span>
-              </div>
-
-              <div v-if="formatPrice(voucherResult?.offered) > 0" class="sum-row">
-                <span class="sum-label">{{ $t('ui.checkoutSummary.voucher') }}</span>
-                <span class="sum-value text-success">
-                  - <price-format :price="formatPrice(voucherResult?.offered || 0)" :decimals="2" />
-                </span>
-              </div>
-
-              <div v-if="formatPrice(loyaltyDiscount) > 0" class="sum-row">
-                <span class="sum-label">{{ loyaltyLabel }}</span>
-                <span class="sum-value text-success">
-                  - <price-format :price="formatPrice(loyaltyDiscount)" :decimals="2" />
-                </span>
-              </div>
-
-              <div
-                v-for="bundle in bundleDiscounts"
-                :key="`mfs-bundle-${bundle.id}`"
-                class="sum-row"
-              >
-                <span class="sum-label">{{ bundle.title || $t('ui.checkoutSummary.bundleSaving') }}</span>
-                <span class="sum-value text-success">
-                  - <price-format :price="formatPrice(bundle.discount)" :decimals="2" />
-                </span>
-              </div>
-
-              <div v-if="formatPrice(pointsDiscount) > 0" class="sum-row">
-                <span class="sum-label">{{ $t('ui.checkoutSummary.cherryPoints') }}</span>
-                <span class="sum-value text-success">
-                  - <price-format :price="formatPrice(pointsDiscount)" :decimals="2" />
-                </span>
+              <div class="sum-charges">
+                <div class="sum-row">
+                  <span class="sum-label">{{ $t('ui.checkoutSummary.totalCharges') }}</span>
+                  <span class="sum-value">
+                    <price-format v-if="!hasStaleLines" :price="formatPrice(productsCharge)" :decimals="2" />
+                    <span v-else class="sum-pending">&mdash;</span>
+                  </span>
+                </div>
+                <p v-if="!hasStaleLines && vatTotal > 0.004" class="sum-charges-vat">
+                  <i18n path="ui.checkoutSummary.includesVat" tag="span">
+                    <template #vat><price-format :price="formatPrice(vatTotal)" :decimals="2" /></template>
+                  </i18n>
+                </p>
               </div>
 
               <div class="sum-row">
@@ -498,6 +368,16 @@
                   <span v-else-if="isFreeShipping" class="color-free">{{ $t('invent.fre') }}</span>
                   <price-format v-else :price="formatPrice(cartPrice.shippingPrice)" :decimals="2" />
                 </span>
+              </div>
+
+              <div v-if="discountRows.length" class="sum-discounts">
+                <div class="sum-discounts-head">{{ $t('ui.checkoutSummary.discounts') }}</div>
+                <div v-for="row in discountRows" :key="`mfs-${row.key}`" class="sum-row">
+                  <span class="sum-label">{{ row.label }}</span>
+                  <span class="sum-value text-success">
+                    &minus; <price-format :price="formatPrice(row.amount)" :decimals="2" />
+                  </span>
+                </div>
               </div>
 
               <template v-if="walletApplied > 0 && !hasStaleLines">
@@ -582,7 +462,7 @@
 
           <!--
             The whole row is the disclosure, so the total reads as
-            "Total (Inc-VAT) EUR 924.16, Show price breakdown, collapsed,
+            "Final amount payable EUR 924.16, Show price breakdown, collapsed,
             button" - the amount and the action in one stop, rather than a
             chevron a screen reader cannot relate to the figure beside it.
             No aria-label: it would replace the total instead of adding to
@@ -595,7 +475,7 @@
             aria-controls="mobile-summary-panel"
             @click="mobileOpen = !mobileOpen"
           >
-            <span class="mfs-head-label">{{ $t('ui.checkoutSummary.totalIncVat') }}</span>
+            <span class="mfs-head-label">{{ $t('ui.checkoutSummary.finalPayableShort') }}</span>
             <span class="mfs-head-value">
               <price-format v-if="!hasStaleLines" :price="formatPrice(totalPrice)" :decimals="2" />
               <span v-else class="sum-pending">&mdash;</span>
@@ -645,6 +525,7 @@ import productPriceHelper from "../mixin/productPriceHelper"
 import AjaxButton from '~/components/AjaxButton'
 import PriceFormat from "./PriceFormat";
 import InfoPopover from "~/components/InfoPopover"
+import SummaryProductGroups from "~/components/SummaryProductGroups"
 
 export default {
   name: 'CheckoutRight',
@@ -781,7 +662,8 @@ export default {
   components: {
     InfoPopover,
     PriceFormat,
-    AjaxButton
+    AjaxButton,
+    SummaryProductGroups
   },
   computed: {
     flashDiscount() {
@@ -1053,6 +935,177 @@ export default {
         }
       }).filter(Boolean)
     },
+
+    /*
+     * The basket's lines in the summary's three groups, always in this order:
+     *
+     *   none      vat_rate 0 - zero-rated or margin scheme; no VAT either way
+     *   included  vat_rate > 0, price contains its VAT; nothing is added
+     *   added     vat_rate > 0, price is ex-VAT; VAT is added at checkout
+     *
+     * Both the classification and every amount are the server's: vat_rate,
+     * vat_inclusive and line_ex_vat / line_vat / line_inc_vat come from
+     * CartsController::repriceForCustomer via Pricing::vatBreakdown. This only
+     * sorts and sums them; it applies no rate and splits nothing.
+     *
+     * Zero-rated and ex-VAT are told apart by the RATE, never by
+     * vat_inclusive alone: a 0% line carries vat_inclusive false as well, and
+     * calling it "VAT added" would promise tax that is never charged. A flat-
+     * amount tax rule also reports rate 0 here, exactly as the server splits it
+     * (Pricing::vatRate) - none is configured, and the summary does not second-
+     * guess the split.
+     *
+     * A line with no rate at all has not been priced yet (see hasStaleLines);
+     * it is left out, and the summary shows a dash until it arrives.
+     *
+     * Each group's inc total is what it contributes to Total charges: the
+     * gross price for 0% and inc-VAT lines, and net + VAT added for ex-VAT
+     * ones. Summed, they are totalPriceWithOffer + exclusiveTax.
+     */
+    productGroups() {
+      const cents = (value) => Math.round(value * 100) / 100
+      const groups = {}
+
+      ;(this.checkedProduct || []).forEach((row) => {
+        if (row?.vat_rate === undefined || row?.vat_rate === null) {
+          return
+        }
+
+        const rate = Number(row.vat_rate)
+        const key = rate > 0 ? (row.vat_inclusive ? 'included' : 'added') : 'none'
+        const group = groups[key] || (groups[key] = {
+          key, lines: [], count: 0, ex: 0, vat: 0, inc: 0, byRate: {},
+        })
+
+        const quantity = parseInt(row?.quantity || 0)
+        const ex = Number(row?.line_ex_vat || 0)
+        const vat = Number(row?.line_vat || 0)
+        const inc = Number(row?.line_inc_vat || 0)
+
+        // The line as the product is quoted: net for an ex-VAT product,
+        // gross for the others - the figure on its own cart card.
+        const amount = key === 'added' ? ex : inc
+
+        /*
+         * "€1,000.00 each" only where unit x quantity really is the line. A
+         * "buy X get Y free" line is charged for fewer units than it holds,
+         * and an "each" beside it would not multiply out.
+         */
+        const unit = Number(row?.unit_price ?? row?.upsell_price ?? 0)
+        const showUnit = quantity > 1 && Math.abs(unit * quantity - amount) < 0.005
+
+        const attributes = row?.updated_inventory?.inventory_attributes || []
+
+        group.lines.push({
+          id: row?.id,
+          title: row?.flash_product?.title || row?.product?.title || '',
+          // "256GB • Black • Excellent", as the cart card names the variant
+          variant: attributes.map(i => i?.attribute_value?.title).filter(Boolean).join(' • '),
+          quantity,
+          rateLabel: this.formatVatRate(rate),
+          ex,
+          vat,
+          inc,
+          amount,
+          unit: showUnit ? unit : null,
+        })
+
+        group.count += quantity
+        group.ex += ex
+        group.vat += vat
+        group.inc += inc
+
+        if (rate > 0) {
+          const rateKey = rate.toFixed(2)
+          const slot = group.byRate[rateKey] || (group.byRate[rateKey] = {
+            rate, rateLabel: this.formatVatRate(rate), vat: 0,
+          })
+
+          slot.vat += vat
+        }
+      })
+
+      return ['none', 'included', 'added']
+        .filter(key => groups[key])
+        .map((key) => {
+          const group = groups[key]
+
+          return {
+            key,
+            lines: group.lines,
+            count: group.count,
+            ex: cents(group.ex),
+            vat: cents(group.vat),
+            inc: cents(group.inc),
+            // highest rate first, the way a VAT invoice lists them
+            rates: Object.values(group.byRate)
+              .map(slot => Object.assign({}, slot, { vat: cents(slot.vat) }))
+              .sort((a, b) => b.rate - a.rate),
+          }
+        })
+    },
+
+    /*
+     * Total charges for all products: the goods with their VAT, before
+     * shipping and the order-wide discounts. Exactly the first two terms of
+     * totalPrice, so "Total charges + Shipping - Discounts = Final amount
+     * payable" is the same sum the order is charged, not a second one.
+     */
+    productsCharge() {
+      return this.cartPrice.totalPriceWithOffer + this.cartPrice.exclusiveTax
+    },
+
+    /*
+     * The order-wide discounts, one row each, in the order they are applied,
+     * and only those taking money off: a zero row is a promotion the
+     * customer does not have, and listing it reads as one that failed.
+     *
+     * Every amount is the same figure totalPrice subtracts, so the rows and
+     * the total cannot disagree.
+     *
+     * The loyalty label is the merchant's customer-facing copy, defaulting to
+     * "Loyalty Discount" - never the group's internal admin title, which is
+     * how a shopper's basket came to read "Group 1  - €250.00".
+     *
+     * One row per Essentials Bundle, named, because it is the one discount a
+     * shopper can lose by editing their basket: removing one item of a bundle
+     * ends the set price for the rest, and an unlabelled saving that quietly
+     * disappeared would read as the total going wrong.
+     */
+    discountRows() {
+      const rows = [
+        {
+          key: 'flash',
+          label: this.$t('ui.checkoutSummary.flashDiscount'),
+          amount: this.flashDiscount,
+        },
+        {
+          key: 'voucher',
+          label: this.$t('ui.checkoutSummary.voucher'),
+          amount: this.cartPrice.voucher,
+        },
+        {
+          key: 'loyalty',
+          label: this.loyaltyLabel,
+          note: this.loyaltyBenefit ? `${this.loyaltyBenefit}${this.loyaltyExpiryNote}` : '',
+          amount: this.loyaltyDiscount,
+        },
+        ...this.bundleDiscounts.map(bundle => ({
+          key: `bundle-${bundle.id}`,
+          label: bundle.title || this.$t('ui.checkoutSummary.bundleSaving'),
+          note: this.$t('ui.checkoutSummary.bundleNote'),
+          amount: bundle.discount,
+        })),
+        {
+          key: 'points',
+          label: this.$t('ui.checkoutSummary.cherryPoints'),
+          amount: this.pointsDiscount,
+        },
+      ]
+
+      return rows.filter(row => Number(this.formatPrice(row.amount || 0)) > 0)
+    },
+
     /*
      * ---- what the summary's info icons open ---------------------------
      *
@@ -1060,44 +1113,6 @@ export default {
      * amount is the one already rendered beside it — the same server splits
      * the rows read — so the popover can never disagree with the summary.
      */
-
-    /*
-     * The normalisation, shown as working: each line's original stated net,
-     * then totalled. It is the answer to "why is my products total not the sum
-     * of the numbers above it" — because one of those numbers had its VAT
-     * taken out first.
-     */
-    /*
-     * Each line at the price actually charged, as displayed, then the total.
-     * The basis is named per row because the column mixes the two, and naming
-     * it is what stops the list being read as one convention.
-     */
-    productsExplainerRows() {
-      const rows = (this.checkedProduct || []).map((row) => {
-        const quantity = parseInt(row?.quantity || 0)
-        const unit = Number(row?.unit_price ?? row?.upsell_price ?? 0)
-        const rated = parseFloat(row?.vat_rate || 0) > 0
-        const basis = rated ? (row?.vat_inclusive ? this.$t('ui.checkoutSummary.incVat') : this.$t('ui.checkoutSummary.exVat')) : ''
-
-        return {
-          label: `${row?.flash_product?.title || ''}${basis ? ` (${basis})` : ''}`,
-          value: `${this.money(unit)} × ${quantity}`,
-        }
-      })
-
-      if (this.vatIncluded > 0.004) {
-        rows.push({ label: this.$t('ui.checkoutSummary.explain.atPricesShown'), value: this.money(this.cartPrice.totalPriceWithOffer) })
-        rows.push({ label: this.$t('ui.checkoutSummary.explain.lessVatInside'), value: `-${this.money(this.vatIncluded)}` })
-      }
-
-      rows.push({
-        label: this.hasVat ? this.$t('ui.checkoutSummary.explain.productsTotalExVat') : this.$t('ui.checkoutSummary.explain.productsTotal'),
-        value: this.money(this.productsNet),
-        strong: true,
-      })
-
-      return rows
-    },
 
     /* The basket's original price, normalised to net. Only the VAT popover
        uses this now: it is what makes the two conventions comparable. */
@@ -1174,23 +1189,9 @@ export default {
       return included > 0 ? included : 0
     },
 
-    /* All the VAT on the order, added and included: the single VAT row. */
+    /* All the VAT on the order, added and included: the line under Total charges. */
     vatTotal() {
       return Number(this.cartPrice.exclusiveTax || 0) + this.vatIncluded
-    },
-
-    hasVat() {
-      return this.vatTotal > 0.004
-    },
-
-    /*
-     * The goods before VAT: the card prices less the VAT already inside the
-     * Inc-VAT ones. Derived from the same figures the total uses, so
-     * productsNet + vatTotal is exactly totalPriceWithOffer + exclusiveTax
-     * and the rows always add up to the Total (Inc-VAT).
-     */
-    productsNet() {
-      return this.cartPrice.totalPriceWithOffer - this.vatIncluded
     },
 
     vatExplainerRows() {
@@ -1644,13 +1645,13 @@ export default {
 
    One flow, in the order a customer reads it:
 
-     Products (Inc-VAT) - You Save = Total Products (Inc-VAT)
-     Total Products - order-wide discounts + shipping = Total (Inc-VAT)
+     ① without VAT + ② VAT included + ③ VAT added = Total charges
+     Total charges + shipping - each discount      = Final amount payable
 
-   Every figure is gross, so a basket holding one ex-VAT and one inc-VAT
-   product adds up without ever putting a net figure next to a gross one. The
-   detail behind each figure is behind the info icon on the row it belongs to,
-   never a second row or a panel of its own.
+   Each group closes on its inc-VAT subtotal, so the three add up without a
+   net figure ever being put next to a gross one. The groups themselves are
+   SummaryProductGroups.vue; the full VAT working is behind the info icon
+   under Total charges.
 
    Sizes are on the same 2/4/6/8/10/12px step as the cart line, so the two
    columns read as one page rather than two panels that happen to sit side by
@@ -1872,6 +1873,59 @@ export default {
   font-size: 13px;
   font-weight: 400;
   color: #6B7C93;
+}
+
+/* --- total charges, discounts, saving ---------------------------------- */
+/* the sum of the three groups: ruled off from them, and set a step heavier */
+.sum-charges {
+  margin: 6px 0 2px;
+  padding: 4px 0 6px;
+  border-bottom: 1px solid #E3E8F0;
+}
+
+.sum-charges .sum-label,
+.sum-charges .sum-value {
+  font-size: 15.5px;
+  font-weight: 800;
+}
+
+.sum-charges-vat {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: -2px 0 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: #6B7C93;
+}
+
+.sum-discounts {
+  margin-top: 2px;
+}
+
+.sum-discounts-head {
+  padding-top: 4px;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #0F2547;
+}
+
+.sum-discounts .sum-row {
+  padding-inline-start: 10px;
+}
+
+.sum-saved {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #15803D;
 }
 
 /* --- total ---------------------------------------------------------------- */

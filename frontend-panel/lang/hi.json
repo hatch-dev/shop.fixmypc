@@ -2106,6 +2106,39 @@
       "daysLeft": " · {days} दिन बाकी",
       "incVat": "वैट सहित",
       "exVat": "वैट रहित",
+      "totalCharges": "सभी उत्पादों का कुल शुल्क",
+      "includesVat": "इसमें {vat} वैट शामिल है",
+      "includesVatSplit": "इसमें {vat} वैट शामिल है ({included} कीमत में शामिल + {added} जोड़ा गया)",
+      "discounts": "छूट",
+      "finalPayable": "देय अंतिम राशि (वैट सहित)",
+      "finalPayableShort": "देय अंतिम राशि",
+      "savedOnList": "आपने सूची मूल्यों पर {amount} की बचत की (ऊपर की कीमतों में पहले ही शामिल)",
+      "groups": {
+        "none": {
+          "title": "वैट रहित उत्पाद",
+          "tag": "वैट लागू नहीं (0%)"
+        },
+        "included": {
+          "title": "वैट सहित उत्पाद",
+          "tag": "वैट पहले से कीमत में शामिल है"
+        },
+        "added": {
+          "title": "चेकआउट पर वैट जोड़े जाने वाले उत्पाद",
+          "tag": "कीमतें वैट के बिना दिखाई गई हैं"
+        },
+        "items": "{count} आइटम | {count} आइटम",
+        "each": "{price} प्रति इकाई",
+        "lineIncluded": "वैट के बिना कीमत {ex} · {rate} वैट शामिल {vat}",
+        "lineAdded": "+ {rate} वैट जोड़ा गया {vat} → वैट सहित {inc}",
+        "peekIncluded": "वैट शामिल {vat}",
+        "peekAdded": "{ex} + वैट {vat}",
+        "subtotalWithoutVat": "उप-योग (वैट लागू नहीं)",
+        "subtotalIncVat": "उप-योग (वैट सहित)",
+        "subtotalExVat": "उप-योग (वैट के बिना)",
+        "vatIncludedInPrices": "इन कीमतों में शामिल वैट",
+        "vatAdded": "जोड़ा गया वैट",
+        "atRate": "{rate} पर वैट"
+      },
       "explain": {
         "atPricesShown": "दिखाई गई कीमतों पर",
         "lessVatInside": "घटाएँ: वैट सहित कीमतों में शामिल वैट",
