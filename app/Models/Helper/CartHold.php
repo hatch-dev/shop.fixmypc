@@ -22,7 +22,8 @@ use Illuminate\Support\Facades\Log;
  * Both count from the same moment and are set by the admin under
  * Settings > Basket reservation (settings.cart_remind_minutes and
  * cart_expire_minutes). One timer per basket, restarted whenever something
- * is added to it. A changed setting applies to baskets already held.
+ * is added to it and while the shopper browses the shop (touch(), since
+ * 2026-11-03). A changed setting applies to baskets already held.
  * Placing an order uses the held units instead of taking stock a second time.
  *
  * How it stays right: cart lines are changed and deleted from many places
@@ -366,6 +367,36 @@ class CartHold
                 Cart::where('id', $line->id)->update(['quantity' => $quantity]);
             }
         }
+    }
+
+
+    /**
+     * The shopper is still shopping: restart the basket's timer.
+     *
+     * Sent by the storefront as the shopper moves between pages (POST
+     * cart/activity), so a basket is emptied after 20 minutes nobody has
+     * touched the shop, not 20 minutes after the last thing was added. Until
+     * 2026-11-03 only an add restarted it, and a shopper who added four items
+     * and kept browsing came back to an empty basket.
+     *
+     * Only a live hold is restarted: one that has already lapsed is emptied
+     * by expireIfLapsed() before this runs (middleware cart.hold), and a
+     * basket with nothing held has no timer to restart. The reminder is not
+     * re-armed - a shopper already reminded is not emailed again for the same
+     * basket. Returns whether a timer was restarted.
+     */
+    public static function touch($userId, $userToken)
+    {
+        $key = self::ownerKey($userId, $userToken);
+
+        if (!$key) {
+            return false;
+        }
+
+        return DB::table('cart_holds')->where('owner_key', $key)->update([
+            'last_activity_at' => self::now(),
+            'updated_at' => self::now(),
+        ]) > 0;
     }
 
 

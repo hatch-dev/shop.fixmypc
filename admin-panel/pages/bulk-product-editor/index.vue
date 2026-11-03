@@ -681,6 +681,9 @@
                       {{ value.title }}
                     </div>
                   </div>
+                  <!-- why the last save of this row was refused, and what it left as it was -->
+                  <p v-for="(message, m) in rowMessages(value.id)" :key="'err-' + m" class="field-error">{{ message }}</p>
+                  <p v-for="(message, m) in rowWarnings(value.id)" :key="'warn-' + m" class="field-warning">{{ message }}</p>
                 </template>
 
                 <!-- Slug -->
@@ -700,6 +703,7 @@
                       {{ value.slug }}
                     </div>
                   </div>
+                  <p v-if="fieldError(value.id, 'slug')" class="field-error">{{ fieldError(value.id, 'slug') }}</p>
                 </template>
 
                 <!-- Editor -->
@@ -1211,26 +1215,38 @@
                       {{ formatAttributes(variant) }}
                     </span>
 
-                    <input
-                      type="text"
-                      v-model="variant.sku"
-                      class="admin-input small"
-                      @input="autoSave(value)"
-                    />
+                    <span class="variant-field">
+                      <input
+                        type="text"
+                        v-model="variant.sku"
+                        class="admin-input small"
+                        :class="{ invalid: !!stockError(value.id, variant.id, 'sku') }"
+                        @input="autoSave(value)"
+                      />
+                      <small v-if="stockError(value.id, variant.id, 'sku')" class="field-error">{{ stockError(value.id, variant.id, 'sku') }}</small>
+                    </span>
 
-                    <input
-                      type="number"
-                      v-model="variant.price"
-                      class="admin-input small"
-                      @input="autoSave(value)"
-                    />
+                    <span class="variant-field">
+                      <input
+                        type="number"
+                        v-model="variant.price"
+                        class="admin-input small"
+                        :class="{ invalid: !!stockError(value.id, variant.id, 'price') }"
+                        @input="autoSave(value)"
+                      />
+                      <small v-if="stockError(value.id, variant.id, 'price')" class="field-error">{{ stockError(value.id, variant.id, 'price') }}</small>
+                    </span>
 
-                    <input
-                      type="number"
-                      v-model="variant.quantity"
-                      class="admin-input small"
-                      @input="autoSave(value)"
-                    />
+                    <span class="variant-field">
+                      <input
+                        type="number"
+                        v-model="variant.quantity"
+                        class="admin-input small"
+                        :class="{ invalid: !!stockError(value.id, variant.id, 'quantity') }"
+                        @input="autoSave(value)"
+                      />
+                      <small v-if="stockError(value.id, variant.id, 'quantity')" class="field-error">{{ stockError(value.id, variant.id, 'quantity') }}</small>
+                    </span>
 
                     <input
                       type="text"
@@ -1882,6 +1898,10 @@ export default {
       isFocusMode: false,
       // Product ids the last bulk save refused, so their rows stand out.
       refusedRowIds: [],
+      // product id -> field -> message, from the last refused save of it
+      fieldErrors: {},
+      // product id -> [message]: gaps a save left as they were
+      fieldWarnings: {},
       itemList: [],
       filters: {
         category_id: '',
@@ -2673,45 +2693,96 @@ export default {
          * thrown error reports every refusal as a success. Nothing is written
          * when that happens, and the response names the rows at fault.
          */
-        if (!this.reportBulkRefusal(data)) {
+        if (!this.reportBulkRefusal(data, products.map(p => p.id))) {
           this.$toast.success(this.$t('pages.bulkProductEditor.bulkUpdateSuccess'))
         }
 
       } catch (e) {
-        this.$toast.dismiss(toastId)
         this.$toast.error(this.$t('pages.bulkProductEditor.bulkUpdateFailed'))
         console.error(e)
+      } finally {
+        // never left on screen beside the answer it was waiting for
+        if (toastId) this.$toast.dismiss(toastId)
       }
     },
     // Rows the last save refused, so the grid can point at them.
     isRefusedRow(id) {
       return this.refusedRowIds.includes(String(id))
     },
+    // The server's message for one input of one product, or ''.
+    fieldError(id, field) {
+      return (this.fieldErrors[String(id)] || {})[field] || ''
+    },
+    stockError(id, inventoryId, column) {
+      return this.fieldError(id, `inventory.${inventoryId}.${column}`)
+    },
+    // A product's messages that have no input of their own on the row.
+    rowMessages(id) {
+      return Object.entries(this.fieldErrors[String(id)] || {})
+        .filter(([field]) => field !== 'slug' && field.indexOf('inventory.') !== 0)
+        .map(([, message]) => message)
+    },
+    rowWarnings(id) {
+      return this.fieldWarnings[String(id)] || []
+    },
     /*
      * Surface a refused bulk save. Returns true when the save was refused, so
      * the caller knows not to claim success.
      *
      * The API answers a refusal with HTTP 200 and status 201 in the body,
-     * carrying a flat list of reasons and a map of product id -> reasons.
-     * Nothing was written.
+     * with `fields` (product id -> field -> message). Nothing was written.
+     * Each message goes beside the input it is about; the toast says once
+     * that nothing was saved. It used to raise a toast per reason on top of
+     * that one - up to seven at once for a single field.
+     *
+     * `ids` are the products this save was for: their old marks are cleared
+     * first, so a fixed row stops being marked and a row saved separately
+     * keeps its own marks.
      */
-    reportBulkRefusal(data) {
-      if (!data || Number(data.status) === 200) {
-        this.refusedRowIds = []
+    reportBulkRefusal(data, ids = []) {
+      const sent = ids.map(String)
+      const payload = (data && data.data) || {}
+      const refused = !!data && Number(data.status) !== 200
+
+      const errors = { ...this.fieldErrors }
+      const warnings = { ...this.fieldWarnings }
+
+      sent.forEach((id) => {
+        delete errors[id]
+        delete warnings[id]
+      })
+
+      Object.entries(payload.warnings || {}).forEach(([id, list]) => { warnings[id] = list })
+
+      if (refused) {
+        Object.entries(payload.fields || {}).forEach(([id, fields]) => {
+          errors[id] = fields
+
+          // A refused stock row is in the variant row: open it so its input shows.
+          const product = this.itemList.find(p => String(p.id) === String(id))
+
+          if (product && Object.keys(fields).some(f => f.indexOf('inventory.') === 0)
+            && !this.expandedRows.includes(product.id)) {
+            this.expandedRows.push(product.id)
+          }
+        })
+      }
+
+      this.fieldErrors = errors
+      this.fieldWarnings = warnings
+      this.refusedRowIds = Object.keys(errors)
+
+      if (!refused) {
         return false
       }
 
-      const reasons = (data.data && data.data.form) || []
+      const reasons = payload.form || []
+      const first = reasons.length ? ` ${reasons[0]}` : ''
+      const more = reasons.length > 1
+        ? ` ${this.$t('pages.bulkProductEditor.andMore', { count: reasons.length - 1 })}`
+        : ''
 
-      this.$toast.error(data.message || this.$t('pages.bulkProductEditor.bulkUpdateFailed'))
-
-      reasons.slice(0, 5).forEach(reason => this.$toast.error(reason))
-
-      if (reasons.length > 5) {
-        this.$toast.error(this.$t('pages.bulkProductEditor.andMore', { count: reasons.length - 5 }))
-      }
-
-      this.refusedRowIds = Object.keys((data.data && data.data.rows) || {})
+      this.$toast.error(`${data.message || this.$t('pages.bulkProductEditor.bulkUpdateFailed')}${first}${more}`)
 
       return true
     },
@@ -2772,16 +2843,26 @@ export default {
             )
             await new Promise(resolve => setTimeout(resolve, 200))
             this.$toast.dismiss(toastId)
+            toastId = null
             await new Promise(resolve => setTimeout(resolve, 200))
 
             // Same as the full save: a refusal arrives with HTTP 200.
-            if (!this.reportBulkRefusal(data)) {
+            if (!this.reportBulkRefusal(data, [product.id])) {
               this.$toast.success(this.$t('pages.bulkProductEditor.changesSaved'), {
                 duration: 2000
               })
             }
           } catch (e) {
+            // A request that never got an answer (network, server error) -
+            // not a refusal, which arrives above with its reasons.
             this.$toast.error(this.$t('pages.bulkProductEditor.changesFailed'))
+          } finally {
+            /*
+             * "Saving changes..." has no timeout of its own. It used to be
+             * dismissed only on the success path, so a failed request left it
+             * on screen for good, beside "Changes failed".
+             */
+            if (toastId) this.$toast.dismiss(toastId)
           }
         }, 800)
       }
@@ -3610,6 +3691,40 @@ select.custom-dropdown {
 
 .variant-row-clean-item .admin-input {
   text-align: center;
+}
+
+/* One stock-row input and the server's message about it, in one grid cell. */
+.variant-row-clean-item .variant-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.variant-row-clean-item .admin-input.invalid {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, .15);
+}
+
+/* Scoped to the editor's grid: this <style> block is unscoped. */
+.admin-row .field-error,
+.variant-row-clean-item .field-error {
+  display: block;
+  margin: 3px 0 0;
+  font-size: 11.5px;
+  line-height: 1.3;
+  color: #b91c1c;
+  text-align: left;
+  white-space: normal;
+}
+
+.admin-row .field-warning {
+  margin: 3px 0 0;
+  font-size: 11.5px;
+  line-height: 1.3;
+  color: #b45309;
+  white-space: normal;
 }
 
 .variant-attr-clean {

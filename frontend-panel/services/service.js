@@ -551,6 +551,11 @@ export default {
     apiClient.defaults.headers.common['Authorization'] = bearer
     return apiClient.post(json.api.cancelBuyNow, params)
   },
+  /** The shopper is browsing: keep their basket's reservation alive. */
+  basketActivity(params, bearer) {
+    apiClient.defaults.headers.common['Authorization'] = bearer
+    return apiClient.post(json.api.basketActivity, params)
+  },
   /** Can the current checkout still be bought? Asked before a pay-first gateway charges. */
   checkoutCheck(params, bearer) {
     apiClient.defaults.headers.common['Authorization'] = bearer

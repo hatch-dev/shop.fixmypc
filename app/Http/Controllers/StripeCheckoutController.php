@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\Helper\BasketUpkeep;
 use App\Models\Helper\CartHold;
+use App\Models\Helper\CheckoutTotals;
 use App\Models\Helper\Response;
 use App\Models\Helper\StripeCheckout;
 use App\Models\Helper\Validation;
@@ -60,10 +61,27 @@ class StripeCheckoutController extends Controller
         CartHold::markPaying($owner[0], $owner[1]);
         BasketUpkeep::touchBuyNow($owner[0], $owner[1]);
 
+        /*
+         * The amount is the server's, never the page's: what placing this
+         * order will charge (CheckoutTotals::quote), less any wallet part.
+         * The page's own sum on /checkout once left out the Essentials Bundle
+         * discount, the card was authorised for more than the order, and
+         * capture() then refused it as a mismatch.
+         */
+        $quote = CheckoutTotals::quote(
+            $request,
+            CartsController::checkoutChoices($request),
+            $request->header('language')
+        );
+
+        if (!$quote['ok']) {
+            return response()->json(Validation::error($request->token, $quote['message']));
+        }
+
         $result = StripeCheckout::authorise(
             $payment,
             $request->payment_token,
-            (float)$request->amount,
+            $quote['amount_due'],
             Setting::select('currency')->first()->currency,
             array_filter([
                 'user_id' => $owner[0],
@@ -74,6 +92,9 @@ class StripeCheckoutController extends Controller
         if ($result['status'] === 'failed') {
             return response()->json(Validation::error($request->token, $result['message']));
         }
+
+        // The amount authorised, so the page can say what was taken.
+        $result['amount'] = $quote['amount_due'];
 
         return response()->json(new Response($request->token, $result));
     }

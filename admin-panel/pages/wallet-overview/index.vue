@@ -11,76 +11,98 @@
     @list="handleList"
   >
 
-    <template v-slot:table="{ list }">
+    <template v-slot:table>
 
+      <!--
+        One row per customer, every fact in its own column; the customer's
+        wallet and Cherry Points transactions open beneath it in the same
+        columns. The customer used to be one cell spanning the whole table,
+        and a collapsed customer still left an empty row for each of their
+        transactions.
+      -->
       <tbody>
 
-        <!-- HEADER -->
         <tr class="lite-bold">
-          <th class="w-50x mx-w-50x">
-            <input type="checkbox" @change="checkAll">
-          </th>
+          <th class="wo-toggle-col"></th>
           <th>{{ $t('pages.walletOverview.colUser') }}</th>
           <th>{{ $t('pages.walletOverview.colEmail') }}</th>
-          <th>{{ $t('pages.walletOverview.colAmount') }}</th>
-          <th>{{ $t('pages.walletOverview.colCherryPoints') }}</th>
+          <th class="wo-num">{{ $t('pages.walletOverview.colAmount') }}</th>
+          <th class="wo-num">{{ $t('pages.walletOverview.colCherryPoints') }}</th>
           <th>{{ $t('pages.walletOverview.colType') }}</th>
           <th>{{ $t('pages.walletOverview.colSource') }}</th>
           <th>{{ $t('pages.walletOverview.colDate') }}</th>
         </tr>
 
-        <!-- ROWS -->
-        <tr v-for="row in flatRows" :key="row._key">
+        <template v-for="group in itemList">
 
-          <!-- USER HEADER -->
-          <template v-if="row._type === 'header'">
-            <td colspan="8" class="user-header" @click="toggleUser(row.user_id)" style="cursor:pointer">
-                <strong>{{ row.user }}</strong>
-                <span class="text-muted">({{ row.email }})</span>
-                <div class="user-summary">
-                    {{ $t('pages.walletOverview.walletSummary', { balance: '€' + row.wallet_balance }) }}
-                    | {{ $t('pages.walletOverview.pointsSummary', { points: row.cherry_points }) }}
-                </div>
-                <span style="float:right">
-                    {{ collapsedUsers[row.user_id] ? '+' : '-' }}
+          <!-- the customer, with their balances -->
+          <tr
+            :key="'u-' + group.user_id"
+            class="wo-user-row"
+            :class="{ 'is-open': isOpen(group.user_id) }"
+            @click="toggleUser(group.user_id)"
+          >
+            <td class="wo-toggle-col">
+              <button
+                type="button"
+                class="wo-toggle"
+                :aria-expanded="isOpen(group.user_id) ? 'true' : 'false'"
+                :aria-label="$t(isOpen(group.user_id) ? 'pages.walletOverview.hideTransactions' : 'pages.walletOverview.showTransactions', { name: group.user })"
+                @click.stop="toggleUser(group.user_id)"
+              >{{ isOpen(group.user_id) ? '−' : '+' }}</button>
+            </td>
+            <td><h5 class="wo-name">{{ group.user }}</h5></td>
+            <td class="wo-email">{{ group.email }}</td>
+            <td class="wo-num">
+              <strong>{{ money(group.wallet_balance) }}</strong>
+              <small class="wo-caption">{{ $t('pages.walletOverview.balanceCaption') }}</small>
+            </td>
+            <td class="wo-num">
+              <strong>{{ group.cherry_points }}</strong>
+              <small class="wo-caption">{{ $t('pages.walletOverview.balanceCaption') }}</small>
+            </td>
+            <td class="wo-muted">
+              {{ $t('pages.walletOverview.transactionsCount', { count: (group.transactions || []).length }) }}
+            </td>
+            <td class="wo-muted">&mdash;</td>
+            <td>
+              {{ group.last_activity || '-' }}
+              <small class="wo-caption">{{ $t('pages.walletOverview.lastActivity') }}</small>
+            </td>
+          </tr>
+
+          <!-- their transactions, newest first -->
+          <template v-if="isOpen(group.user_id)">
+            <tr
+              v-for="txn in group.transactions"
+              :key="'t-' + txn.id"
+              class="wo-txn-row"
+            >
+              <td class="wo-toggle-col"></td>
+              <td class="wo-muted wo-indent">{{ group.user }}</td>
+              <td class="wo-muted wo-email">{{ group.email }}</td>
+              <td class="wo-num">
+                <span v-if="Number(txn.amount) > 0">{{ signed(txn, money(txn.amount)) }}</span>
+                <span v-else class="wo-muted">-</span>
+              </td>
+              <td class="wo-num">
+                <span v-if="Number(txn.points) > 0">{{ signed(txn, txn.points) }}</span>
+                <span v-else class="wo-muted">-</span>
+              </td>
+              <td>
+                <span :class="txn.type === 'credit' ? 'badge bg-success' : 'badge bg-danger'">
+                  {{ txn.type === 'credit' ? $t('pages.walletOverview.typeCredit') : (txn.type === 'debit' ? $t('pages.walletOverview.typeDebit') : txn.type) }}
                 </span>
-            </td>
+              </td>
+              <td>{{ txn.source || '-' }}</td>
+              <td>
+                {{ txn.created }}
+                <small class="wo-caption">{{ txn.time }}</small>
+              </td>
+            </tr>
           </template>
 
-          <!-- TRANSACTION -->
-          <template v-else>
-            <template v-if="!collapsedUsers[row.user_id]">
-            <td class="w-50x mx-w-50x">
-              <input type="checkbox" :value="row.id" v-model="cbList">
-            </td>
-
-            <td><h5>{{ row.user }}</h5></td>
-            <td>{{ row.email }}</td>
-
-            <td>
-              <span v-if="row.amount > 0">
-                €{{ Number(row.amount).toFixed(2) }}
-              </span>
-              <span v-else>-</span>
-            </td>
-
-            <td>
-              <span v-if="row.points > 0">{{ row.points }}</span>
-              <span v-else>-</span>
-            </td>
-
-            <td>
-              <span :class="row.type === 'credit' ? 'badge bg-success' : 'badge bg-danger'">
-                {{ row.type === 'credit' ? $t('pages.walletOverview.typeCredit') : (row.type === 'debit' ? $t('pages.walletOverview.typeDebit') : row.type) }}
-              </span>
-            </td>
-
-            <td>{{ row.source || '-' }}</td>
-            <td>{{ row.created }}</td>
-            </template>
-          </template>
-
-        </tr>
+        </template>
 
       </tbody>
 
@@ -92,7 +114,6 @@
 
 <script>
 import ListPage from "~/components/partials/ListPage";
-import bulkDelete from "~/mixin/bulkDelete";
 import util from "~/mixin/util";
 
 export default {
@@ -100,84 +121,37 @@ export default {
   middleware: ['common-middleware', 'auth'],
   data() {
     return {
-        itemList: [],
-        collapsedUsers: {},
-        users: [],
-        selectedUser: null
+      // one entry per customer, from the current page
+      itemList: [],
+      // customers whose transactions are showing; all start folded
+      openUsers: {}
     }
-    },
-    computed: {
-  flatRows() {
-    const rows = []
-
-    // IMPORTANT: list comes from ListPage via @list
-    const groups = this.itemList || []
-
-    groups.forEach(group => {
-
-      // 👇 USER HEADER
-      rows.push({
-        _type: 'header',
-        _key: 'h-' + group.user_id,
-        user_id: group.user_id,
-        user: group.user,
-        email: group.email,
-        wallet_balance: group.wallet_balance || 0,
-        cherry_points: group.cherry_points || 0
-      })
-
-      // 👇 TRANSACTIONS
-      group.transactions.forEach(txn => {
-        rows.push({
-          _type: 'txn',
-          _key: txn.id,
-          user_id: group.user_id,
-          ...txn
-        })
-      })
-
-    })
-
-    return rows
-  }
-},
-    methods: {
+  },
+  methods: {
     handleList(res) {
-        this.itemList = res
-        this.collapsedUsers = {}
-        res.forEach(user => {
-            this.$set(this.collapsedUsers, user.user_id, true)
-        })
+      this.itemList = res || []
+      this.openUsers = {}
+    },
+    isOpen(userId) {
+      return !!this.openUsers[userId]
     },
     toggleUser(userId) {
-        this.$set(
-        this.collapsedUsers,
-        userId,
-        !this.collapsedUsers[userId]
-        )
+      this.$set(this.openUsers, userId, !this.openUsers[userId])
     },
-    viewItem(item) {
-        console.log('Wallet item:', item)
+    money(value) {
+      return '€' + Number(value || 0).toFixed(2)
     },
-
-    filterUser(userId) {
-        this.selectedUser = userId
-
-        this.$refs.listPage.fetch({
-        user_id: userId
-        })
-    },
-
-    resetUser() {
-        this.selectedUser = null
-        this.$refs.listPage.fetch()
+    // "+€10.00" for a credit, "−€10.00" for a debit; as recorded otherwise
+    signed(txn, text) {
+      if (txn.type === 'credit') return '+' + text
+      if (txn.type === 'debit') return '−' + text
+      return String(text)
     }
-    },
+  },
   components: {
     ListPage
   },
-
-  mixins: [util, bulkDelete],
+  mixins: [util],
 }
 </script>
 
@@ -187,48 +161,77 @@ export default {
    collapsing the product grid's Title column to an equal 1/13th share. */
 .wallet-overview-table {
   table-layout: fixed;
+  min-width: 760px;
 }
 
-.badge {
+.wallet-overview-table .wo-toggle-col {
+  width: 44px;
+}
+
+.wallet-overview-table .wo-num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.wallet-overview-table .wo-email {
+  overflow-wrap: anywhere;
+}
+
+.wallet-overview-table .wo-name {
+  margin: 0;
+}
+
+.wallet-overview-table .wo-caption {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.wallet-overview-table .wo-muted {
+  color: #6b7280;
+}
+
+.wallet-overview-table .wo-user-row {
+  cursor: pointer;
+  background: #f9fafb;
+}
+
+.wallet-overview-table .wo-user-row:hover,
+.wallet-overview-table .wo-user-row.is-open {
+  background: #f3f4f6;
+}
+
+.wallet-overview-table .wo-txn-row .wo-indent {
+  padding-left: 22px;
+  border-left: 3px solid #e5e7eb;
+}
+
+.wallet-overview-table .wo-toggle {
+  width: 26px;
+  height: 26px;
+  line-height: 24px;
+  padding: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wallet-overview-table .badge {
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 12px;
 }
 
-.bg-success {
+.wallet-overview-table .bg-success {
   background: #d1fae5;
   color: #065f46;
 }
 
-.bg-danger {
+.wallet-overview-table .bg-danger {
   background: #fee2e2;
   color: #991b1b;
-}
-
-.user-filter {
-  margin-bottom: 15px;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-
-.user-header {
-  background: #f3f4f6;
-}
-
-.user-header td {
-  padding: 10px;
-  font-size: 14px;
-}
-
-.user-header {
-  background: #f3f4f6;
-  font-weight: 600;
-  transition: 0.2s;
-}
-
-.user-header:hover {
-  background: #e5e7eb;
 }
 </style>

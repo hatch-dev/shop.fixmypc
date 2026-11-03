@@ -16,6 +16,43 @@
  */
 export default function ({app, store}) {
 
+  /*
+   * Keep the basket while the shopper shops.
+   *
+   * A basket's units are reserved for a set time (Settings > Basket
+   * reservation, 20 minutes by default). That time used to count from the
+   * last thing added, so a shopper who added four items and went on browsing
+   * came back to an emptied basket. Each page they visit now restarts it
+   * (cart/markBasketActivity -> CartHold::touch): the basket is released
+   * only once nobody has touched the shop for the whole period.
+   *
+   * At most once a minute - the timer is measured in minutes - and only
+   * while the basket holds something, so an empty basket costs nothing.
+   *
+   * Registered before the $auth check below: this plugin runs before the
+   * auth module's own plugin (see .nuxt/index.js), so app.$auth is not set
+   * yet here. The action reads $auth when a page changes, by which time it is.
+   */
+  const ACTIVITY_EVERY_MS = 60 * 1000
+  let lastActivity = 0
+
+  if (app.router) {
+    app.router.afterEach(() => {
+      if (!(store.getters['cart/cartCount'] > 0)) {
+        return
+      }
+
+      const now = Date.now()
+
+      if (now - lastActivity < ACTIVITY_EVERY_MS) {
+        return
+      }
+
+      lastActivity = now
+      store.dispatch('cart/markBasketActivity')
+    })
+  }
+
   const auth = app.$auth
 
   if (!auth || !auth.$storage) {

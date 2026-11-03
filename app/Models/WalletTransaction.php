@@ -46,6 +46,8 @@ class WalletTransaction extends Model
                 return 'Returned from cancelled order' . $on;
             case 'gift_voucher':
                 return 'Gift card purchase';
+            case 'gift_voucher_refund':
+                return 'Gift card purchase refunded';
             case 'gift_card':
                 return 'Gift card redeemed';
             case 'admin':

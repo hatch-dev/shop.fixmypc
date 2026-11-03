@@ -1665,13 +1665,20 @@ class ProductsController extends ControllerHelper
             // Stock, with each variant's attribute values and image mapping.
             foreach (UpdatedInventory::where('product_id', $product->id)->get() as $row) {
 
+                /*
+                 * The copy is a new product, so it gets identifiers of its
+                 * own: a fresh SKU, and no barcode or IMEI until they are
+                 * entered for it. Copying them put the same barcode on two
+                 * products - a scan could no longer say which one - and the
+                 * same IMEI, which belongs to one physical device, on two.
+                 */
                 $copy = UpdatedInventory::create([
                     'product_id' => $newId,
                     'sku' => $row->sku . '-COPY-' . Str::upper(Str::random(4)),
                     'price' => $row->price,
                     'quantity' => $row->quantity,
-                    'imei' => $row->imei,
-                    'barcode' => $row->barcode,
+                    'imei' => null,
+                    'barcode' => null,
                     'is_active' => $row->is_active,
                 ]);
 
@@ -1943,23 +1950,41 @@ class ProductsController extends ControllerHelper
      * The grid writes the same columns as the form, so it answers to the same
      * rules.
      *
-     * Returns a map of product id => list of messages. Empty means the batch
-     * is good.
+     * Each rule guards the field it is about, and only when this save writes
+     * that field. The grid submits the whole row - title, slug, every stock
+     * row - whatever the admin actually touched, so a rule that ran on
+     * everything blocked a price change on any product carrying an old gap
+     * elsewhere: a stock row imported without a SKU, a slug never set, a
+     * back-ordered variant whose quantity checkout took below zero. None of
+     * those was being written; refusing them only stopped the edit that was.
+     * What IS being written still answers to every rule, so a slug cannot be
+     * blanked or duplicated and a stock row cannot be saved without a SKU.
+     *
+     * Returns ['errors' => [id => [field => message]], 'warnings' => [id =>
+     * [message]]]. Fields are 'title', 'slug', 'selling', 'offered',
+     * 'discount', 'status' and 'inventory.<id>.<column>'. No errors means the
+     * batch is good; warnings describe gaps left as they were.
      */
     private function validateBulkRows($rows, $existing)
     {
         $errors = [];
+        $warnings = [];
 
-        $add = function (&$errors, $id, $message) {
-            $errors[$id][] = $message;
+        $add = function (&$errors, $id, $field, $message) {
+            // One message per field: the first problem is the one to fix.
+            if (!isset($errors[$id][$field])) {
+                $errors[$id][$field] = $message;
+            }
         };
+
+        $stockRows = UpdatedInventory::whereIn('product_id', $existing->keys())->get()->keyBy('id');
 
         foreach ($rows as $row) {
 
             $id = $row['id'] ?? null;
 
             if (!$id || !$existing->has($id)) {
-                $add($errors, (string)$id, 'This product no longer exists.');
+                $add($errors, (string)$id, 'product', 'This product no longer exists.');
                 continue;
             }
 
@@ -1971,28 +1996,28 @@ class ProductsController extends ControllerHelper
             $offered = $row['offered'] ?? 0;
 
             if (!is_numeric($selling) || (float)$selling <= 0) {
-                $add($errors, $id, $label . ': a selling price above zero is required.');
+                $add($errors, $id, 'selling', $label . ': a selling price above zero is required.');
             }
 
             if ($offered !== null && $offered !== '' && !is_numeric($offered)) {
-                $add($errors, $id, $label . ': the offer price must be a number.');
+                $add($errors, $id, 'offered', $label . ': the offer price must be a number.');
             } elseif ((float)$offered < 0) {
-                $add($errors, $id, $label . ': the offer price cannot be negative.');
+                $add($errors, $id, 'offered', $label . ': the offer price cannot be negative.');
             } elseif ((float)$offered > 0 && is_numeric($selling) && (float)$offered > (float)$selling) {
-                $add($errors, $id, $label . ': the offer price cannot be above the selling price.');
+                $add($errors, $id, 'offered', $label . ': the offer price cannot be above the selling price.');
             }
 
             if (array_key_exists('discount_type', $row) && !is_null($row['discount_type'])
                 && !in_array($row['discount_type'], ['fixed', 'percentage'], true)) {
-                $add($errors, $id, $label . ': the discount type must be fixed or percentage.');
+                $add($errors, $id, 'discount', $label . ': the discount type must be fixed or percentage.');
             }
 
             if (array_key_exists('discount_value', $row) && !is_null($row['discount_value'])) {
                 if (!is_numeric($row['discount_value']) || (float)$row['discount_value'] < 0) {
-                    $add($errors, $id, $label . ': the discount cannot be negative.');
+                    $add($errors, $id, 'discount', $label . ': the discount cannot be negative.');
                 } elseif (($row['discount_type'] ?? null) === 'percentage'
                     && (float)$row['discount_value'] > 100) {
-                    $add($errors, $id, $label . ': a percentage discount cannot be above 100.');
+                    $add($errors, $id, 'discount', $label . ': a percentage discount cannot be above 100.');
                 }
             }
 
@@ -2001,48 +2026,122 @@ class ProductsController extends ControllerHelper
                     (int)Config::get('constants.status.PUBLIC'),
                     (int)Config::get('constants.status.PRIVATE'),
                 ], true)) {
-                $add($errors, $id, $label . ': that is not a status a product can have.');
+                $add($errors, $id, 'status', $label . ': that is not a status a product can have.');
             }
 
             /*
-             * Title and slug are only written by the full save, not by a merge.
-             * The slug is what the storefront routes on, so a duplicate is not
-             * a cosmetic problem.
+             * A merge (the Bulk Edit modal) writes neither title, slug nor any
+             * stock row, so none of them is checked for one.
              */
-            if (!$merge) {
-
-                if (trim((string)($row['title'] ?? '')) === '') {
-                    $add($errors, $id, 'A product cannot be saved without a title.');
-                }
-
-                $slug = trim((string)($row['slug'] ?? ''));
-
-                if ($slug === '') {
-                    $add($errors, $id, $label . ': a slug is required.');
-                } elseif (Product::where('slug', $slug)->where('id', '!=', $id)->exists()) {
-                    $add($errors, $id, $label . ': that slug already belongs to another product.');
-                }
+            if ($merge) {
+                continue;
             }
 
+            /*
+             * Title and slug: checked when they change. The slug is what the
+             * storefront routes on, so blanking it or taking another
+             * product's is refused. One that was never set, and is not being
+             * set now, is left as it is and reported rather than holding the
+             * rest of the row hostage.
+             */
+            $title = trim((string)($row['title'] ?? ''));
+
+            if ($title === '' && trim((string)$product->title) !== '') {
+                $add($errors, $id, 'title', 'A product cannot be saved without a title.');
+            }
+
+            $slug = trim((string)($row['slug'] ?? ''));
+            $storedSlug = trim((string)$product->slug);
+
+            if ($slug !== $storedSlug) {
+                if ($slug === '') {
+                    $add($errors, $id, 'slug', $label . ': a slug is required.');
+                } elseif (Product::where('slug', $slug)->where('id', '!=', $id)->exists()) {
+                    $add($errors, $id, 'slug', $label . ': that slug already belongs to another product.');
+                }
+            } elseif ($slug === '') {
+                $warnings[$id][] = $label . ': has no slug yet, so the storefront cannot link to it.';
+            }
+
+            /*
+             * Stock rows: only the ones this save changes are checked, and
+             * only those are written (bulkUpdate). A changed row needs a SKU,
+             * as on the product form; each number is checked when it is the
+             * one being changed, so editing the price of a back-ordered row
+             * does not trip over the negative stock checkout gave it.
+             */
             foreach (($row['product_inventories'] ?? []) as $inventory) {
 
+                $stored = $stockRows->get($inventory['id'] ?? null);
+
+                if (!$stored || (int)$stored->product_id !== (int)$id) {
+                    continue;
+                }
+
+                $changed = self::changedStockColumns($stored, $inventory);
+
+                if (!$changed) {
+                    if (trim((string)$stored->sku) === '') {
+                        $warnings[$id][] = $label . ': a stock row has no SKU yet.';
+                    }
+                    continue;
+                }
+
+                $key = 'inventory.' . $stored->id . '.';
                 $sku = trim((string)($inventory['sku'] ?? ''));
 
                 if ($sku === '') {
-                    $add($errors, $id, $label . ': every stock row needs a SKU.');
+                    $add($errors, $id, $key . 'sku', $label . ': every stock row needs a SKU.');
                 }
 
-                if (!is_numeric($inventory['price'] ?? null) || (float)$inventory['price'] < 0) {
-                    $add($errors, $id, $label . ' (' . $sku . '): the price cannot be negative.');
+                if (in_array('price', $changed, true)
+                    && (!is_numeric($inventory['price'] ?? null) || (float)$inventory['price'] < 0)) {
+                    $add($errors, $id, $key . 'price', $label . ' (' . $sku . '): the price cannot be negative.');
                 }
 
-                if (!is_numeric($inventory['quantity'] ?? null) || (int)$inventory['quantity'] < 0) {
-                    $add($errors, $id, $label . ' (' . $sku . '): the quantity cannot be negative.');
+                if (in_array('quantity', $changed, true)
+                    && (!is_numeric($inventory['quantity'] ?? null) || (int)$inventory['quantity'] < 0)) {
+                    $add($errors, $id, $key . 'quantity', $label . ' (' . $sku . '): the quantity cannot be negative.');
                 }
             }
         }
 
-        return $errors;
+        return ['errors' => $errors, 'warnings' => $warnings];
+    }
+
+
+    /**
+     * The columns of a stock row that a bulk-editor submission changes.
+     *
+     * Compared as stored: numbers by value (the grid sends "10" for 10.00),
+     * text trimmed, and an empty string the same as null - an untouched field
+     * is not a change. Empty means there is nothing to write.
+     */
+    private static function changedStockColumns($stored, array $submitted)
+    {
+        $changed = [];
+
+        foreach (['price', 'quantity'] as $column) {
+            if (array_key_exists($column, $submitted)
+                && (!is_numeric($submitted[$column])
+                    || abs((float)$submitted[$column] - (float)$stored->{$column}) >= 0.005)) {
+                $changed[] = $column;
+            }
+        }
+
+        foreach (['sku', 'imei', 'barcode'] as $column) {
+            if (array_key_exists($column, $submitted)
+                && trim((string)$submitted[$column]) !== trim((string)$stored->{$column})) {
+                $changed[] = $column;
+            }
+        }
+
+        if (array_key_exists('is_active', $submitted)
+            && (int)(bool)$submitted['is_active'] !== (int)(bool)$stored->is_active) {
+            $changed[] = 'is_active';
+        }
+
+        return $changed;
     }
 
     /**
@@ -2124,20 +2223,31 @@ class ProductsController extends ControllerHelper
          */
         $existing = Product::whereIn('id', $productIds)->get()->keyBy('id');
 
-        $rowErrors = $this->validateBulkRows($products, $existing);
+        $checked = $this->validateBulkRows($products, $existing);
+        $fieldErrors = $checked['errors'];
 
-        if (count($rowErrors) > 0) {
+        if (count($fieldErrors) > 0) {
 
             $flat = [];
-            foreach ($rowErrors as $messages) {
-                foreach ($messages as $message) {
+            $rowErrors = [];
+
+            foreach ($fieldErrors as $id => $fields) {
+                foreach ($fields as $message) {
                     $flat[] = $message;
+                    $rowErrors[$id][] = $message;
                 }
             }
 
+            /*
+             * `form` and `rows` as before; `fields` says which input each
+             * message belongs to (id => field => message), so the editor can
+             * put it beside that input instead of in a stack of toasts.
+             */
             return response()->json(new Response($request->token, [
                 'form' => $flat,
                 'rows' => $rowErrors,
+                'fields' => $fieldErrors,
+                'warnings' => $checked['warnings'],
             ], 201, __('lang.bulk_update_refused', [], $request->header('language'))));
         }
 
@@ -2321,13 +2431,28 @@ class ProductsController extends ControllerHelper
                     if(isset($product['product_inventories'])){
                         foreach($product['product_inventories'] as $inv){
                             $existInv = UpdatedInventory::where(['id' => $inv['id'], 'product_id' => $product['id']])->first();
-                            if($existInv){
+
+                            // Only a row this save changes is written - the
+                            // same rows validateBulkRows checked. The rest
+                            // stay exactly as stored.
+                            if($existInv && self::changedStockColumns($existInv, $inv)){
+                                /*
+                                 * Stored the way the product form stores them:
+                                 * its request middleware trims text and turns
+                                 * an empty string into null, but these rows
+                                 * arrive inside a JSON string it never sees.
+                                 */
+                                $text = function ($value) {
+                                    $value = trim((string)$value);
+                                    return $value === '' ? null : $value;
+                                };
+
                                 $existInv->update([
                                     'price' => $inv['price'],
-                                    'sku' => $inv['sku'],
+                                    'sku' => trim((string)$inv['sku']),
                                     'quantity' => $inv['quantity'],
-                                    'imei' => $inv['imei'],
-                                    'barcode' => $inv['barcode'],
+                                    'imei' => $text($inv['imei'] ?? null),
+                                    'barcode' => $text($inv['barcode'] ?? null),
                                     'is_active' => $inv['is_active'],
                                 ]);
                             }
@@ -2415,7 +2540,11 @@ class ProductsController extends ControllerHelper
             return response()->json(Validation::error($request->token, $ex->getMessage()));
         }
 
-        return response()->json(new Response($request->token, ['message' => 'Products updated successfully']));
+        return response()->json(new Response($request->token, [
+            'message' => 'Products updated successfully',
+            // gaps the save left as they were (a slug or SKU never set)
+            'warnings' => $checked['warnings'],
+        ]));
     }
 
     /**

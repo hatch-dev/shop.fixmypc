@@ -16,8 +16,10 @@ use Tests\IsolatedTestCase;
 /**
  * Basket activity, expiry at checkout, and telling the shopper (2026-10-13).
  *
- *  - only adding to the basket restarts the 20 minutes; loading the basket
- *    or a checkout step does not (changed 2026-10-14);
+ *  - adding to the basket restarts the 20 minutes, and so does the shopper
+ *    moving around the shop (POST cart/activity, sent on page navigation
+ *    since 2026-11-03); loading the basket or a checkout step does not
+ *    (changed 2026-10-14);
  *  - a basket whose 20 minutes have lapsed is emptied the moment it is
  *    priced, shipped or paid for - it can never be bought, whether or not
  *    the sweep has run - unless it has started paying;
@@ -104,10 +106,11 @@ class BasketActivityTest extends IsolatedTestCase
     // --------------------------------------------------------------- activity
 
     /**
-     * Only adding restarts the 20 minutes. This test used to require the
-     * opposite (any basket or checkout request was activity); the user's rule
-     * since 2026-10-14 is that the timer starts on add, and a basket that was
-     * only being looked at is emptied on time.
+     * Reading the basket does not restart the 20 minutes. This test used to
+     * require the opposite (any basket or checkout request was activity); the
+     * user's rule since 2026-10-14 is that the timer starts on add, and since
+     * 2026-11-03 also on browsing the shop (cart/activity, tested below) - a
+     * basket request on its own is still not activity.
      */
     public function test_loading_the_basket_does_not_restart_the_twenty_minutes()
     {
@@ -123,6 +126,65 @@ class BasketActivityTest extends IsolatedTestCase
         CartHold::sweep();
         $this->assertSame(0, Cart::where('user_id', $this->customer->id)->count());
         $this->assertSame(10, $this->stock());
+    }
+
+    /** Browsing the shop keeps the basket: 15 + 15 minutes after the add, it is still there. */
+    public function test_browsing_the_shop_restarts_the_twenty_minutes()
+    {
+        $this->assertApiOk($this->add());
+        $this->idleFor(15);
+
+        $response = $this->asCustomer($this->customer->id)->postJson('/api/v1/cart/activity');
+        $this->assertApiOk($response);
+        $this->assertTrue((bool)$response->json('data.held'));
+        $this->assertLessThan(60, $this->lastActivity()->diffInSeconds(Carbon::parse(date('Y-m-d H:i:s'))));
+
+        // 30 minutes since the add, 15 since the shopper last moved.
+        DB::table('cart_holds')->where('owner_key', 'u:' . $this->customer->id)
+            ->update(['last_activity_at' => $this->ago(15)]);
+        CartHold::sweep();
+        $this->assertSame(1, Cart::where('user_id', $this->customer->id)->count());
+        $this->assertSame(8, $this->stock());
+
+        // Then nobody touches the shop for the whole period: released as before.
+        $this->idleFor(21);
+        CartHold::sweep();
+        $this->assertSame(0, Cart::where('user_id', $this->customer->id)->count());
+        $this->assertSame(10, $this->stock());
+    }
+
+    /** Activity cannot bring back a basket whose 20 minutes already ran out. */
+    public function test_browsing_does_not_revive_a_lapsed_basket()
+    {
+        $this->assertApiOk($this->add());
+        $this->idleFor(21);
+
+        $response = $this->asCustomer($this->customer->id)->postJson('/api/v1/cart/activity');
+        $this->assertApiOk($response);
+        $this->assertFalse((bool)$response->json('data.held'));
+        $this->assertSame(0, Cart::where('user_id', $this->customer->id)->count());
+        $this->assertSame(10, $this->stock());
+    }
+
+    public function test_a_guest_basket_is_kept_by_browsing_and_an_unknown_caller_is_refused()
+    {
+        $add = $this->asGuest()->postJson('/api/v1/cart/action', [
+            'product_id' => Fixture::PRODUCT_PHONE_ID,
+            'inventory_id' => Fixture::PHONE_128_BLACK_ID,
+            'quantity' => 1,
+            'user_token' => Fixture::GUEST_TOKEN,
+        ]);
+        $this->assertApiOk($add);
+        DB::table('cart_holds')->where('owner_key', 'g:' . Fixture::GUEST_TOKEN)
+            ->update(['last_activity_at' => $this->ago(15)]);
+
+        $this->assertTrue((bool)$this->asGuest()->postJson('/api/v1/cart/activity',
+            ['user_token' => Fixture::GUEST_TOKEN])->json('data.held'));
+        $this->assertLessThan(60, Carbon::parse(DB::table('cart_holds')
+            ->where('owner_key', 'g:' . Fixture::GUEST_TOKEN)->value('last_activity_at'))
+            ->diffInSeconds(Carbon::parse(date('Y-m-d H:i:s'))));
+
+        $this->assertApiRefused($this->asGuest()->postJson('/api/v1/cart/activity'), 403);
     }
 
     // ----------------------------------------------------- expiry at checkout

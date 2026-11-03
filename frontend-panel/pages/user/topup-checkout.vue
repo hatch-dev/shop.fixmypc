@@ -104,9 +104,10 @@ export default {
             try {
                 const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/'
                 // everything else was fixed on the server when the checkout was opened
+                const lang = this.$store.getters['language/langCode']
                 const {data} = await this.$axios.post(`${baseUrl}api/v1/user/purchase-gift-voucher/confirm`, {
                     checkout_id: checkoutId
-                })
+                }, {headers: lang ? {language: lang} : {}})
                 this.setToastMessage(data?.message || this.$t('ui.topupCheckout.giftCardBought'))
                 setTimeout(() => this.$router.push('/user/vouchers'), 750)
             } catch (e) {

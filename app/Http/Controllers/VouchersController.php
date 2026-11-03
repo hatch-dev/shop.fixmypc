@@ -41,7 +41,7 @@ class VouchersController extends ControllerHelper
             }
 
             if ($voucher->isGiftCard() && $voucher->giftBalance() <= 0) {
-                return response()->json(Validation::error(null, 'This gift card has been used up.'));
+                return response()->json(Validation::error(null, __('lang.gc_used_up', [], $lang)));
             }
 
             $q = Cart::with('product_inner');
@@ -306,6 +306,10 @@ class VouchersController extends ControllerHelper
                 $query = $query->select('vouchers.*', 'trl.title');
             }
             $data = $query->with('products:id')->find($id);
+            // A redeemed gift card is a customer's money, not a promotion.
+            if ($data && $data->isGiftCard()) {
+                return response()->json(Validation::error(null, 'Gift cards cannot be changed here. Use Gift card sales.'));
+            }
 
             if ($this->isVendor && $isOwner = Utils::isDataOwner($this->user, $data)) {
                 return $isOwner;
@@ -331,6 +335,15 @@ class VouchersController extends ControllerHelper
         try {
 
             $lang = $request->header('language');
+            /*
+             * Gift cards are vouchers underneath (gift_value set), but their
+             * value, owner and expiry are managed in Gift card sales, where
+             * every change is recorded. Neither edited here, nor made here.
+             */
+            if ($id && optional(Voucher::find($id))->isGiftCard()) {
+                return response()->json(Validation::error(null, 'Gift cards cannot be changed here. Use Gift card sales.'));
+            }
+            $request->request->remove('gift_value');
 
 
             $validate = Validation::voucherRules($request);
@@ -516,6 +529,9 @@ class VouchersController extends ControllerHelper
 
                 if (is_null($voucher)) {
                     return response()->json(Validation::noDataLang($lang));
+                }
+                if ($voucher->isGiftCard()) {
+                    return response()->json(Validation::error(null, 'Gift cards cannot be changed here. Use Gift card sales.'));
                 }
 
                 $order = Order::where('voucher_id', $i)->first();

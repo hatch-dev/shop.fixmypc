@@ -32,16 +32,23 @@ class LoyaltyController extends Controller
             return response()->json(['active' => false, 'next' => null]);
         }
 
-        $subtotal = (float)($request->subtotal ?? 0);
         $currency = $this->currencyIcon();
 
         /*
          * The loyalty group or the membership, whichever pays more - the
-         * same choice the order makes. The membership is priced on the
-         * basket's own lines, because which of them count depends on what
-         * each one is charged at, which the browser's subtotal cannot say.
+         * same choice the order makes, on the same figures. Both are priced
+         * on the basket's own lines: the subtotal is the order's
+         * $totalCartPrice (charged price x units paid for), worked out here.
+         *
+         * It used to be the `subtotal` the browser sent - a sum the page did
+         * for itself. Wherever that drifted from what the order charges (a
+         * clearance the basket had lost on a translated page, a line priced
+         * by the page's own fallback ladder) the preview promised a discount,
+         * or a minimum cart value, that checkout then disagreed with. The
+         * parameter is still accepted and is no longer read.
          */
         $checkout = Membership::checkoutLines($user);
+        $subtotal = $checkout['subtotal'];
         $best = Membership::bestOrderDiscount($user, $subtotal, $checkout['lines'], $checkout['subtotal']);
         $applied = $best ? Pricing::round($best['discount']) : 0.0;
 

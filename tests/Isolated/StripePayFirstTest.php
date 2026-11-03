@@ -143,9 +143,12 @@ class StripePayFirstTest extends IsolatedTestCase
 
     public function test_the_card_is_authorised_not_charged_and_no_order_is_made()
     {
-        $this->stripe->queue(200, $this->intent('requires_capture', 100));
+        $expected = $this->orderTotal();
 
-        $response = $this->authorise();
+        $this->stripe->queue(200, $this->intent('requires_capture', $expected));
+
+        // The page's figure is not the amount: the server prices the basket.
+        $response = $this->authorise(['amount' => 1.00]);
 
         $this->assertApiOk($response);
         $response->assertJsonPath('data.status', 'authorised');
@@ -153,7 +156,9 @@ class StripePayFirstTest extends IsolatedTestCase
 
         $sent = $this->stripe->requests[0]['params'];
         $this->assertSame('manual', $sent['capture_method'], 'held, not taken');
-        $this->assertSame(10000, (int)$sent['amount']);
+        $this->assertSame((int)round($expected * 100), (int)$sent['amount'],
+            'authorised for what placing the order will charge, not the posted amount');
+        $this->assertEquals($expected, $response->json('data.amount'));
         $this->assertSame('checkout', $sent['metadata']['purpose']);
 
         $this->assertSame(0, $this->liveOrders(), 'no order yet');

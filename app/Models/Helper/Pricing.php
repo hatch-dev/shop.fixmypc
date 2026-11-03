@@ -581,11 +581,141 @@ class Pricing
             return 0.0;
         }
 
-        if ((int)$taxRule->type === (int)Config::get('constants.priceType.FLAT')) {
+        if (self::isFlatRule($taxRule)) {
             return self::round((float)$taxRule->price);
         }
 
-        return self::round(((float)$taxRule->price * (float)$unitPrice) / 100);
+        // In whole cents, so 23% of 10.03 is 2.31 every time and not whichever
+        // way the float for 2.3069 happens to fall.
+        return self::percentOfMinor(self::toMinorUnits($unitPrice), $taxRule->price) / 100;
+    }
+
+
+    /**
+     * A rule that charges a fixed amount per unit rather than a percentage.
+     *
+     * vatRate() reports 0 for one, because there is no percentage to state --
+     * which is not the same as "no tax". unitTax() has always charged the
+     * amount on an ex-VAT product; anything that describes a line's VAT has to
+     * ask this as well, or it shows no VAT on a line the order then taxes.
+     */
+    public static function isFlatRule($taxRule)
+    {
+        return $taxRule
+            && (int)$taxRule->type === (int)Config::get('constants.priceType.FLAT')
+            && (float)$taxRule->price > 0;
+    }
+
+
+    /**
+     * One line's VAT, stated the way the order charges it.
+     *
+     * One rounding rule for the whole shop: VAT is worked out on ONE unit and
+     * rounded to the cent there, then multiplied by the units paid for. That
+     * is how the order has always charged it -- unitTax() is stored per unit
+     * on ordered_products.tax_price and multiplied by the payable quantity --
+     * and it is the only rule under which every figure on a basket line
+     * multiplies out: unit VAT x quantity is the line VAT, to the cent.
+     *
+     * The basket used to round once per LINE instead (rate x line total). On
+     * EUR 10.03 x 3 at 23% that is 6.92 shown against 6.93 charged, and a card
+     * gateway refuses a cent's difference between what it took and the order.
+     *
+     * $quantity is the PAYABLE quantity: units a "buy X get Y free" deal gives
+     * away are neither charged nor taxed (QA audit ORD-03).
+     *
+     *   inclusive  the unit price contains the VAT; it is split, never added to
+     *   exclusive  the VAT is added on top of the unit price
+     *
+     * A flat-amount rule is the same per-unit amount either way: added to an
+     * ex-VAT price, contained in an inc-VAT one (never more than the price).
+     *
+     * Integer cents throughout, converted back once at the end.
+     */
+    public static function lineVat($unitPrice, $quantity, $taxRule, $inclusive)
+    {
+        return self::lineVatAt(
+            $unitPrice,
+            $quantity,
+            self::vatRate($taxRule),
+            $inclusive,
+            self::isFlatRule($taxRule) ? (float)$taxRule->price : 0.0
+        );
+    }
+
+
+    /**
+     * lineVat() from a rate and a flat amount rather than a tax rule -- for an
+     * order, which records the rate it charged (and, on an ex-VAT line, the
+     * VAT per unit it added) but never re-reads today's rule.
+     */
+    public static function lineVatAt($unitPrice, $quantity, $rate, $inclusive, $flatAmount = 0.0)
+    {
+        $unit = self::toMinorUnits($unitPrice);
+        $quantity = max(0, (int)$quantity);
+        $inclusive = (bool)$inclusive;
+
+        $rate = max(0.0, (float)$rate);
+        $flat = max(0, self::toMinorUnits($flatAmount));
+
+        if ($flat > 0) {
+            $vat = $inclusive ? min($flat, max(0, $unit)) : $flat;
+        } else if ($rate > 0) {
+            $vat = $inclusive
+                ? $unit - self::netOfGrossMinor($unit, $rate)
+                : self::percentOfMinor($unit, $rate);
+        } else {
+            $vat = 0;
+        }
+
+        $ex = $inclusive ? $unit - $vat : $unit;
+
+        return [
+            'rate' => $rate,
+            'flat' => $flat / 100,
+            'inclusive' => $inclusive,
+            'quantity' => $quantity,
+            'unit_ex' => $ex / 100,
+            'unit_vat' => $vat / 100,
+            'unit_inc' => ($ex + $vat) / 100,
+            'line_ex' => ($ex * $quantity) / 100,
+            'line_vat' => ($vat * $quantity) / 100,
+            'line_inc' => (($ex + $vat) * $quantity) / 100,
+        ];
+    }
+
+
+    /** A percentage as hundredths of a percent: 23 -> 2300, 13.5 -> 1350. */
+    private static function rateHundredths($rate)
+    {
+        return (int)round(((float)$rate) * 100);
+    }
+
+
+    /** $minor cents x $rate %, rounded half-up to the cent. Integers only. */
+    private static function percentOfMinor($minor, $rate)
+    {
+        return self::divideRounded((int)$minor * self::rateHundredths($rate), 10000);
+    }
+
+
+    /** The ex-VAT part of a gross $minor cents at $rate %, half-up to the cent. */
+    private static function netOfGrossMinor($minor, $rate)
+    {
+        return self::divideRounded((int)$minor * 10000, 10000 + self::rateHundredths($rate));
+    }
+
+
+    /** $a / $b rounded half away from zero, on integers. */
+    private static function divideRounded($a, $b)
+    {
+        $negative = ($a < 0) !== ($b < 0);
+        $a = abs($a);
+        $b = abs($b);
+
+        $quotient = intdiv(2 * $a + $b, 2 * $b);
+
+        return $negative ? -$quotient : $quotient;
     }
 
 
@@ -672,26 +802,28 @@ class Pricing
             ];
         }
 
+        // Whole cents, so the split cannot drift on a float like 2.3069.
+        $minor = self::toMinorUnits($amount);
+
         if ($inclusive) {
-            $ex = self::round($amount / (1 + ($rate / 100)));
-            $vat = self::round($amount - $ex);
+            $ex = self::netOfGrossMinor($minor, $rate);
+            $vat = $minor - $ex;
 
             return [
-                'ex' => $ex,
-                'vat' => $vat,
-                'inc' => self::round($ex + $vat),
+                'ex' => $ex / 100,
+                'vat' => $vat / 100,
+                'inc' => ($ex + $vat) / 100,
                 'rate' => $rate,
                 'inclusive' => true,
             ];
         }
 
-        $ex = self::round($amount);
-        $vat = self::round(($amount * $rate) / 100);
+        $vat = self::percentOfMinor($minor, $rate);
 
         return [
-            'ex' => $ex,
-            'vat' => $vat,
-            'inc' => self::round($ex + $vat),
+            'ex' => $minor / 100,
+            'vat' => $vat / 100,
+            'inc' => ($minor + $vat) / 100,
             'rate' => $rate,
             'inclusive' => false,
         ];

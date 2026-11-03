@@ -18,7 +18,9 @@
     </button>
     <div
       v-if="showPopover"
+      ref="pop"
       class="inline-pop-over"
+      :class="alignClass"
     >
         <h4 v-if="title" class="pop-header ptb-10 plr-15">{{ title }}</h4>
         <div class="pop-content sb sb-2">
@@ -62,7 +64,9 @@
     },
     data() {
       return {
-        showPopover: false
+        showPopover: false,
+        // '' (the stylesheet's own side), 'align-left' or 'align-right'
+        alignClass: ''
       }
     },
     methods: {
@@ -70,10 +74,40 @@
         this.showPopover = !this.showPopover
         if(this.showPopover) {
           this.$emit('open')
+          this.alignClass = ''
+          this.$nextTick(this.fitToView)
         }
       },
       closePop(){
         this.showPopover = false
+      },
+      /*
+       * Keep the panel where it can be seen.
+       *
+       * The panel opens from the button's right edge (its left edge in RTL).
+       * A button near the start of its row - the products table's "Action",
+       * for one - then opened its panel past the start of the content area
+       * and underneath the fixed sidebar, which covered all of "Delete" but
+       * its last letter. When the panel spills out of the area it belongs to
+       * (the table toolbar, or failing that the window), it is aligned to the
+       * other edge of the button instead; a panel that fits is left alone.
+       */
+      fitToView(){
+        const pop = this.$refs.pop
+
+        if (!pop || typeof window === 'undefined') return
+
+        const area = this.$el.closest('.filter-toolbar, .table-top')
+        const box = area ? area.getBoundingClientRect() : { left: 0, right: window.innerWidth }
+        const left = Math.max(box.left, 0)
+        const right = Math.min(box.right, window.innerWidth)
+        const rect = pop.getBoundingClientRect()
+
+        if (rect.left < left) {
+          this.alignClass = 'align-left'
+        } else if (rect.right > right) {
+          this.alignClass = 'align-right'
+        }
       }
     },
     mounted() {}

@@ -814,7 +814,10 @@
       "exVat": "HT",
       "removeItem": "Supprimer l’article",
       "saveError": "Impossible d’enregistrer cet article",
-      "movedToSaved": "Déplacé vers « Enregistré pour plus tard »"
+      "movedToSaved": "Déplacé vers « Enregistré pour plus tard »",
+      "vatPerUnitAdded": "TVA ajoutée par unité",
+      "flatVat": "forfait {amount}",
+      "badgeNone": "Sans TVA"
     },
     "categoryListingLayoutUi": {
       "bannerTitle": "Parcourez nos catégories",
@@ -2010,6 +2013,28 @@
         "emailInvalid": "Saisissez une adresse e-mail valide pour le destinataire.",
         "emailOwn": "Il s’agit de votre propre adresse e-mail. Choisissez plutôt « Pour moi ».",
         "messageLong": "Le message ne doit pas dépasser 300 caractères."
+      },
+      "history": {
+        "show": "Voir l’historique",
+        "hide": "Masquer l’historique",
+        "loading": "Chargement…",
+        "failed": "L’historique n’a pas pu être chargé.",
+        "empty": "Rien ne s’est encore passé sur cette carte.",
+        "summary": "Valeur {value} · dépensé {spent} · restant {balance}",
+        "ev": {
+          "purchased": "Achetée",
+          "issued": "Émise par la boutique",
+          "emailed": "Envoyée par e-mail",
+          "resend": "Renvoyée par e-mail",
+          "redeemed": "Ajoutée à vos bons",
+          "spent": "Dépensée sur la commande n°{order}",
+          "released": "Commande n°{order} annulée : rendu sur votre carte",
+          "returned": "Articles retournés de la commande n°{order} : rendu sur votre carte",
+          "balance": "Solde ajusté par la boutique",
+          "expiry": "Date d’expiration changée au {date}",
+          "refund": "Achat remboursé",
+          "void": "Annulée par la boutique"
+        }
       }
     },
     "accountLayout": {
@@ -2153,7 +2178,21 @@
         "totalVat": "TVA totale de cette commande",
         "netExVat": "Net HT",
         "totalIncVat": "Total TTC",
-        "mixedRates": "Votre panier contient des produits à plusieurs taux de TVA."
+        "mixedRates": "Votre panier contient des produits à plusieurs taux de TVA.",
+        "savingPriceLine": "{from} → {to} TTC, × {qty}",
+        "savingFreeLine": "{count} offert(s), d’une valeur de {amount}",
+        "savingsGrossNote": "Les économies sont indiquées TTC et sont déjà prises en compte dans les prix ci-dessus. Les remises sur la commande sont listées à part.",
+        "vatInsideAt": "TVA incluse dans les prix ({rate})",
+        "vatAddedAt": "TVA ajoutée ({rate})",
+        "vatOnceNote": "La TVA déjà incluse dans un prix n’est jamais ajoutée à nouveau ; seule la TVA des prix HT est ajoutée. La TVA est calculée par unité et arrondie au centime."
+      },
+      "flatRate": "forfait {amount}",
+      "breakdown": {
+        "subtotalEx": "Sous-total (HT)",
+        "vatIncluded": "TVA déjà incluse dans les prix TTC",
+        "vatAdded": "TVA ajoutée aux prix HT",
+        "totalVat": "TVA totale",
+        "subtotalInc": "Sous-total (TTC)"
       }
     },
     "flashDiscount": {
@@ -2543,7 +2582,8 @@
       "notPlaced": "Votre commande n’a pas pu être passée.",
       "reasonNotCharged": "{reason} Vous n’avez pas été débité.",
       "couldNotPlace": "Nous n’avons pas pu passer cette commande.",
-      "orderRefused": "Commande refusée"
+      "orderRefused": "Commande refusée",
+      "amountChanged": "Le total de votre commande est maintenant de {amount}. Veuillez vérifier votre panier avant de payer."
     },
     "paymentPage": {
       "title": "Finalisez votre paiement",
@@ -2626,7 +2666,8 @@
       "notConfirmed": "Le paiement n’a pas pu être confirmé",
       "notAuthorised": "Votre carte n’a pas été autorisée. Veuillez essayer une autre carte.",
       "notPlaced": "Votre commande n’a pas pu être passée. Vous n’avez pas été débité.",
-      "notStarted": "Le paiement par carte n’a pas pu démarrer. Veuillez réessayer."
+      "notStarted": "Le paiement par carte n’a pas pu démarrer. Veuillez réessayer.",
+      "amountChanged": "Le total de votre commande est maintenant de {amount}, et non le montant affiché. Votre carte n’a pas été débitée — veuillez vérifier votre panier et réessayer."
     },
     "topPromoBanner": {
       "shopAnd": "ACHETEZ ET",

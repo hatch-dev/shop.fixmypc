@@ -814,7 +814,10 @@
       "exVat": "KDV Hariç",
       "removeItem": "Ürünü kaldır",
       "saveError": "Bu ürün kaydedilemedi",
-      "movedToSaved": "Sonraya Kaydedilenler listesine taşındı"
+      "movedToSaved": "Sonraya Kaydedilenler listesine taşındı",
+      "vatPerUnitAdded": "Birim başına eklenen KDV",
+      "flatVat": "sabit {amount}",
+      "badgeNone": "KDV Yok"
     },
     "categoryListingLayoutUi": {
       "bannerTitle": "Kategorilerimize Göz Atın",
@@ -2010,6 +2013,28 @@
         "emailInvalid": "Alıcı için geçerli bir e-posta adresi girin.",
         "emailOwn": "Bu sizin kendi e-posta adresiniz. Bunun yerine \"Kendim için\" seçeneğini seçin.",
         "messageLong": "Mesajı 300 karakterle sınırlayın."
+      },
+      "history": {
+        "show": "Geçmişi göster",
+        "hide": "Geçmişi gizle",
+        "loading": "Yükleniyor…",
+        "failed": "Geçmiş yüklenemedi.",
+        "empty": "Bu kartta henüz bir işlem yok.",
+        "summary": "Değer {value} · harcanan {spent} · kalan {balance}",
+        "ev": {
+          "purchased": "Satın alındı",
+          "issued": "Mağaza tarafından oluşturuldu",
+          "emailed": "E-postayla gönderildi",
+          "resend": "Yeniden e-postayla gönderildi",
+          "redeemed": "Kuponlarınıza eklendi",
+          "spent": "#{order} siparişinde harcandı",
+          "released": "#{order} siparişi iptal edildi: tutar kartınıza geri döndü",
+          "returned": "#{order} siparişinden ürün iadesi: tutar kartınıza geri döndü",
+          "balance": "Bakiye mağaza tarafından düzenlendi",
+          "expiry": "Son kullanma tarihi {date} olarak değiştirildi",
+          "refund": "Satın alma iade edildi",
+          "void": "Mağaza tarafından iptal edildi"
+        }
       }
     },
     "accountLayout": {
@@ -2153,7 +2178,21 @@
         "totalVat": "Bu siparişteki toplam KDV",
         "netExVat": "Net (KDV hariç)",
         "totalIncVat": "Toplam (KDV dahil)",
-        "mixedRates": "Sepetinizde farklı KDV oranlarına sahip ürünler var."
+        "mixedRates": "Sepetinizde farklı KDV oranlarına sahip ürünler var.",
+        "savingPriceLine": "{from} → {to} KDV dahil, × {qty}",
+        "savingFreeLine": "{count} ücretsiz, değeri {amount}",
+        "savingsGrossNote": "Tasarruflar KDV dahil gösterilir ve yukarıdaki fiyatlara zaten yansıtılmıştır. Sipariş indirimleri ayrıca listelenir.",
+        "vatInsideAt": "Fiyatlara dahil KDV ({rate})",
+        "vatAddedAt": "Eklenen KDV ({rate})",
+        "vatOnceNote": "Fiyata zaten dahil olan KDV asla tekrar eklenmez; yalnızca KDV hariç fiyatların KDV’si eklenir. KDV birim başına hesaplanır ve kuruşa yuvarlanır."
+      },
+      "flatRate": "sabit {amount}",
+      "breakdown": {
+        "subtotalEx": "Ara toplam (KDV hariç)",
+        "vatIncluded": "KDV dahil fiyatlarda zaten bulunan KDV",
+        "vatAdded": "KDV hariç fiyatlara eklenen KDV",
+        "totalVat": "Toplam KDV",
+        "subtotalInc": "Ara toplam (KDV dahil)"
       }
     },
     "flashDiscount": {
@@ -2543,7 +2582,8 @@
       "notPlaced": "Siparişiniz verilemedi.",
       "reasonNotCharged": "{reason} Sizden ücret alınmadı.",
       "couldNotPlace": "Bu siparişi veremedik.",
-      "orderRefused": "Sipariş reddedildi"
+      "orderRefused": "Sipariş reddedildi",
+      "amountChanged": "Sipariş toplamınız artık {amount}. Ödemeden önce lütfen sepetinizi kontrol edin."
     },
     "paymentPage": {
       "title": "Ödemenizi tamamlayın",
@@ -2626,7 +2666,8 @@
       "notConfirmed": "Ödeme onaylanamadı",
       "notAuthorised": "Kartınız onaylanmadı. Lütfen başka bir kart deneyin.",
       "notPlaced": "Siparişiniz verilemedi. Sizden ücret alınmadı.",
-      "notStarted": "Kartla ödeme başlatılamadı. Lütfen tekrar deneyin."
+      "notStarted": "Kartla ödeme başlatılamadı. Lütfen tekrar deneyin.",
+      "amountChanged": "Sipariş toplamınız artık gösterilen tutar değil, {amount}. Kartınızdan ücret alınmadı — lütfen sepetinizi kontrol edip tekrar deneyin."
     },
     "topPromoBanner": {
       "shopAnd": "ALIŞVERİŞ YAPIN VE",

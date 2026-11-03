@@ -190,6 +190,24 @@ function buildStore (rows, entitled) {
 
 const toasts = []
 
+/* --------------------------------------- the shared checkout arithmetic */
+
+// Loaded for real: the summary's sums are this module's, not the component's.
+function loadTotals () {
+  const code = babel.transformSync(fs.readFileSync(path.join(ROOT, 'mixin/checkoutTotals.js'), 'utf8'), {
+    filename: 'checkoutTotals.js',
+    configFile: false,
+    babelrc: false,
+    presets: [[path.join(NM, '@babel/preset-env'), { targets: { node: 'current' } }]],
+  }).code
+
+  const module = { exports: {} }
+  // eslint-disable-next-line no-new-func
+  new Function('module', 'exports', 'require', code)(module, module.exports, () => ({}))
+
+  return module.exports
+}
+
 /* ------------------------------------------------------------- the tile */
 
 function loadTile () {
@@ -208,6 +226,7 @@ function loadTile () {
     if (request === 'vuex') {
       return { mapGetters: () => ({}), mapActions: () => ({}), mapState: () => ({}) }
     }
+    if (request.indexOf('mixin/checkoutTotals') !== -1) return loadTotals()
     if (request.indexOf('~/') === 0 || request.indexOf('@/') === 0) return stub
     try { return require(path.join(NM, request)) } catch (e) { return stub }
   }
@@ -260,6 +279,7 @@ function loadSummary () {
     if (request === 'vuex') {
       return { mapGetters: () => ({}), mapActions: () => ({}), mapState: () => ({}) }
     }
+    if (request.indexOf('mixin/checkoutTotals') !== -1) return loadTotals()
     if (request.indexOf('~/') === 0 || request.indexOf('@/') === 0) return stub
     try { return require(path.join(NM, request)) } catch (e) { return stub }
   }
@@ -308,31 +328,44 @@ function withServerVat (row) {
   const free = bundle && quantity >= parseInt(bundle.buy) ? parseInt(bundle.free) : 0
   const payable = Math.max(quantity - free, 0)
 
-  // Pricing::vatBreakdown, in its two directions.
+  /*
+   * Pricing::lineVat: ONE unit split, rounded to the cent, then multiplied by
+   * the units - in whole cents, the way the server does it. The order has
+   * always charged VAT per unit; the basket now states it the same way.
+   */
   const split = (amount) => {
-    if (!(rate > 0)) return { ex: round2(amount), vat: 0, inc: round2(amount) }
+    const minor = Math.round(amount * 100)
+
+    if (!(rate > 0)) return { ex: minor, vat: 0 }
 
     if (inclusive) {
-      const ex = round2(amount / (1 + rate / 100))
-      const vat = round2(amount - ex)
-      return { ex, vat, inc: round2(ex + vat) }
+      const ex = Math.round((minor * 100) / (100 + rate))
+      return { ex, vat: minor - ex }
     }
 
-    const ex = round2(amount)
-    const vat = round2((amount * rate) / 100)
-    return { ex, vat, inc: round2(ex + vat) }
+    return { ex: minor, vat: Math.round((minor * rate) / 100) }
   }
 
   const unitSplit = split(unit)
-  const lineSplit = split(round2(unit * payable))
-  const listSplit = split(round2(list * quantity))
+  const listSplit = split(list)
+  const times = (s, n) => ({ ex: (s.ex * n) / 100, vat: (s.vat * n) / 100, inc: ((s.ex + s.vat) * n) / 100 })
+
+  const u = times(unitSplit, 1)
+  const l = times(unitSplit, payable)
+  const lu = times(listSplit, 1)
+  const ll = times(listSplit, quantity)
 
   return Object.assign({}, row, {
     vat_rate: rate,
+    vat_flat: 0,
     vat_inclusive: inclusive,
-    unit_ex_vat: unitSplit.ex, unit_vat: unitSplit.vat, unit_inc_vat: unitSplit.inc,
-    line_ex_vat: lineSplit.ex, line_vat: lineSplit.vat, line_inc_vat: lineSplit.inc,
-    line_list_inc_vat: listSplit.inc,
+    free_units: free,
+    payable_quantity: payable,
+    unit_ex_vat: u.ex, unit_vat: u.vat, unit_inc_vat: u.inc,
+    line_ex_vat: l.ex, line_vat: l.vat, line_inc_vat: l.inc,
+    line_goods: round2(unit * payable),
+    unit_list_ex_vat: lu.ex, unit_list_vat: lu.vat, unit_list_inc_vat: lu.inc,
+    line_list_ex_vat: ll.ex, line_list_inc_vat: ll.inc,
   })
 }
 
@@ -499,6 +532,22 @@ async function main () {
       )
     }
 
+    /*
+     * And everything the server's own describeVat puts on a line, read from
+     * the PHP rather than restated: line_goods went stale this way, and a
+     * quantity step left the flash discount measured on the old quantity.
+     */
+    const php = fs.readFileSync(path.join(ROOT, '../app/Http/Controllers/CartsController.php'), 'utf8')
+    const body = php.slice(php.indexOf('private function describeVat('))
+    const assigned = [...body.slice(0, body.indexOf('\n    }')).matchAll(/\$row->(\w+)\s*=/g)].map(m => m[1])
+
+    assert.ok(assigned.length >= 15, 'describeVat was not found')
+
+    for (const field of assigned) {
+      assert.ok(listed.indexOf(`'${field}'`) !== -1,
+        `describeVat sends ${field}, which SERVER_PRICE_FIELDS does not copy`)
+    }
+
     assert.ok(store, 'the store module loads')
   })
 
@@ -626,35 +675,32 @@ async function main () {
 
   console.log('\nthe order summary')
 
-  await test('the subtotal is the list price of what is in the basket', () => {
+  await test('the list price of what is in the basket is the server original_price', () => {
     const vm = summaryFor([cartRow(11, true)])
 
     // 899 list x 11, from the server's original_price - not products.selling
-    // read locally, which is the same here and wrong on a variant.
-    assert.strictEqual(round2(vm.cartPrice.priceBeforeOffer), 9889)
+    // read locally, which is the same here and wrong on a variant. Stated
+    // incl. VAT on the per-unit rule: 899 + 206.77 = 1,105.77 x 11.
+    assert.strictEqual(round2(vm.goods.listIncVat), 12163.47)
   })
 
-  await test('the discount is list minus what is actually charged', () => {
+  await test('the discount is list minus what is actually charged, incl. VAT', () => {
     const vm = summaryFor([cartRow(11, true)])
 
-    const charged = round2(vm.cartPrice.totalPrice)
-    const discount = round2(vm.cartPrice.priceBeforeOffer - charged)
+    assert.strictEqual(round2(vm.cartPrice.totalPriceWithOffer), 629 * 11, 'charged at the 10-24 band')
 
-    assert.strictEqual(charged, 629 * 11, 'charged at the 10-24 band')
-    assert.strictEqual(discount, 9889 - 6919)
+    // (1,105.77 - 773.67) x 11: the band saving incl. the VAT it saves
+    assert.strictEqual(round2(vm.productsDiscount), 3653.1)
   })
 
   await test('the discount is not taken twice off an already banded price', () => {
     const vm = summaryFor([cartRow(11, true)])
 
-    // What the customer pays is exactly the band price x quantity. If the
-    // discount row were also coming off this, the two would not agree.
+    // What the customer pays is exactly the band price x quantity (+ VAT). If
+    // the saving were also coming off this, the two would not agree.
     assert.strictEqual(round2(vm.cartPrice.totalPriceWithOffer), 629 * 11)
-
-    assert.strictEqual(
-      round2(vm.cartPrice.priceBeforeOffer - round2(vm.cartPrice.priceBeforeOffer - vm.cartPrice.totalPrice)),
-      round2(vm.cartPrice.totalPrice)
-    )
+    assert.strictEqual(round2(vm.goods.listIncVat - vm.productsDiscount), round2(vm.goods.incVat))
+    assert.strictEqual(round2(vm.totalPrice), round2(vm.goods.incVat), 'the saving is not a deduction')
   })
 
   await test('VAT is charged on the banded price, not the list price', () => {
@@ -671,10 +717,14 @@ async function main () {
     const row = cartRow(11, true)
     row.flash_product.tax_rules = { id: 9, title: 'VAT13.5', type: 2, price: 13.5 }
 
-    assert.strictEqual(
-      round2(summaryFor([row]).cartPrice.exclusiveTax),
-      round2(629 * 0.135 * 11)
-    )
+    /*
+     * Per unit, rounded to the cent, times the quantity - the rule the order
+     * charges by (Pricing::unitTax x payable quantity): 629 x 13.5% = 84.915,
+     * so 84.92 a unit and 934.12 for eleven. Rounding the line once instead
+     * gives 934.07, which the basket used to show against 934.12 charged.
+     */
+    assert.strictEqual(round2(summaryFor([row]).cartPrice.exclusiveTax), round2(84.92 * 11))
+    assert.strictEqual(round2(84.92 * 11), 934.12)
   })
 
   await test('a product on no tax rule is not taxed', () => {
@@ -722,8 +772,9 @@ async function main () {
 
     const vm = summaryFor([banded, plain])
 
-    assert.strictEqual(round2(vm.cartPrice.totalPrice), 629 * 11 + 80 * 2)
-    assert.strictEqual(round2(vm.cartPrice.priceBeforeOffer), 899 * 11 + 100 * 2)
+    assert.strictEqual(round2(vm.cartPrice.totalPriceWithOffer), 629 * 11 + 80 * 2)
+    // list incl. VAT: 1,105.77 x 11 + 113.50 x 2
+    assert.strictEqual(round2(vm.goods.listIncVat), 12390.47)
     assert.strictEqual(
       round2(vm.cartPrice.exclusiveTax),
       round2(629 * 0.23 * 11 + 80 * 0.135 * 2)
@@ -734,7 +785,7 @@ async function main () {
   await test('a personal basket is summed at retail throughout', () => {
     const vm = summaryFor([cartRow(11, false)])
 
-    assert.strictEqual(round2(vm.cartPrice.totalPrice), 699 * 11)
+    assert.strictEqual(round2(vm.cartPrice.totalPriceWithOffer), 699 * 11)
     assert.strictEqual(round2(vm.cartPrice.exclusiveTax), round2(699 * 0.23 * 11))
   })
 

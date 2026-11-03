@@ -3,33 +3,27 @@
  *
  * Run with: npm run check:cart-summary
  *
- * The summary works in prices AS DISPLAYED, and adds VAT once at the end to
- * the lines that do not already carry it:
+ * Since 2026-11-03 the summary states the goods on both sides of VAT, with
+ * the VAT already inside prices and the VAT added on separate rows:
  *
- *     3,097.00   original, as displayed  (2,097 net + 1,000 gross)
- *     - 176.00   saving, as displayed    (75 net + 101 gross)
- *     = 2,921.00 products total
- *     + 465.06   VAT, added for the ex-VAT lines ONLY
- *     = 3,386.06 total
+ *     2,752.89   Subtotal (excl. VAT)     (2,022.00 net + 730.89 net of 899)
+ *       168.11   VAT already included     (the Samsung's, inside its 899.00)
+ *     + 465.06   VAT added                (the iPhone's: 155.02 x 3)
+ *       633.17   Total VAT                (the two, counted once)
+ *     3,386.06   Subtotal (incl. VAT)     = excl. VAT + Total VAT
+ *     = 3,386.06 Final amount payable     (no shipping, no discounts)
  *
- * That works because the two conventions are reconciled by WHERE the VAT is
- * added, not by converting the prices. The Samsung's tax is already inside its
- * 899.00 and nothing is added for it; the iPhone's is not, so its 465.06 is
- * the VAT row. Applying the rate to the mixed 2,921.00 instead gives 671.83 —
- * it taxes the Samsung twice, and overcharges by 38.66 on two items.
+ * The conventions are reconciled by WHERE the VAT is added, never by applying
+ * a rate to a mixed total: the Samsung's tax is inside its 899.00 and nothing
+ * is added for it. Applying 23% to the mixed 2,921.00 instead gives 671.83 -
+ * it taxes the Samsung twice.
  *
- * Two figures therefore differ from what a single-convention shop would show,
- * and both are correct:
+ * The saving is 193.25, incl. VAT on both lines (92.25 + 101.00). It used to
+ * be shown as 176.00 - the iPhone's NET 75.00 added to the Samsung's gross
+ * 101.00 - while the amount charged fell by 193.25.
  *
- *   THE SAVING. The row says 176.00, the saving at the displayed prices. What
- *   actually comes off the total is 193.25, because the iPhone's 75 is net and
- *   reducing it also reduces the VAT added below by 17.25.
- *
- *   THE VAT. The row says 465.06, the VAT ADDED. The order contains 633.17
- *   once the Samsung's own tax is counted, which is what an invoice needs; the
- *   popover carries it.
- *
- * All of it is pinned below against the worked example in the brief.
+ * Every line figure is per unit, rounded to the cent, times the units paid
+ * for (Pricing::lineVat) - the rule the order charges by.
  */
 const assert = require('assert')
 const path = require('path')
@@ -84,6 +78,13 @@ function loadSfc(file) {
      */
     if (request.indexOf('mixin/productPriceHelper') !== -1) {
       return { default: loadMixin('productPriceHelper'), __esModule: true }
+    }
+    /*
+     * The summary's arithmetic lives in checkoutTotals, so it is loaded for
+     * real too: stubbed, every figure below would be undefined.
+     */
+    if (request.indexOf('mixin/checkoutTotals') !== -1) {
+      return loadMixin('checkoutTotals')
     }
     return {}
   }
@@ -180,6 +181,9 @@ const IPHONE = {
   unit_ex_vat: 674, unit_vat: 155.02, unit_inc_vat: 829.02,
   line_ex_vat: 2022, line_vat: 465.06, line_inc_vat: 2487.06,
   line_list: 2097, line_list_ex_vat: 2097, line_list_inc_vat: 2579.31,  // 699 x 3
+  // the list price on the same per-unit rule: 699 + 160.77 VAT = 859.77
+  unit_list_ex_vat: 699, unit_list_vat: 160.77, unit_list_inc_vat: 859.77,
+  line_goods: 2022, free_units: 0, payable_quantity: 3, vat_flat: 0,
   flash_product: { title: 'Apple iPhone 15 Pro' },
 }
 
@@ -193,6 +197,8 @@ const SAMSUNG = {
   unit_ex_vat: 730.89, unit_vat: 168.11, unit_inc_vat: 899,
   line_ex_vat: 730.89, line_vat: 168.11, line_inc_vat: 899,
   line_list: 1000, line_list_ex_vat: 813.01, line_list_inc_vat: 1000,  // 1,000 gross -> 813.01 net
+  unit_list_ex_vat: 813.01, unit_list_vat: 186.99, unit_list_inc_vat: 1000,
+  line_goods: 899, free_units: 0, payable_quantity: 1, vat_flat: 0,
   flash_product: { title: 'Samsung Galaxy A05s' },
 }
 
@@ -222,70 +228,72 @@ function close(actual, expected, what) {
   )
 }
 
-console.log('\nsavings, per line, on the basis the line is priced on')
+console.log('\nsavings, per line, stated incl. VAT on every line')
 
-check('an ex-VAT line grosses its saving up by the VAT on it', () => {
+/*
+ * One basis for every line since 2026-11-03. The saving used to be added up
+ * "as displayed" - the iPhone's NET 75.00 beside the Samsung's gross 101.00 -
+ * and the row said 176.00 while the amount charged fell by 193.25. Both ends
+ * are now inc-VAT for every line (the list price split on the same per-unit
+ * rule as the charge), so the row is the 193.25 the customer actually saves,
+ * which is also what the order confirmation states (discount_inc_vat).
+ */
+check('an ex-VAT line states its saving incl. the VAT it saves', () => {
   const row = savings([IPHONE])[0]
 
-  assert.strictEqual(row.inclusive, false)
-  close(row.unitSaving, 25, 'unit saving')
-  close(row.baseSaving, 75, 'net saving (25 x 3)')
-  close(row.vatOnSaving, 17.25, 'VAT on the saving')
-  close(row.incSaving, 92.25, 'gross saving')
-
-  // The parts close.
-  close(row.baseSaving + row.vatOnSaving, row.incSaving, 'net + VAT = gross saving')
+  close(row.unitFrom, 859.77, 'list price incl. VAT (699 + 160.77)')
+  close(row.unitTo, 829.02, 'charged price incl. VAT (674 + 155.02)')
+  close(row.priceSaving, 92.25, 'gross saving (30.75 x 3)')
+  close(row.freeValue, 0, 'no free units')
 })
 
 check('an inc-VAT line saves exactly what it says', () => {
   const row = savings([SAMSUNG])[0]
 
-  assert.strictEqual(row.inclusive, true)
-  close(row.incSaving, 101, 'gross saving')
-  close(row.vatOnSaving, 0, 'nothing is added to a saving already gross')
+  close(row.priceSaving, 101, 'gross saving')
+  close(row.freeValue, 0, 'no free units')
 })
 
 check('a line with no saving is left out entirely', () => {
   const full = Object.assign({}, SAMSUNG, {
-    original_price: 899, line_list_inc_vat: 899,
+    original_price: 899, line_list_inc_vat: 899, unit_list_inc_vat: 899,
   })
 
   assert.strictEqual(savings([full]).length, 0)
 })
 
-console.log('\nthe worked example from the brief')
+check('free bundle units are a saving of their own, counted once', () => {
+  // 3 at 100.00 inc-VAT, 1 free: charged 200.00, list 300.00.
+  const bundled = Object.assign({}, SAMSUNG, {
+    id: 30, quantity: 3, free_units: 1, payable_quantity: 2,
+    unit_price: 100, original_price: 100,
+    unit_ex_vat: 81.3, unit_vat: 18.7, unit_inc_vat: 100,
+    line_ex_vat: 162.6, line_vat: 37.4, line_inc_vat: 200, line_goods: 200,
+    unit_list_ex_vat: 81.3, unit_list_vat: 18.7, unit_list_inc_vat: 100,
+    line_list: 300, line_list_ex_vat: 243.9, line_list_inc_vat: 300,
+  })
+  const row = savings([bundled])[0]
 
-check('the saving is 176.00 as displayed and 193.25 off the final total', () => {
-  /*
-   * Both are right, and they are different numbers for a good reason.
-   *
-   * The summary shows 176.00 — the saving at the prices on the cards, 75 off
-   * the iPhone and 101 off the Samsung. That is the figure that takes the
-   * Products Total from 3,097.00 to 2,921.00.
-   *
-   * What actually comes off the amount charged is 193.25, because the iPhone's
-   * 75 is net: reducing it also reduces the VAT added further down, by 17.25.
-   * The Samsung's 101 is already gross and carries no such effect.
-   */
-  const asDisplayed = savings(BASKET).reduce((sum, row) => sum + row.baseSaving, 0)
-  const offTheTotal = savings(BASKET).reduce((sum, row) => sum + row.incSaving, 0)
-
-  close(asDisplayed, 176, 'the You Save row')
-  close(offTheTotal, 193.25, 'the effect on the total')
-  close(offTheTotal - asDisplayed, 17.25, 'the VAT on the ex-VAT saving')
-
-  // And the row really is the first of those.
-  close(summaryVm(BASKET).productsDiscount, 176, 'productsDiscount')
+  close(row.priceSaving, 0, 'no price reduction')
+  close(row.freeValue, 100, 'one unit given away')
+  close(summaryVm([bundled]).productsDiscount, 100, 'the saving is the free unit, once')
 })
 
-check('the gross ladder still closes, for the popovers that use it', () => {
-  const listIncVat = BASKET.reduce((s, r) => s + r.line_list_inc_vat, 0)
-  const incVat = BASKET.reduce((s, r) => s + r.line_inc_vat, 0)
-  const youSave = savings(BASKET).reduce((s, r) => s + r.incSaving, 0)
+console.log('\nthe worked example from the brief')
 
-  close(listIncVat, 3579.31, 'Products (Inc-VAT)')
-  close(incVat, 3386.06, 'Total Products (Inc-VAT)')
-  close(listIncVat - youSave, incVat, 'Products - You Save = Total Products')
+check('the saving is 193.25 off the final total, and the row says 193.25', () => {
+  const lines = savings(BASKET).reduce((sum, row) => sum + row.priceSaving + row.freeValue, 0)
+
+  close(lines, 193.25, 'the popover lines (92.25 + 101.00)')
+  close(summaryVm(BASKET).productsDiscount, 193.25, 'the You saved figure')
+})
+
+check('the gross ladder closes: list - saving = charged, incl. VAT', () => {
+  const vm = summaryVm(BASKET)
+
+  close(vm.goods.listIncVat, 3579.31, 'list incl. VAT')
+  close(vm.goods.incVat, 3386.06, 'charged incl. VAT')
+  close(vm.goods.listIncVat - vm.productsDiscount, vm.goods.incVat, 'list - saving = charged')
 })
 
 check('ex-VAT + VAT = inc-VAT across both conventions', () => {
@@ -309,28 +317,41 @@ console.log('\nthe summary as it is rendered, end to end')
  */
 check('every row of the summary matches the brief', () => {
   const vm = summaryVm(BASKET)
+  const included = vm.productGroups.find(g => g.key === 'included')
+  const added = vm.productGroups.find(g => g.key === 'added')
 
-  close(vm.originalTotal, 3097, 'Original Products total')
-  close(vm.productsDiscount, 176, 'You Save')
-  close(vm.cartPrice.totalPriceWithOffer, 2921, 'Products Total')
-  close(vm.cartPrice.exclusiveTax, 465.06, 'VAT')
+  // ② the Samsung: 899.00 incl. VAT, of which 168.11 VAT, 730.89 net
+  close(included.inc, 899, 'VAT included group: subtotal incl. VAT')
+  close(included.vat, 168.11, 'VAT included in these prices')
+  close(included.ex, 730.89, 'VAT included group: subtotal excl. VAT')
+
+  // ③ the iPhone: 2,022.00 + 465.06 VAT (155.02 x 3) = 2,487.06
+  close(added.ex, 2022, 'VAT added group: subtotal excl. VAT')
+  close(added.vat, 465.06, 'VAT added')
+  close(added.inc, 2487.06, 'VAT added group: subtotal incl. VAT')
+
+  close(vm.productsCharge, 3386.06, 'Total charges for all products')
+  close(vm.vatTotal, 633.17, 'Includes 633.17 VAT')
+  close(vm.vatIncluded, 168.11, '... 168.11 included')
+  close(vm.cartPrice.exclusiveTax, 465.06, '... + 465.06 added')
+  close(vm.productsDiscount, 193.25, 'You saved, incl. VAT')
+  close(vm.cartPrice.totalPriceWithOffer, 2921, 'goods before VAT is added (the flash base)')
   close(vm.cartPrice.shippingPrice, 0, 'Shipping')
-  close(vm.totalPrice, 3386.06, 'Total (Inc-VAT)')
+  close(vm.totalPrice, 3386.06, 'Final amount payable')
 })
 
 check('the summary is one sum the customer can follow top to bottom', () => {
   const vm = summaryVm(BASKET)
+  const groups = vm.productGroups.reduce((s, g) => s + g.inc, 0)
 
-  // 3,097.00 - 176.00 = 2,921.00
-  close(vm.originalTotal - vm.productsDiscount, vm.cartPrice.totalPriceWithOffer,
-    'Original - You Save = Products Total')
+  // 899.00 + 2,487.06 = 3,386.06: the groups make up Total charges
+  close(groups, vm.productsCharge, 'the groups add up to Total charges')
+  close(vm.goods.exVat + vm.vatTotal, vm.productsCharge, 'excl. VAT + all VAT = Total charges')
+  close(vm.vatIncluded + vm.cartPrice.exclusiveTax, vm.vatTotal, 'included + added = the VAT stated')
 
-  // 2,921.00 + 465.06 + 0 = 3,386.06
-  close(
-    vm.cartPrice.totalPriceWithOffer + vm.cartPrice.exclusiveTax + vm.cartPrice.shippingPrice,
-    vm.totalPrice,
-    'Products Total + VAT + Shipping = Total'
-  )
+  // 3,386.06 + 0 shipping - 0 discounts = 3,386.06
+  close(vm.productsCharge + vm.cartPrice.shippingPrice - vm.totals.discounts, vm.totalPrice,
+    'Total charges + Shipping - Discounts = Final amount payable')
 })
 
 check('VAT is added for the ex-VAT line and NOT for the inc-VAT one', () => {
@@ -396,6 +417,65 @@ check('each card states its line on the basis that line is priced on', () => {
   close(samsung.displayPrice * SAMSUNG.quantity, samsung.lineTotal, 'unit x qty = line')
 })
 
+check('an ex-VAT card states its VAT in full, and adds it once', () => {
+  const v = vmFor(tile, { cart: IPHONE }).vatLine
+
+  assert.strictEqual(v.kind, 'added')
+  assert.strictEqual(v.badge, 'Ex-VAT')
+
+  // Line Total: "€674.00 x 3" over "€2,022.00 Ex-VAT", then "€2,487.06 Inc-VAT"
+  close(v.unitQuoted, 674, 'the price as quoted, net')
+  close(v.lineQuoted, 2022, 'the line as quoted, net')
+  assert.strictEqual(v.short, 'Ex-VAT')
+  close(v.unitEx, 674, 'unit price excl. VAT')
+  assert.strictEqual(v.rateLabel, '23%')
+  close(v.unitVat, 155.02, 'VAT per unit, added')
+  close(v.unitInc, 829.02, 'unit price incl. VAT')
+  assert.strictEqual(v.quantity, 3)
+  close(v.lineInc, 2487.06, 'total incl. VAT')
+
+  // Everything on the card multiplies out without the customer doing it.
+  close(v.unitEx + v.unitVat, v.unitInc, 'excl. + VAT = incl.')
+  close(v.unitInc * v.paid, v.lineInc, 'unit incl. x quantity = total')
+})
+
+check('an inc-VAT card splits its price and never adds VAT to it', () => {
+  const v = vmFor(tile, { cart: SAMSUNG }).vatLine
+
+  assert.strictEqual(v.kind, 'included')
+  assert.strictEqual(v.badge, 'Inc-VAT')
+  close(v.lineQuoted, 899, 'the line as quoted, gross')
+  close(v.lineEx, 730.89, 'its Ex-VAT counterpart')
+  close(v.unitEx, 730.89, 'the VAT-exclusive part')
+  close(v.unitVat, 168.11, 'the VAT already inside')
+  close(v.unitInc, 899, 'the price as quoted - unchanged')
+  close(v.lineInc, 899, 'the total is the price, not price + VAT')
+})
+
+check('a zero-rated card says No VAT', () => {
+  const zero = Object.assign({}, SAMSUNG, {
+    vat_rate: 0, unit_vat: 0, unit_ex_vat: 899, line_vat: 0, line_ex_vat: 899,
+  })
+  const v = vmFor(tile, { cart: zero }).vatLine
+
+  assert.strictEqual(v.kind, 'none')
+  assert.strictEqual(v.badge, 'No VAT')
+  assert.strictEqual(v.rateLabel, '0%')
+})
+
+check('a genuine zero price stays zero on the card', () => {
+  // A 100% clearance: the server says 0.00 and means it.
+  const free = Object.assign({}, SAMSUNG, {
+    unit_price: 0, upsell_price: 0, unit_ex_vat: 0, unit_vat: 0, unit_inc_vat: 0,
+    line_total: 0, line_ex_vat: 0, line_vat: 0, line_inc_vat: 0,
+    flash_product: { title: 'Free', selling: 1000, offered: 899 },
+  })
+  const card = vmFor(tile, { cart: free })
+
+  assert.strictEqual(card.hasUpsellPrice, true, 'the server answered')
+  close(card.displayPrice, 0, 'not replaced by the old selling price')
+})
+
 /*
  * The "Original Products" LIST is gone from the summary on purpose -- it
  * restated the Products Total five lines above it, and the header comment in
@@ -408,26 +488,32 @@ check('each card states its line on the basis that line is priced on', () => {
  * back to unit x quantity for a payload that predates it. That is
  * originalTotal, so that is what they measure now.
  */
-console.log('\noriginal prices, as the saving is measured against')
+console.log('\nlist prices, as the saving is measured against')
 
-check('every line is counted once, at its original total', () => {
-  // 699 x 3 as quoted, plus 1,000 x 1 as quoted.
-  close(summaryVm(BASKET).originalTotal, 3097, 'original total')
+/*
+ * The saving's base is the list price incl. VAT, per line, from the server
+ * (line_list_inc_vat). It used to be line_list - each product's own
+ * convention, 2,097 net + 1,000 gross = 3,097 - which is not a figure that
+ * can be compared with an inc-VAT charge.
+ */
+check('every line is counted once, at its list total incl. VAT', () => {
+  // 859.77 x 3 + 1,000.00
+  close(summaryVm(BASKET).goods.listIncVat, 3579.31, 'list total incl. VAT')
 })
 
 check('the base is the line list, not the unit price', () => {
   const vm = summaryVm([IPHONE])
 
-  // The trap: counting 699.00, which is not what three of them cost.
-  close(vm.originalTotal, 2097, 'three at the original price')
-  assert.ok(vm.originalTotal !== 699, 'the unit price is not the line')
+  close(vm.goods.listIncVat, 2579.31, 'three at the list price incl. VAT')
+  assert.ok(vm.goods.listIncVat !== 859.77, 'the unit price is not the line')
 })
 
-check('a payload with no line_list falls back to unit x quantity', () => {
+check('a payload with no list figure shows no saving rather than inventing one', () => {
   const older = Object.assign({}, IPHONE)
-  delete older.line_list
+  delete older.line_list_inc_vat
+  delete older.unit_list_inc_vat
 
-  close(summaryVm([older]).originalTotal, 2097, 'unit x quantity')
+  close(summaryVm([older]).productsDiscount, 0, 'no saving')
 })
 
 check('the base totals as displayed, and VAT is not applied to that total', () => {
@@ -473,9 +559,11 @@ console.log('\nwhat the info icons open')
 check('an ex-VAT card explains its own price', () => {
   const rows = vmFor(tile, { cart: IPHONE }).vatExplainer.rows
 
+  // unit price excl. VAT, rate, VAT added per unit, unit price incl. VAT
   assert.deepStrictEqual(rows, [
     { label: 'Current price', value: '€674.00' },
     { label: 'VAT rate', value: '23%' },
+    { label: 'VAT added per unit', value: '€155.02' },
     { label: 'Inc-VAT equivalent', value: '€829.02' },
   ])
 })
@@ -485,6 +573,7 @@ check('an inc-VAT card explains its own price', () => {
 
   assert.deepStrictEqual(rows, [
     { label: 'Current price', value: '€899.00' },
+    { label: 'VAT rate', value: '23%' },
     { label: 'VAT included', value: '€168.11' },
     { label: 'Ex-VAT value', value: '€730.89' },
   ])
@@ -496,12 +585,12 @@ check('a zero-rated card opens nothing, because it has nothing to explain', () =
   assert.strictEqual(vmFor(tile, { cart: zeroRated }).vatExplainer, null)
 })
 
-check('the VAT icon opens both figures, added and contained', () => {
+check('the VAT icon opens both figures, included and added, rate by rate', () => {
   const vm = summaryVm(BASKET)
 
   assert.deepStrictEqual(vm.vatExplainerRows, [
+    { label: 'VAT included in prices (23%)', value: '€168.11' },
     { label: 'VAT added (23%)', value: '€465.06' },
-    { label: 'Inside Inc-VAT prices', value: '€168.11' },
     { label: 'Total VAT in this order', value: '€633.17', strong: true },
     { label: 'Net Ex-VAT', value: '€2752.89' },
     { label: 'Total Inc-VAT', value: '€3386.06' },
@@ -512,12 +601,11 @@ check('the VAT icon opens both figures, added and contained', () => {
 })
 
 check('an all ex-VAT basket does not claim any VAT was already included', () => {
-  // Nothing is contained, so the two figures coincide and the extra rows would
-  // just restate the first one.
-  const labels = summaryVm([IPHONE]).vatExplainerRows.map(r => r.label)
+  const vm = summaryVm([IPHONE])
 
-  assert.ok(!labels.includes('Inside Inc-VAT prices'))
-  assert.ok(!labels.includes('Total VAT in this order'))
+  assert.ok(!vm.vatExplainerRows.some(r => r.label.indexOf('VAT included') === 0))
+  assert.deepStrictEqual(vm.productGroups.map(g => g.key), ['added'], 'and no VAT-included group')
+  close(vm.goods.vatIncluded, 0, 'nothing is inside the price')
 })
 
 check('a second rate stops a single percentage being printed on the row', () => {
@@ -530,33 +618,47 @@ check('a second rate stops a single percentage being printed on the row', () => 
 
   // 23% and 13.5% in one basket: no one percentage describes it.
   assert.strictEqual(vm.vatRateLabel, null)
-  assert.strictEqual(vm.vatExplainerRows[0].label, 'VAT added')
-  assert.ok(vm.vatExplainerNote.length > 0, 'and the popover says why')
+  assert.deepStrictEqual(vm.vatExplainerRows.slice(0, 2).map(r => r.label),
+    ['VAT included in prices (13.5%)', 'VAT added (23%)'], 'each rate states its own VAT')
+  assert.ok(vm.vatExplainerNote.length > 0, 'and the popover explains the rule')
 })
 
 console.log('\nVAT details')
 
 check('one row per rate, highest first', () => {
-  const byRate = {
-    '23.00': { rate: 23, ex: 2752.89, vat: 633.17, inc: 3386.06 },
-    '13.50': { rate: 13.5, ex: 100, vat: 13.5, inc: 113.5 },
-    '0.00': { rate: 0, ex: 50, vat: 0, inc: 50 },
-  }
+  const reduced = Object.assign({}, IPHONE, {
+    id: 31, vat_rate: 13.5, line_ex_vat: 100, line_vat: 13.5, line_inc_vat: 113.5,
+  })
 
-  const rows = summary.computed.vatBreakdown.call(withI18n({ cartPrice: { byRate } }))
+  const rows = summaryVm([reduced, IPHONE]).vatExplainerRows
 
-  assert.deepStrictEqual(rows.map(r => r.rate), [23, 13.5, 0])
+  assert.deepStrictEqual(rows.slice(0, 2).map(r => r.label), ['VAT added (23%)', 'VAT added (13.5%)'])
 })
 
 check('a rate carrying no goods is not listed', () => {
-  const byRate = {
-    '23.00': { rate: 23, ex: 100, vat: 23, inc: 123 },
-    '9.00': { rate: 9, ex: 0, vat: 0, inc: 0 },
-  }
+  const zeroRated = Object.assign({}, SAMSUNG, {
+    id: 32, vat_rate: 0, line_vat: 0, unit_vat: 0, line_ex_vat: 899,
+  })
 
-  const rows = summary.computed.vatBreakdown.call(withI18n({ cartPrice: { byRate } }))
+  const rows = summaryVm([zeroRated, IPHONE]).vatExplainerRows
 
-  assert.strictEqual(rows.length, 1)
+  assert.deepStrictEqual(rows.filter(r => /VAT (added|included)/.test(r.label)).map(r => r.label),
+    ['VAT added (23%)'])
+})
+
+check('a flat-amount rule is tax, not "no VAT"', () => {
+  // A EUR 5.00-per-unit rule: rate 0, but the order adds it (Pricing::unitTax).
+  const flat = Object.assign({}, IPHONE, {
+    id: 33, quantity: 2, vat_rate: 0, vat_flat: 5,
+    unit_ex_vat: 100, unit_vat: 5, unit_inc_vat: 105,
+    line_ex_vat: 200, line_vat: 10, line_inc_vat: 210, line_goods: 200,
+  })
+  const vm = summaryVm([flat])
+
+  assert.deepStrictEqual(vm.productGroups.map(g => g.key), ['added'])
+  close(vm.goods.vatAdded, 10, 'VAT added: 5.00 x 2')
+  close(vm.totalPrice, 210, 'and it is charged')
+  assert.strictEqual(vm.productGroups[0].lines[0].rateLabel, 'flat €5.00')
 })
 
 console.log('\na basket that lost its VAT split')
@@ -575,7 +677,9 @@ check('a row with no VAT fields is flagged, not reported as zero VAT', () => {
 
   const vm = summaryVm([stale])
 
-  close(vm.cartPrice.totalPriceWithOffer, 699, 'the price still reads correctly')
+  // No figure is made up for a line the server has not priced: it counts for
+  // nothing until it is, and the summary shows a dash in the meantime.
+  close(vm.cartPrice.totalPriceWithOffer, 0, 'no price is invented for it')
   assert.strictEqual(vm.cartPrice.staleLines, 1, 'and the missing split is counted')
   assert.strictEqual(vm.hasStaleLines, true, 'so the summary declines to state VAT')
 })
@@ -629,6 +733,8 @@ function line(id, title, price, rate, inclusive, split, extra) {
     original_price: price,
     unit_price: price,
     line_list: price,
+    // one unit: the line IS one unit at quantity 1
+    unit_ex_vat: split[0], unit_vat: split[1], unit_inc_vat: split[2],
     line_ex_vat: split[0], line_vat: split[1], line_inc_vat: split[2],
     line_list_inc_vat: split[2],
     flash_product: { title },
@@ -765,8 +871,10 @@ check('two rates in one group each get their own VAT row, highest first', () => 
 })
 
 check('a quantity of two shows the unit price and the line total', () => {
+  // per unit: 1,000 = 813.01 + 186.99, so the line is 1,626.02 + 373.98
   const two = line(24, 'Two of them', 1000, 23, true, [1626.02, 373.98, 2000], {
     quantity: 2, line_list: 2000, line_list_inc_vat: 2000,
+    unit_ex_vat: 813.01, unit_vat: 186.99, unit_inc_vat: 1000,
   })
   const vm = summaryVm([two])
   const l = groupOf(vm, 'included').lines[0]
@@ -814,6 +922,10 @@ check('the group labels exist in all five languages', () => {
     'groups.lineIncluded', 'groups.lineAdded', 'groups.peekIncluded', 'groups.peekAdded',
     'groups.subtotalWithoutVat', 'groups.subtotalIncVat', 'groups.subtotalExVat',
     'groups.vatIncludedInPrices', 'groups.vatAdded', 'groups.atRate',
+    'flatRate', 'breakdown.subtotalEx', 'breakdown.vatIncluded',
+    'breakdown.vatAdded', 'breakdown.totalVat',
+    'breakdown.subtotalInc', 'explain.savingPriceLine', 'explain.savingFreeLine',
+    'explain.savingsGrossNote', 'explain.vatInsideAt', 'explain.vatAddedAt', 'explain.vatOnceNote',
   ]
 
   // Built at run time (`groups.${key}.title`) or used through <i18n path>, so

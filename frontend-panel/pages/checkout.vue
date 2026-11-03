@@ -463,6 +463,7 @@
         placingOrder: false,
         cartPrice: {
           totalPriceWithOffer: 0,
+          totalPrice: 0,
           shippingPrice: 0,
           exclusiveTax: 0,
           inclusiveTax: 0,
@@ -632,30 +633,24 @@
         return parseInt(this.paymentGateway?.card_payment) !== this.status.PUBLIC &&
           parseInt(this.paymentGateway?.cash_on_delivery) !== this.status.PUBLIC
       },
-      productPrice() {
-        return this.cartPrice.totalPriceWithOffer + this.cartPrice.shippingPrice + this.cartPrice.exclusiveTax
-      },
       flashDiscount() {
         return this.$store.getters['cart/flashDiscountAmount'] || 0
       },
       /*
-       * This is the figure the payment gateways are handed, so it has to match
-       * what the server will charge. The loyalty discount is taken off here for
-       * the same reason the flash discount is: an order priced without it
-       * charges the card the undiscounted amount and then records a discounted
-       * order, which is the mismatch the server refuses to confirm.
+       * The figure PaymentGateways is handed: the summary's own total, every
+       * order-wide discount taken off in the order's order (checkoutTotals.
+       * payable) - except points, which the gateway panel takes off itself.
+       *
+       * It used to be summed here a second time, as goods + shipping + VAT
+       * less the voucher, the flash discount and the loyalty discount. The
+       * Essentials Bundle discount was missing from that list, so the pay
+       * button and the SumUp checkout asked for more than the order came to.
+       * Card gateways are now charged the server's quote either way
+       * (CheckoutTotals::quote); this keeps the figure on the button equal to
+       * it.
        */
       totalPrice() {
-        if (this.productPrice) {
-          return Math.max(
-            this.productPrice
-            - this.cartPrice.voucher
-            - this.flashDiscount
-            - this.loyaltyDiscount,
-            0
-          )
-        }
-        return 0
+        return Number(this.cartPrice?.totalPrice) || 0
       },
       checkedProduct() {
         return this.cartProducts.filter(obj => {
@@ -971,7 +966,8 @@
           payload: {
             voucher: this.voucher,
             user_token: await this.getUserToken(),
-            price: this.cartPrice.totalPrice - this.flashDiscount + this.cartPrice.shippingPrice + this.cartPrice.exclusiveTax
+            // Not read by the server (QA audit CPN-02 prices the basket itself).
+            price: this.cartPrice.totalPrice
           },
           lang: this.langCode
         })

@@ -975,13 +975,17 @@ class MailHelper
      * purchase was a gift, otherwise the buyer. Records where each code went.
      * Never throws: a mail failure must not undo a paid purchase.
      */
-    public static function giftCardDelivery($order, $codes, $lang = null)
+    /**
+     * $to: a corrected address for a resend (GiftCardSalesController::resend).
+     * It changes where the email goes, never what kind of email it is: a card
+     * bought "for me" still reads as the buyer's own, a gift as a gift.
+     */
+    public static function giftCardDelivery($order, $codes, $lang = null, $to = null)
     {
-        $buyer = \App\Models\User::find($order->user_id);
+        $buyer = $order->user_id ? \App\Models\User::find($order->user_id) : null;
         $isGift = !empty($order->recipient_email);
-
-        $email = $isGift ? $order->recipient_email : optional($buyer)->email;
-        $name = $isGift ? ($order->recipient_name ?: $order->recipient_email) : optional($buyer)->name;
+        $email = $to ?: ($isGift ? $order->recipient_email : optional($buyer)->email);
+        $name = $isGift ? ($order->recipient_name ?: $email) : (optional($buyer)->name ?: $email);
 
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             \Illuminate\Support\Facades\Log::warning('Gift card email has no usable address', ['gift_order_id' => $order->id]);

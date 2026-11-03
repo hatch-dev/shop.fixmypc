@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GiftCardEvent;
+use App\Models\GiftVoucher;
 use App\Models\GiftVoucherCode;
+use App\Models\Helper\GiftCardAdmin;
+use App\Models\Helper\GiftCardHistory;
 use App\Models\Voucher;
 use App\Models\Helper\ControllerHelper;
 use App\Models\Helper\MailHelper;
@@ -27,6 +31,16 @@ use Illuminate\Support\Facades\Log;
  */
 class GiftCardSalesController extends ControllerHelper
 {
+    /**
+     * SQL: what a card is worth now - its voucher's gift_value once redeemed
+     * (staff may have changed it, GiftCardAdmin::adjustBalance), else the
+     * code's amount.
+     */
+    private static function valueSql()
+    {
+        return 'COALESCE((SELECT gv.gift_value FROM vouchers gv WHERE gv.id = gift_voucher_codes.voucher_id), gift_voucher_codes.amount)';
+    }
+
     /** SQL: what orders have taken off this code's voucher (0 if none). */
     private static function usedSql()
     {
@@ -37,7 +51,7 @@ class GiftCardSalesController extends ControllerHelper
     /** [state, spent, left] for one code, with used_amount selected. */
     private static function usage($c)
     {
-        $amount = round((float)$c->amount, 2);
+        $amount = round((float)($c->value_now ?? $c->amount), 2);
 
         if ($c->status !== GiftVoucherCode::REDEEMED) {
             return [$c->displayState(), 0.0, $c->displayState() === 'available' ? $amount : 0.0];
@@ -67,10 +81,11 @@ class GiftCardSalesController extends ControllerHelper
             }
 
             $used = self::usedSql();
-
+            $value = self::valueSql();
             $query = GiftVoucherCode::query()
                 ->select('gift_voucher_codes.*')
                 ->selectRaw("($used) AS used_amount")
+                ->selectRaw("($value) AS value_now")
                 ->with(['order.design:id,title', 'buyer:id,name,email', 'redeemer:id,name,email']);
 
             if ($request->q) {
@@ -104,12 +119,12 @@ class GiftCardSalesController extends ControllerHelper
                     $query->where('status', GiftVoucherCode::REDEEMED)
                         ->whereNotNull('voucher_id')
                         ->whereRaw("($used) > 0")
-                        ->whereRaw("($used) < gift_voucher_codes.amount");
+                        ->whereRaw("($used) < ($value)");
                     break;
                 case 'used_up':
                     $query->where('status', GiftVoucherCode::REDEEMED)
-                        ->where(function ($w) use ($used) {
-                            $w->whereNull('voucher_id')->orWhereRaw("($used) >= gift_voucher_codes.amount");
+                        ->where(function ($w) use ($used, $value) {
+                            $w->whereNull('voucher_id')->orWhereRaw("($used) >= ($value)");
                         });
                     break;
                 case 'void':
@@ -133,7 +148,12 @@ class GiftCardSalesController extends ControllerHelper
                 return [
                     'id'             => $c->id,
                     'code'           => $c->code,
-                    'amount'         => number_format((float)$c->amount, 2, '.', ''),
+                    'amount'         => number_format((float)$c->value_now, 2, '.', ''),
+                    'order_id'       => $c->gift_voucher_order_id,
+                    'order_status'   => optional($order)->status,
+                    'refundable'     => $order && in_array($order->payment_method, ['wallet', 'sumup'], true)
+                        && in_array($order->status, ['success', 'partially_refunded'], true)
+                        && $c->status === GiftVoucherCode::ACTIVE,
                     'design'         => optional(optional($order)->design)->title ?: '—',
                     'state'          => $state,
                     'spent'          => number_format($spent, 2, '.', ''),
@@ -168,11 +188,11 @@ class GiftCardSalesController extends ControllerHelper
                     COALESCE(SUM(CASE WHEN status = 'redeemed' THEN 1 ELSE 0 END), 0) as added,
                     COALESCE(SUM(CASE
                         WHEN status = 'redeemed' AND voucher_id IS NULL THEN amount
-                        WHEN status = 'redeemed' THEN LEAST(amount, $used)
+                        WHEN status = 'redeemed' THEN LEAST($value, $used)
                         ELSE 0 END), 0) as spent,
                     COALESCE(SUM(CASE
                         WHEN status = 'active' AND $live THEN amount
-                        WHEN status = 'redeemed' AND voucher_id IS NOT NULL AND $live THEN GREATEST(0, amount - ($used))
+                        WHEN status = 'redeemed' AND voucher_id IS NOT NULL AND $live THEN GREATEST(0, ($value) - ($used))
                         ELSE 0 END), 0) as outstanding
                 ")->first();
 
@@ -213,17 +233,31 @@ class GiftCardSalesController extends ControllerHelper
             }
 
             $order = $code->order;
-
-            // Staff may correct a mistyped recipient address before resending.
+            /*
+             * Staff may correct a mistyped address before resending. It goes
+             * on this card only (sent_to), never on the purchase: writing it
+             * to recipient_email turned a "for me" purchase into a gift, and
+             * redirected every other card in the purchase with it.
+             */
+            $to = null;
             if ($request->email) {
-                if (!filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
+                $to = trim((string)$request->email);
+                if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
                     return response()->json(Validation::error($request->token, 'That email address is not valid.'));
                 }
-                $order->recipient_email = $request->email;
-                $order->save();
             }
-
-            $sent = MailHelper::giftCardDelivery($order->fresh(), [$code]);
+            $before = $code->sent_to;
+            $sent = MailHelper::giftCardDelivery($order, [$code], null, $to);
+            if ($sent) {
+                GiftCardEvent::record([
+                    'gift_voucher_code_id'  => $code->id,
+                    'gift_voucher_order_id' => $order->id,
+                    'type'                  => GiftCardEvent::RESEND,
+                    'old_value'             => $before ? mb_substr($before, 0, 64) : null,
+                    'new_value'             => mb_substr((string)$code->fresh()->sent_to, 0, 64),
+                    'admin_id'              => optional($this->user)->id,
+                ]);
+            }
 
             return $sent
                 ? response()->json(new Response($request->token, true, 200, 'Gift card emailed again.'))
@@ -258,9 +292,19 @@ class GiftCardSalesController extends ControllerHelper
                         'This card has already been redeemed and cannot be voided.'));
                 }
 
+                if ($code->status === GiftVoucherCode::VOID) {
+                    return response()->json(Validation::error($request->token, 'This card is already void.'));
+                }
                 $code->update(['status' => GiftVoucherCode::VOID, 'void_reason' => $reason ?: 'Voided by staff']);
-
                 Log::info('Gift card voided', ['code_id' => $code->id, 'admin_id' => optional($this->user)->id, 'reason' => $reason]);
+                GiftCardEvent::record([
+                    'gift_voucher_code_id'  => $code->id,
+                    'gift_voucher_order_id' => $code->gift_voucher_order_id,
+                    'type'                  => GiftCardEvent::VOID,
+                    'amount'                => $code->amount,
+                    'reason'                => $reason ?: 'Voided by staff',
+                    'admin_id'              => optional($this->user)->id,
+                ]);
 
                 return response()->json(new Response($request->token, true, 200, 'Gift card voided.'));
             });
@@ -268,5 +312,84 @@ class GiftCardSalesController extends ControllerHelper
         } catch (\Exception $ex) {
             return response()->json(Validation::error($request->token, $ex->getMessage()));
         }
+    }
+    /** One card's history, with who did what and why. */
+    public function history(Request $request, $id = null)
+    {
+        if ($can = Utils::userCan($this->user, 'gift_card.view')) {
+            return $can;
+        }
+        $code = GiftVoucherCode::find($id ?: $request->id);
+        if (!$code) {
+            return response()->json(Validation::noDataLang(null));
+        }
+        $data = GiftCardHistory::for($code, true);
+        $order = $code->order;
+        $data['purchase'] = $order ? [
+            'id'             => $order->id,
+            'status'         => $order->status,
+            'payment_method' => $order->payment_method,
+            'total'          => number_format((float)$order->total, 2, '.', ''),
+            'quantity'       => (int)$order->quantity,
+        ] : null;
+        $data['log_ready'] = GiftCardEvent::available();
+        return response()->json(new Response($request->token, $data));
+    }
+
+    /** Designs staff may issue a card in, for the issue form. */
+    public function designs(Request $request)
+    {
+        if ($can = Utils::userCan($this->user, 'gift_card.view')) {
+            return $can;
+        }
+        $designs = GiftVoucher::orderBy('title')->get(['id', 'title', 'amounts', 'is_active']);
+        return response()->json(new Response($request->token, $designs));
+    }
+
+    /** Issue cards without a purchase. */
+    public function issue(Request $request)
+    {
+        if ($can = Utils::userCan($this->user, 'gift_card.edit')) {
+            return $can;
+        }
+        return $this->reply($request, GiftCardAdmin::issue($request->only([
+            'design_id', 'amount', 'quantity', 'expires_at', 'customer_email',
+            'recipient_name', 'recipient_email', 'sender_name', 'message', 'reason', 'send_email',
+        ]), optional($this->user)->id));
+    }
+
+    /** Add to or take from a card's balance. */
+    public function adjust(Request $request, $id = null)
+    {
+        if ($can = Utils::userCan($this->user, 'gift_card.edit')) {
+            return $can;
+        }
+        return $this->reply($request, GiftCardAdmin::adjustBalance($id ?: $request->id, $request->amount, $request->reason, optional($this->user)->id));
+    }
+
+    /** Move a card's expiry date. */
+    public function expiry(Request $request, $id = null)
+    {
+        if ($can = Utils::userCan($this->user, 'gift_card.edit')) {
+            return $can;
+        }
+        return $this->reply($request, GiftCardAdmin::changeExpiry($id ?: $request->id, $request->expires_at, $request->reason, optional($this->user)->id));
+    }
+
+    /** Refund the unredeemed cards of a purchase, the way it was paid. */
+    public function refund(Request $request, $orderId = null)
+    {
+        if ($can = Utils::userCan($this->user, 'gift_card.edit')) {
+            return $can;
+        }
+        return $this->reply($request, GiftCardAdmin::refundPurchase($orderId ?: $request->order_id, $request->reason, optional($this->user)->id));
+    }
+
+    private function reply(Request $request, array $result)
+    {
+        [$ok, $message, $data] = $result;
+        return $ok
+            ? response()->json(new Response($request->token, $data ?: true, 200, $message))
+            : response()->json(Validation::error($request->token, $message));
     }
 }

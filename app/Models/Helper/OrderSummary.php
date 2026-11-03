@@ -143,17 +143,14 @@ class OrderSummary
             $subtotal += $line['list_total'];
             $charged += $line['line_total'];
 
-            $subtotalIncVat += $line['vat_known']
-                ? Pricing::vatBreakdown(
-                    $line['list_total'], $line['vat_rate'], $line['vat_inclusive']
-                )['inc']
-                /*
-                 * An order placed before the treatment was recorded reports
-                 * the list price as it stands, which is what its own lines do
-                 * (see lines()). Inventing a rate for it here would be the
-                 * restatement those columns exist to prevent.
-                 */
-                : $line['list_total'];
+            /*
+             * The line's own gross list figure, on the per-unit rule. An order
+             * placed before the treatment was recorded reports the list price
+             * as it stands, which is what its own lines do (see lines()).
+             * Inventing a rate for it here would be the restatement those
+             * columns exist to prevent.
+             */
+            $subtotalIncVat += $line['list_inc_vat'];
             $discount += $line['discount'];
             $bundleOffer += $line['bundle_offer_value'];
             $shipping += $line['shipping_price'];
@@ -259,7 +256,8 @@ class OrderSummary
          * Rounded once, here, because the gross discount below is derived from
          * these two and has to leave them reconciling exactly.
          */
-        $incVat = Pricing::round($exVat - $bundleOffer + $vat);
+        // Each line's ex_vat is already the units paid for (see lines()).
+        $incVat = Pricing::round($exVat + $vat);
         $subtotalIncVat = Pricing::round($subtotalIncVat);
 
         return [
@@ -276,7 +274,7 @@ class OrderSummary
              * `vat` is the tax on them; `inc_vat` is the two together, before
              * the order-wide discounts below.
              */
-            'ex_vat' => Pricing::round($exVat - $bundleOffer),
+            'ex_vat' => Pricing::round($exVat),
             'vat' => Pricing::round($vat),
             'inc_vat' => $incVat,
 
@@ -286,7 +284,7 @@ class OrderSummary
              * Derived like its gross twin, so the identity holds exactly.
              */
             'subtotal_ex_vat' => Pricing::round($subtotalExVat),
-            'discount_ex_vat' => Pricing::round(Pricing::round($subtotalExVat) - Pricing::round($exVat - $bundleOffer)),
+            'discount_ex_vat' => Pricing::round(Pricing::round($subtotalExVat) - Pricing::round($exVat)),
 
             /*
              * The gross statement of the same goods, for a summary that leads
@@ -414,35 +412,48 @@ class OrderSummary
 
             $lineCharged = Pricing::round($charged * $quantity);
 
-            if ($knownTreatment) {
-                /*
-                 * Bundle freebies are not taxed (QA audit ORD-03), so an
-                 * exclusive line's VAT follows the payable quantity while its
-                 * ex-VAT value follows what the customer is billed for.
-                 */
-                $vatBase = $inclusive ? $lineCharged : Pricing::round($charged * $payableQty);
-                $split = Pricing::vatBreakdown($vatBase, $rate, $inclusive);
+            /*
+             * The units paid for, on the shop's one rounding rule
+             * (Pricing::lineVat): VAT per unit to the cent, times the payable
+             * quantity -- the rule the order charged it by and the basket
+             * states it by, so the two agree to the cent.
+             *
+             * Bundle freebies are neither charged nor taxed (QA audit ORD-03),
+             * so they are in none of these figures. An inc-VAT line used to be
+             * split on its FULL quantity, free units included, and then had
+             * the freebies' gross value taken off its NET total: 3 x 100.00
+             * with 1 free stated VAT 56.10 on 200.00 paid, where the VAT
+             * inside 200.00 is 37.40.
+             *
+             * An ex-VAT line's VAT is the VAT the order recorded adding per
+             * unit (tax_price), never re-derived from a rate -- which is also
+             * what makes a flat-amount rule come out right.
+             */
+            $split = ($knownTreatment && $inclusive)
+                ? Pricing::lineVatAt($charged, $payableQty, $rate, true)
+                : Pricing::lineVatAt($charged, $payableQty, 0, false, $unitTax);
 
-                $lineEx = $inclusive ? $split['ex'] : $lineCharged;
-                $lineVat = $split['vat'];
-
-            } else {
-                $lineEx = $lineCharged;
-                $lineVat = Pricing::round($unitTax * $payableQty);
-            }
+            $lineEx = $split['line_ex'];
+            $lineVat = $split['line_vat'];
 
             /*
-             * The list price through the same split as the charge. An order
-             * from before the treatment was recorded reports the list price
-             * as it stands, as subtotal_inc_vat does for the whole order.
+             * The list price through the same rule, over the FULL quantity --
+             * the saving against it then carries whatever a bundle gave away.
+             * An order from before the treatment was recorded reports the list
+             * price as it stands, as subtotal_inc_vat does for the whole order.
              */
             $listTotal = Pricing::round($listPrice * $quantity);
-            $lineList = $knownTreatment
-                ? Pricing::vatBreakdown($listTotal, $rate, $inclusive)
-                : ['ex' => $listTotal, 'inc' => $listTotal];
-            $unitList = $knownTreatment
-                ? Pricing::vatBreakdown(Pricing::round($listPrice), $rate, $inclusive)
-                : ['ex' => Pricing::round($listPrice), 'inc' => Pricing::round($listPrice)];
+
+            if ($knownTreatment) {
+                $listSplit = Pricing::lineVatAt($listPrice, $quantity, $rate, $inclusive,
+                    !$inclusive && $rate <= 0 ? $unitTax : 0.0);
+
+                $lineList = ['ex' => $listSplit['line_ex'], 'inc' => $listSplit['line_inc']];
+                $unitList = ['ex' => $listSplit['unit_ex'], 'inc' => $listSplit['unit_inc']];
+            } else {
+                $lineList = ['ex' => $listTotal, 'inc' => $listTotal];
+                $unitList = ['ex' => Pricing::round($listPrice), 'inc' => Pricing::round($listPrice)];
+            }
 
             $lines[] = [
                 'product_id' => (int)$product->product_id,
@@ -483,12 +494,8 @@ class OrderSummary
                 'vat_known' => $knownTreatment,
 
                 /* One unit, the same way, for the item rows. */
-                'unit_ex_vat' => $knownTreatment && $inclusive
-                    ? Pricing::vatBreakdown($charged, $rate, true)['ex']
-                    : Pricing::round($charged),
-                'unit_inc_vat' => $knownTreatment && $inclusive
-                    ? Pricing::round($charged)
-                    : Pricing::round($charged + $unitTax),
+                'unit_ex_vat' => $split['unit_ex'],
+                'unit_inc_vat' => $split['unit_inc'],
 
                 /*
                  * The list price and the discount off it, stated both ways,

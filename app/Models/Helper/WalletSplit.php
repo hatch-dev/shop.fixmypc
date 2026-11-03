@@ -84,6 +84,28 @@ class WalletSplit
     }
 
 
+    /**
+     * What apply() would take for $payable, without taking it: the balance,
+     * always leaving at least a cent for the chosen method. For the checkout
+     * quote a card gateway is charged from (CheckoutTotals::quote).
+     */
+    public static function preview($userId, $payable)
+    {
+        $payable = Pricing::round($payable);
+
+        if (!$userId || $payable <= 0) {
+            return 0;
+        }
+
+        $wallet = Wallet::where('user_id', $userId)->first();
+        $balance = $wallet ? Pricing::round($wallet->balance) : 0;
+
+        $take = Pricing::round(min($balance, $payable - 0.01));
+
+        return $take > 0 ? $take : 0;
+    }
+
+
     /** The wallet money this order still holds: debits less anything returned. */
     public static function held($order)
     {

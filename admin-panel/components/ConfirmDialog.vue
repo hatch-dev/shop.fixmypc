@@ -51,6 +51,7 @@
 
       <div class="confirm-actions">
         <button
+          v-if="!hideCancel"
           ref="cancelButton"
           type="button"
           class="confirm-btn confirm-btn--quiet"
@@ -58,6 +59,7 @@
           @click="$emit('cancel')"
         >{{ cancelLabel }}</button>
         <button
+          ref="confirmButton"
           type="button"
           class="confirm-btn"
           :class="tone === 'danger' ? 'confirm-btn--danger' : 'confirm-btn--primary'"
@@ -108,7 +110,9 @@
       /** The action is running: both buttons lock and the spinner shows. */
       busy: {type: Boolean, default: false},
       /** Not ready to confirm yet - still fetching what the act would affect. */
-      confirmDisabled: {type: Boolean, default: false}
+      confirmDisabled: {type: Boolean, default: false},
+      /** A notice rather than a question: one button, which acknowledges it. */
+      hideCancel: {type: Boolean, default: false}
     },
     data() {
       dialogSeq += 1
@@ -137,7 +141,8 @@
           document.body.style.overflow = 'hidden'
 
           this.$nextTick(() => {
-            if (this.$refs.cancelButton) this.$refs.cancelButton.focus()
+            const button = this.$refs.cancelButton || this.$refs.confirmButton
+            if (button) button.focus()
           })
 
           return

@@ -9,6 +9,8 @@ use App\Models\PointTransaction;
 use App\Models\GiftVoucher;
 use App\Models\GiftVoucherOrder;
 use App\Models\GiftVoucherCode;
+use App\Models\Helper\GiftCardHistory;
+use App\Models\Helper\GiftCardPurchases;
 use App\Models\Helper\MailHelper;
 use App\Models\Voucher;
 use Illuminate\Support\Facades\Config;
@@ -256,6 +258,7 @@ class WalletController extends Controller
      */
     private function giftVoucherLine(Request $request)
     {
+        $lang = $request->header('language');
         /*
          * Field by field, in words a customer can act on, and returned as
          * `errors` so the form can put each one under its own field. The
@@ -271,24 +274,24 @@ class WalletController extends Controller
             'sender_name'     => 'nullable|string|max:120',
             'message'         => 'nullable|string|max:300',
         ], [
-            'voucher_id.*'                 => 'Choose a gift card design.',
-            'amount.*'                     => 'Choose a value.',
-            'quantity.*'                   => 'Choose how many.',
-            'recipient_email.email'        => 'Enter a valid email address for the recipient.',
-            'recipient_email.max'          => 'That email address is too long.',
-            'recipient_name.required_with' => "Enter the recipient's name.",
-            'recipient_name.min'           => "The recipient's name looks too short.",
-            'recipient_name.max'           => "The recipient's name is too long (120 characters at most).",
-            'recipient_name.regex'         => "Enter the recipient's name in letters.",
-            'message.max'                  => 'Keep the message to 300 characters.',
+            'voucher_id.*'                 => __('lang.gc_design_required', [], $lang),
+            'amount.*'                     => __('lang.gc_amount_required', [], $lang),
+            'quantity.*'                   => __('lang.gc_quantity_required', [], $lang),
+            'recipient_email.email'        => __('lang.gc_recipient_email_invalid', [], $lang),
+            'recipient_email.max'          => __('lang.gc_recipient_email_long', [], $lang),
+            'recipient_name.required_with' => __('lang.gc_recipient_name_required', [], $lang),
+            'recipient_name.min'           => __('lang.gc_recipient_name_short', [], $lang),
+            'recipient_name.max'           => __('lang.gc_recipient_name_long', [], $lang),
+            'recipient_name.regex'         => __('lang.gc_recipient_name_letters', [], $lang),
+            'message.max'                  => __('lang.gc_message_long', [], $lang),
         ]);
 
         // A gift to your own address is a purchase for yourself.
-        $validator->after(function ($v) use ($request) {
+        $validator->after(function ($v) use ($request, $lang) {
             $buyer = Auth::user();
             if ($buyer && $request->recipient_email
                 && strcasecmp(trim($request->recipient_email), trim((string)$buyer->email)) === 0) {
-                $v->errors()->add('recipient_email', 'That is your own email address. Choose "For me" instead.');
+                $v->errors()->add('recipient_email', __('lang.gc_own_email', [], $lang));
             }
         });
 
@@ -302,7 +305,7 @@ class WalletController extends Controller
         $voucher = GiftVoucher::findOrFail($request->voucher_id);
 
         if (isset($voucher->is_active) && !$voucher->is_active) {
-            return [null, response()->json(['message' => 'This gift card is no longer available.'], 422)];
+            return [null, response()->json(['message' => __('lang.gc_unavailable', [], $lang)], 422)];
         }
 
         $offered = collect(is_array($voucher->amounts) ? $voucher->amounts : (json_decode($voucher->amounts, true) ?: []))
@@ -312,11 +315,11 @@ class WalletController extends Controller
         $quantity = (int)$request->quantity;
 
         if (!$offered->contains($unit)) {
-            return [null, response()->json(['message' => 'That amount is not available for this gift card.'], 422)];
+            return [null, response()->json(['message' => __('lang.gc_amount_unavailable', [], $lang)], 422)];
         }
 
         if ($quantity < (int)$voucher->min_quantity || $quantity > (int)$voucher->max_quantity) {
-            return [null, response()->json(['message' => "Choose between {$voucher->min_quantity} and {$voucher->max_quantity}."], 422)];
+            return [null, response()->json(['message' => __('lang.gc_quantity_range', ['min' => $voucher->min_quantity, 'max' => $voucher->max_quantity], $lang)], 422)];
         }
 
         $recipient = [
@@ -338,7 +341,7 @@ class WalletController extends Controller
     public function purchaseGiftVoucher(Request $request)
     {
         if ($request->payment_method !== 'wallet') {
-            return response()->json(['message' => 'Card payments are completed at checkout.'], 422);
+            return response()->json(['message' => __('lang.gc_card_at_checkout', [], $request->header('language'))], 422);
         }
 
         [$line, $refusal] = $this->giftVoucherLine($request);
@@ -386,14 +389,14 @@ class WalletController extends Controller
         });
 
         if (!$result) {
-            return response()->json(['message' => 'There is not enough in your wallet for this purchase.'], 422);
+            return response()->json(['message' => __('lang.gc_wallet_short', [], $request->header('language'))], 422);
         }
 
         [$order, $codes, $newBalance] = $result;
-        $sent = MailHelper::giftCardDelivery($order, $codes);
-
+        $lang = $request->header('language');
+        $sent = MailHelper::giftCardDelivery($order, $codes, $lang);
         return response()->json([
-            'message' => $this->purchasedMessage($order, count($codes), $sent),
+            'message' => $this->purchasedMessage($order, count($codes), $sent, $lang),
             'balance' => $newBalance,
         ]);
     }
@@ -428,7 +431,7 @@ class WalletController extends Controller
 
         if (empty($checkout['id'])) {
             Log::warning('Gift card checkout could not be created', ['response' => $checkout]);
-            return response()->json(['message' => 'We could not start the payment. Please try again.'], 422);
+            return response()->json(['message' => __('lang.gc_start_failed', [], $request->header('language'))], 422);
         }
 
         GiftVoucherOrder::create(array_merge([
@@ -446,74 +449,107 @@ class WalletController extends Controller
     }
 
     /**
-     * Card purchase, step 2: once SumUp says the checkout was paid, for the
-     * pending purchase's total, mark it paid and issue the codes. Safe to
-     * call twice.
+     * Card purchase, step 2: the customer's browser is back from SumUp. Ask
+     * SumUp where the checkout stands and, if it was paid for this
+     * purchase's total, issue the codes (GiftCardPurchases::settle). The
+     * same settling runs when SumUp notifies us (sumupGiftCardNotify) and on
+     * a schedule (gift-cards:reconcile-payments), so the codes no longer
+     * depend on the customer coming back. Safe to call any number of times.
      */
     public function confirmGiftVoucher(Request $request)
     {
         $request->validate(['checkout_id' => 'required|string|max:100']);
-
+        $lang = $request->header('language');
         $user = Auth::user();
         $order = GiftVoucherOrder::where('reference', $request->checkout_id)
             ->where('user_id', $user->id)
             ->first();
-
         if (!$order) {
-            return response()->json(['message' => 'We could not find this gift card purchase.'], 422);
+            return response()->json(['message' => __('lang.gc_purchase_missing', [], $lang)], 422);
         }
-
-        if ($order->status === 'success') {
-            return response()->json(['message' => $this->purchasedMessage($order, $order->quantity, true)]);
+        $result = GiftCardPurchases::settleAndDeliver($order, $lang);
+        switch ($result['state']) {
+            case 'paid':
+                $fresh = $order->fresh();
+                return response()->json(['message' => $this->purchasedMessage($fresh, $fresh->quantity, $result['sent'], $lang)]);
+            case 'pending':
+                return response()->json(['message' => __('lang.gc_pending', [], $lang), 'pending' => true], 202);
+            case 'unconfirmed':
+                Log::warning('Gift card card payment refused', ['gift_order_id' => $order->id, 'reason' => 'charged but does not match']);
+                return response()->json(['message' => __('lang.gc_unconfirmed', [], $lang)], 422);
+            default:
+                // failed or cancelled: SumUp never took the money
+                return response()->json(['message' => __('lang.gc_not_charged', [], $lang)], 422);
         }
-
-        $verified = GatewayVerifier::verifySumup(Payment::first(), $request->checkout_id, (float)$order->total, 'EUR');
-        $isGift = strpos((string)($verified['checkout']['description'] ?? ''), 'Gift Voucher Purchase #') === 0;
-
-        if (!$verified['ok'] || !$isGift) {
-            Log::warning('Gift card card payment refused', [
-                'gift_order_id' => $order->id,
-                'reason'        => $verified['reason'] ?? 'checkout is not a gift card purchase',
-            ]);
-
-            /*
-             * "charged" is false for a declined or unpaid checkout: say so
-             * rather than telling the customer to contact us about a charge
-             * that never happened.
-             */
-            return response()->json([
-                'message' => empty($verified['charged'])
-                    ? 'The payment did not go through, so nothing was charged. Please try again.'
-                    : 'We could not confirm this payment. Your card may have been charged; please contact us.'
-            ], 422);
-        }
-
-        $codes = DB::transaction(function () use ($order) {
-            $locked = GiftVoucherOrder::where('id', $order->id)->lockForUpdate()->first();
-
-            if ($locked->status === 'success') {
-                return null;
-            }
-
-            $locked->update(['status' => 'success']);
-            return GiftVoucherCode::issueFor($locked);
-        });
-
-        $sent = $codes ? MailHelper::giftCardDelivery($order->fresh(), $codes) : true;
-
-        return response()->json(['message' => $this->purchasedMessage($order, $order->quantity, $sent)]);
     }
 
-    private function purchasedMessage($order, $count, $sent)
+    /**
+     * SumUp's notification that a gift card checkout changed (the checkout's
+     * return_url). It carries the checkout id and nothing we would trust: the
+     * purchase is settled by asking SumUp directly, exactly as the browser's
+     * confirm does, so a forged or repeated call can at most make us look
+     * again. Always answers 200 with nothing about the purchase in it.
+     */
+    public function sumupGiftCardNotify(Request $request)
+    {
+        $checkoutId = (string)($request->input('id') ?: $request->input('checkout_id'));
+        if ($checkoutId !== '' && strlen($checkoutId) <= 100) {
+            $order = GiftVoucherOrder::where('reference', $checkoutId)
+                ->where('payment_method', 'sumup')
+                ->first();
+            if ($order) {
+                try {
+                    GiftCardPurchases::settleAndDeliver($order);
+                } catch (\Throwable $e) {
+                    Log::error('Gift card SumUp notification could not be settled', [
+                        'gift_order_id' => $order->id, 'message' => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+        return response()->json(['ok' => true]);
+    }
+
+    private function purchasedMessage($order, $count, $sent, $lang = null)
     {
         if ($order->recipient_email) {
-            return $sent
-                ? ($count > 1 ? "$count gift cards" : "Your gift card") . " went to {$order->recipient_email}."
-                : "Bought, but we could not email {$order->recipient_email}. The codes are in My gift cards.";
+            if (!$sent) {
+                return __('lang.gc_email_failed', ['email' => $order->recipient_email], $lang);
+            }
+            return $count > 1
+                ? __('lang.gc_sent_many', ['count' => $count, 'email' => $order->recipient_email], $lang)
+                : __('lang.gc_sent_one', ['email' => $order->recipient_email], $lang);
         }
+        if ($count > 1) {
+            return __($sent ? 'lang.gc_ready_many_inbox' : 'lang.gc_ready_many', ['count' => $count], $lang);
+        }
+        return __($sent ? 'lang.gc_ready_one_inbox' : 'lang.gc_ready_one', [], $lang);
+    }
 
-        return ($count > 1 ? "$count gift cards are" : "Your gift card is") . " ready: see My gift cards"
-            . ($sent ? " (and your inbox)." : ".");
+    /**
+     * One of the customer's gift cards, start to finish: bought, emailed,
+     * added to vouchers, spent, given back, changed by staff. Theirs if they
+     * bought it or redeemed it. By code id (My gift cards) or by the voucher
+     * it became (the voucher list).
+     */
+    public function giftCardHistory(Request $request)
+    {
+        $user = Auth::user();
+        $query = GiftVoucherCode::query();
+        if ($request->code_id) {
+            $query->where('id', (int)$request->code_id);
+        } elseif ($request->voucher_id) {
+            $query->where('voucher_id', (int)$request->voucher_id);
+        } else {
+            return response()->json(['message' => __('lang.gc_not_found', [], $request->header('language'))], 422);
+        }
+        $code = $query->where(function ($w) use ($user) {
+            $w->where('buyer_user_id', $user->id)->orWhere('redeemed_by', $user->id);
+        })->first();
+        if (!$code) {
+            return response()->json(['message' => __('lang.gc_not_found', [], $request->header('language'))], 404);
+        }
+        return response()->json(['status' => 200, 'data' => GiftCardHistory::for($code, false)]);
     }
 
     /** The gift cards this customer has bought, one row per code. */
@@ -555,7 +591,7 @@ class WalletController extends Controller
     {
         $request->validate(['code' => 'required|string|max:40']);
 
-        [$ok, $message, $voucher] = GiftVoucherCode::redeem($request->code, Auth::user());
+        [$ok, $message, $voucher] = GiftVoucherCode::redeem($request->code, Auth::user(), $request->header('language'));
 
         return $ok
             ? response()->json(['status' => 200, 'message' => $message, 'voucher_code' => $voucher->code])

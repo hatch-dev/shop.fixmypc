@@ -86,12 +86,14 @@ class ListingPrices
             $vat = $vatMap->get($product->id ?? null)
                 ?: ['rate' => 0.0, 'inclusive' => true];
 
-            $split = Pricing::vatBreakdown($range['min'], $vat['rate'], $vat['inclusive']);
+            // One unit on the basket's own rule, flat-amount rules included.
+            $split = Pricing::lineVatAt($range['min'], 1, $vat['rate'], $vat['inclusive'], $vat['flat'] ?? 0.0);
 
-            $product->display_price_ex_vat = $split['ex'];
-            $product->display_price_vat = $split['vat'];
-            $product->display_price_inc_vat = $split['inc'];
+            $product->display_price_ex_vat = $split['unit_ex'];
+            $product->display_price_vat = $split['unit_vat'];
+            $product->display_price_inc_vat = $split['unit_inc'];
             $product->vat_rate = $split['rate'];
+            $product->vat_flat = $split['flat'];
             $product->vat_inclusive = $split['inclusive'];
         }
 
@@ -239,6 +241,7 @@ class ListingPrices
 
             $map[$item->id] = [
                 'rate' => Pricing::vatRate($rule),
+                'flat' => Pricing::isFlatRule($rule) ? (float)$rule->price : 0.0,
                 'inclusive' => Pricing::isVatInclusive($row),
             ];
         }

@@ -56,6 +56,8 @@ export default {
     {src: '~/plugins/nuxt-client-init.js', ssr: false},
     {src: '~/plugins/back-handler.js', mode: 'client'},
     { src: '~/plugins/toast.js', mode: 'client' },
+    // this.$dialog: confirm / alert / prompt in place of the browser's own.
+    { src: '~/plugins/dialog.js', mode: 'client' },
     // A placeholder wherever an image fails to load.
     { src: '~/plugins/image-placeholder.js', mode: 'client' }
   ],
