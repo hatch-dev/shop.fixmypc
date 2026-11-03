@@ -19,8 +19,8 @@ Pages have no browser tests yet; the page lists are the plan for the Playwright 
 | 1 | [Cart & pricing](#cart--pricing) | 32 | 13 | 12 | 7 | 3 |
 | 1 | [Checkout & payments](#checkout--payments) | 14 | 5 | 3 | 6 | 7 |
 | 1 | [Orders, POS & after-sales](#orders-pos--after-sales) | 42 | 15 | 9 | 18 | 10 |
-| 1 | [Wallet, gift cards & loyalty](#wallet-gift-cards--loyalty) | 51 | 15 | 12 | 24 | 9 |
-| 1 | [Promotions](#promotions) | 53 | 0 | 39 | 14 | 21 |
+| 1 | [Wallet, gift cards & loyalty](#wallet-gift-cards--loyalty) | 59 | 26 | 9 | 24 | 9 |
+| 1 | [Promotions](#promotions) | 53 | 3 | 39 | 11 | 21 |
 | 1 | [Tax, shipping & payment settings](#tax-shipping--payment-settings) | 16 | 1 | 3 | 12 | 6 |
 | 2 | [Catalogue & browsing](#catalogue--browsing) | 96 | 5 | 33 | 58 | 33 |
 | 2 | [Procurement & suppliers](#procurement--suppliers) | 10 | 0 | 9 | 1 | 4 |
@@ -30,7 +30,7 @@ Pages have no browser tests yet; the page lists are the plan for the Playwright 
 | 3 | [Reviews, messages & newsletter](#reviews-messages--newsletter) | 19 | 0 | 1 | 18 | 5 |
 | 3 | [Sellers, stores & withdrawals](#sellers-stores--withdrawals) | 17 | 0 | 0 | 17 | 6 |
 | 3 | [Installer, OAuth & framework](#installer-oauth--framework) | 33 | 0 | 0 | 33 | 0 |
-| | **Total** | **572** | **71** | **139** | **362** | **169** |
+| | **Total** | **580** | **85** | **136** | **359** | **169** |
 
 ## Access review
 
@@ -193,7 +193,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ⬜ | POST | `api/admin/product-upgrades/preview/{id}` | ProductUpgradeConfigController@preview | admin |  |
 | ⬜ | POST | `api/admin/product-upgrades/ranks` | ProductUpgradeConfigController@saveRanks | admin |  |
 | 🟡 | GET | `api/v1/business-product/{id}` | FrontendController@businessProduct | anyone (sign-in optional) | AccountTypeApiTest, BusinessPricingAdminTest, BusinessPricingBoundaryTest +5 |
-| ✅ | POST | `api/v1/cart/action` | CartsController@action | anyone (sign-in optional) | AccountUpgradeApiTest, BasketActivityTest, BuyNowBasketTest +26 |
+| ✅ | POST | `api/v1/cart/action` | CartsController@action | anyone (sign-in optional) | AccountUpgradeApiTest, BasketActivityTest, BuyNowBasketTest +27 |
 | ✅ | POST | `api/v1/cart/activity` | CartsController@activity | anyone (sign-in optional) | BasketActivityTest |
 | 🟡 | POST | `api/v1/cart/bundle` | CartsController@addBundle | anyone (sign-in optional) | BundleAuditTest, BundleCheckoutTest, BundleStockTest +3 |
 | 🟡 | GET | `api/v1/cart/bundle-discount` | CartsController@bundleDiscount | anyone (sign-in optional) | BundleCheckoutTest, SampleBundleWalkthroughTest |
@@ -233,7 +233,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ⬜ | POST | `api/v1/guest/verify-email/check` | GuestUsersController@verifyCheckoutCode | anyone (sign-in optional) |  |
 | ⬜ | POST | `api/v1/iyzico-callback` | IyzicoPaymentController@callback | anyone (sign-in optional) |  |
 | ⬜ | GET | `api/v1/iyzico-redirect` | IyzicoPaymentController@redirect | anyone (sign-in optional) |  |
-| ✅ | POST | `api/v1/order/action` | OrdersController@action | anyone (sign-in optional) | BasketActivityTest, BuyNowBasketTest, CartReservationTest +24 |
+| ✅ | POST | `api/v1/order/action` | OrdersController@action | anyone (sign-in optional) | BasketActivityTest, BuyNowBasketTest, CartReservationTest +25 |
 | ⬜ | POST | `api/v1/order/payfast-notify` | OrdersController@payFastNotify | anyone (sign-in optional) |  |
 | ✅ | POST | `api/v1/order/payment-done` | OrdersController@paymentDone | anyone (sign-in optional) | StripeCheckoutTest, BankTransferFlowTest |
 | ✅ | POST | `api/v1/order/stripe-authorise` | StripeCheckoutController@authorise | anyone (sign-in optional) | StripePayFirstTest |
@@ -317,12 +317,18 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Wallet, gift cards & loyalty
 
-**API**: 51 routes · ✅ 15 · 🟡 12 · ⬜ 24
+**API**: 59 routes · ✅ 26 · 🟡 9 · ⬜ 24
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
+| ✅ | POST | `api/admin/gift-card/adjust/{id?}` | GiftCardSalesController@adjust | admin | GiftCardStabilisationTest |
 | 🟡 | GET | `api/admin/gift-card/all` | GiftCardSalesController@all | admin | GiftCardTest |
-| ⬜ | POST | `api/admin/gift-card/resend/{id?}` | GiftCardSalesController@resend | admin |  |
+| ⬜ | GET | `api/admin/gift-card/designs` | GiftCardSalesController@designs | admin |  |
+| ✅ | POST | `api/admin/gift-card/expiry/{id?}` | GiftCardSalesController@expiry | admin | GiftCardStabilisationTest |
+| ✅ | GET | `api/admin/gift-card/history/{id?}` | GiftCardSalesController@history | admin | GiftCardStabilisationTest |
+| ✅ | POST | `api/admin/gift-card/issue` | GiftCardSalesController@issue | admin | GiftCardStabilisationTest |
+| ✅ | POST | `api/admin/gift-card/refund/{orderId?}` | GiftCardSalesController@refund | admin | GiftCardStabilisationTest |
+| ✅ | POST | `api/admin/gift-card/resend/{id?}` | GiftCardSalesController@resend | admin | GiftCardStabilisationTest |
 | ⬜ | POST | `api/admin/gift-card/void/{id?}` | GiftCardSalesController@void | admin |  |
 | ⬜ | POST | `api/admin/gift-voucher/action/{id?}` | GiftVoucherController@store | admin |  |
 | ⬜ | GET | `api/admin/gift-voucher/all` | GiftVoucherController@index | admin |  |
@@ -345,8 +351,10 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ✅ | POST | `api/admin/memberships/grant` | MembershipMemberController@grant | admin | MembershipTest |
 | ⬜ | GET | `api/admin/memberships/stats` | MembershipMemberController@stats | admin |  |
 | ✅ | GET | `api/admin/wallet-overview/all` | WalletOverviewController@all | admin | AdminBulkWalletBarcodeTest |
+| ✅ | POST | `api/v1/sumup/gift-card-notify` | WalletController@sumupGiftCardNotify | anyone | GiftCardStabilisationTest |
+| ✅ | GET | `api/v1/user/gift-card-history` | WalletController@giftCardHistory | customer | GiftCardStabilisationTest |
 | 🟡 | GET | `api/v1/user/gift-voucher-codes` | WalletController@giftCodes | customer | GiftCardTest |
-| 🟡 | POST | `api/v1/user/gift-voucher-codes/redeem` | WalletController@redeemGiftCode | customer | GiftCardTest |
+| ✅ | POST | `api/v1/user/gift-voucher-codes/redeem` | WalletController@redeemGiftCode | customer | GiftCardStabilisationTest, GiftCardTest |
 | ⬜ | GET | `api/v1/user/gift-vouchers` | FrontendController@getGiftVouchers | anyone (sign-in optional) ⚠️ |  |
 | ✅ | GET | `api/v1/user/loyalty-discount` | LoyaltyController@current | customer | CheckoutVatConsistencyTest, MembershipTest, SuspendedAccountAccessTest |
 | ✅ | GET | `api/v1/user/membership` | MembershipController@show | customer | MembershipTest |
@@ -362,8 +370,8 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ✅ | GET | `api/v1/user/points` | WalletController@getPoints | customer | SignInLifetimeTest, AdminOrderDetailTest, SaversClubTest |
 | 🟡 | GET | `api/v1/user/points/history` | WalletController@pointsHistory | customer | SaversClubTest |
 | 🟡 | POST | `api/v1/user/purchase-gift-voucher` | WalletController@purchaseGiftVoucher | customer | GiftCardTest |
-| 🟡 | POST | `api/v1/user/purchase-gift-voucher/confirm` | WalletController@confirmGiftVoucher | customer | GiftCardTest |
-| 🟡 | POST | `api/v1/user/purchase-gift-voucher/start` | WalletController@startGiftCardCheckout | customer | GiftCardTest |
+| ✅ | POST | `api/v1/user/purchase-gift-voucher/confirm` | WalletController@confirmGiftVoucher | customer | GiftCardStabilisationTest, GiftCardTest |
+| ✅ | POST | `api/v1/user/purchase-gift-voucher/start` | WalletController@startGiftCardCheckout | customer | GiftCardStabilisationTest, GiftCardTest |
 | 🟡 | GET | `api/v1/user/savings` | WalletController@savings | customer | LifetimeSavingsTest |
 | 🟡 | GET | `api/v1/user/user-vouchers` | UsersController@vouchers | anyone (sign-in optional) ⚠️ | GiftCardTest |
 | ⬜ | GET | `api/v1/user/wallet` | WalletController@getWallet | customer |  |
@@ -387,7 +395,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Promotions
 
-**API**: 53 routes · ✅ 0 · 🟡 39 · ⬜ 14
+**API**: 53 routes · ✅ 3 · 🟡 39 · ⬜ 11
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
@@ -428,10 +436,10 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | 🟡 | GET | `api/admin/upsell/find/{id}` | UpsellCampaignsController@find | admin | UpsellCampaignAdminTest |
 | 🟡 | GET | `api/admin/upsell/products` | UpsellCampaignsController@searchProducts | admin | UpsellCampaignAdminTest |
 | 🟡 | POST | `api/admin/upsell/toggle` | UpsellCampaignsController@toggle | admin | UpsellCampaignAdminTest |
-| ⬜ | POST | `api/admin/voucher/action/{id?}` | VouchersController@action | admin |  |
+| ✅ | POST | `api/admin/voucher/action/{id?}` | VouchersController@action | admin | GiftCardStabilisationTest |
 | ⬜ | GET | `api/admin/voucher/all` | VouchersController@all | admin |  |
-| ⬜ | DELETE | `api/admin/voucher/delete/{id}` | VouchersController@delete | admin |  |
-| ⬜ | GET | `api/admin/voucher/find/{id}` | VouchersController@find | admin |  |
+| ✅ | DELETE | `api/admin/voucher/delete/{id}` | VouchersController@delete | admin | GiftCardStabilisationTest |
+| ✅ | GET | `api/admin/voucher/find/{id}` | VouchersController@find | admin | GiftCardStabilisationTest |
 | ⬜ | POST | `api/admin/voucher/validity` | VouchersController@validity | admin |  |
 | ⬜ | GET | `api/upsells/active` | UpsellController@getActiveUpsells | anyone |  |
 | ⬜ | GET | `api/upsells/{upsell_id}/products` | UpsellController@findProducts | anyone |  |

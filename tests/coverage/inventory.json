@@ -1427,6 +1427,21 @@
             }
         },
         {
+            "method": "POST",
+            "uri": "api/admin/gift-card/adjust/{id?}",
+            "handler": "GiftCardSalesController@adjust",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/GiftCardStabilisationTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
             "method": "GET",
             "uri": "api/admin/gift-card/all",
             "handler": "GiftCardSalesController@all",
@@ -1442,6 +1457,79 @@
             }
         },
         {
+            "method": "GET",
+            "uri": "api/admin/gift-card/designs",
+            "handler": "GiftCardSalesController@designs",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/gift-card/expiry/{id?}",
+            "handler": "GiftCardSalesController@expiry",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/GiftCardStabilisationTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/admin/gift-card/history/{id?}",
+            "handler": "GiftCardSalesController@history",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/GiftCardStabilisationTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/gift-card/issue",
+            "handler": "GiftCardSalesController@issue",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/GiftCardStabilisationTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/gift-card/refund/{orderId?}",
+            "handler": "GiftCardSalesController@refund",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/GiftCardStabilisationTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
             "method": "POST",
             "uri": "api/admin/gift-card/resend/{id?}",
             "handler": "GiftCardSalesController@resend",
@@ -1450,7 +1538,9 @@
             "access": "admin",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/GiftCardStabilisationTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -4676,7 +4766,9 @@
             "access": "admin",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/GiftCardStabilisationTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -4702,7 +4794,9 @@
             "access": "admin",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/GiftCardStabilisationTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -4715,7 +4809,9 @@
             "access": "admin",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/GiftCardStabilisationTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -5366,6 +5462,7 @@
                     "Isolated/BuyNowBasketTest.php",
                     "Isolated/CartReservationTest.php",
                     "Isolated/CartTraceTest.php",
+                    "Isolated/GiftCardStabilisationTest.php",
                     "Isolated/NewProductAlertsTest.php",
                     "Isolated/OrderNumberTest.php"
                 ],
@@ -6065,6 +6162,7 @@
                     "Isolated/BuyNowBasketTest.php",
                     "Isolated/CartReservationTest.php",
                     "Isolated/CheckoutVatConsistencyTest.php",
+                    "Isolated/GiftCardStabilisationTest.php",
                     "Isolated/MembershipTest.php",
                     "Isolated/OrderNumberTest.php",
                     "Isolated/StripePayFirstTest.php",
@@ -6633,6 +6731,21 @@
             }
         },
         {
+            "method": "POST",
+            "uri": "api/v1/sumup/gift-card-notify",
+            "handler": "WalletController@sumupGiftCardNotify",
+            "module": "wallet",
+            "tier": 1,
+            "access": "anyone",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/GiftCardStabilisationTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
             "method": "GET",
             "uri": "api/v1/towns",
             "handler": "FrontendController@towns",
@@ -6822,6 +6935,21 @@
         },
         {
             "method": "GET",
+            "uri": "api/v1/user/gift-card-history",
+            "handler": "WalletController@giftCardHistory",
+            "module": "wallet",
+            "tier": 1,
+            "access": "customer",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/GiftCardStabilisationTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
             "uri": "api/v1/user/gift-voucher-codes",
             "handler": "WalletController@giftCodes",
             "module": "wallet",
@@ -6844,7 +6972,9 @@
             "access": "customer",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/GiftCardStabilisationTest.php"
+                ],
                 "legacy": [
                     "Feature/GiftCardTest.php"
                 ]
@@ -7203,7 +7333,9 @@
             "access": "customer",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/GiftCardStabilisationTest.php"
+                ],
                 "legacy": [
                     "Feature/GiftCardTest.php"
                 ]
@@ -7218,7 +7350,9 @@
             "access": "customer",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/GiftCardStabilisationTest.php"
+                ],
                 "legacy": [
                     "Feature/GiftCardTest.php"
                 ]

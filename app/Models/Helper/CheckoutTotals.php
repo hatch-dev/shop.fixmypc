@@ -159,7 +159,7 @@ class CheckoutTotals
         }
 
         if ($voucher->isGiftCard() && $voucher->giftBalance() <= 0) {
-            return $refuse('This gift card has been used up.');
+            return $refuse(__('lang.gc_used_up', [], $lang));
         }
 
         $now = Carbon::now();

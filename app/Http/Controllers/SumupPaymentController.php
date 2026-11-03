@@ -78,11 +78,7 @@ class SumupPaymentController extends Controller
             }
 
             $paymentSettings = Payment::first();
-
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $paymentSettings->sumup_api_key,
-                'Content-Type'  => 'application/json'
-            ])->post('https://api.sumup.com/v0.1/checkouts', [
+            $checkout = [
                 'checkout_reference' => $checkout_reference,
                 'amount' => $amount,
                 'currency' => $request->currency,
@@ -90,7 +86,21 @@ class SumupPaymentController extends Controller
                 'redirect_url' => env('APP_URL') . "/checkout",
                 'description' => $description,
                 'merchant_code' => $paymentSettings->sumup_merchant_code
-            ]);
+            ];
+            /*
+             * A gift card purchase also asks SumUp to tell us when the checkout
+             * changes (return_url), so its codes are issued even if the
+             * customer never comes back to the site. The notification is only
+             * a prompt: WalletController::sumupGiftCardNotify asks SumUp what
+             * happened before anything is issued.
+             */
+            if (!empty($request->is_gift_voucher)) {
+                $checkout['return_url'] = rtrim((string)env('APP_URL'), '/') . '/api/v1/sumup/gift-card-notify';
+            }
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $paymentSettings->sumup_api_key,
+                'Content-Type'  => 'application/json'
+            ])->post('https://api.sumup.com/v0.1/checkouts', $checkout);
 
             $body = $response->json();
 

@@ -284,6 +284,13 @@ Route::group([
             Route::get('all', [\App\Http\Controllers\GiftCardSalesController::class, 'all']);
             Route::post('resend/{id?}', [\App\Http\Controllers\GiftCardSalesController::class, 'resend']);
             Route::post('void/{id?}', [\App\Http\Controllers\GiftCardSalesController::class, 'void']);
+            // one card's story; staff issue, balance, expiry and refund (2026-11-03)
+            Route::get('history/{id?}', [\App\Http\Controllers\GiftCardSalesController::class, 'history']);
+            Route::get('designs', [\App\Http\Controllers\GiftCardSalesController::class, 'designs']);
+            Route::post('issue', [\App\Http\Controllers\GiftCardSalesController::class, 'issue']);
+            Route::post('adjust/{id?}', [\App\Http\Controllers\GiftCardSalesController::class, 'adjust']);
+            Route::post('expiry/{id?}', [\App\Http\Controllers\GiftCardSalesController::class, 'expiry']);
+            Route::post('refund/{orderId?}', [\App\Http\Controllers\GiftCardSalesController::class, 'refund']);
         });
 
         Route::group([
@@ -1026,6 +1033,13 @@ Route::post('v1/stripe/webhook', [StripeWebhookController::class, 'handle']);
  */
 Route::post('v1/aftership/webhook', [\App\Http\Controllers\AfterShipWebhookController::class, 'handle']);
 
+/*
+ * SumUp's notification that a gift card checkout changed (the checkout's
+ * return_url). No token of ours, and none needed: it only makes the server
+ * ask SumUp about that checkout (WalletController::sumupGiftCardNotify).
+ */
+Route::post('v1/sumup/gift-card-notify', [WalletController::class, 'sumupGiftCardNotify'])->middleware('throttle:60,1');
+
 Route::group([
     'prefix' => 'v1',
     // QA audit SEC-02: guest tokens must be ones the server issued.
@@ -1417,6 +1431,8 @@ Route::group([
             // the codes bought, and adding a code (bought or given) to your vouchers
             Route::get('gift-voucher-codes', [WalletController::class, "giftCodes"]);
             Route::post('gift-voucher-codes/redeem', [WalletController::class, "redeemGiftCode"])->middleware('throttle:10,1');
+            // one of your gift cards, start to finish
+            Route::get('gift-card-history', [WalletController::class, "giftCardHistory"]);
 
             Route::get('product/qualifying', [FrontendController::class, "qualifyingProducts"]);
 

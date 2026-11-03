@@ -22,6 +22,9 @@
       </div>
     </div>
 
+    <div v-if="$can('gift_card', 'edit')" class="gc-toolbar">
+      <button type="button" class="primary-btn gc-issue-btn" @click="issuing = true">{{ $t('pages.giftCards.issue') }}</button>
+    </div>
     <div class="gc-filters" role="tablist" :aria-label="$t('pages.giftCards.filterByStatus')">
       <button
         v-for="f in filters"
@@ -76,7 +79,7 @@
               <span class="gc-sub">{{ item.buyer.email }}</span>
             </template>
             <span v-else class="gc-sub">{{ $t('pages.giftCards.accountRemoved') }}</span>
-            <span class="gc-sub">{{ item.payment_method === 'wallet' ? $t('pages.giftCards.paidByWallet') : $t('pages.giftCards.paidByCard') }}</span>
+            <span class="gc-sub">{{ item.payment_method === 'wallet' ? $t('pages.giftCards.paidByWallet') : item.payment_method === 'admin' ? $t('pages.giftCards.issuedByStaff') : $t('pages.giftCards.paidByCard') }}</span>
           </td>
 
           <td>
@@ -116,6 +119,7 @@
           <td>{{ item.created }}</td>
 
           <td class="gc-actions">
+            <button type="button" class="lite-btn" @click="managing = item">{{ $t('pages.giftCards.manage') }}</button>
             <template v-if="item.state === 'available' && $can('gift_card', 'edit')">
               <button type="button" class="lite-btn" :disabled="busyId === item.id" @click="resend(item)">
                 {{ $t('pages.giftCards.resend') }}
@@ -128,16 +132,30 @@
         </tr>
       </template>
     </list-page>
+    <gift-card-manage
+      v-if="managing"
+      :card="managing"
+      :currency-icon="currencyIcon"
+      @changed="refresh"
+      @close="managing = null"
+    />
+    <gift-card-issue
+      v-if="issuing"
+      @changed="refresh"
+      @close="issuing = false"
+    />
   </div>
 </template>
 
 <script>
 import util from '~/mixin/util'
 import ListPage from '~/components/partials/ListPage'
+import GiftCardManage from '~/components/partials/GiftCardManage'
+import GiftCardIssue from '~/components/partials/GiftCardIssue'
 import {mapActions, mapGetters} from 'vuex'
 
 /*
- * Every gift card sold. A card is a code worth its value once: redeeming it
+ * Every gift card sold or issued. Redeeming one
  * adds it to the redeemer's vouchers. Staff can email a card again
  * (to a corrected address if needed) and void one that has not been
  * redeemed, e.g. after a chargeback.
@@ -145,13 +163,15 @@ import {mapActions, mapGetters} from 'vuex'
 export default {
   name: 'gift-cards',
   middleware: ['common-middleware', 'auth'],
-  components: {ListPage},
+  components: {ListPage, GiftCardManage, GiftCardIssue},
   mixins: [util],
   data() {
     return {
       itemList: [],
       summary: null,
       busyId: null,
+      managing: null,
+      issuing: false,
       filters: [
         {key: '', label: this.$t('pages.giftCards.filterAll')},
         {key: 'available', label: this.$t('pages.giftCards.stateNotAdded')},
@@ -214,7 +234,7 @@ export default {
     },
     async resend(item) {
       const current = item.recipient ? item.recipient.email : item.sent_to
-      const email = prompt(this.$t('pages.giftCards.resendPrompt'), current || '')
+      const email = await this.$dialog.prompt(this.$t('pages.giftCards.resendPrompt'), {value: current || '', inputType: 'email', tone: 'primary', icon: 'fa-solid fa-envelope'})
 
       if (email === null) return
 
@@ -232,7 +252,7 @@ export default {
       }
     },
     async voidCard(item) {
-      const reason = prompt(this.$t('pages.giftCards.voidPrompt', { code: item.code, amount: this.currencyIcon + item.amount }), '')
+      const reason = await this.$dialog.prompt(this.$t('pages.giftCards.voidPrompt', { code: item.code, amount: this.currencyIcon + item.amount }), {tone: 'danger'})
 
       if (reason === null) return
 
@@ -254,6 +274,17 @@ export default {
 </script>
 
 <style scoped>
+.gc-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.gc-issue-btn {
+  width: auto;
+  height: 40px;
+  line-height: 38px;
+  padding: 0 18px;
+}
 .gc-tiles {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

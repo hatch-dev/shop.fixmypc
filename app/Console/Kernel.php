@@ -82,6 +82,14 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping();
 
         /*
+         * Gift cards paid by card that neither the customer's browser nor
+         * SumUp's notification settled: ask SumUp, issue the codes once.
+         */
+        $schedule->command('gift-cards:reconcile-payments')
+            ->everyFiveMinutes()
+            ->withoutOverlapping();
+
+        /*
          * Basket reservations: reminder and emptying on the admin timings; plus
          * abandoned Buy Now lines (BasketUpkeep). Also swept from API traffic
          * (middleware cart.hold:sweep) for the no-cron case.

@@ -2013,6 +2013,28 @@
         "emailInvalid": "Alıcı için geçerli bir e-posta adresi girin.",
         "emailOwn": "Bu sizin kendi e-posta adresiniz. Bunun yerine \"Kendim için\" seçeneğini seçin.",
         "messageLong": "Mesajı 300 karakterle sınırlayın."
+      },
+      "history": {
+        "show": "Geçmişi göster",
+        "hide": "Geçmişi gizle",
+        "loading": "Yükleniyor…",
+        "failed": "Geçmiş yüklenemedi.",
+        "empty": "Bu kartta henüz bir işlem yok.",
+        "summary": "Değer {value} · harcanan {spent} · kalan {balance}",
+        "ev": {
+          "purchased": "Satın alındı",
+          "issued": "Mağaza tarafından oluşturuldu",
+          "emailed": "E-postayla gönderildi",
+          "resend": "Yeniden e-postayla gönderildi",
+          "redeemed": "Kuponlarınıza eklendi",
+          "spent": "#{order} siparişinde harcandı",
+          "released": "#{order} siparişi iptal edildi: tutar kartınıza geri döndü",
+          "returned": "#{order} siparişinden ürün iadesi: tutar kartınıza geri döndü",
+          "balance": "Bakiye mağaza tarafından düzenlendi",
+          "expiry": "Son kullanma tarihi {date} olarak değiştirildi",
+          "refund": "Satın alma iade edildi",
+          "void": "Mağaza tarafından iptal edildi"
+        }
       }
     },
     "accountLayout": {

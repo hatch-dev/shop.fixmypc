@@ -803,13 +803,36 @@ CREATE TABLE `gift_voucher` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `gift_card_events`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `gift_card_events` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `gift_voucher_code_id` bigint(20) unsigned DEFAULT NULL,
+  `gift_voucher_order_id` bigint(20) unsigned DEFAULT NULL,
+  `voucher_id` bigint(20) unsigned DEFAULT NULL,
+  `type` varchar(16) NOT NULL,
+  `amount` decimal(10,2) DEFAULT NULL,
+  `old_value` varchar(64) DEFAULT NULL,
+  `new_value` varchar(64) DEFAULT NULL,
+  `reason` varchar(255) DEFAULT NULL,
+  `admin_id` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `gift_card_events_gift_voucher_code_id_index` (`gift_voucher_code_id`),
+  KEY `gift_card_events_gift_voucher_order_id_index` (`gift_voucher_order_id`),
+  KEY `gift_card_events_voucher_id_index` (`voucher_id`),
+  KEY `gift_card_events_type_index` (`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `gift_voucher_codes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `gift_voucher_codes` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `gift_voucher_order_id` bigint(20) unsigned NOT NULL,
-  `buyer_user_id` bigint(20) unsigned NOT NULL,
+  `buyer_user_id` bigint(20) unsigned DEFAULT NULL,
   `code` varchar(32) NOT NULL,
   `amount` decimal(10,2) NOT NULL,
   `expires_at` timestamp NULL DEFAULT NULL,
@@ -835,7 +858,7 @@ DROP TABLE IF EXISTS `gift_voucher_orders`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `gift_voucher_orders` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` bigint(20) unsigned NOT NULL,
+  `user_id` bigint(20) unsigned DEFAULT NULL,
   `voucher_id` bigint(20) unsigned NOT NULL,
   `amount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `quantity` int(11) NOT NULL,
@@ -3212,7 +3235,7 @@ CREATE TABLE `wallet_transactions` (
   `type` enum('credit','debit') NOT NULL,
   `amount` decimal(12,2) NOT NULL,
   `balance_after` decimal(12,2) DEFAULT NULL,
-  `source` enum('topup','order','refund','admin','gift_voucher','gift_card','order_release') NOT NULL,
+  `source` enum('topup','order','refund','admin','gift_voucher','gift_card','order_release','gift_voucher_refund') NOT NULL,
   `reference_id` varchar(255) DEFAULT NULL,
   `transaction_id` varchar(255) DEFAULT NULL,
   `status` enum('pending','success','failed') NOT NULL DEFAULT 'pending',

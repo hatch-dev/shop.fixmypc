@@ -2138,6 +2138,28 @@
         "emailInvalid": "Enter a valid email address for the recipient.",
         "emailOwn": "That is your own email address. Choose \"For me\" instead.",
         "messageLong": "Keep the message to 300 characters."
+      },
+      "history": {
+        "show": "Show history",
+        "hide": "Hide history",
+        "loading": "Loading…",
+        "failed": "The history could not be loaded.",
+        "empty": "Nothing has happened to this card yet.",
+        "summary": "Value {value} · spent {spent} · left {balance}",
+        "ev": {
+          "purchased": "Bought",
+          "issued": "Issued by the shop",
+          "emailed": "Emailed",
+          "resend": "Emailed again",
+          "redeemed": "Added to your vouchers",
+          "spent": "Spent on order #{order}",
+          "released": "Order #{order} cancelled: back on your card",
+          "returned": "Items returned from order #{order}: back on your card",
+          "balance": "Balance adjusted by the shop",
+          "expiry": "Expiry date changed to {date}",
+          "refund": "Purchase refunded",
+          "void": "Cancelled by the shop"
+        }
       }
     },
     "accountLayout": {

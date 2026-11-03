@@ -298,6 +298,19 @@ class Refunder
     }
 
 
+    /**
+     * A SumUp transaction that is not an order's: a gift card bought by card
+     * (GiftCardAdmin::refundPurchase), which records its checkout, not an order.
+     */
+    public static function sumupTransaction($transactionId, $amount)
+    {
+        $payment = Payment::first();
+        if (is_null($payment) || empty($payment->sumup_api_key)) {
+            return self::fail('sumup is not configured');
+        }
+        return self::refundSumup($payment, (object)['trans_id' => $transactionId], $amount);
+    }
+
     private static function refundSumup($payment, $order, $amount)
     {
         try {

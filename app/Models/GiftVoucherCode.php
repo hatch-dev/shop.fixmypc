@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\DB;
 /**
  * One gift card: a code, its value, and where it stands.
  *
- * Redeeming a code credits its full value to the redeemer's Savers Club
- * wallet (WalletController::redeemGiftCode), where it pays for orders at
- * checkout and any balance carries over. status is the single source of
- * truth: active -> redeemed, or active -> void (an admin withdrew it).
+ * Redeeming a code makes it a voucher of the redeemer's own (toVoucher):
+ * orders spend it at checkout and whatever is left stays on it
+ * (Voucher::giftBalance). status is the single source of truth: active ->
+ * redeemed, or active -> void (staff withdrew it, or refunded its purchase).
  * Expiry is read from expires_at, not stored as a status.
  */
 class GiftVoucherCode extends Model
@@ -119,10 +119,7 @@ class GiftVoucherCode extends Model
         return strtoupper(trim((string)$input));
     }
 
-    /**
-     * Credit this code's value to $user's wallet. Returns [ok, message, balance].
-     * Locks the code and the wallet so the same code cannot be credited twice.
-     */
+
     /**
      * The customer's own voucher for a gift card: its code, a flat amount
      * equal to the card's value, no minimum spend, valid until the card
@@ -153,27 +150,30 @@ class GiftVoucherCode extends Model
         ]);
     }
 
-    public static function redeem($input, User $user)
+    /**
+     * Add a code to $user's vouchers. Returns [ok, message, voucher]. The code
+     * row is locked, so two attempts at once (two tabs, two people) cannot
+     * both redeem it: the second waits, then finds it redeemed.
+     * Messages are in $lang, the shopper's language.
+     */
+    public static function redeem($input, User $user, $lang = null)
     {
         $code = static::normalise($input);
-
-        return DB::transaction(function () use ($code, $user) {
-
+        return DB::transaction(function () use ($code, $user, $lang) {
             $gift = static::where('code', $code)->lockForUpdate()->first();
-
             if (!$gift) {
-                return [false, 'We could not find that gift card code. Check it and try again.', null];
+                return [false, __('lang.gc_not_found', [], $lang), null];
             }
             if ($gift->status === self::REDEEMED) {
                 return [false, (int)$gift->redeemed_by === (int)$user->id
-                    ? 'This gift card is already in your vouchers.'
-                    : 'This gift card has already been redeemed.', null];
+                    ? __('lang.gc_already_yours', [], $lang)
+                    : __('lang.gc_already_redeemed', [], $lang), null];
             }
             if ($gift->status === self::VOID) {
-                return [false, 'This gift card is no longer valid. Please contact us.', null];
+                return [false, __('lang.gc_void', [], $lang), null];
             }
             if ($gift->isExpired()) {
-                return [false, 'This gift card has expired.', null];
+                return [false, __('lang.gc_expired', [], $lang), null];
             }
 
             $voucher = static::toVoucher($gift, $user);
@@ -185,9 +185,7 @@ class GiftVoucherCode extends Model
                 'voucher_id'  => $voucher->id,
             ]);
 
-            return [true, 'Your €' . number_format((float)$gift->amount, 2)
-                . ' gift card is now in your vouchers. Apply it at checkout; anything left over stays for your next order.',
-                $voucher];
+            return [true, __('lang.gc_redeemed', ['amount' => '€' . number_format((float)$gift->amount, 2)], $lang), $voucher];
         });
     }
 }

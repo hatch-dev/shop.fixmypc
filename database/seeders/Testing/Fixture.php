@@ -84,7 +84,8 @@ final class Fixture
      * database seeded by an older copy stops and says to run `php artisan test:db`
      * instead of failing somewhere downstream.
      */
-    const VERSION = 1;
+    // 2: gift_card_events; staff-issued gift cards need no buyer account (2026-11-03)
+    const VERSION = 2;
 
     /** A customer's sign-in email, e.g. customer-101@fixture.test. */
     public static function email(int $userId): string

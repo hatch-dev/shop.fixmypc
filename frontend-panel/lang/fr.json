@@ -2013,6 +2013,28 @@
         "emailInvalid": "Saisissez une adresse e-mail valide pour le destinataire.",
         "emailOwn": "Il s’agit de votre propre adresse e-mail. Choisissez plutôt « Pour moi ».",
         "messageLong": "Le message ne doit pas dépasser 300 caractères."
+      },
+      "history": {
+        "show": "Voir l’historique",
+        "hide": "Masquer l’historique",
+        "loading": "Chargement…",
+        "failed": "L’historique n’a pas pu être chargé.",
+        "empty": "Rien ne s’est encore passé sur cette carte.",
+        "summary": "Valeur {value} · dépensé {spent} · restant {balance}",
+        "ev": {
+          "purchased": "Achetée",
+          "issued": "Émise par la boutique",
+          "emailed": "Envoyée par e-mail",
+          "resend": "Renvoyée par e-mail",
+          "redeemed": "Ajoutée à vos bons",
+          "spent": "Dépensée sur la commande n°{order}",
+          "released": "Commande n°{order} annulée : rendu sur votre carte",
+          "returned": "Articles retournés de la commande n°{order} : rendu sur votre carte",
+          "balance": "Solde ajusté par la boutique",
+          "expiry": "Date d’expiration changée au {date}",
+          "refund": "Achat remboursé",
+          "void": "Annulée par la boutique"
+        }
       }
     },
     "accountLayout": {

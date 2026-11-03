@@ -83,6 +83,9 @@ class OrdersController extends ControllerHelper
      */
     private $stockTaken = [];
 
+    /** The gift card this request is spending, while it holds its lock. */
+    private $giftCardLocked = null;
+
     public function vendorAll(Request $request)
     {
         try {
@@ -3325,7 +3328,15 @@ class OrdersController extends ControllerHelper
      */
     public function action(Request $request, TwilioService $twilio)
     {
-        $response = $this->processOrder($request, $twilio);
+        try {
+            $response = $this->processOrder($request, $twilio);
+        } finally {
+            // Whatever happened to the order, the gift card is free for the next checkout.
+            if ($this->giftCardLocked) {
+                \App\Models\Helper\GiftCardLock::release($this->giftCardLocked);
+                $this->giftCardLocked = null;
+            }
+        }
 
         try {
             $stripe = (int)$request->order_method === (int)Config::get('constants.paymentMethod.STRIPE');
@@ -3376,6 +3387,23 @@ class OrdersController extends ControllerHelper
             // Whether one is required is decided from the stored profile below,
             // never from this payload; only the text itself comes from here.
             $request->request->add(['purchase_order_number' => $params->purchase_order_number ?? null]);
+
+            /*
+             * A gift card is spent by one checkout at a time (GiftCardLock).
+             * Its balance only counts orders that are paid, so two checkouts
+             * with the same card used to read the same balance and both take
+             * all of it. Held from here, before the balance is read, until
+             * this order is paid or rolled back; action() releases it.
+             */
+            if ($request->voucher) {
+                $giftVoucherId = \App\Models\Voucher::where('code', $request->voucher)->whereNotNull('gift_value')->value('id');
+                if ($giftVoucherId) {
+                    if (!\App\Models\Helper\GiftCardLock::acquire($giftVoucherId)) {
+                        return response()->json(Validation::error($request->token, __('lang.gc_busy', [], $lang)));
+                    }
+                    $this->giftCardLocked = $giftVoucherId;
+                }
+            }
 
             /*
              * A suspended account may still sign in and read its history, but

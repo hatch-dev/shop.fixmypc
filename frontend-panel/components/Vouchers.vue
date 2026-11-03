@@ -164,6 +164,7 @@
                 </div>
                 <button class="btn-use-now" @click="goToCart">{{ $t('ui.vouchersPanel.useNow') }}</button>
             </div>
+            <gift-card-history v-if="item.is_gift_card" :query="{ voucher_id: item.id }" />
 
             <div class="voucher-progress-wrapper mt-3">
                 <div class="voucher-progress">
@@ -251,6 +252,7 @@
               <i class="fa-regular fa-envelope" aria-hidden="true"></i>
               {{ $t('ui.vouchersPanel.giftCodes.sentTo', { name: gc.recipient }) }}
             </span>
+            <gift-card-history :query="{ code_id: gc.id }" />
           </div>
 
           <div class="gift-code-side">
@@ -707,6 +709,11 @@
       Pagination
     },
     computed: {
+      // Gift card calls carry the shopper's language, so the server's
+      // messages (redeemed, refused, bought) come back in it.
+      giftRequest() {
+        return {headers: this.langCode ? {language: this.langCode} : {}}
+      },
       filteredActiveList() {
         let list = [...this.activeList]
 
@@ -897,7 +904,7 @@
           if (method === 'sumup') {
             // The purchase (value, quantity, recipient) is fixed on the server
             // before paying; the checkout page only confirms the payment.
-            const {data} = await this.$axios.post(`${this.apiBase()}api/v1/user/purchase-gift-voucher/start`, payload)
+            const {data} = await this.$axios.post(`${this.apiBase()}api/v1/user/purchase-gift-voucher/start`, payload, this.giftRequest)
 
             if (!data?.checkout_id) {
               this.setToastError(data?.message || this.$t('ui.vouchersPanel.toast.paymentStartFailed'))
@@ -912,7 +919,7 @@
             const {data} = await this.$axios.post(`${this.apiBase()}api/v1/user/purchase-gift-voucher`, {
               ...payload,
               payment_method: 'wallet'
-            })
+            }, this.giftRequest)
 
             this.setToastMessage(data?.message || this.$t('ui.vouchersPanel.toast.bought'))
 
@@ -1003,7 +1010,7 @@
       },
       async fetchGiftCodes() {
         try {
-          const {data} = await this.$axios.get(`${this.apiBase()}api/v1/user/gift-voucher-codes`)
+          const {data} = await this.$axios.get(`${this.apiBase()}api/v1/user/gift-voucher-codes`, this.giftRequest)
           this.giftCodes = data?.data || []
         } catch (e) {
           this.giftCodes = []
@@ -1014,7 +1021,7 @@
         if (!code || this.redeeming) return
         this.redeeming = true
         try {
-          const {data} = await this.$axios.post(`${this.apiBase()}api/v1/user/gift-voucher-codes/redeem`, {code})
+          const {data} = await this.$axios.post(`${this.apiBase()}api/v1/user/gift-voucher-codes/redeem`, {code}, this.giftRequest)
           this.setToastMessage(data?.message || this.$t('ui.vouchersPanel.toast.added'))
           this.redeemCode = ''
           await Promise.all([this.fetchGiftCodes(), this.refreshVoucherList()])

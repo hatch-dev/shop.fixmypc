@@ -49,13 +49,39 @@ class Voucher extends Model
      *
      * Less returned_amount: the gift card's share of items sent back on an
      * order that still stands (a partial return), which goes back on the card.
+     *
+     * Counted through giftHoldingOrderSql, not standingOrderSql: a bank
+     * transfer awaiting its payment holds the card's value too (2026-11-03).
      */
     public static function giftUsedSql($voucherId)
     {
         return "(SELECT COALESCE(SUM(ov.discount - COALESCE(ov.returned_amount, 0)), 0) FROM ordered_voucher ov"
             . " JOIN orders o ON o.id = ov.order_id AND o.voucher_id = ov.voucher_id"
             . " WHERE ov.voucher_id = $voucherId"
-            . " AND " . static::standingOrderSql('o') . ")";
+            . " AND " . static::giftHoldingOrderSql('o') . ")";
+    }
+
+    /**
+     * An order that has taken value off a gift card: one that stands, or a
+     * bank transfer still awaiting its payment.
+     *
+     * A transfer order is placed unpaid and stays that way until the money
+     * arrives, so under standingOrderSql it took nothing - and the same
+     * balance could be spent again on a second order before the first was
+     * paid. It now holds the value, as cash on delivery always has; cancelling
+     * it (by staff, or orders:cancel-unpaid-transfers) gives it back. Only the
+     * gift card balance reads this: lifetime savings still count paid orders.
+     */
+    public static function giftHoldingOrderSql($alias)
+    {
+        $bank = (int)\Illuminate\Support\Facades\Config::get('constants.paymentMethod.BANK');
+
+        return '((' . static::standingOrderSql($alias) . ')'
+            . " OR (" . str_replace(
+                " AND ($alias.payment_done = 1 OR $alias.order_method = " . (int)\Illuminate\Support\Facades\Config::get('constants.paymentMethod.CASH_ON_DELIVERY') . ")",
+                " AND $alias.order_method = $bank",
+                static::standingOrderSql($alias)
+            ) . '))';
     }
 
     /**
