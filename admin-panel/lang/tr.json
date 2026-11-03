@@ -532,7 +532,7 @@
     "cartExpire": "Sepeti boşalt ve stoku şu süre sonra geri yükle",
     "cartExpireHint": "Ürünler sepetten kaldırılır ve ayrılmış miktar yeniden satışa çıkar.",
     "cartMinutes": "dakika",
-    "cartNote": "Her iki süre de müşterinin sepete en son ürün eklediği andan itibaren sayılır. Değişiklikler, zaten ayrılmış sepetler dahil hemen uygulanır.",
+    "cartNote": "Her iki süre de müşterinin mağazadaki son etkinliğinden itibaren sayılır - bir ürün eklemek veya sayfalar arasında gezinmek. Değişiklikler hemen uygulanır, zaten ayrılmış sepetler dahil.",
     "cartRemindErr": "Hatırlatma, sepet boşaltılmadan önce gönderilmelidir.",
     "cartWholeErr": "Tam sayı olarak dakika girin (hatırlatma için en az 1, boşaltma için en az 2).",
     "cartMaxErr": "Bir sepet en fazla {max} dakika (bir gün) ayrılabilir.",
@@ -3083,7 +3083,12 @@
       "walletSummary": "Cüzdan: {balance}",
       "pointsSummary": "Puan: {points}",
       "typeCredit": "alacak",
-      "typeDebit": "borç"
+      "typeDebit": "borç",
+      "balanceCaption": "Bakiye",
+      "transactionsCount": "{count} işlem",
+      "lastActivity": "Son etkinlik",
+      "showTransactions": "{name} işlemlerini göster",
+      "hideTransactions": "{name} işlemlerini gizle"
     },
     "onboarding": {
       "title": "Karşılama Ekranları",

@@ -13,24 +13,24 @@ Pages have no browser tests yet; the page lists are the plan for the Playwright 
 
 | Tier | Module | API routes | ✅ | 🟡 | ⬜ | Pages |
 |---|---|---:|---:|---:|---:|---:|
-| 1 | [Customer accounts & sign-in](#customer-accounts--sign-in) | 35 | 1 | 14 | 20 | 8 |
+| 1 | [Customer accounts & sign-in](#customer-accounts--sign-in) | 38 | 7 | 12 | 19 | 8 |
 | 1 | [Admin sign-in, staff & roles](#admin-sign-in-staff--roles) | 19 | 1 | 0 | 18 | 8 |
-| 1 | [Customer & trade account admin](#customer--trade-account-admin) | 10 | 0 | 7 | 3 | 4 |
-| 1 | [Cart & pricing](#cart--pricing) | 24 | 0 | 16 | 8 | 3 |
-| 1 | [Checkout & payments](#checkout--payments) | 11 | 0 | 6 | 5 | 7 |
-| 1 | [Orders, POS & after-sales](#orders-pos--after-sales) | 24 | 0 | 7 | 17 | 10 |
-| 1 | [Wallet, gift cards & loyalty](#wallet-gift-cards--loyalty) | 28 | 0 | 14 | 14 | 9 |
+| 1 | [Customer & trade account admin](#customer--trade-account-admin) | 13 | 4 | 6 | 3 | 4 |
+| 1 | [Cart & pricing](#cart--pricing) | 32 | 13 | 12 | 7 | 3 |
+| 1 | [Checkout & payments](#checkout--payments) | 14 | 5 | 3 | 6 | 7 |
+| 1 | [Orders, POS & after-sales](#orders-pos--after-sales) | 42 | 15 | 9 | 18 | 10 |
+| 1 | [Wallet, gift cards & loyalty](#wallet-gift-cards--loyalty) | 51 | 15 | 12 | 24 | 9 |
 | 1 | [Promotions](#promotions) | 53 | 0 | 39 | 14 | 21 |
-| 1 | [Tax, shipping & payment settings](#tax-shipping--payment-settings) | 15 | 0 | 0 | 15 | 6 |
-| 2 | [Catalogue & browsing](#catalogue--browsing) | 95 | 3 | 35 | 57 | 32 |
+| 1 | [Tax, shipping & payment settings](#tax-shipping--payment-settings) | 16 | 1 | 3 | 12 | 6 |
+| 2 | [Catalogue & browsing](#catalogue--browsing) | 96 | 5 | 33 | 58 | 33 |
 | 2 | [Procurement & suppliers](#procurement--suppliers) | 10 | 0 | 9 | 1 | 4 |
-| 2 | [Dashboard & reports](#dashboard--reports) | 4 | 0 | 0 | 4 | 2 |
-| 2 | [Store settings & system](#store-settings--system) | 50 | 0 | 0 | 50 | 18 |
+| 2 | [Dashboard & reports](#dashboard--reports) | 4 | 1 | 0 | 3 | 2 |
+| 2 | [Store settings & system](#store-settings--system) | 54 | 4 | 0 | 50 | 27 |
 | 3 | [Content & CMS](#content--cms) | 61 | 0 | 0 | 61 | 16 |
 | 3 | [Reviews, messages & newsletter](#reviews-messages--newsletter) | 19 | 0 | 1 | 18 | 5 |
 | 3 | [Sellers, stores & withdrawals](#sellers-stores--withdrawals) | 17 | 0 | 0 | 17 | 6 |
 | 3 | [Installer, OAuth & framework](#installer-oauth--framework) | 33 | 0 | 0 | 33 | 0 |
-| | **Total** | **508** | **5** | **148** | **355** | **159** |
+| | **Total** | **572** | **71** | **139** | **362** | **169** |
 
 ## Access review
 
@@ -59,31 +59,34 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Customer accounts & sign-in
 
-**API**: 35 routes · ✅ 1 · 🟡 14 · ⬜ 20
+**API**: 38 routes · ✅ 7 · 🟡 12 · ⬜ 19
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
 | ⬜ | POST | `api/admin/user/address/action` | UsersController@addressAction | admin |  |
 | ⬜ | GET | `api/admin/user/address/all` | UsersController@addresses | admin |  |
 | ⬜ | DELETE | `api/admin/user/address/delete/{id}` | UsersController@deleteAddress | admin |  |
-| 🟡 | POST | `api/v1/guest/token` | GuestUsersController@issueToken | anyone | BundleStorefrontTest, ClearanceTest, CrossSellStorefrontTest +1 |
+| ✅ | POST | `api/v1/guest/token` | GuestUsersController@issueToken | anyone | BuyNowBasketTest, BundleStorefrontTest, ClearanceTest +2 |
 | ⬜ | POST | `api/v1/logout-device` | FrontendController@logoutDevice | anyone (sign-in optional) |  |
 | ⬜ | POST | `api/v1/logout-other-devices` | FrontendController@logoutOtherDevices | anyone (sign-in optional) |  |
 | 🟡 | GET | `api/v1/sessions` | FrontendController@sessions | anyone (sign-in optional) | SuspendedAccountAccessTest |
+| ✅ | GET | `api/v1/user/account-upgrade` | AccountUpgradesController@show | customer | AccountUpgradeApiTest |
+| ✅ | POST | `api/v1/user/account-upgrade` | AccountUpgradesController@store | customer | AccountUpgradeApiTest, AccountUpgradeEmailTest |
+| ✅ | POST | `api/v1/user/account-upgrade/withdraw` | AccountUpgradesController@withdraw | customer | AccountUpgradeApiTest |
 | 🟡 | POST | `api/v1/user/address/action` | UsersController@addressAction | anyone (sign-in optional) ⚠️ | GuestCartMergeTest |
 | 🟡 | GET | `api/v1/user/address/all` | UsersController@addresses | anyone (sign-in optional) ⚠️ | SuspendedAccountAccessTest |
 | ⬜ | DELETE | `api/v1/user/address/delete/{id}` | UsersController@deleteAddress | anyone (sign-in optional) ⚠️ |  |
 | ⬜ | DELETE | `api/v1/user/delete` | UsersController@deleteUser | customer |  |
 | ⬜ | POST | `api/v1/user/forgot-password` | UsersController@forgotPassword | anyone (sign-in optional) |  |
 | ⬜ | POST | `api/v1/user/login-code` | UsersController@sendLoginCode | anyone (sign-in optional) |  |
-| ⬜ | POST | `api/v1/user/login-code/verify` | UsersController@verifyLoginCode | anyone (sign-in optional) |  |
+| ✅ | POST | `api/v1/user/login-code/verify` | UsersController@verifyLoginCode | anyone (sign-in optional) | SignInLifetimeTest |
 | ⬜ | GET | `api/v1/user/logout` | UsersController@logout | customer |  |
 | ⬜ | POST | `api/v1/user/phone/send-code` | TwoFactorController@sendPhoneCode | customer |  |
 | 🟡 | POST | `api/v1/user/phone/verify` | TwoFactorController@verifyPhone | customer | RegistrationLifecycleTest |
 | 🟡 | GET | `api/v1/user/profile` | UsersController@profile | anyone (sign-in optional) ⚠️ | AccountTypeApiTest, GuestCheckoutTest, ManualQaSuiteTest +3 |
 | ⬜ | POST | `api/v1/user/reset-password` | UsersController@resetPassword | anyone (sign-in optional) |  |
 | ⬜ | POST | `api/v1/user/reset-password/check` | UsersController@checkResetToken | anyone (sign-in optional) |  |
-| ✅ | POST | `api/v1/user/signin` | UsersController@login | anyone (sign-in optional) | FoundationSmokeTest, GuestCartMergeTest, RegistrationLifecycleTest +1 |
+| ✅ | POST | `api/v1/user/signin` | UsersController@login | anyone (sign-in optional) | CartTraceTest, FoundationSmokeTest, SignInLifetimeTest +3 |
 | 🟡 | POST | `api/v1/user/signup` | UsersController@signup | anyone (sign-in optional) | AccountTypeApiTest, GuestCartMergeTest, ManualQaSuiteTest +3 |
 | ⬜ | GET | `api/v1/user/social-login/callback/{service}` | UsersController@handleProviderCallback | anyone (sign-in optional) |  |
 | ⬜ | GET | `api/v1/user/social-login/redirect/{service}` | UsersController@redirectToProvider | anyone (sign-in optional) |  |
@@ -95,7 +98,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ⬜ | POST | `api/v1/user/two-factor/sms/send` | TwoFactorController@sendSms | customer |  |
 | 🟡 | GET | `api/v1/user/two-factor/status` | TwoFactorController@status | customer | RegistrationLifecycleTest, SuspendedAccountAccessTest |
 | ⬜ | POST | `api/v1/user/update-password` | UsersController@updatePassword | anyone (sign-in optional) |  |
-| 🟡 | POST | `api/v1/user/update-profile` | UsersController@updateProfile | customer | AccountSecurityTest, ManualQaSuiteTest, RegistrationLifecycleTest +1 |
+| ✅ | POST | `api/v1/user/update-profile` | UsersController@updateProfile | customer | AccountUpgradeApiTest, AccountSecurityTest, ManualQaSuiteTest +2 |
 | 🟡 | POST | `api/v1/user/update-user-password` | UsersController@updateUserPassword | customer | SuspendedAccountAccessTest |
 | ⬜ | POST | `api/v1/user/verify` | UsersController@verify | anyone (sign-in optional) |  |
 
@@ -149,7 +152,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Customer & trade account admin
 
-**API**: 10 routes · ✅ 0 · 🟡 7 · ⬜ 3
+**API**: 13 routes · ✅ 4 · 🟡 6 · ⬜ 3
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
@@ -158,9 +161,12 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | 🟡 | POST | `api/admin/trade-application/action/{id}` | TradeApplicationsController@action | admin | AccountTypeApiTest, ManualQaSuiteTest, TradeLifecycleTest +1 |
 | 🟡 | GET | `api/admin/trade-application/all` | TradeApplicationsController@all | admin | AccountTypeApiTest, AdminCustomerPreviewTest, ManualQaSuiteTest +2 |
 | 🟡 | GET | `api/admin/trade-application/find/{id}` | TradeApplicationsController@find | admin | ManualQaSuiteTest, TradeNotificationTest |
+| ✅ | GET | `api/admin/trade-application/upgrades` | TradeApplicationsController@upgrades | admin | AccountUpgradeAdminApiTest |
+| ✅ | POST | `api/admin/trade-application/upgrades/action/{id}` | TradeApplicationsController@upgradeAction | admin | AccountUpgradeAdminApiTest, AccountUpgradeEmailTest |
+| ✅ | GET | `api/admin/trade-application/upgrades/{id}` | TradeApplicationsController@upgrade | admin | AccountUpgradeAdminApiTest |
 | 🟡 | GET | `api/admin/user/all` | UsersController@all | admin | ManualQaSuiteTest, TradeLifecycleTest |
 | ⬜ | DELETE | `api/admin/user/delete/{id}` | UsersController@delete | admin |  |
-| 🟡 | GET | `api/admin/user/find/{id}` | UsersController@find | admin | AdminCustomerPreviewTest, ManualQaSuiteTest, TradeLifecycleTest +1 |
+| ✅ | GET | `api/admin/user/find/{id}` | UsersController@find | admin | AccountUpgradeAdminApiTest, AdminCustomerPreviewTest, ManualQaSuiteTest +2 |
 | 🟡 | POST | `api/admin/user/status/{id}` | UsersController@status | admin | AccountTypeApiTest, ManualQaSuiteTest, SuspendedAccountAccessTest +1 |
 | 🟡 | POST | `api/admin/user/verification/{id}` | UsersController@verification | admin | AccountTypeApiTest, ManualQaSuiteTest, TradeLifecycleTest |
 
@@ -173,7 +179,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Cart & pricing
 
-**API**: 24 routes · ✅ 0 · 🟡 16 · ⬜ 8
+**API**: 32 routes · ✅ 13 · 🟡 12 · ⬜ 7
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
@@ -187,17 +193,25 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ⬜ | POST | `api/admin/product-upgrades/preview/{id}` | ProductUpgradeConfigController@preview | admin |  |
 | ⬜ | POST | `api/admin/product-upgrades/ranks` | ProductUpgradeConfigController@saveRanks | admin |  |
 | 🟡 | GET | `api/v1/business-product/{id}` | FrontendController@businessProduct | anyone (sign-in optional) | AccountTypeApiTest, BusinessPricingAdminTest, BusinessPricingBoundaryTest +5 |
-| 🟡 | POST | `api/v1/cart/action` | CartsController@action | anyone (sign-in optional) | AccountSecurityTest, AdminOrderDetailTest, BundleAuditTest +16 |
+| ✅ | POST | `api/v1/cart/action` | CartsController@action | anyone (sign-in optional) | AccountUpgradeApiTest, BasketActivityTest, BuyNowBasketTest +26 |
+| ✅ | POST | `api/v1/cart/activity` | CartsController@activity | anyone (sign-in optional) | BasketActivityTest |
 | 🟡 | POST | `api/v1/cart/bundle` | CartsController@addBundle | anyone (sign-in optional) | BundleAuditTest, BundleCheckoutTest, BundleStockTest +3 |
 | 🟡 | GET | `api/v1/cart/bundle-discount` | CartsController@bundleDiscount | anyone (sign-in optional) | BundleCheckoutTest, SampleBundleWalkthroughTest |
-| ⬜ | POST | `api/v1/cart/buy-now` | CartsController@buyNow | anyone (sign-in optional) |  |
-| 🟡 | GET | `api/v1/cart/by-user` | CartsController@byUser | anyone (sign-in optional) | AccountSecurityTest, BusinessPricingBoundaryTest, BusinessQuantityPricingTest +13 |
+| ✅ | POST | `api/v1/cart/buy-now` | CartsController@buyNow | anyone (sign-in optional) | BuyNowBasketTest, CartTraceTest |
+| ✅ | POST | `api/v1/cart/buy-now/cancel` | CartsController@cancelBuyNow | anyone (sign-in optional) | BuyNowBasketTest |
+| ✅ | GET | `api/v1/cart/by-user` | CartsController@byUser | anyone (sign-in optional) | AccountUpgradeApiTest, BasketActivityTest, BuyNowBasketTest +19 |
 | ⬜ | POST | `api/v1/cart/change` | CartsController@changeSelected | anyone (sign-in optional) |  |
+| ✅ | POST | `api/v1/cart/checkout-check` | CartsController@checkoutCheck | anyone (sign-in optional) | BasketActivityTest, BuyNowBasketTest |
+| ✅ | POST | `api/v1/cart/checkout-total` | CartsController@checkoutTotal | anyone (sign-in optional) | CheckoutVatConsistencyTest |
 | 🟡 | POST | `api/v1/cart/cross-sell` | CartsController@addCrossSell | anyone (sign-in optional) | CrossSellStorefrontTest |
-| 🟡 | DELETE | `api/v1/cart/delete/{id}` | CartsController@delete | anyone (sign-in optional) | CrossSellStorefrontTest, SampleBundleWalkthroughTest |
-| 🟡 | POST | `api/v1/cart/merge` | CartsController@merge | anyone (sign-in optional) | BundleAuditTest, CrossSellStorefrontTest, GuestCartMergeTest +1 |
+| ✅ | DELETE | `api/v1/cart/delete/{id}` | CartsController@delete | anyone (sign-in optional) | CartReservationTest, CrossSellStorefrontTest, SampleBundleWalkthroughTest |
+| ✅ | POST | `api/v1/cart/hold-for-payment` | CartsController@holdForPayment | anyone (sign-in optional) | BasketActivityTest, BuyNowBasketTest, CartReservationTest |
+| ✅ | POST | `api/v1/cart/merge` | CartsController@merge | anyone (sign-in optional) | BuyNowBasketTest, BundleAuditTest, CrossSellStorefrontTest +2 |
+| ✅ | POST | `api/v1/cart/notices/dismiss` | CartsController@dismissNotices | anyone (sign-in optional) | BasketActivityTest |
+| ✅ | POST | `api/v1/cart/notices/restore` | CartsController@restoreNotice | anyone (sign-in optional) | BasketActivityTest |
+| ✅ | POST | `api/v1/cart/shipping-quote` | CartsController@shippingQuote | anyone (sign-in optional) | MembershipTest, ShippingByAddressTest, ShippingByWeightTest |
 | 🟡 | POST | `api/v1/cart/switch-variant` | CartsController@switchVariant | anyone (sign-in optional) | ProductUpgradeEngineTest |
-| 🟡 | POST | `api/v1/cart/update-shipping` | CartsController@updateShipping | anyone (sign-in optional) | CheckoutBasketRetrievalTest, GuestCartMergeTest |
+| 🟡 | POST | `api/v1/cart/update-shipping` | CartsController@updateShipping | anyone (sign-in optional) | CheckoutBasketRetrievalTest, GuestCartMergeTest, OrderLifecycleEmailTest +2 |
 | ⬜ | GET | `api/v1/product/{id}/upgrades` | ProductUpgradesController@forVariant | anyone (sign-in optional) |  |
 | 🟡 | POST | `api/v1/product/{id}/upgrades/validate` | ProductUpgradesController@validateUpgrade | anyone (sign-in optional) | ProductUpgradeEngineTest |
 | 🟡 | GET | `api/v1/user/product/qualifying` | FrontendController@qualifyingProducts | customer | SaversClubTest |
@@ -210,21 +224,24 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Checkout & payments
 
-**API**: 11 routes · ✅ 0 · 🟡 6 · ⬜ 5
+**API**: 14 routes · ✅ 5 · 🟡 3 · ⬜ 6
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
-| 🟡 | POST | `api/create-sumup-checkout` | SumupPaymentController@createCheckout | anyone | SaversClubTest |
+| ✅ | POST | `api/create-sumup-checkout` | SumupPaymentController@createCheckout | anyone | CheckoutVatConsistencyTest, SaversClubTest |
 | ⬜ | POST | `api/v1/guest/verify-email` | GuestUsersController@sendCheckoutCode | anyone (sign-in optional) |  |
 | ⬜ | POST | `api/v1/guest/verify-email/check` | GuestUsersController@verifyCheckoutCode | anyone (sign-in optional) |  |
 | ⬜ | POST | `api/v1/iyzico-callback` | IyzicoPaymentController@callback | anyone (sign-in optional) |  |
 | ⬜ | GET | `api/v1/iyzico-redirect` | IyzicoPaymentController@redirect | anyone (sign-in optional) |  |
-| 🟡 | POST | `api/v1/order/action` | OrdersController@action | anyone (sign-in optional) | AccountTypeApiTest, AdminOrderDetailTest, BundleAuditTest +13 |
+| ✅ | POST | `api/v1/order/action` | OrdersController@action | anyone (sign-in optional) | BasketActivityTest, BuyNowBasketTest, CartReservationTest +24 |
 | ⬜ | POST | `api/v1/order/payfast-notify` | OrdersController@payFastNotify | anyone (sign-in optional) |  |
-| 🟡 | POST | `api/v1/order/payment-done` | OrdersController@paymentDone | anyone (sign-in optional) | BankTransferFlowTest |
+| ✅ | POST | `api/v1/order/payment-done` | OrdersController@paymentDone | anyone (sign-in optional) | StripeCheckoutTest, BankTransferFlowTest |
+| ✅ | POST | `api/v1/order/stripe-authorise` | StripeCheckoutController@authorise | anyone (sign-in optional) | StripePayFirstTest |
+| ⬜ | POST | `api/v1/order/stripe-cancel` | StripeCheckoutController@cancel | anyone (sign-in optional) |  |
 | 🟡 | POST | `api/v1/order/transaction` | OrdersController@transaction | anyone (sign-in optional) | BankTransferFlowTest |
 | 🟡 | GET | `api/v1/payment-gateway` | FrontendController@paymentGateway | anyone (sign-in optional) | BankTransferFlowTest |
 | 🟡 | GET | `api/v1/payment/find` | FrontendController@paymentGateway | anyone (sign-in optional) | BankTransferFlowTest |
+| ✅ | POST | `api/v1/stripe/webhook` | StripeWebhookController@handle | anyone | MembershipTest |
 
 **Pages**: 7
 
@@ -238,33 +255,51 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Orders, POS & after-sales
 
-**API**: 24 routes · ✅ 0 · 🟡 7 · ⬜ 17
+**API**: 42 routes · ✅ 15 · 🟡 9 · ⬜ 18
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
 | ⬜ | GET | `api/admin/cancellation/find/{orderId}` | CancellationsController@find | admin |  |
-| ⬜ | POST | `api/admin/cancellation/refund/{id}` | CancellationsController@refund | admin |  |
+| ✅ | POST | `api/admin/cancellation/refund/{id}` | CancellationsController@refund | admin | MyOrdersTabsTest |
 | ⬜ | POST | `api/admin/cart/action` | CartsController@action | admin |  |
 | ⬜ | GET | `api/admin/cart/by-user` | CartsController@byUser | admin |  |
 | ⬜ | DELETE | `api/admin/cart/delete/{id}` | CartsController@delete | admin |  |
+| ⬜ | POST | `api/admin/cart/shipping-quote` | CartsController@shippingQuote | admin |  |
 | ⬜ | POST | `api/admin/cart/update-shipping` | CartsController@updateShipping | admin |  |
-| 🟡 | GET | `api/admin/order/all` | OrdersController@all | admin | AdminOrderListQueryCountTest, AdminOrderListTest, BankTransferFlowTest |
+| ✅ | POST | `api/admin/order-return/action/{id}` | OrderReturnsController@action | admin | OrderExchangeTest, OrderReturnTest |
+| ✅ | GET | `api/admin/order-return/all` | OrderReturnsController@all | admin | OrderReturnTest, ReturnsWorkbookCasesTest |
+| ✅ | POST | `api/admin/order-return/create` | OrderReturnsController@create | admin | OrderExchangeTest, OrderReturnTest, ReturnsWorkbookCasesTest |
+| ⬜ | GET | `api/admin/order-return/find/{id}` | OrderReturnsController@find | admin |  |
+| ✅ | GET | `api/admin/order-return/order/{orderId}` | OrderReturnsController@forOrder | admin | OrderExchangeTest, OrderReturnTest, ReturnsWorkbookCasesTest |
+| ⬜ | GET | `api/admin/order-return/quote` | OrderReturnsController@quote | admin |  |
+| ✅ | GET | `api/admin/order-return/stats` | OrderReturnsController@stats | admin | ReturnsWorkbookCasesTest |
+| ✅ | GET | `api/admin/order/all` | OrdersController@all | admin | MyOrdersTabsTest, AdminOrderListQueryCountTest, AdminOrderListTest +1 |
 | 🟡 | DELETE | `api/admin/order/delete/{id}` | OrdersController@delete | admin | AdminOrderListTest |
-| 🟡 | GET | `api/admin/order/find/{id}` | OrdersController@find | admin | AdminOrderDetailTest, AdminOrderListTest, PurchaseOrderCheckoutTest +1 |
+| 🟡 | GET | `api/admin/order/find/{id}` | OrdersController@find | admin | AdminOrderDetailTest, AdminOrderListTest, AfterShipTrackingTest +2 |
 | ⬜ | POST | `api/admin/order/payment-method` | OrdersController@updatePaymentMethod | admin |  |
 | 🟡 | POST | `api/admin/order/payment-status` | OrdersController@updatePaymentStatus | admin | AdminOrderDetailTest, BankTransferFlowTest |
 | ⬜ | GET | `api/admin/order/send-delivered-email/{id}` | OrdersController@sendDeliveredEmail | admin |  |
-| 🟡 | POST | `api/admin/order/update-status` | OrdersController@updateStatus | admin | AdminOrderDetailTest, BankTransferFlowTest |
+| 🟡 | POST | `api/admin/order/shipment` | OrdersController@saveShipment | admin | AfterShipTrackingTest |
+| 🟡 | GET | `api/admin/order/shipment-couriers` | OrdersController@shipmentCouriers | admin | AfterShipTrackingTest |
+| 🟡 | POST | `api/admin/order/shipment-refresh/{id}` | OrdersController@refreshShipment | admin | AfterShipTrackingTest |
+| 🟡 | POST | `api/admin/order/update-status` | OrdersController@updateStatus | admin | AdminOrderDetailTest, AfterShipTrackingTest, BankTransferFlowTest +1 |
 | ⬜ | GET | `api/admin/order/vendor-all` | OrdersController@vendorAll | admin |  |
 | 🟡 | POST | `api/admin/pos-order/action` | PosOrdersController@action | admin | PosBundleTest |
 | ⬜ | GET | `api/admin/pos-order/all` | PosOrdersController@all | admin |  |
 | ⬜ | DELETE | `api/admin/pos-order/delete/{id}` | PosOrdersController@delete | admin |  |
 | ⬜ | POST | `api/check-order` | OrdersController@checkOrder | anyone |  |
+| ✅ | POST | `api/v1/aftership/webhook` | AfterShipWebhookController@handle | anyone | AfterShipSettingsTest, AfterShipTrackingTest |
 | ⬜ | POST | `api/v1/cancellation/cancel-order` | CancellationsController@cancelOrder | anyone (sign-in optional) |  |
 | ⬜ | GET | `api/v1/cancellation/find/{orderId}` | CancellationsController@findCancellation | anyone (sign-in optional) |  |
-| 🟡 | POST | `api/v1/order/by-user` | OrdersController@byUser | anyone (sign-in optional) | AdminOrderDetailTest, OrderConfirmationFidelityTest, PurchaseOrderCheckoutTest |
+| ✅ | POST | `api/v1/order-return/cancel` | CustomerReturnsController@cancel | anyone (sign-in optional) | ReturnRequestAndPayLinkTest, ReturnsWorkbookCasesTest |
+| ✅ | POST | `api/v1/order-return/options` | CustomerReturnsController@options | anyone (sign-in optional) | ReturnRequestAndPayLinkTest, ReturnsWorkbookCasesTest |
+| ✅ | POST | `api/v1/order-return/request` | CustomerReturnsController@request | anyone (sign-in optional) | ReturnRequestAndPayLinkTest, ReturnsWorkbookCasesTest |
+| ✅ | POST | `api/v1/order/by-user` | OrdersController@byUser | anyone (sign-in optional) | MyOrdersTabsTest, OrderReturnTest, AdminOrderDetailTest +3 |
 | ⬜ | GET | `api/v1/order/send-order-email/{id}` | OrdersController@sendOrderEmail | anyone (sign-in optional) |  |
-| ⬜ | GET | `api/v1/track-order` | FrontendController@trackOrder | anyone (sign-in optional) |  |
+| ✅ | POST | `api/v1/pay-link/confirm` | CustomerReturnsController@payLinkConfirm | anyone (sign-in optional) | ReturnsWorkbookCasesTest |
+| ✅ | POST | `api/v1/pay-link/start` | CustomerReturnsController@payLinkStart | anyone (sign-in optional) | ReturnsWorkbookCasesTest |
+| ✅ | GET | `api/v1/pay-link/view` | CustomerReturnsController@payLink | anyone (sign-in optional) | ReturnRequestAndPayLinkTest, ReturnsWorkbookCasesTest |
+| 🟡 | GET | `api/v1/track-order` | FrontendController@trackOrder | anyone (sign-in optional) | AfterShipTrackingTest |
 | ⬜ | GET | `api/v1/user/order/{id}/invoice` | InvoiceController@show | customer |  |
 
 **Pages**: 10
@@ -282,7 +317,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Wallet, gift cards & loyalty
 
-**API**: 28 routes · ✅ 0 · 🟡 14 · ⬜ 14
+**API**: 51 routes · ✅ 15 · 🟡 12 · ⬜ 24
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
@@ -298,12 +333,33 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ⬜ | DELETE | `api/admin/loyalty-groups/delete/{id}` | LoyaltyGroupController@delete | admin |  |
 | ⬜ | GET | `api/admin/loyalty-groups/find/{id}` | LoyaltyGroupController@find | admin |  |
 | ⬜ | GET | `api/admin/loyalty-groups/redemptions/{id}` | LoyaltyGroupController@redemptions | admin |  |
-| ⬜ | GET | `api/admin/wallet-overview/all` | WalletOverviewController@all | admin |  |
+| ✅ | POST | `api/admin/membership-plans/action/{id?}` | MembershipPlanController@action | admin | MembershipTest |
+| ⬜ | GET | `api/admin/membership-plans/all` | MembershipPlanController@all | admin |  |
+| ✅ | DELETE | `api/admin/membership-plans/delete/{id}` | MembershipPlanController@delete | admin | MembershipTest |
+| ⬜ | GET | `api/admin/membership-plans/find/{id}` | MembershipPlanController@find | admin |  |
+| ⬜ | POST | `api/admin/membership-plans/sync/{id}` | MembershipPlanController@sync | admin |  |
+| ⬜ | POST | `api/admin/memberships/action/{id}` | MembershipMemberController@action | admin |  |
+| ⬜ | GET | `api/admin/memberships/all` | MembershipMemberController@all | admin |  |
+| ⬜ | GET | `api/admin/memberships/customers` | MembershipMemberController@customers | admin |  |
+| ⬜ | GET | `api/admin/memberships/find/{id}` | MembershipMemberController@find | admin |  |
+| ✅ | POST | `api/admin/memberships/grant` | MembershipMemberController@grant | admin | MembershipTest |
+| ⬜ | GET | `api/admin/memberships/stats` | MembershipMemberController@stats | admin |  |
+| ✅ | GET | `api/admin/wallet-overview/all` | WalletOverviewController@all | admin | AdminBulkWalletBarcodeTest |
 | 🟡 | GET | `api/v1/user/gift-voucher-codes` | WalletController@giftCodes | customer | GiftCardTest |
 | 🟡 | POST | `api/v1/user/gift-voucher-codes/redeem` | WalletController@redeemGiftCode | customer | GiftCardTest |
 | ⬜ | GET | `api/v1/user/gift-vouchers` | FrontendController@getGiftVouchers | anyone (sign-in optional) ⚠️ |  |
-| 🟡 | GET | `api/v1/user/loyalty-discount` | LoyaltyController@current | customer | SuspendedAccountAccessTest |
-| 🟡 | GET | `api/v1/user/points` | WalletController@getPoints | customer | AdminOrderDetailTest, SaversClubTest |
+| ✅ | GET | `api/v1/user/loyalty-discount` | LoyaltyController@current | customer | CheckoutVatConsistencyTest, MembershipTest, SuspendedAccountAccessTest |
+| ✅ | GET | `api/v1/user/membership` | MembershipController@show | customer | MembershipTest |
+| ✅ | GET | `api/v1/user/membership/billing` | MembershipController@billing | customer | MembershipTest |
+| ✅ | POST | `api/v1/user/membership/cancel` | MembershipController@cancel | customer | MembershipTest |
+| ✅ | POST | `api/v1/user/membership/card` | MembershipController@card | customer | MembershipTest |
+| ⬜ | POST | `api/v1/user/membership/card/finish` | MembershipController@cardFinish | customer |  |
+| ✅ | POST | `api/v1/user/membership/change` | MembershipController@change | customer | MembershipTest |
+| ✅ | POST | `api/v1/user/membership/digest` | MembershipController@digest | customer | NewProductAlertsTest |
+| ✅ | POST | `api/v1/user/membership/resume` | MembershipController@resume | customer | MembershipTest |
+| ✅ | POST | `api/v1/user/membership/subscribe` | MembershipController@subscribe | customer | MembershipTest |
+| ✅ | POST | `api/v1/user/membership/subscribe/finish` | MembershipController@joinFinish | customer | MembershipTest |
+| ✅ | GET | `api/v1/user/points` | WalletController@getPoints | customer | SignInLifetimeTest, AdminOrderDetailTest, SaversClubTest |
 | 🟡 | GET | `api/v1/user/points/history` | WalletController@pointsHistory | customer | SaversClubTest |
 | 🟡 | POST | `api/v1/user/purchase-gift-voucher` | WalletController@purchaseGiftVoucher | customer | GiftCardTest |
 | 🟡 | POST | `api/v1/user/purchase-gift-voucher/confirm` | WalletController@confirmGiftVoucher | customer | GiftCardTest |
@@ -314,6 +370,8 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | 🟡 | GET | `api/v1/user/wallet/statement` | WalletController@statement | customer | SaversClubTest |
 | 🟡 | POST | `api/v1/user/wallet/topup/confirm` | WalletController@confirmTopup | customer | SaversClubTest |
 | 🟡 | GET | `api/v1/user/wallet/transactions` | WalletController@transactions | customer | SaversClubTest |
+| ⬜ | GET | `membership/digest/unsubscribe` | MembershipController@digestUnsubscribe | anyone |  |
+| ⬜ | POST | `membership/digest/unsubscribe` | MembershipController@digestUnsubscribe | anyone |  |
 
 **Pages**: 9
 
@@ -413,19 +471,20 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Tax, shipping & payment settings
 
-**API**: 15 routes · ✅ 0 · 🟡 0 · ⬜ 15
+**API**: 16 routes · ✅ 1 · 🟡 3 · ⬜ 12
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
 | ⬜ | GET | `api/admin/payment/find` | PaymentsController@find | admin |  |
-| ⬜ | POST | `api/admin/payment/save` | PaymentsController@save | admin |  |
+| ✅ | POST | `api/admin/payment/save` | PaymentsController@save | admin | StripeCheckoutTest |
 | ⬜ | POST | `api/admin/setting/currency` | SettingsController@currency | admin |  |
 | ⬜ | GET | `api/admin/setting/sumup` | SettingsController@getSumup | admin |  |
 | ⬜ | POST | `api/admin/setting/sumup` | SettingsController@updateSumup | admin |  |
-| ⬜ | POST | `api/admin/shipping-rule/action/{id?}` | ShippingRulesController@action | admin |  |
+| 🟡 | POST | `api/admin/shipping-rule/action/{id?}` | ShippingRulesController@action | admin | ShippingByAddressTest, ShippingByWeightTest |
 | ⬜ | GET | `api/admin/shipping-rule/all` | ShippingRulesController@all | admin |  |
 | ⬜ | GET | `api/admin/shipping-rule/all-shipping-rules` | ShippingRulesController@allList | admin |  |
-| ⬜ | DELETE | `api/admin/shipping-rule/delete/{id}` | ShippingRulesController@delete | admin |  |
+| 🟡 | GET | `api/admin/shipping-rule/coverage` | ShippingRulesController@coverage | admin | ShippingByAddressTest |
+| 🟡 | DELETE | `api/admin/shipping-rule/delete/{id}` | ShippingRulesController@delete | admin | ShippingByAddressTest |
 | ⬜ | GET | `api/admin/shipping-rule/find/{id}` | ShippingRulesController@find | admin |  |
 | ⬜ | POST | `api/admin/tax-rule/action/{id?}` | TaxRulesController@action | admin |  |
 | ⬜ | GET | `api/admin/tax-rule/all` | TaxRulesController@all | admin |  |
@@ -446,7 +505,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Catalogue & browsing
 
-**API**: 95 routes · ✅ 3 · 🟡 35 · ⬜ 57
+**API**: 96 routes · ✅ 5 · 🟡 33 · ⬜ 58
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
@@ -484,10 +543,10 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ⬜ | POST | `api/admin/product-collection/update-sort-order` | ProductCollectionsController@updateSortOrder | admin |  |
 | ⬜ | POST | `api/admin/product-collection/upload-image/{id}` | ProductCollectionsController@image | admin |  |
 | ⬜ | POST | `api/admin/product-image-attributes/action` | ProductImageAttributesController@action | admin |  |
-| 🟡 | POST | `api/admin/product/action/{product?}` | ProductsController@action | admin | AddProductFlowTest, ProductsModuleTest |
+| 🟡 | POST | `api/admin/product/action/{product?}` | ProductsController@action | admin | AddProductFlowTest, ProductsModuleTest, ShippingByAddressTest +1 |
 | 🟡 | GET | `api/admin/product/all` | ProductsController@all | admin | ProductsModuleTest |
 | 🟡 | GET | `api/admin/product/all-images/{productId}` | ProductsController@allImages | admin | ProductsModuleTest |
-| 🟡 | POST | `api/admin/product/bulk-update` | ProductsController@bulkUpdate | admin | ProductsModuleTest |
+| ✅ | POST | `api/admin/product/bulk-update` | ProductsController@bulkUpdate | admin | AdminBulkWalletBarcodeTest, ProductsModuleTest |
 | 🟡 | DELETE | `api/admin/product/delete-image/{productImageId}` | ProductsController@deleteProductImage | admin | ProductsModuleTest |
 | 🟡 | DELETE | `api/admin/product/delete/{id}` | ProductsController@delete | admin | ProductsModuleTest |
 | 🟡 | GET | `api/admin/product/dropdown-data` | ProductsController@dropDownData | admin | ProductsModuleTest |
@@ -511,7 +570,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ⬜ | POST | `api/admin/subcategory/upload/{id?}` | SubCategoriesController@upload | admin |  |
 | ⬜ | POST | `api/admin/tag/action/{tag?}` | TagsController@action | admin |  |
 | ⬜ | GET | `api/admin/tag/all` | TagsController@all | admin |  |
-| 🟡 | POST | `api/admin/updated-inventory/action/{productId}` | UpdatedInventoriesController@action | admin | AddProductFlowTest, ProductsModuleTest |
+| ✅ | POST | `api/admin/updated-inventory/action/{productId}` | UpdatedInventoriesController@action | admin | AdminBulkWalletBarcodeTest, AddProductFlowTest, ProductsModuleTest |
 | ⬜ | GET | `api/admin/updated-inventory/find/{productId}` | UpdatedInventoriesController@byProduct | admin |  |
 | ⬜ | GET | `api/inventory/find/{productId}` | UpdatedInventoriesController@byProduct | anyone |  |
 | 🟡 | GET | `api/products/all-simple` | ProductsController@allSimple | admin | ProductsModuleTest |
@@ -525,9 +584,10 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | 🟡 | GET | `api/v1/home` | FrontendController@home | anyone (sign-in optional) | ListingPricingTest |
 | ⬜ | GET | `api/v1/price-ranges` | FrontendController@priceRanges | anyone (sign-in optional) |  |
 | ✅ | GET | `api/v1/product/{id}` | FrontendController@product | anyone (sign-in optional) | FoundationSmokeTest, BusinessQuantityPricingTest, ClearanceTest +5 |
+| ⬜ | GET | `api/v1/product/{id}/stock` | FrontendController@productStock | anyone (sign-in optional) |  |
 | 🟡 | GET | `api/v1/products` | FrontendController@products | anyone (sign-in optional) | BusinessQuantityPricingTest, CartRepricingTest, ClearanceTest +4 |
 | ⬜ | GET | `api/v1/reviews/{id}` | FrontendController@reviews | anyone (sign-in optional) |  |
-| ✅ | GET | `api/v1/search` | FrontendController@search | anyone (sign-in optional) | FoundationSmokeTest, ListingPricingTest, PricingConsistencyTest |
+| ✅ | GET | `api/v1/search` | FrontendController@search | anyone (sign-in optional) | FoundationSmokeTest, TranslationFallbackTest, ListingPricingTest +1 |
 | 🟡 | GET | `api/v1/suggested-products/{id}` | FrontendController@productSuggestion | anyone (sign-in optional) | ProductSuggestionTest |
 | 🟡 | POST | `api/v1/user/compare-list/action` | CompareListsController@action | customer | ClearanceTest |
 | 🟡 | GET | `api/v1/user/compare-list/all` | CompareListsController@all | customer | ClearanceTest, ListingPricingTest, SuspendedAccountAccessTest |
@@ -546,7 +606,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ⬜ | POST | `api/v1/user/wishlist/share` | WishlistShareController@enable | customer |  |
 | ⬜ | GET | `api/v1/wishlist/shared/{token}` | WishlistShareController@show | anyone (sign-in optional) |  |
 
-**Pages**: 32
+**Pages**: 33
 
 - [ ] storefront `/brand` (_main/brand/index.vue)
 - [ ] storefront `/collection` (_main/collection/index.vue)
@@ -559,6 +619,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 - [ ] storefront `/embed/category/:id` (embed/category/_id.vue)
 - [ ] storefront `/embed/product/:id` (embed/product/_id.vue)
 - [ ] storefront `/` (index.vue)
+- [ ] storefront `/pay/:token` (pay/_token.vue)
 - [ ] storefront `/search` (search.vue)
 - [ ] storefront `/user/compared` (user/compared.vue)
 - [ ] storefront `/user/following` (user/following.vue)
@@ -607,12 +668,12 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Dashboard & reports
 
-**API**: 4 routes · ✅ 0 · 🟡 0 · ⬜ 4
+**API**: 4 routes · ✅ 1 · 🟡 0 · ⬜ 3
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
 | ⬜ | GET | `api/admin/activity` | AdminsController@activity | admin |  |
-| ⬜ | GET | `api/admin/dashboard` | AdminsController@dashboard | admin |  |
+| ✅ | GET | `api/admin/dashboard` | AdminsController@dashboard | admin | OrderReturnTest |
 | ⬜ | GET | `api/admin/low-stock-products` | AdminsController@lowStockProducts | admin |  |
 | ⬜ | GET | `api/admin/order-statistic` | AdminsController@statistic | admin |  |
 
@@ -623,7 +684,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Store settings & system
 
-**API**: 50 routes · ✅ 0 · 🟡 0 · ⬜ 50
+**API**: 54 routes · ✅ 4 · 🟡 0 · ⬜ 50
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
@@ -652,7 +713,11 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ⬜ | GET | `api/admin/pos-setting/find` | PosSettingsController@find | admin |  |
 | ⬜ | POST | `api/admin/pos-setting/upload` | PosSettingsController@upload | admin |  |
 | ⬜ | POST | `api/admin/setting/address` | SettingsController@address | admin |  |
+| ✅ | GET | `api/admin/setting/aftership` | SettingsController@aftershipFind | admin | AfterShipSettingsTest |
+| ✅ | POST | `api/admin/setting/aftership` | SettingsController@aftershipAction | admin | AfterShipSettingsTest |
+| ✅ | POST | `api/admin/setting/aftership-test` | SettingsController@aftershipTest | admin | AfterShipSettingsTest |
 | ⬜ | POST | `api/admin/setting/analytics` | SettingsController@analytics | admin |  |
+| ✅ | POST | `api/admin/setting/cart-reservation` | SettingsController@cartReservation | admin | CartReservationTest |
 | ⬜ | GET | `api/admin/setting/convert-image/{imageName}` | SettingsController@convert | admin |  |
 | ⬜ | GET | `api/admin/setting/find` | SettingsController@find | admin |  |
 | ⬜ | POST | `api/admin/setting/media-storage-action` | SettingsController@mediaStorageAction | admin |  |
@@ -678,14 +743,23 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ⬜ | GET | `mail-preview` | MailPreviewController@index | anyone |  |
 | ⬜ | GET | `mail-preview/{template}` | MailPreviewController@show | anyone |  |
 
-**Pages**: 18
+**Pages**: 27
 
 - [ ] admin `/custom-scripts/:id` (custom-scripts/_id.vue)
 - [ ] admin `/custom-scripts` (custom-scripts/index.vue)
+- [ ] admin `/membership-plans/:id` (membership-plans/_id.vue)
+- [ ] admin `/membership-plans` (membership-plans/index.vue)
+- [ ] admin `/memberships/:id` (memberships/_id.vue)
+- [ ] admin `/memberships` (memberships/index.vue)
 - [ ] admin `/onboarding/:id` (onboarding/_id.vue)
 - [ ] admin `/onboarding` (onboarding/index.vue)
+- [ ] admin `/returns/:id` (returns/_id.vue)
+- [ ] admin `/returns` (returns/index.vue)
+- [ ] admin `/returns/start` (returns/start.vue)
 - [ ] admin `/setting/address` (setting/address.vue)
+- [ ] admin `/setting/aftership` (setting/aftership.vue)
 - [ ] admin `/setting/analytics` (setting/analytics.vue)
+- [ ] admin `/setting/cart-reservation` (setting/cart-reservation.vue)
 - [ ] admin `/setting/clear-cache` (setting/clear-cache.vue)
 - [ ] admin `/setting/languages/:id` (setting/languages/_id.vue)
 - [ ] admin `/setting/languages` (setting/languages/index.vue)

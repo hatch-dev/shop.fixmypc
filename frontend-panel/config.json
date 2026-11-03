@@ -73,6 +73,7 @@
     "cartAction": "cart/action",
     "buyNow": "cart/buy-now",
     "cancelBuyNow": "cart/buy-now/cancel",
+    "basketActivity": "cart/activity",
     "basketNoticesDismiss": "cart/notices/dismiss",
     "basketNoticeRestore": "cart/notices/restore",
     "checkoutCheck": "cart/checkout-check",

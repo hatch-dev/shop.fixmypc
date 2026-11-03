@@ -1166,6 +1166,8 @@ Route::group([
         Route::post('checkout-check', [CartsController::class, 'checkoutCheck']);
         // What the checkout would be charged, worked out as placing the order would (read only).
         Route::post('checkout-total', [CartsController::class, 'checkoutTotal']);
+        // The shopper is browsing: restart the basket's reservation timer (CartHold::touch).
+        Route::post('activity', [CartsController::class, 'activity']);
         /*
          * Move a line onto a better variant of the same product. Not an
          * add: the line changes, keeping its quantity, so the basket can

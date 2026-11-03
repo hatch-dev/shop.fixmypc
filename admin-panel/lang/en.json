@@ -532,7 +532,7 @@
     "cartExpire": "Empty the basket and restore stock after",
     "cartExpireHint": "The items are removed from the basket and the reserved quantity goes back on sale.",
     "cartMinutes": "minutes",
-    "cartNote": "Both times count from the last time the customer added an item to their basket. Changes apply straight away, including to baskets that are already reserved.",
+    "cartNote": "Both times count from the customer's last activity in the shop - adding an item, or moving between pages. Changes apply straight away, including to baskets that are already reserved.",
     "cartRemindErr": "The reminder must be sent before the basket is emptied.",
     "cartWholeErr": "Enter a whole number of minutes (at least 1 for the reminder, 2 for emptying).",
     "cartMaxErr": "A basket can be reserved for at most {max} minutes (one day).",
@@ -3082,7 +3082,12 @@
       "walletSummary": "Wallet: {balance}",
       "pointsSummary": "Points: {points}",
       "typeCredit": "credit",
-      "typeDebit": "debit"
+      "typeDebit": "debit",
+      "balanceCaption": "Balance",
+      "transactionsCount": "{count} transactions",
+      "lastActivity": "Last activity",
+      "showTransactions": "Show transactions for {name}",
+      "hideTransactions": "Hide transactions for {name}"
     },
     "onboarding": {
       "title": "Onboarding",

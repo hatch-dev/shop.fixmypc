@@ -574,7 +574,9 @@
             "access": "admin",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/MyOrdersTabsTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -608,6 +610,19 @@
             "method": "DELETE",
             "uri": "api/admin/cart/delete/{id}",
             "handler": "CartsController@delete",
+            "module": "orders",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/cart/shipping-quote",
+            "handler": "CartsController@shippingQuote",
             "module": "orders",
             "tier": 1,
             "access": "admin",
@@ -1086,7 +1101,9 @@
             "access": "admin",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/OrderReturnTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -1869,6 +1886,155 @@
             }
         },
         {
+            "method": "POST",
+            "uri": "api/admin/membership-plans/action/{id?}",
+            "handler": "MembershipPlanController@action",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/MembershipTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/admin/membership-plans/all",
+            "handler": "MembershipPlanController@all",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "DELETE",
+            "uri": "api/admin/membership-plans/delete/{id}",
+            "handler": "MembershipPlanController@delete",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/MembershipTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/admin/membership-plans/find/{id}",
+            "handler": "MembershipPlanController@find",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/membership-plans/sync/{id}",
+            "handler": "MembershipPlanController@sync",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/memberships/action/{id}",
+            "handler": "MembershipMemberController@action",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/admin/memberships/all",
+            "handler": "MembershipMemberController@all",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/admin/memberships/customers",
+            "handler": "MembershipMemberController@customers",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/admin/memberships/find/{id}",
+            "handler": "MembershipMemberController@find",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/memberships/grant",
+            "handler": "MembershipMemberController@grant",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/MembershipTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/admin/memberships/stats",
+            "handler": "MembershipMemberController@stats",
+            "module": "wallet",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
             "method": "GET",
             "uri": "api/admin/onboarding",
             "handler": "OnboardingController@index",
@@ -1908,6 +2074,113 @@
             }
         },
         {
+            "method": "POST",
+            "uri": "api/admin/order-return/action/{id}",
+            "handler": "OrderReturnsController@action",
+            "module": "orders",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/OrderExchangeTest.php",
+                    "Isolated/OrderReturnTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/admin/order-return/all",
+            "handler": "OrderReturnsController@all",
+            "module": "orders",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/OrderReturnTest.php",
+                    "Isolated/ReturnsWorkbookCasesTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/order-return/create",
+            "handler": "OrderReturnsController@create",
+            "module": "orders",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/OrderExchangeTest.php",
+                    "Isolated/OrderReturnTest.php",
+                    "Isolated/ReturnsWorkbookCasesTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/admin/order-return/find/{id}",
+            "handler": "OrderReturnsController@find",
+            "module": "orders",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/admin/order-return/order/{orderId}",
+            "handler": "OrderReturnsController@forOrder",
+            "module": "orders",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/OrderExchangeTest.php",
+                    "Isolated/OrderReturnTest.php",
+                    "Isolated/ReturnsWorkbookCasesTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/admin/order-return/quote",
+            "handler": "OrderReturnsController@quote",
+            "module": "orders",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/admin/order-return/stats",
+            "handler": "OrderReturnsController@stats",
+            "module": "orders",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/ReturnsWorkbookCasesTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
             "method": "GET",
             "uri": "api/admin/order-statistic",
             "handler": "AdminsController@statistic",
@@ -1929,7 +2202,9 @@
             "access": "admin",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/MyOrdersTabsTest.php"
+                ],
                 "legacy": [
                     "Feature/AdminOrderListQueryCountTest.php",
                     "Feature/AdminOrderListTest.php",
@@ -1965,6 +2240,7 @@
                 "legacy": [
                     "Feature/AdminOrderDetailTest.php",
                     "Feature/AdminOrderListTest.php",
+                    "Feature/AfterShipTrackingTest.php",
                     "Feature/PurchaseOrderCheckoutTest.php",
                     "Manual/SampleBundleWalkthroughTest.php"
                 ]
@@ -2014,6 +2290,51 @@
         },
         {
             "method": "POST",
+            "uri": "api/admin/order/shipment",
+            "handler": "OrdersController@saveShipment",
+            "module": "orders",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": [
+                    "Feature/AfterShipTrackingTest.php"
+                ]
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/admin/order/shipment-couriers",
+            "handler": "OrdersController@shipmentCouriers",
+            "module": "orders",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": [
+                    "Feature/AfterShipTrackingTest.php"
+                ]
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/order/shipment-refresh/{id}",
+            "handler": "OrdersController@refreshShipment",
+            "module": "orders",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": [
+                    "Feature/AfterShipTrackingTest.php"
+                ]
+            }
+        },
+        {
+            "method": "POST",
             "uri": "api/admin/order/update-status",
             "handler": "OrdersController@updateStatus",
             "module": "orders",
@@ -2024,7 +2345,9 @@
                 "isolated": [],
                 "legacy": [
                     "Feature/AdminOrderDetailTest.php",
-                    "Feature/BankTransferFlowTest.php"
+                    "Feature/AfterShipTrackingTest.php",
+                    "Feature/BankTransferFlowTest.php",
+                    "Feature/OrderLifecycleEmailTest.php"
                 ]
             }
         },
@@ -2154,7 +2477,9 @@
             "access": "admin",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/StripeCheckoutTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -2484,7 +2809,9 @@
                 "isolated": [],
                 "legacy": [
                     "Feature/AddProductFlowTest.php",
-                    "Feature/ProductsModuleTest.php"
+                    "Feature/ProductsModuleTest.php",
+                    "Feature/ShippingByAddressTest.php",
+                    "Feature/ShippingByWeightTest.php"
                 ]
             }
         },
@@ -2527,7 +2854,9 @@
             "access": "admin",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AdminBulkWalletBarcodeTest.php"
+                ],
                 "legacy": [
                     "Feature/ProductsModuleTest.php"
                 ]
@@ -2899,6 +3228,51 @@
             }
         },
         {
+            "method": "GET",
+            "uri": "api/admin/setting/aftership",
+            "handler": "SettingsController@aftershipFind",
+            "module": "settings",
+            "tier": 2,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/AfterShipSettingsTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/setting/aftership",
+            "handler": "SettingsController@aftershipAction",
+            "module": "settings",
+            "tier": 2,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/AfterShipSettingsTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/setting/aftership-test",
+            "handler": "SettingsController@aftershipTest",
+            "module": "settings",
+            "tier": 2,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/AfterShipSettingsTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
             "method": "POST",
             "uri": "api/admin/setting/analytics",
             "handler": "SettingsController@analytics",
@@ -2908,6 +3282,21 @@
             "review": null,
             "tests": {
                 "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/setting/cart-reservation",
+            "handler": "SettingsController@cartReservation",
+            "module": "settings",
+            "tier": 2,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/CartReservationTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -3129,7 +3518,10 @@
             "review": null,
             "tests": {
                 "isolated": [],
-                "legacy": []
+                "legacy": [
+                    "Feature/ShippingByAddressTest.php",
+                    "Feature/ShippingByWeightTest.php"
+                ]
             }
         },
         {
@@ -3159,6 +3551,21 @@
             }
         },
         {
+            "method": "GET",
+            "uri": "api/admin/shipping-rule/coverage",
+            "handler": "ShippingRulesController@coverage",
+            "module": "money",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": [
+                    "Feature/ShippingByAddressTest.php"
+                ]
+            }
+        },
+        {
             "method": "DELETE",
             "uri": "api/admin/shipping-rule/delete/{id}",
             "handler": "ShippingRulesController@delete",
@@ -3168,7 +3575,9 @@
             "review": null,
             "tests": {
                 "isolated": [],
-                "legacy": []
+                "legacy": [
+                    "Feature/ShippingByAddressTest.php"
+                ]
             }
         },
         {
@@ -3850,6 +4259,52 @@
             }
         },
         {
+            "method": "GET",
+            "uri": "api/admin/trade-application/upgrades",
+            "handler": "TradeApplicationsController@upgrades",
+            "module": "customers",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/AccountUpgradeAdminApiTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/trade-application/upgrades/action/{id}",
+            "handler": "TradeApplicationsController@upgradeAction",
+            "module": "customers",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/AccountUpgradeAdminApiTest.php",
+                    "Isolated/AccountUpgradeEmailTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/admin/trade-application/upgrades/{id}",
+            "handler": "TradeApplicationsController@upgrade",
+            "module": "customers",
+            "tier": 1,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/AccountUpgradeAdminApiTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
             "method": "POST",
             "uri": "api/admin/update",
             "handler": "AdminsController@update",
@@ -3897,7 +4352,9 @@
             "access": "admin",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AdminBulkWalletBarcodeTest.php"
+                ],
                 "legacy": [
                     "Feature/AddProductFlowTest.php",
                     "Feature/ProductsModuleTest.php"
@@ -4151,7 +4608,9 @@
             "access": "admin",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AccountUpgradeAdminApiTest.php"
+                ],
                 "legacy": [
                     "Feature/AdminCustomerPreviewTest.php",
                     "Feature/ManualQaSuiteTest.php",
@@ -4282,7 +4741,9 @@
             "access": "admin",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AdminBulkWalletBarcodeTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -4490,7 +4951,9 @@
             "access": "anyone",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/CheckoutVatConsistencyTest.php"
+                ],
                 "legacy": [
                     "Feature/SaversClubTest.php"
                 ]
@@ -4772,6 +5235,23 @@
             }
         },
         {
+            "method": "POST",
+            "uri": "api/v1/aftership/webhook",
+            "handler": "AfterShipWebhookController@handle",
+            "module": "orders",
+            "tier": 1,
+            "access": "anyone",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/AfterShipSettingsTest.php"
+                ],
+                "legacy": [
+                    "Feature/AfterShipTrackingTest.php"
+                ]
+            }
+        },
+        {
             "method": "GET",
             "uri": "api/v1/all",
             "handler": "FrontendController@all",
@@ -4880,7 +5360,15 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AccountUpgradeApiTest.php",
+                    "Isolated/BasketActivityTest.php",
+                    "Isolated/BuyNowBasketTest.php",
+                    "Isolated/CartReservationTest.php",
+                    "Isolated/CartTraceTest.php",
+                    "Isolated/NewProductAlertsTest.php",
+                    "Isolated/OrderNumberTest.php"
+                ],
                 "legacy": [
                     "Feature/AccountSecurityTest.php",
                     "Feature/AdminOrderDetailTest.php",
@@ -4897,11 +5385,29 @@
                     "Feature/ManualQaSuiteTest.php",
                     "Feature/MixedVatBasketTest.php",
                     "Feature/OrderConfirmationFidelityTest.php",
+                    "Feature/OrderLifecycleEmailTest.php",
                     "Feature/PosBundleTest.php",
                     "Feature/ProductUpgradeEngineTest.php",
                     "Feature/PurchaseOrderCheckoutTest.php",
+                    "Feature/ShippingByAddressTest.php",
+                    "Feature/ShippingByWeightTest.php",
                     "Manual/SampleBundleWalkthroughTest.php"
                 ]
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/cart/activity",
+            "handler": "CartsController@activity",
+            "module": "pricing",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/BasketActivityTest.php"
+                ],
+                "legacy": []
             }
         },
         {
@@ -4949,7 +5455,25 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/BuyNowBasketTest.php",
+                    "Isolated/CartTraceTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/cart/buy-now/cancel",
+            "handler": "CartsController@cancelBuyNow",
+            "module": "pricing",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/BuyNowBasketTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -4962,7 +5486,13 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AccountUpgradeApiTest.php",
+                    "Isolated/BasketActivityTest.php",
+                    "Isolated/BuyNowBasketTest.php",
+                    "Isolated/CartReservationTest.php",
+                    "Isolated/CheckoutVatConsistencyTest.php"
+                ],
                 "legacy": [
                     "Feature/AccountSecurityTest.php",
                     "Feature/BusinessPricingBoundaryTest.php",
@@ -4978,6 +5508,7 @@
                     "Feature/MixedVatBasketTest.php",
                     "Feature/OrderConfirmationFidelityTest.php",
                     "Feature/PaymentPageCartPayloadTest.php",
+                    "Feature/ShippingByWeightTest.php",
                     "Feature/SuspendedAccountAccessTest.php",
                     "Feature/TradeLifecycleTest.php"
                 ]
@@ -4993,6 +5524,37 @@
             "review": null,
             "tests": {
                 "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/cart/checkout-check",
+            "handler": "CartsController@checkoutCheck",
+            "module": "pricing",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/BasketActivityTest.php",
+                    "Isolated/BuyNowBasketTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/cart/checkout-total",
+            "handler": "CartsController@checkoutTotal",
+            "module": "pricing",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/CheckoutVatConsistencyTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -5035,11 +5597,30 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/CartReservationTest.php"
+                ],
                 "legacy": [
                     "Feature/CrossSellStorefrontTest.php",
                     "Manual/SampleBundleWalkthroughTest.php"
                 ]
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/cart/hold-for-payment",
+            "handler": "CartsController@holdForPayment",
+            "module": "pricing",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/BasketActivityTest.php",
+                    "Isolated/BuyNowBasketTest.php",
+                    "Isolated/CartReservationTest.php"
+                ],
+                "legacy": []
             }
         },
         {
@@ -5051,12 +5632,62 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/BuyNowBasketTest.php"
+                ],
                 "legacy": [
                     "Feature/BundleAuditTest.php",
                     "Feature/CrossSellStorefrontTest.php",
                     "Feature/GuestCartMergeTest.php",
                     "Manual/SampleBundleWalkthroughTest.php"
+                ]
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/cart/notices/dismiss",
+            "handler": "CartsController@dismissNotices",
+            "module": "pricing",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/BasketActivityTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/cart/notices/restore",
+            "handler": "CartsController@restoreNotice",
+            "module": "pricing",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/BasketActivityTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/cart/shipping-quote",
+            "handler": "CartsController@shippingQuote",
+            "module": "pricing",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/MembershipTest.php"
+                ],
+                "legacy": [
+                    "Feature/ShippingByAddressTest.php",
+                    "Feature/ShippingByWeightTest.php"
                 ]
             }
         },
@@ -5087,7 +5718,10 @@
                 "isolated": [],
                 "legacy": [
                     "Feature/CheckoutBasketRetrievalTest.php",
-                    "Feature/GuestCartMergeTest.php"
+                    "Feature/GuestCartMergeTest.php",
+                    "Feature/OrderLifecycleEmailTest.php",
+                    "Feature/ShippingByAddressTest.php",
+                    "Feature/ShippingByWeightTest.php"
                 ]
             }
         },
@@ -5239,7 +5873,9 @@
             "access": "anyone",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/BuyNowBasketTest.php"
+                ],
                 "legacy": [
                     "Feature/BundleStorefrontTest.php",
                     "Feature/ClearanceTest.php",
@@ -5369,6 +6005,54 @@
         },
         {
             "method": "POST",
+            "uri": "api/v1/order-return/cancel",
+            "handler": "CustomerReturnsController@cancel",
+            "module": "orders",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/ReturnRequestAndPayLinkTest.php",
+                    "Isolated/ReturnsWorkbookCasesTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/order-return/options",
+            "handler": "CustomerReturnsController@options",
+            "module": "orders",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/ReturnRequestAndPayLinkTest.php",
+                    "Isolated/ReturnsWorkbookCasesTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/order-return/request",
+            "handler": "CustomerReturnsController@request",
+            "module": "orders",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/ReturnRequestAndPayLinkTest.php",
+                    "Isolated/ReturnsWorkbookCasesTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
             "uri": "api/v1/order/action",
             "handler": "OrdersController@action",
             "module": "checkout",
@@ -5376,7 +6060,16 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/BasketActivityTest.php",
+                    "Isolated/BuyNowBasketTest.php",
+                    "Isolated/CartReservationTest.php",
+                    "Isolated/CheckoutVatConsistencyTest.php",
+                    "Isolated/MembershipTest.php",
+                    "Isolated/OrderNumberTest.php",
+                    "Isolated/StripePayFirstTest.php",
+                    "Isolated/WalletSplitPaymentTest.php"
+                ],
                 "legacy": [
                     "Feature/AccountTypeApiTest.php",
                     "Feature/AdminOrderDetailTest.php",
@@ -5391,8 +6084,11 @@
                     "Feature/ManualQaSuiteTest.php",
                     "Feature/MixedVatBasketTest.php",
                     "Feature/OrderConfirmationFidelityTest.php",
+                    "Feature/OrderLifecycleEmailTest.php",
                     "Feature/PurchaseOrderCheckoutTest.php",
                     "Feature/RegistrationLifecycleTest.php",
+                    "Feature/ShippingByAddressTest.php",
+                    "Feature/ShippingByWeightTest.php",
                     "Manual/SampleBundleWalkthroughTest.php"
                 ]
             }
@@ -5421,9 +6117,13 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/MyOrdersTabsTest.php",
+                    "Isolated/OrderReturnTest.php"
+                ],
                 "legacy": [
                     "Feature/AdminOrderDetailTest.php",
+                    "Feature/AfterShipTrackingTest.php",
                     "Feature/OrderConfirmationFidelityTest.php",
                     "Feature/PurchaseOrderCheckoutTest.php"
                 ]
@@ -5451,7 +6151,9 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/StripeCheckoutTest.php"
+                ],
                 "legacy": [
                     "Feature/BankTransferFlowTest.php"
                 ]
@@ -5462,6 +6164,34 @@
             "uri": "api/v1/order/send-order-email/{id}",
             "handler": "OrdersController@sendOrderEmail",
             "module": "orders",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/order/stripe-authorise",
+            "handler": "StripeCheckoutController@authorise",
+            "module": "checkout",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/StripePayFirstTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/order/stripe-cancel",
+            "handler": "StripeCheckoutController@cancel",
+            "module": "checkout",
             "tier": 1,
             "access": "anyone (sign-in optional)",
             "review": null,
@@ -5510,6 +6240,52 @@
             "review": null,
             "tests": {
                 "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/pay-link/confirm",
+            "handler": "CustomerReturnsController@payLinkConfirm",
+            "module": "orders",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/ReturnsWorkbookCasesTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/pay-link/start",
+            "handler": "CustomerReturnsController@payLinkStart",
+            "module": "orders",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/ReturnsWorkbookCasesTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/v1/pay-link/view",
+            "handler": "CustomerReturnsController@payLink",
+            "module": "orders",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/ReturnRequestAndPayLinkTest.php",
+                    "Isolated/ReturnsWorkbookCasesTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -5611,6 +6387,19 @@
                 "legacy": [
                     "Feature/CrossSellStorefrontTest.php"
                 ]
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/v1/product/{id}/stock",
+            "handler": "FrontendController@productStock",
+            "module": "catalogue",
+            "tier": 2,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
             }
         },
         {
@@ -5750,7 +6539,8 @@
             "review": null,
             "tests": {
                 "isolated": [
-                    "Isolated/FoundationSmokeTest.php"
+                    "Isolated/FoundationSmokeTest.php",
+                    "Isolated/TranslationFallbackTest.php"
                 ],
                 "legacy": [
                     "Feature/ListingPricingTest.php",
@@ -5813,6 +6603,21 @@
             }
         },
         {
+            "method": "POST",
+            "uri": "api/v1/stripe/webhook",
+            "handler": "StripeWebhookController@handle",
+            "module": "checkout",
+            "tier": 1,
+            "access": "anyone",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/MembershipTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
             "method": "GET",
             "uri": "api/v1/suggested-products/{id}",
             "handler": "FrontendController@productSuggestion",
@@ -5850,7 +6655,9 @@
             "review": null,
             "tests": {
                 "isolated": [],
-                "legacy": []
+                "legacy": [
+                    "Feature/AfterShipTrackingTest.php"
+                ]
             }
         },
         {
@@ -5863,6 +6670,52 @@
             "review": null,
             "tests": {
                 "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/v1/user/account-upgrade",
+            "handler": "AccountUpgradesController@show",
+            "module": "accounts",
+            "tier": 1,
+            "access": "customer",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/AccountUpgradeApiTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/user/account-upgrade",
+            "handler": "AccountUpgradesController@store",
+            "module": "accounts",
+            "tier": 1,
+            "access": "customer",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/AccountUpgradeApiTest.php",
+                    "Isolated/AccountUpgradeEmailTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/user/account-upgrade/withdraw",
+            "handler": "AccountUpgradesController@withdraw",
+            "module": "accounts",
+            "tier": 1,
+            "access": "customer",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/AccountUpgradeApiTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -6032,7 +6885,9 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/SignInLifetimeTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -6058,10 +6913,161 @@
             "access": "customer",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/CheckoutVatConsistencyTest.php",
+                    "Isolated/MembershipTest.php"
+                ],
                 "legacy": [
                     "Feature/SuspendedAccountAccessTest.php"
                 ]
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/v1/user/membership",
+            "handler": "MembershipController@show",
+            "module": "wallet",
+            "tier": 1,
+            "access": "customer",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/MembershipTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "api/v1/user/membership/billing",
+            "handler": "MembershipController@billing",
+            "module": "wallet",
+            "tier": 1,
+            "access": "customer",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/MembershipTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/user/membership/cancel",
+            "handler": "MembershipController@cancel",
+            "module": "wallet",
+            "tier": 1,
+            "access": "customer",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/MembershipTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/user/membership/card",
+            "handler": "MembershipController@card",
+            "module": "wallet",
+            "tier": 1,
+            "access": "customer",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/MembershipTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/user/membership/card/finish",
+            "handler": "MembershipController@cardFinish",
+            "module": "wallet",
+            "tier": 1,
+            "access": "customer",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/user/membership/change",
+            "handler": "MembershipController@change",
+            "module": "wallet",
+            "tier": 1,
+            "access": "customer",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/MembershipTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/user/membership/digest",
+            "handler": "MembershipController@digest",
+            "module": "wallet",
+            "tier": 1,
+            "access": "customer",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/NewProductAlertsTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/user/membership/resume",
+            "handler": "MembershipController@resume",
+            "module": "wallet",
+            "tier": 1,
+            "access": "customer",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/MembershipTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/user/membership/subscribe",
+            "handler": "MembershipController@subscribe",
+            "module": "wallet",
+            "tier": 1,
+            "access": "customer",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/MembershipTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/user/membership/subscribe/finish",
+            "handler": "MembershipController@joinFinish",
+            "module": "wallet",
+            "tier": 1,
+            "access": "customer",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/MembershipTest.php"
+                ],
+                "legacy": []
             }
         },
         {
@@ -6114,7 +7120,9 @@
             "access": "customer",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/SignInLifetimeTest.php"
+                ],
                 "legacy": [
                     "Feature/AdminOrderDetailTest.php",
                     "Feature/SaversClubTest.php"
@@ -6349,7 +7357,9 @@
             "review": null,
             "tests": {
                 "isolated": [
-                    "Isolated/FoundationSmokeTest.php"
+                    "Isolated/CartTraceTest.php",
+                    "Isolated/FoundationSmokeTest.php",
+                    "Isolated/SignInLifetimeTest.php"
                 ],
                 "legacy": [
                     "Feature/GuestCartMergeTest.php",
@@ -6554,7 +7564,9 @@
             "access": "customer",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AccountUpgradeApiTest.php"
+                ],
                 "legacy": [
                     "Feature/AccountSecurityTest.php",
                     "Feature/ManualQaSuiteTest.php",
@@ -6794,6 +7806,32 @@
             "handler": "MailPreviewController@show",
             "module": "settings",
             "tier": 2,
+            "access": "anyone",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
+            "uri": "membership/digest/unsubscribe",
+            "handler": "MembershipController@digestUnsubscribe",
+            "module": "wallet",
+            "tier": 1,
+            "access": "anyone",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "membership/digest/unsubscribe",
+            "handler": "MembershipController@digestUnsubscribe",
+            "module": "wallet",
+            "tier": 1,
             "access": "anyone",
             "review": null,
             "tests": {
@@ -7202,6 +8240,13 @@
             "path": "/page/:slug",
             "module": "content",
             "tier": 3
+        },
+        {
+            "panel": "storefront",
+            "file": "pay/_token.vue",
+            "path": "/pay/:token",
+            "module": "catalogue",
+            "tier": 2
         },
         {
             "panel": "storefront",
@@ -7716,6 +8761,34 @@
         },
         {
             "panel": "admin",
+            "file": "membership-plans/_id.vue",
+            "path": "/membership-plans/:id",
+            "module": "settings",
+            "tier": 2
+        },
+        {
+            "panel": "admin",
+            "file": "membership-plans/index.vue",
+            "path": "/membership-plans",
+            "module": "settings",
+            "tier": 2
+        },
+        {
+            "panel": "admin",
+            "file": "memberships/_id.vue",
+            "path": "/memberships/:id",
+            "module": "settings",
+            "tier": 2
+        },
+        {
+            "panel": "admin",
+            "file": "memberships/index.vue",
+            "path": "/memberships",
+            "module": "settings",
+            "tier": 2
+        },
+        {
+            "panel": "admin",
             "file": "onboarding/_id.vue",
             "path": "/onboarding/:id",
             "module": "settings",
@@ -7856,6 +8929,27 @@
         },
         {
             "panel": "admin",
+            "file": "returns/_id.vue",
+            "path": "/returns/:id",
+            "module": "settings",
+            "tier": 2
+        },
+        {
+            "panel": "admin",
+            "file": "returns/index.vue",
+            "path": "/returns",
+            "module": "settings",
+            "tier": 2
+        },
+        {
+            "panel": "admin",
+            "file": "returns/start.vue",
+            "path": "/returns/start",
+            "module": "settings",
+            "tier": 2
+        },
+        {
+            "panel": "admin",
             "file": "roles-permissions/_id.vue",
             "path": "/roles-permissions/:id",
             "module": "staff",
@@ -7877,8 +8971,22 @@
         },
         {
             "panel": "admin",
+            "file": "setting/aftership.vue",
+            "path": "/setting/aftership",
+            "module": "settings",
+            "tier": 2
+        },
+        {
+            "panel": "admin",
             "file": "setting/analytics.vue",
             "path": "/setting/analytics",
+            "module": "settings",
+            "tier": 2
+        },
+        {
+            "panel": "admin",
+            "file": "setting/cart-reservation.vue",
+            "path": "/setting/cart-reservation",
             "module": "settings",
             "tier": 2
         },

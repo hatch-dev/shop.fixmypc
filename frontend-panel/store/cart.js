@@ -895,6 +895,25 @@ const actions = {
   setCartCount ({ commit }, count) {
     commit('SET_CART_COUNT', count)
   },
+  /*
+   * The shopper is moving around the shop: tell the server, so the basket's
+   * reservation counts from now rather than from the last add (CartHold::
+   * touch). Sent by plugins/cart-identity.js, only while the basket has
+   * something in it. A failure only means this ping did not land; the next
+   * page sends another.
+   */
+  async markBasketActivity ({ dispatch }) {
+    try {
+      const userToken = this.$auth.loggedIn ? null : await dispatch('user/getUserToken', null, {root: true})
+      const bearer = this.$auth.loggedIn ? this.$auth.strategy.token.get() : null
+
+      if (this.$auth.loggedIn || userToken) {
+        await Service.basketActivity({ user_token: userToken }, bearer)
+      }
+    } catch (e) {
+      // the next navigation tries again
+    }
+  },
 }
 
 export {

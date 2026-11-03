@@ -532,7 +532,7 @@
     "cartExpire": "Vider le panier et rétablir le stock après",
     "cartExpireHint": "Les articles sont retirés du panier et la quantité réservée est remise en vente.",
     "cartMinutes": "minutes",
-    "cartNote": "Les deux délais comptent à partir du dernier ajout d'un article au panier par le client. Les modifications s'appliquent immédiatement, y compris aux paniers déjà réservés.",
+    "cartNote": "Les deux délais comptent à partir de la dernière activité du client dans la boutique - ajout d'un article ou passage d'une page à l'autre. Les modifications s'appliquent immédiatement, y compris aux paniers déjà réservés.",
     "cartRemindErr": "Le rappel doit être envoyé avant que le panier ne soit vidé.",
     "cartWholeErr": "Saisissez un nombre entier de minutes (au moins 1 pour le rappel, 2 pour le vidage).",
     "cartMaxErr": "Un panier peut être réservé au maximum {max} minutes (un jour).",
@@ -3083,7 +3083,12 @@
       "walletSummary": "Portefeuille : {balance}",
       "pointsSummary": "Points : {points}",
       "typeCredit": "crédit",
-      "typeDebit": "débit"
+      "typeDebit": "débit",
+      "balanceCaption": "Solde",
+      "transactionsCount": "{count} transactions",
+      "lastActivity": "Dernière activité",
+      "showTransactions": "Afficher les transactions de {name}",
+      "hideTransactions": "Masquer les transactions de {name}"
     },
     "onboarding": {
       "title": "Accueil des nouveaux utilisateurs",

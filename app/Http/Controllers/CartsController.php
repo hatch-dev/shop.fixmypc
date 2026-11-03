@@ -594,6 +594,28 @@ class CartsController extends ControllerHelper
     }
 
     /**
+     * The shopper is browsing the shop: keep their basket (CartHold::touch).
+     *
+     * A lapsed basket is emptied by the cart.hold middleware before this
+     * runs, so this cannot bring one back - the shopper is told about it on
+     * the next basket read, as before.
+     */
+    public function activity(Request $request)
+    {
+        $owner = CartHold::ownerFromRequest($request);
+
+        if (!$owner) {
+            return response()->json(Validation::unauthorized(403,
+                __('lang.cart_owner_required', [], $request->header('language'))));
+        }
+
+        return response()->json(new Response($request->token, [
+            'held' => CartHold::touch($owner[0], $owner[1]),
+        ]));
+    }
+
+
+    /**
      * What the caller's checkout would be charged, as placing the order would
      * charge it (CheckoutTotals::quote). Read only.
      *

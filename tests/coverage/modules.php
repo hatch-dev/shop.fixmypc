@@ -145,6 +145,7 @@ return [
         // --- whole controllers ---------------------------------------------
         'TwoFactorController' => 'accounts',
         'TradeApplicationsController' => 'customers',
+        'AccountUpgradesController' => 'accounts',
         'RolesController' => 'staff',
 
         'CartsController' => 'pricing',
@@ -154,10 +155,15 @@ return [
 
         'SumupPaymentController' => 'checkout',
         'IyzicoPaymentController' => 'checkout',
+        'StripeCheckoutController' => 'checkout',
+        'StripeWebhookController' => 'checkout',
 
         'PosOrdersController' => 'orders',
         'CancellationsController' => 'orders',
         'InvoiceController' => 'orders',
+        'OrderReturnsController' => 'orders',
+        'CustomerReturnsController' => 'orders',
+        'AfterShipWebhookController' => 'orders',
 
         'WalletController' => 'wallet',
         'WalletOverviewController' => 'wallet',
@@ -165,6 +171,9 @@ return [
         'GiftCardSalesController' => 'wallet',
         'LoyaltyController' => 'wallet',
         'LoyaltyGroupController' => 'wallet',
+        'MembershipController' => 'wallet',
+        'MembershipPlanController' => 'wallet',
+        'MembershipMemberController' => 'wallet',
 
         'FlashSalesController' => 'promotions',
         'FlashDiscountController' => 'promotions',

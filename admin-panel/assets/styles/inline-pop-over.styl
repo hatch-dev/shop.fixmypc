@@ -42,6 +42,18 @@
     .pop-footer
       border-top 1px solid border-color
 
+// Set by InlinePopOver.fitToView when the panel would leave the visible area.
+// Listed after the RTL rule, and with it, so they win in either direction.
+.inline-pop-wrapper .inline-pop-over.align-left,
+.rtl .inline-pop-wrapper .inline-pop-over.align-left
+  left 0
+  right auto
+
+.inline-pop-wrapper .inline-pop-over.align-right,
+.rtl .inline-pop-wrapper .inline-pop-over.align-right
+  left auto
+  right 0
+
 //RESPONSIVE
 @media only screen and (max-width: 768px)
   .inline-pop-wrapper
