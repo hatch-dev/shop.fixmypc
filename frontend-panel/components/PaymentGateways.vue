@@ -180,11 +180,13 @@
                 inline
                 :stripe-key="paymentGateway.stripe_key"
                 :amount="finalPayableAmount"
+                :checkout-choices="checkoutChoices"
                 :currency="currencyData"
                 :name="userName"
                 :email="userEmail"
                 :place-order="placeStripeOrder"
                 @success="orderPlaced('success', $event)"
+                @amount-changed="refreshBasketAfterRefusal"
               />
             </div>
 
@@ -989,6 +991,21 @@
         const take = Math.min(Number(this.walletBalance || 0), this.baseAmount - 0.01)
         return take > 0 ? Math.round(take * 100) / 100 : 0
       },
+      /*
+       * The checkout decisions a pay-first gateway sends so the server can
+       * price the basket itself (CheckoutTotals::quote) - the same choices
+       * the order payload carries, and never an amount.
+       */
+      checkoutChoices() {
+        return {
+          order_method: this.paymentType,
+          voucher: this.voucherResult?.voucher || '',
+          use_points: this.usePoints ? 1 : 0,
+          points_discount: this.pointsDiscount,
+          use_wallet: this.walletApplied > 0 ? 1 : 0,
+          apply_flash_discount: this.$store.state.cart.flashDiscountOptIn ? 1 : 0,
+        }
+      },
       /* What the chosen method is asked to charge. */
       finalPayableAmount(){
           return Math.max(
@@ -1225,28 +1242,69 @@
           }
 
           const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/'
-          const response = await this.$axios.post(
-            `${baseUrl}api/create-sumup-checkout`,
-            {
-              "amount": this.finalPayableAmount,
-              "currency": this.currency
-            },
-            {
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              }
+
+          /*
+           * The server prices the checkout itself (CheckoutTotals::quote) and
+           * creates the SumUp checkout for that figure, so it needs to know
+           * whose basket this is and what the shopper chose - never how much.
+           * `amount` is still sent: it is what the button showed, and the
+           * figure the server used comes back as charged_amount.
+           */
+          const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+          const token = this.$auth?.loggedIn ? this.$auth.strategy.token.get() : null
+
+          if (token) headers.Authorization = token
+
+          let response
+
+          try {
+            response = await this.$axios.post(
+              `${baseUrl}api/create-sumup-checkout`,
+              {
+                ...this.checkoutChoices,
+                user_token: this.$auth?.loggedIn ? null : await this.getUserToken(),
+                amount: this.finalPayableAmount,
+                currency: this.currency
+              },
+              { headers }
+            )
+          } catch (e) {
+            // A checkout the server would not place: its own reason, not a generic one.
+            const refusal = e?.response?.data?.message
+
+            if (refusal) {
+              this.refreshBasketAfterRefusal()
+              this.reportPaymentFailure(refusal)
+              return
             }
-          );
+
+            throw e
+          }
+
           const data = response?.data;
+          const charged = Number(data?.charged_amount)
+
+          /*
+           * Created for the server's figure. If that is not the one on the
+           * button, the basket moved under the shopper - a price, a promotion,
+           * a balance - so stop here and show them, rather than send them to
+           * pay an amount they did not agree to.
+           */
+          if (data?.id && Number.isFinite(charged)
+            && Math.round(charged * 100) !== Math.round(Number(this.finalPayableAmount) * 100)) {
+            this.refreshBasketAfterRefusal()
+            this.reportPaymentFailure(this.$t('ui.paymentGateways.amountChanged', { amount: this.money(charged) }))
+            return
+          }
+
           if (data?.id) {
             /*
-             * The checkout above was priced at finalPayableAmount - voucher,
-             * flash discount and points all taken off. /payment builds the
-             * order once the card clears, and the server checks the order
-             * total against what SumUp actually took: it has to be given the
-             * same discounts or the two cannot agree, and a paid order is left
-             * reading "Not Paid".
+             * The checkout above was created for the server's quote - voucher,
+             * flash discount, bundle, loyalty and points all taken off.
+             * /payment builds the order once the card clears, and the server
+             * checks the order total against what SumUp actually took: it has
+             * to be given the same choices or the two cannot agree, and a paid
+             * order is left reading "Not Paid".
              */
             this.$store.commit('cart/SET_PENDING_PAYMENT', {
               voucher: this.voucherResult?.voucher || '',
@@ -1254,7 +1312,7 @@
               points_discount: this.pointsDiscount,
               // the card was charged the remainder after this wallet part
               use_wallet: this.walletApplied > 0 ? 1 : 0,
-              amount: this.finalPayableAmount,
+              amount: Number.isFinite(charged) ? charged : this.finalPayableAmount,
               // /payment builds the order after the card clears, on a page
               // that never saw the checkout form.
               purchase_order_number: this.purchaseOrderNumber || '',

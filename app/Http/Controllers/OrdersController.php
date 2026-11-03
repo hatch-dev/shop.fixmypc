@@ -30,6 +30,7 @@ use App\Models\Helper\Response;
 use App\Models\Helper\WalletSplit;
 use App\Models\Helper\CartHold;
 use App\Models\Helper\CheckoutStock;
+use App\Models\Helper\CheckoutTotals;
 use App\Models\Helper\Utils;
 use App\Models\Helper\Validation;
 use App\Models\Helper\ShipmentTracking;
@@ -3607,115 +3608,41 @@ class OrdersController extends ControllerHelper
                 $existingCart->pluck('product_id')
             );
 
-            $totalPriceWithoutShipping = 0;
-            foreach ($existingCart as $cart) {
-                // One ladder, shared with add-to-cart and the charging loop below.
-                $currentPrice = Pricing::unitPrice(
-                    $cart->product_inner, $cart->updated_inventory, $cart->quantity,
-                    $businessTiers->get($cart->product_inner->id)
-                );
-                $bundleQtyOffer = Pricing::bundleFreeQuantity($cart->product_inner, $cart->quantity);
+            /*
+             * Every line priced once, here, by the same helper the checkout
+             * quote uses (CheckoutTotals) -- the amount a card gateway is
+             * asked to take before this order exists is built from exactly
+             * these figures. The charging loop below reads them rather than
+             * pricing the line a second time.
+             */
+            $priced = CheckoutTotals::lines($existingCart, $businessTiers);
 
-                $totalPriceWithoutShipping += $currentPrice * ((int)$cart->quantity - $bundleQtyOffer);
-            }
-
-            $totalPriceWithoutShipping = Pricing::round($totalPriceWithoutShipping);
+            $totalPriceWithoutShipping = $priced['goods'];
 
             $offeredVoucher = 0;
             $voucher = null;
 
             if ($request->voucher) {
-                // QA audit CPN-03: the preview endpoint filters on apply_type,
-                // so this one must too, or codes rejected on the cart page are
-                // accepted at checkout.
-                $voucher = Voucher::where('code', $request->voucher)
-                    ->where('apply_type', 1)
-                    ->where('status', Config::get('constants.status.PUBLIC'))
-                    // a redeemed gift voucher is its owner's alone
-                    ->usableBy(optional($request->user('user'))->id)
-                    ->first();
-
-                if (is_null($voucher)) {
-                    return response()->json(Validation::error($request->token,
-                        __('lang.invalid_voucher', [], $lang)
-                    ));
-                }
-
-                if ($voucher->isGiftCard() && $voucher->giftBalance() <= 0) {
-                    return response()->json(Validation::error($request->token,
-                        'This gift card has been used up.'
-                    ));
-                }
-
                 /*
-                 * QA audit CPN-01. This check used to read
-                 * "if ($start >= $now && $now >= $end)", which is satisfiable
-                 * only when start >= end — so it never fired and every expired
-                 * and not-yet-started voucher was accepted.
+                 * The refusals of QA audit CPN-01..05 (apply_type, the date
+                 * window, min_spend, usage and per-customer limits, the
+                 * uncast cap), in CheckoutTotals::voucher so a quote refuses
+                 * exactly what this does.
                  */
-                $start = new Carbon($voucher->start_time);
-                $end = new Carbon($voucher->end_time);
-                $now = Carbon::now();
+                $checkedVoucher = CheckoutTotals::voucher(
+                    $request->voucher,
+                    $totalPriceWithoutShipping,
+                    $request->user('user'),
+                    $request->user_token,
+                    $lang
+                );
 
-                if ($now->lt($start) || $now->gt($end)) {
-                    return response()->json(Validation::error($request->token,
-                        __('lang.voucher_expired', [], $lang)
-                    ));
+                if ($checkedVoucher['error']) {
+                    return response()->json(Validation::error($request->token, $checkedVoucher['error']));
                 }
 
-                if ($totalPriceWithoutShipping < $voucher->min_spend) {
-                    $setting = Setting::select('currency', 'currency_icon', 'currency_position')->first();
-                    $price = $voucher->min_spend . $setting->currency_icon;
-
-                    if ((int)$setting->currency_position == Config::get('constants.currencyPosition.PRE')) {
-                        $price = $setting->currency_icon . $voucher->min_spend;
-                    }
-
-                    return response()->json(Validation::error($request->token,
-                        __('lang.min_spent', ['amount' => $price], $lang)
-                    ));
-                }
-
-                /*
-                 * QA audit CPN-05. Redemptions used to be counted over every
-                 * order carrying the voucher id, including unpaid, abandoned
-                 * and cancelled ones — a declined card burned a single-use
-                 * code. Only orders that stand actually consume a redemption.
-                 */
-                $totalOrdered = Voucher::redemptionQuery($voucher->id)->count();
-
-                if ($totalOrdered >= $voucher->usage_limit) {
-                    return response()->json(Validation::error($request->token,
-                        __('lang.voucher_exceeded', [], $lang)
-                    ));
-                }
-
-
-                $OrderedByUserQuery = Voucher::redemptionQuery($voucher->id);
-
-                if ($request->user('user')) {
-
-                    $OrderedByUserQuery = $OrderedByUserQuery->where('user_id', $request->user('user')->id);
-
-                } else if ($request->user_token) {
-
-                    $OrderedByUserQuery = $OrderedByUserQuery->where('user_token', $request->user_token);
-
-                } else {
-
-                    return response()->json(Validation::errorLang($lang));
-                }
-
-                $totalOrderedByUser = $OrderedByUserQuery->count();
-
-                if ($totalOrderedByUser >= $voucher->limit_per_customer) {
-                    return response()->json(Validation::error($request->token,
-                        __('lang.voucher_max', [], $lang)
-                    ));
-                }
-
-                // QA audit CPN-04: the cap was applied with an (int) cast.
-                $offeredVoucher = Pricing::voucherDiscount($voucher, $totalPriceWithoutShipping);
+                $voucher = $checkedVoucher['voucher'];
+                $offeredVoucher = $checkedVoucher['discount'];
             }
 
             /*
@@ -3854,13 +3781,19 @@ class OrdersController extends ControllerHelper
                     ));
                 }
 
-                $shippingQuote = Shipping::quote(
+                /*
+                 * A member's delivery is free (Helper\Membership); collection
+                 * keeps its price. Decided in CheckoutTotals::shipping, which
+                 * the basket's quote asks too, so the figure shown is the
+                 * figure charged.
+                 */
+                $shippingQuote = CheckoutTotals::shipping(
+                    $existingCart,
                     $shippingType,
-                    optional($deliveryAddress)->country,
-                    optional($deliveryAddress)->state,
-                    $isCollection ? $existingCart->pluck('shipping_place_id')->filter()->first() : null,
-                    $existingCart->pluck('product_inner'),
-                    Shipping::linesWeight($existingCart)
+                    $deliveryAddress,
+                    $isCollection,
+                    $request->user('user'),
+                    $totalPriceWithoutShipping
                 );
 
                 if (!$shippingQuote['ok']) {
@@ -3880,15 +3813,6 @@ class OrdersController extends ControllerHelper
                 $orderShippingPlace = $shippingQuote['place'];
                 $orderShippingPrice = $shippingQuote['price'];
 
-                /*
-                 * A member's delivery is free (Helper\Membership). Collection
-                 * keeps its price. The basket and the shipping quote ask the
-                 * same question, so the figure shown is the figure charged.
-                 */
-                if ((int)$shippingType === Shipping::deliveryType()
-                    && Membership::freeShippingFor($request->user('user'), $totalPriceWithoutShipping)) {
-                    $orderShippingPrice = 0.0;
-                }
                 $shippingCharged = false;
 
                 // Decided above from the stored profile, not from the request.
@@ -3946,20 +3870,14 @@ class OrdersController extends ControllerHelper
                          * ladder out again, testing the flash price as
                          * "!== null" where the subtotal loop above tested it as
                          * "> 0" — the same product priced two ways inside one
-                         * request. Both now call the same method.
+                         * request. It now reads the line priced above, which
+                         * CheckoutTotals::lines also left on the row as
+                         * charged_unit_price for the Essentials Bundle
+                         * discount below.
                          */
-                        $currentPrice = Pricing::unitPrice(
-                            $cart->product_inner, $cart->updated_inventory, $cart->quantity,
-                            $businessTiers->get($cart->product_inner->id)
-                        );
+                        $line = $priced['lines'][$cart->id];
 
-                        /*
-                         * Kept on the row, in memory only, so the Essentials
-                         * Bundle discount below is worked out against what
-                         * this order is actually charging rather than against
-                         * the price the basket last stored.
-                         */
-                        $cart->charged_unit_price = $currentPrice;
+                        $currentPrice = $line['unit'];
 
                         /*
                          * Delivery is charged once per order, on the first
@@ -3970,13 +3888,13 @@ class OrdersController extends ControllerHelper
                         $shippingCharged = true;
 
 
-                        $bundleQtyOffer = Pricing::bundleFreeQuantity($cart->product_inner, $cart->quantity);
+                        $bundleQtyOffer = $line['free'];
 
                         // Units the customer actually pays for on this line.
-                        $payableQty = max(0, (int)$cart->quantity - (int)$bundleQtyOffer);
+                        $payableQty = $line['payable'];
 
                         /*
-                         * Tax calculation.
+                         * Tax calculation (CheckoutTotals::line).
                          *
                          * excludeVAT = 1 means this product's price is quoted
                          * excluding VAT, so tax is added on top; anything else
@@ -3985,32 +3903,19 @@ class OrdersController extends ControllerHelper
                          * unchanged deliberately — see TAX-01 in the audit, which
                          * is a business decision, not a code fix.
                          *
-                         * QA audit TAX-02: the rate now comes from the joined
-                         * tax_rules row instead of a hardcoded 23%.
+                         * QA audit TAX-02: the rate comes from the joined
+                         * tax_rules row instead of a hardcoded 23%. The tax is
+                         * worked out per unit, rounded to the cent, then times
+                         * the payable quantity -- the rule the basket now
+                         * states as well (Pricing::lineVat).
                          */
-                        $taxRule = $cart->product_inner->tax_rules;
-
-                        /*
-                         * Read excludeVAT off the relation when it was selected,
-                         * and fall back to the product row when it was not.
-                         * Without the fallback a missing column reads as null,
-                         * which silently means "not taxable" and drops VAT from
-                         * the whole order without any error.
-                         */
-                        $excludeVAT = $cart->product_inner->getAttribute('excludeVAT');
-
-                        if (is_null($excludeVAT)) {
-                            $excludeVAT = Product::where('id', $cart->product_inner->id)
-                                ->value('excludeVAT');
-                        }
-
-                        $productTaxable = (int)$excludeVAT === 1;
-
-                        $taxQtyOffer = Pricing::unitTax($taxRule, $currentPrice, $productTaxable);
+                        $taxRule = $line['tax_rule'];
+                        $productTaxable = $line['taxable'];
+                        $taxQtyOffer = $line['unit_tax'];
 
                         // QA audit ORD-03: free bundle units were being taxed.
-                        $totalTax = Pricing::round($taxQtyOffer * $payableQty);
-                        $priceWithoutBundle = Pricing::round($currentPrice * $payableQty);
+                        $totalTax = $line['tax'];
+                        $priceWithoutBundle = $line['goods'];
                         $total = Pricing::round($shippingPrice + $totalTax + $priceWithoutBundle);
 
                         $totalPrice += $total;
@@ -4040,9 +3945,7 @@ class OrdersController extends ControllerHelper
                              * matched either way, which is why it went
                              * unnoticed.
                              */
-                            'actual_price' => Pricing::listPrice(
-                                $cart->product_inner, $cart->updated_inventory, $currentPrice
-                            ),
+                            'actual_price' => $line['list'],
                             // QA audit CART-01: was $cart->price, which the
                             // client chose. Now the price actually charged.
                             'price' => $currentPrice,
@@ -4211,11 +4114,6 @@ class OrdersController extends ControllerHelper
                  */
                 $bundleBreakdown = BundleDiscount::forRows($existingCart);
 
-                $bundleDiscountAmount = Pricing::round(max(0, min(
-                    $bundleBreakdown['total'],
-                    max(0, Pricing::round($totalPrice - $offeredVoucher - $flashDiscountAmount))
-                )));
-
                 /*
                  * The customer's loyalty group discount.
                  *
@@ -4231,7 +4129,6 @@ class OrdersController extends ControllerHelper
                  * value of the goods.
                  */
                 $loyaltyBest = null;
-                $loyaltyDiscountAmount = 0;
 
                 if ($request->user('user')) {
 
@@ -4244,61 +4141,48 @@ class OrdersController extends ControllerHelper
                         $totalCartPrice,
                         $memberLines
                     );
-
-                    if ($loyaltyBest) {
-
-                        $remainingBeforeLoyalty = max(0, Pricing::round(
-                            $totalPrice - $offeredVoucher - $flashDiscountAmount
-                            - $bundleDiscountAmount));
-
-                        $loyaltyDiscountAmount = Pricing::round(max(0, min(
-                            $loyaltyBest['discount'],
-                            $remainingBeforeLoyalty
-                        )));
-
-                        // Record what was actually granted, not what was offered.
-                        $loyaltyBest['discount'] = $loyaltyDiscountAmount;
-                    }
                 }
 
-                $pointsDiscount = 0;
+                $usingPoints = $request->user('user')
+                    && isset($params->use_points) && (int)$params->use_points === 1;
+
+                /*
+                 * The order-wide discounts, each capped by what is still owed
+                 * after the ones before it: bundle after the voucher and the
+                 * flash discount, loyalty after the bundle, and points can
+                 * only pay for what is left -- so between them they can never
+                 * exceed the order value. The same chain prices the checkout
+                 * quote (CheckoutTotals::chain).
+                 */
+                $chain = CheckoutTotals::chain(
+                    $totalPrice,
+                    $offeredVoucher,
+                    $flashDiscountAmount,
+                    $bundleBreakdown['total'],
+                    $loyaltyBest ? $loyaltyBest['discount'] : 0,
+                    $usingPoints ? (float)($params->points_discount ?? 0) : 0,
+                    $usingPoints ? CheckoutTotals::pointsValue($request->user('user')->id) : 0
+                );
+
+                $bundleDiscountAmount = $chain['bundle'];
+                $loyaltyDiscountAmount = $chain['loyalty'];
+                $pointsDiscount = $chain['points'];
+
+                if ($loyaltyBest) {
+                    // Record what was actually granted, not what was offered.
+                    $loyaltyBest['discount'] = $loyaltyDiscountAmount;
+                }
 
                 if ($request->user('user')) {
                     $user = $request->user('user');
 
-                    if(isset($params->use_points) && (int)$params->use_points === 1){
-                        $availablePoints = PointTransaction::where('user_id', $user->id)
-                        ->selectRaw("
-                            SUM(
-                                CASE
-                                    WHEN type='credit' THEN points
-                                    ELSE -points
-                                END
-                            ) as total
-                        ")
-                        ->value('total') ?? 0;
-
-                        $availableValue = $availablePoints * 0.01;
-
+                    if ($usingPoints) {
                         /*
-                         * Points can only pay for what is still owed after the
-                         * voucher, the flash discount and the loyalty group
-                         * discount, otherwise they can exceed the order value
-                         * between them.
+                         * In whole points: floor(0.29 / 0.01) is 28, because
+                         * the float for 0.29 / 0.01 is 28.999..., which
+                         * debited one point fewer than the value recorded.
                          */
-                        $remainingAfterDiscounts = max(0,
-                            $totalPrice - $offeredVoucher - $flashDiscountAmount
-                            - $bundleDiscountAmount - $loyaltyDiscountAmount);
-
-                        $pointsDiscount = Pricing::round(min(
-                            (float)($params->points_discount ?? 0),
-                            $availableValue,
-                            $remainingAfterDiscounts
-                        ));
-
-                        $pointsDiscount = max(0, $pointsDiscount);
-
-                        $usedPoints = floor($pointsDiscount / 0.01);
+                        $usedPoints = (int)round($pointsDiscount * 100);
 
                         if ($usedPoints > 0) {
 
@@ -4342,10 +4226,7 @@ class OrdersController extends ControllerHelper
                     ));
                 }
 
-                $payableTotal = Pricing::round(max(0,
-                    $totalPrice - $offeredVoucher - $flashDiscountAmount
-                    - $bundleDiscountAmount - $loyaltyDiscountAmount
-                    - $pointsDiscount));
+                $payableTotal = $chain['payable'];
 
                 /*
                  * Split payment: part from the wallet, the rest by the chosen

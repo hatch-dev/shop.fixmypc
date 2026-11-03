@@ -258,6 +258,11 @@ export default {
       const rate = this.formatVatRate(detail.rate)
       const exVat = detail.ex !== null ? detail.ex : detail.amount - detail.vat
 
+      /*
+       * One unit, both sides of VAT, the rate and the VAT itself - all four
+       * figures a customer needs to read the price, in the order the price
+       * is built up for its own convention.
+       */
       if (detail.inclusive) {
         return {
           title: this.$t('ui.priceHelper.incTitle'),
@@ -265,6 +270,7 @@ export default {
           lede: this.$t('ui.priceHelper.incLede'),
           rows: [
             { label: this.$t('ui.priceHelper.currentPrice'), value: this.money(detail.amount) },
+            { label: this.$t('ui.priceHelper.vatRate'), value: rate },
             { label: this.$t('ui.priceHelper.vatIncluded'), value: this.money(detail.vat) },
             { label: this.$t('ui.priceHelper.exValue'), value: this.money(exVat) },
           ],
@@ -279,6 +285,7 @@ export default {
         rows: [
           { label: this.$t('ui.priceHelper.currentPrice'), value: this.money(exVat) },
           { label: this.$t('ui.priceHelper.vatRate'), value: rate },
+          { label: this.$t('ui.cartProductTileUi.vatPerUnitAdded'), value: this.money(detail.vat) },
           { label: this.$t('ui.priceHelper.incEquivalent'), value: this.money(detail.amount) },
         ],
         note: this.$t('ui.priceHelper.exNote'),

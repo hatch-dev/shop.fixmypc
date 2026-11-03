@@ -58,10 +58,10 @@
               in order to decide.
             -->
             <span
-              v-if="cartVatBasis"
+              v-if="vatLine"
               class="cart-basis-badge"
-              :class="cartVatBasis.inclusive ? 'is-inclusive' : 'is-exclusive'"
-            >{{ cartVatBasis.short }}<info-popover
+              :class="`is-${vatLine.kind === 'added' ? 'exclusive' : vatLine.kind === 'included' ? 'inclusive' : 'none'}`"
+            >{{ vatLine.badge }}<info-popover
               v-if="vatExplainer"
               variant="badge"
               :title="vatExplainer.title"
@@ -81,6 +81,7 @@
                 {{ $t('ui.cartProductTileUi.save', { amount: (currencyIcon || '') + discountAmount.toFixed(2) }) }}
               </span>
             </div>
+
 
             <!--
               Whether this line can be bought as it stands, and whether its
@@ -142,46 +143,43 @@
               :max="maxQuantity" @value-changed="valueChanged" />
           </div>
           <!--
-            The line, on the basis the line is priced on, and the multiplication
-            that produced it.
+            The line, on the basis the product is quoted on, and the
+            multiplication that produced it - "€501.49 × 1" over "€501.49
+            Ex-VAT" - so the card is checkable against the price beside it.
+            The other side of VAT is stated underneath: the incl. VAT figure an
+            ex-VAT line is charged at, or the excl. VAT value inside an inc-VAT
+            one.
 
-            Stated the way the product is quoted rather than converted to gross:
-            "€674.00 × 3" and "€2,022.00 Ex-VAT" are the same number the price
-            above it is, so the card is checkable by eye. Converting it here
-            instead put a figure on the card (€2,487.06) that appears nowhere
-            else on the line and that the customer has no way to arrive at.
-
-            Normalising the two conventions so they can be added is the Order
-            Summary's job, and the summary is where VAT is stated. The card
-            says what this product costs; the ⓘ on the badge has the split for
-            anyone who wants it.
-
-            An Ex-VAT line also shows its Inc-VAT total underneath, because the
-            net figure is not what will be charged: without it the Order
-            Summary's total reads as higher than the cards for no visible
-            reason. An Inc-VAT line gets the matching second line as its Ex-VAT
-            total ("€730.89 Ex-VAT"), by the store's choice, so both kinds of
-            line show both sides. The headline stays the price charged.
+            Every figure is the server's split (CartsController::describeVat):
+            VAT per unit rounded to the cent, times the units paid for - the
+            rule the order charges by, so the counterpart here is exactly what
+            the order takes for this line. A "buy X get Y free" line multiplies
+            by the units paid for, which is what the line actually costs.
           -->
           <div class="cart-line-total">
             <span class="cart-line-total-label">{{ $t('ui.cartProductTileUi.lineTotal') }}</span>
 
             <span class="cart-line-total-calc">
-              <price-format :price="displayPrice" /> &times; {{ productQuantity }}
+              <template v-if="vatLine">
+                <price-format :price="vatLine.unitQuoted" /> &times; {{ vatLine.paid }}
+              </template>
+              <template v-else>
+                <price-format :price="displayPrice" /> &times; {{ productQuantity }}
+              </template>
             </span>
 
             <span class="cart-line-total-main">
-              <price-format class="cart-line-total-value" :price="lineTotal" />
-              <em v-if="cartVatBasis" class="cart-line-total-basis">
-                {{ cartVatBasis.short }}
+              <price-format class="cart-line-total-value" :price="vatLine ? vatLine.lineQuoted : lineTotal" />
+              <em v-if="vatLine && vatLine.short" class="cart-line-total-basis">
+                {{ vatLine.short }}
               </em>
             </span>
 
-            <span v-if="lineIncVat !== null" class="cart-line-total-inc">
-              <price-format :price="lineIncVat" :decimals="2" /> {{ $t('ui.cartProductTileUi.incVat') }}
+            <span v-if="vatLine && vatLine.kind === 'added'" class="cart-line-total-inc">
+              <price-format :price="vatLine.lineInc" :decimals="2" /> {{ $t('ui.cartProductTileUi.incVat') }}
             </span>
-            <span v-else-if="lineExVat !== null" class="cart-line-total-inc">
-              <price-format :price="lineExVat" :decimals="2" /> {{ $t('ui.cartProductTileUi.exVat') }}
+            <span v-else-if="vatLine && vatLine.kind === 'included'" class="cart-line-total-inc">
+              <price-format :price="vatLine.lineEx" :decimals="2" /> {{ $t('ui.cartProductTileUi.exVat') }}
             </span>
           </div>
           <div class="delete-and-check">
@@ -225,6 +223,7 @@ import AjaxButton from "~/components/AjaxButton"
 import FlashDiscount from "~/components/FlashDiscount"
 import Dropdown from "./Dropdown";
 import InfoPopover from "~/components/InfoPopover"
+import { isPriced, vatKind } from "~/mixin/checkoutTotals"
 
 export default {
   name: 'CartProductTile',
@@ -309,26 +308,6 @@ export default {
      * multiplication done here against whatever price the page happens to be
      * holding. The fallback covers a cached or older payload.
      */
-    /*
-     * The server's gross total for an Ex-VAT line, or null. Null on an
-     * Inc-VAT or zero-rated line, and on a line priced before the split was
-     * sent — never worked out here from a rate.
-     */
-    lineIncVat() {
-      if (!this.cartVatBasis || this.cartVatBasis.inclusive) return null
-
-      const inc = parseFloat(this.cart?.line_inc_vat)
-
-      return Number.isFinite(inc) ? inc : null
-    },
-    /* The server's net total for an Inc-VAT line, or null. */
-    lineExVat() {
-      if (!this.cartVatBasis || !this.cartVatBasis.inclusive) return null
-
-      const ex = parseFloat(this.cart?.line_ex_vat)
-
-      return Number.isFinite(ex) && ex > 0 ? ex : null
-    },
     lineTotal() {
       const serverTotal = this.cart?.line_total
 
@@ -350,9 +329,67 @@ export default {
      * about. unit_price is the explicit name; upsell_price is the same value
      * under the name the cart API has always used.
      */
+    /*
+     * Any number the server sent is its answer, 0.00 included: a product on
+     * a 100% clearance genuinely costs nothing, and "> 0" here used to hand a
+     * free line back to the retail ladder, which priced it at its old
+     * selling price.
+     */
     hasUpsellPrice() {
       const price = this.cart?.unit_price ?? this.cart?.upsell_price
-      return price !== null && price !== undefined && parseFloat(price) > 0;
+      return price !== null && price !== undefined && price !== '' && Number.isFinite(parseFloat(price));
+    },
+
+    /*
+     * The line's VAT, every figure from the server's split (describeVat).
+     * Null until the line has been priced, so nothing is shown that the page
+     * would have had to work out for itself.
+     */
+    vatLine() {
+      const line = this.cart
+
+      if (!isPriced(line)) return null
+
+      const kind = vatKind(line)
+      const quantity = parseInt(line.quantity || 0)
+      const free = parseInt(line.free_units || 0)
+      const paid = line.payable_quantity != null ? parseInt(line.payable_quantity) : Math.max(0, quantity - free)
+
+      const rate = Number(line.vat_rate)
+      const flat = Number(line.vat_flat)
+      const rateLabel = rate > 0
+        ? this.formatVatRate(rate)
+        : flat > 0 ? this.$t('ui.cartProductTileUi.flatVat', { amount: this.money(flat) }) : '0%'
+
+      const unitEx = Number(line.unit_ex_vat || 0)
+      const unitInc = Number(line.unit_inc_vat || 0)
+      const lineEx = Number(line.line_ex_vat || 0)
+      const lineInc = Number(line.line_inc_vat || 0)
+
+      // An ex-VAT product is quoted net; everything else is quoted gross.
+      const net = kind === 'added'
+
+      return {
+        kind,
+        rateLabel,
+        quantity,
+        free,
+        paid,
+        unitEx,
+        unitVat: Number(line.unit_vat || 0),
+        unitInc,
+        lineEx,
+        lineVat: Number(line.line_vat || 0),
+        lineInc,
+        unitQuoted: net ? unitEx : unitInc,
+        lineQuoted: net ? lineEx : lineInc,
+        // the badge and the basis beside the line total, as the reference names them
+        badge: kind === 'added' ? this.$t('ui.priceHelper.ex')
+          : kind === 'included' ? this.$t('ui.priceHelper.inc')
+            : this.$t('ui.cartProductTileUi.badgeNone'),
+        short: kind === 'added' ? this.$t('ui.priceHelper.ex')
+          : kind === 'included' ? this.$t('ui.priceHelper.inc') : '',
+      }
     },
 
     upsellPrice() {
@@ -845,6 +882,11 @@ h6.cart-heading a:hover {
 .cart-basis-badge.is-inclusive {
   background: #DCF6E4;
   color: #15803D;
+}
+
+.cart-basis-badge.is-none {
+  background: #EEF1F6;
+  color: #42526B;
 }
 
 .cart-basis-badge:focus-visible {

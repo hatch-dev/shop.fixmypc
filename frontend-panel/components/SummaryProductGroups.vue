@@ -135,6 +135,11 @@
               <span>{{ $t('ui.checkoutSummary.groups.atRate', { rate: r.rateLabel }) }}</span>
               <price-format :price="r.vat" :decimals="2" />
             </div>
+            <!-- the net value inside those prices: incl. VAT less the VAT above -->
+            <div class="spg-row">
+              <span>{{ $t('ui.checkoutSummary.groups.subtotalExVat') }}</span>
+              <price-format :price="group.ex" :decimals="2" />
+            </div>
           </template>
 
           <!-- ③ -->

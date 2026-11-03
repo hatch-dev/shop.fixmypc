@@ -939,7 +939,10 @@
       "exVat": "Ex-VAT",
       "removeItem": "Remove item",
       "saveError": "Could not save this item",
-      "movedToSaved": "Moved to Save for later"
+      "movedToSaved": "Moved to Save for later",
+      "vatPerUnitAdded": "VAT added per unit",
+      "flatVat": "flat {amount}",
+      "badgeNone": "No VAT"
     },
     "categoryListingLayoutUi": {
       "bannerTitle": "Browse Our Categories",
@@ -2278,7 +2281,21 @@
         "totalVat": "Total VAT in this order",
         "netExVat": "Net Ex-VAT",
         "totalIncVat": "Total Inc-VAT",
-        "mixedRates": "Your basket has products at more than one VAT rate."
+        "mixedRates": "Your basket has products at more than one VAT rate.",
+        "savingPriceLine": "{from} → {to} incl. VAT, × {qty}",
+        "savingFreeLine": "{count} free, worth {amount}",
+        "savingsGrossNote": "Savings are stated incl. VAT and are already reflected in the prices above. Order discounts are listed separately.",
+        "vatInsideAt": "VAT included in prices ({rate})",
+        "vatAddedAt": "VAT added ({rate})",
+        "vatOnceNote": "VAT already inside a price is never added again; only VAT on VAT-exclusive prices is added. VAT is worked out per unit and rounded to the cent."
+      },
+      "flatRate": "flat {amount}",
+      "breakdown": {
+        "subtotalEx": "Subtotal (excl. VAT)",
+        "vatIncluded": "VAT already included in VAT-inclusive prices",
+        "vatAdded": "VAT added to VAT-exclusive prices",
+        "totalVat": "Total VAT",
+        "subtotalInc": "Subtotal (incl. VAT)"
       }
     },
     "flashDiscount": {
@@ -2668,7 +2685,8 @@
       "notPlaced": "Your order could not be placed.",
       "reasonNotCharged": "{reason} You have not been charged.",
       "couldNotPlace": "We could not place this order.",
-      "orderRefused": "Order refused"
+      "orderRefused": "Order refused",
+      "amountChanged": "Your order total is now {amount}. Please review your basket before paying."
     },
     "paymentPage": {
       "title": "Complete your payment",
@@ -2751,7 +2769,8 @@
       "notConfirmed": "Payment could not be confirmed",
       "notAuthorised": "Your card was not authorised. Please try another card.",
       "notPlaced": "Your order could not be placed. You have not been charged.",
-      "notStarted": "The card payment could not be started. Please try again."
+      "notStarted": "The card payment could not be started. Please try again.",
+      "amountChanged": "Your order total is now {amount}, not the amount shown. Your card has not been charged — please review your basket and try again."
     },
     "topPromoBanner": {
       "shopAnd": "SHOP AND",

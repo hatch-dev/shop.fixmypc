@@ -97,8 +97,20 @@ function loadCartModule () {
   new Function('module', 'exports', 'require', code)(m, m.exports, (request) => {
     if (request === 'vue') return { default: Vue, __esModule: true }
     if (request.indexOf('service') !== -1) return { default: service, __esModule: true }
+    // the goods base is the shared checkout arithmetic, loaded for real
+    if (request.indexOf('mixin/checkoutTotals') !== -1) return loadTotals()
     return {}
   })
+
+  return m.exports
+}
+
+function loadTotals () {
+  const code = transform(fs.readFileSync(path.join(ROOT, 'mixin/checkoutTotals.js'), 'utf8'), 'checkoutTotals.js')
+  const m = { exports: {} }
+
+  // eslint-disable-next-line no-new-func
+  new Function('module', 'exports', 'require', code)(m, m.exports, () => ({}))
 
   return m.exports
 }
@@ -134,6 +146,9 @@ function line (unitPrice, quantity, selected = 1) {
     unit_price: unitPrice,
     upsell_price: unitPrice,
     line_total: Number((unitPrice * quantity).toFixed(2)),
+    // what the order charges before VAT is added: unit x units paid for
+    line_goods: Number((unitPrice * quantity).toFixed(2)),
+    vat_rate: 23, vat_inclusive: true,
     original_price: unitPrice + 100,
     flash_product: { selling: unitPrice + 300, offered: unitPrice + 100 },
   }
@@ -271,6 +286,26 @@ async function run () {
 
     check('the banner figure matches what the summary holds', () => {
       assert.ok(b.text().indexOf('€' + b.amount().toFixed(2)) !== -1, b.text().slice(0, 200))
+    })
+  }
+
+  /*
+   * A "buy 3 get 1 free" line: 3 units at 100.00, one of them free. The order
+   * measures the flash discount on what it charges - 2 x 100.00 - and the
+   * preview used to measure it on line_total, all three units.
+   */
+  {
+    const flash = promotion()
+    const row = line(100, 3)
+    row.line_goods = 200
+    row.free_units = 1
+
+    const b = mount(flash, [row], true)
+    await settle()
+
+    check('free bundle units are not in the flash discount base', () => {
+      assert.strictEqual(b.store.getters['cart/selectedGoodsTotal'], 200)
+      assert.strictEqual(b.amount(), serverDiscount(flash, 200))
     })
   }
 

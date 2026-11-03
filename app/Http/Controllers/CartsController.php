@@ -14,6 +14,8 @@ use App\Models\Helper\Response;
 use App\Models\Helper\Validation;
 use App\Models\Helper\BundleDiscount;
 use App\Models\Helper\Pricing;
+use App\Models\Helper\CheckoutTotals;
+use App\Models\Helper\ClearanceWindow;
 use App\Models\Helper\Shipping;
 use App\Models\Helper\Membership;
 use App\Models\Product;
@@ -129,11 +131,23 @@ class CartsController extends ControllerHelper
                             \DB::raw('COALESCE(pl.title, products.title) as title'), 'products.slug',
                             'products.selling', 'products.offered', 'products.tax_rule_id',
                             'products.excludeVAT',
-                            'products.image', 'products.shipping_rule_id',
+                            'products.image', 'products.shipping_rule_id', 'products.sell_countries',
                             'flash_sale_products.price',
                             'flash_sale_products.discount_type as flash_discount_type',
                             'flash_sale_products.discount_value as flash_discount_value',
-                            'flash_sales.end_time', 'upsell_products.price as upsell_price');
+                            'flash_sales.end_time', 'upsell_products.price as upsell_price')
+                        /*
+                         * The live clearance, which Cart::flash_product joins
+                         * and selects -- and which the select() above, by
+                         * REPLACING the relation's column list, used to drop.
+                         * Pricing then saw no clearance at all, so a shopper
+                         * on any language but the default was shown, and had
+                         * carts.price rewritten to, the undiscounted price
+                         * while the order charged the clearance one. Price is
+                         * not a translation; it must not move with the
+                         * Language header.
+                         */
+                        ->addSelect(ClearanceWindow::columns());
                 }]);
 
             } else {
@@ -415,86 +429,10 @@ class CartsController extends ControllerHelper
             $row->line_total = Pricing::round($unitPrice * $quantity);
 
             /*
-             * The line split for VAT, decided here rather than in the browser.
-             *
-             * CheckoutRight.vue was working the tax out for itself from the
-             * product's rule and its excludeVAT flag — a fifth copy of the
-             * ladder, on the one screen where being wrong means charging the
-             * wrong amount. It now reads these, so the basket, the summary and
-             * the order all come from Pricing and cannot disagree.
-             *
-             * Whether the unit price is net or gross depends on the product;
-             * both conventions exist in this catalogue.
+             * The line split for VAT, decided here rather than in the browser
+             * (describeVat), on the same per-unit rule the order charges by.
              */
-            $taxRule = $product->tax_rules ?? null;
-            $rate = Pricing::vatRate($taxRule);
-            $inclusive = Pricing::isVatInclusive($product);
-
-            $unitSplit = Pricing::vatBreakdown($unitPrice, $rate, $inclusive);
-
-            /*
-             * Units the customer actually pays for: a "buy X get Y free"
-             * bundle does not tax the free ones (QA audit ORD-03), which is
-             * the same rule the order applies when it charges.
-             */
-            $freeUnits = Pricing::bundleFreeQuantity($product, $quantity);
-            $payableQty = max(0, $quantity - (int)$freeUnits);
-
-            $lineSplit = Pricing::vatBreakdown(
-                Pricing::round($unitPrice * $payableQty), $rate, $inclusive
-            );
-
-            $row->vat_rate = $unitSplit['rate'];
-            $row->vat_inclusive = $unitSplit['inclusive'];
-            $row->unit_ex_vat = $unitSplit['ex'];
-            $row->unit_vat = $unitSplit['vat'];
-            $row->unit_inc_vat = $unitSplit['inc'];
-            $row->line_ex_vat = $lineSplit['ex'];
-            $row->line_vat = $lineSplit['vat'];
-            $row->line_inc_vat = $lineSplit['inc'];
-
-            /*
-             * The list price of this line, stated gross.
-             *
-             * `original_price` is in whichever convention the product is
-             * quoted in, so a summary cannot add it up and call the result
-             * inc-VAT. Split here by the same helper, so the basket can lead
-             * with "Products (Inc-VAT)" and have it mean the same thing for
-             * the ex-VAT lines as for the rest. Same basis as the order
-             * (OrderSummary::for), which measures the list against the full
-             * quantity and lets the discount carry anything a bundle gave away.
-             */
-            $listSplit = Pricing::vatBreakdown(
-                Pricing::round($originalPrice * $quantity), $rate, $inclusive
-            );
-
-            $row->line_list_inc_vat = $listSplit['inc'];
-
-            /*
-             * The same list total stated two more ways, because the summary
-             * needs all three and none of them may be derived in the browser.
-             *
-             *   line_list      as the product is quoted: 699 x 3 = 2,097.00 for
-             *                  an ex-VAT line, 1,000.00 for an inc-VAT one.
-             *                  This is what the "Original Products" list shows
-             *                  beside each name, and it is deliberately NOT
-             *                  summed with its neighbours — two conventions do
-             *                  not add up, which is the whole point of stating
-             *                  the basis next to it.
-             *
-             *   line_list_ex_vat  the same figure normalised to net, which IS
-             *                  addable across conventions. 1,000 inc-VAT
-             *                  becomes 813.01, and the basket's original net
-             *                  total comes out at 2,910.01 rather than the
-             *                  2,910.01-vs-3,097.00 confusion of adding a gross
-             *                  figure to a net one.
-             *
-             * Normalising first and aggregating second is the rule the whole
-             * of this method follows; these two just make it visible to the
-             * summary as well as to the total.
-             */
-            $row->line_list = Pricing::round($originalPrice * $quantity);
-            $row->line_list_ex_vat = $listSplit['ex'];
+            $this->describeVat($row, $product, $unitPrice, $originalPrice, $quantity);
 
             /*
              * "The price of this item has changed": the unit price
@@ -654,6 +592,54 @@ class CartsController extends ControllerHelper
             return response()->json(Validation::error($request->token, $ex->getMessage()));
         }
     }
+
+    /**
+     * What the caller's checkout would be charged, as placing the order would
+     * charge it (CheckoutTotals::quote). Read only.
+     *
+     * Takes the shopper's choices -- voucher code, flash discount, points,
+     * wallet -- and never an amount. A card gateway that takes the money
+     * before the order exists is handed this figure, so the amount taken and
+     * the order's total_amount come out of the same arithmetic.
+     */
+    public function checkoutTotal(Request $request)
+    {
+        try {
+            $lang = $request->header('language');
+
+            $quote = CheckoutTotals::quote($request, self::checkoutChoices($request), $lang);
+
+            if (!$quote['ok']) {
+                return response()->json(Validation::error($request->token, $quote['message']));
+            }
+
+            unset($quote['ok'], $quote['message']);
+
+            return response()->json(new Response($request->token, $quote));
+
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+
+    /**
+     * The checkout decisions a request may carry, and nothing else: which
+     * voucher, and yes/no for the flash discount, points and wallet. The
+     * points figure is a request -- CheckoutTotals caps it by the balance.
+     */
+    public static function checkoutChoices(Request $request)
+    {
+        return [
+            'voucher' => $request->input('voucher') ?: null,
+            'apply_flash_discount' => (int)$request->input('apply_flash_discount') === 1,
+            'use_points' => (int)$request->input('use_points') === 1,
+            'points_discount' => (float)$request->input('points_discount', 0),
+            'use_wallet' => (int)$request->input('use_wallet') === 1,
+            'order_method' => (int)$request->input('order_method', 0),
+        ];
+    }
+
 
     /**
      * Can the caller's checkout be bought right now? Asked by the payment
@@ -2122,38 +2108,74 @@ class CartsController extends ControllerHelper
             return;
         }
 
-        $rate = Pricing::vatRate($product->tax_rules ?? null);
+        $this->describeVat($cart, $product, (float)$cart->unit_price,
+            (float)$cart->original_price, (int)$cart->quantity);
+    }
+
+
+    /**
+     * Put a line's VAT on it, in every form the basket and summary print.
+     *
+     * Decided here, never in the browser: CheckoutRight.vue once worked the
+     * tax out for itself from the product's rule and its excludeVAT flag -- a
+     * fifth copy of the ladder, on the one screen where being wrong means
+     * charging the wrong amount. Whether the unit price is net or gross
+     * depends on the product; both conventions exist in this catalogue.
+     *
+     * One rule for every figure (Pricing::lineVat): VAT per unit rounded to
+     * the cent, times the units. It is the rule the order charges by, so the
+     * line VAT here is the tax the order adds, to the cent -- the line-level
+     * rounding this used to do showed EUR 6.92 on 10.03 x 3 at 23% against
+     * 6.93 charged. It is also why every unit figure multiplies out to its
+     * line figure on the card.
+     *
+     *   unit_*         one unit: ex-VAT, VAT, inc-VAT
+     *   line_*         the units paid for -- a "buy X get Y free" bundle's free
+     *                  ones are neither charged nor taxed (QA audit ORD-03)
+     *   line_goods     what the order charges before adding any VAT: the base
+     *                  of the store-wide flash discount, as OrdersController
+     *                  takes it
+     *   unit_list_*,   the list price the saving is measured against, on the
+     *   line_list_*    same rule, over the FULL quantity, so the saving carries
+     *                  whatever a bundle gave away (as OrderSummary does)
+     *   line_list      the list total as the product is quoted -- net for an
+     *                  ex-VAT line, gross otherwise; not addable across lines
+     *   vat_flat       a flat-amount rule's per-unit amount. vat_rate is 0 for
+     *                  one (there is no percentage) but the tax is real
+     */
+    private function describeVat($row, $product, $unitPrice, $originalPrice, $quantity)
+    {
+        $taxRule = $product->tax_rules ?? null;
         $inclusive = Pricing::isVatInclusive($product);
 
-        $unitPrice = (float)$cart->unit_price;
-        $quantity = (int)$cart->quantity;
+        $freeUnits = (int)Pricing::bundleFreeQuantity($product, $quantity);
+        $payableQty = max(0, (int)$quantity - $freeUnits);
 
-        $unitSplit = Pricing::vatBreakdown($unitPrice, $rate, $inclusive);
+        $line = Pricing::lineVat($unitPrice, $payableQty, $taxRule, $inclusive);
+        $list = Pricing::lineVat($originalPrice, $quantity, $taxRule, $inclusive);
 
-        $freeUnits = Pricing::bundleFreeQuantity($product, $quantity);
-        $payableQty = max(0, $quantity - (int)$freeUnits);
+        $row->vat_rate = $line['rate'];
+        $row->vat_flat = $line['flat'];
+        $row->vat_inclusive = $line['inclusive'];
 
-        $lineSplit = Pricing::vatBreakdown(
-            Pricing::round($unitPrice * $payableQty), $rate, $inclusive
-        );
+        $row->free_units = $freeUnits;
+        $row->payable_quantity = $payableQty;
 
-        $cart->vat_rate = $unitSplit['rate'];
-        $cart->vat_inclusive = $unitSplit['inclusive'];
-        $cart->unit_ex_vat = $unitSplit['ex'];
-        $cart->unit_vat = $unitSplit['vat'];
-        $cart->unit_inc_vat = $unitSplit['inc'];
-        $cart->line_ex_vat = $lineSplit['ex'];
-        $cart->line_vat = $lineSplit['vat'];
-        $cart->line_inc_vat = $lineSplit['inc'];
+        $row->unit_ex_vat = $line['unit_ex'];
+        $row->unit_vat = $line['unit_vat'];
+        $row->unit_inc_vat = $line['unit_inc'];
 
-        /* The list price of the line, all three ways — see repriceForCustomer. */
-        $listSplit = Pricing::vatBreakdown(
-            Pricing::round((float)$cart->original_price * $quantity), $rate, $inclusive
-        );
+        $row->line_ex_vat = $line['line_ex'];
+        $row->line_vat = $line['line_vat'];
+        $row->line_inc_vat = $line['line_inc'];
+        $row->line_goods = Pricing::round($unitPrice * $payableQty);
 
-        $cart->line_list_inc_vat = $listSplit['inc'];
-        $cart->line_list = Pricing::round((float)$cart->original_price * $quantity);
-        $cart->line_list_ex_vat = $listSplit['ex'];
+        $row->unit_list_ex_vat = $list['unit_ex'];
+        $row->unit_list_vat = $list['unit_vat'];
+        $row->unit_list_inc_vat = $list['unit_inc'];
+        $row->line_list_ex_vat = $list['line_ex'];
+        $row->line_list_inc_vat = $list['line_inc'];
+        $row->line_list = Pricing::round($originalPrice * $quantity);
     }
 
 

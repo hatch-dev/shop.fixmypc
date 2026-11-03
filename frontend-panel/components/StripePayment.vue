@@ -170,6 +170,14 @@
        * pays an order that already exists (orderId) straight away.
        */
       placeOrder: {type: Function, default: null},
+      /*
+       * The shopper's checkout decisions - voucher, flash discount, points,
+       * wallet - sent with the authorisation so the server can price the
+       * basket itself (CheckoutTotals::quote). Never an amount: the card is
+       * authorised for the server's figure, and `amount` above is only what
+       * the page showed, which it is checked against.
+       */
+      checkoutChoices: {type: Object, default: null},
       // In the page rather than a dialog; the parent calls pay().
       inline: {type: Boolean, default: false},
       // ISO code the card form's country list starts on.
@@ -366,6 +374,23 @@
           return
         }
 
+        /*
+         * The server authorised what the order will charge. If that is not
+         * the figure the shopper agreed to on the button, the basket moved
+         * under them (a price, a promotion, a balance): release the hold and
+         * say so, rather than place an order for an amount they were not shown.
+         */
+        const authorised = Number(auth.amount)
+
+        if (Number.isFinite(authorised) && Math.round(authorised * 100) !== Math.round(Number(this.amount) * 100)) {
+          this.release(auth.intent)
+          this.errorText = this.$t('ui.stripePaymentUi.amountChanged', {
+            amount: this.priceFormat(this.currencyPosition, this.currencyIcon, authorised, this.setting, 2)
+          })
+          this.$emit('amount-changed', authorised)
+          return
+        }
+
         const placed = await this.placeOrder(auth.intent)
         if (!placed?.ok) {
           // The server released the hold with its refusal; this is a backstop.
@@ -391,7 +416,11 @@
       // {status: authorised | requires_action | failed, intent, client_secret, message}
       async authorise(paymentToken) {
         try {
-          const res = await this.api('stripe-authorise', {payment_token: paymentToken, amount: this.amount})
+          const res = await this.api('stripe-authorise', {
+            ...(this.checkoutChoices || {}),
+            payment_token: paymentToken,
+            amount: this.amount
+          })
           if (res?.status === 200) return res.data
           return {status: 'failed', message: res?.message}
         } catch (e) {

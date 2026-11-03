@@ -50,6 +50,20 @@ function loadPage (relative) {
       return { mapGetters: spread, mapActions: spread, mapState: spread }
     }
 
+    // The shared checkout arithmetic is loaded for real: it IS the total.
+    if (request.indexOf('mixin/checkoutTotals') !== -1) {
+      const totals = { exports: {} }
+      const source = babel.transformSync(fs.readFileSync(path.join(ROOT, 'mixin/checkoutTotals.js'), 'utf8'), {
+        filename: 'checkoutTotals.js', configFile: false, babelrc: false,
+        presets: [[path.join(NM, '@babel/preset-env'), { targets: { node: 'current' } }]],
+      }).code
+
+      // eslint-disable-next-line no-new-func
+      new Function('module', 'exports', 'require', source)(totals, totals.exports, () => ({}))
+
+      return totals.exports
+    }
+
     return { default: {}, __esModule: true }
   }
 
@@ -111,58 +125,52 @@ function test (name, fn) {
 
 console.log('\nguest checkout: the bundle saving')
 
-test('the saving comes off the pay button', () => {
+/*
+ * The guest's pay button, from the same chain the registered checkout uses
+ * (checkoutTotals.payable): goods incl. VAT + delivery, less voucher, flash
+ * discount and bundle, each capped by what is still owed.
+ */
+function guestTotal ({ goods = 94.97, delivery = 0, bundle = null, voucher = null, flash = 0 } = {}) {
   const ctx = {
-    $store: { state: bundleState(10.5) },
-    orderTotal: 94.97,
-    voucherResult: null,
+    $store: { state: bundleState(bundle), getters: { 'cart/flashDiscountAmount': flash } },
+    goods: { incVat: goods },
+    deliveryPrice: delivery,
+    voucherResult: voucher,
   }
 
   ctx.voucherDiscount = computed(guest, 'voucherDiscount', ctx)
   ctx.bundleDiscount = computed(guest, 'bundleDiscount', ctx)
+  ctx.flashDiscount = computed(guest, 'flashDiscount', ctx)
+  ctx.totals = computed(guest, 'totals', ctx)
+
+  return { ctx, payable: computed(guest, 'payableTotal', ctx) }
+}
+
+test('the saving comes off the pay button', () => {
+  const { ctx, payable } = guestTotal({ bundle: 10.5 })
 
   assert.strictEqual(ctx.bundleDiscount, 10.5)
-  assert.strictEqual(computed(guest, 'payableTotal', ctx), 84.47)
+  assert.strictEqual(payable, 84.47)
 })
 
 test('a basket with no bundle pays the same as before', () => {
-  const ctx = {
-    $store: { state: bundleState(null) },
-    orderTotal: 94.97,
-    voucherResult: null,
-  }
-
-  ctx.voucherDiscount = computed(guest, 'voucherDiscount', ctx)
-  ctx.bundleDiscount = computed(guest, 'bundleDiscount', ctx)
+  const { ctx, payable } = guestTotal()
 
   assert.strictEqual(ctx.bundleDiscount, 0)
-  assert.strictEqual(computed(guest, 'payableTotal', ctx), 94.97)
+  assert.strictEqual(payable, 94.97)
 })
 
 test('a voucher and a bundle both come off', () => {
-  const ctx = {
-    $store: { state: bundleState(10.5) },
-    orderTotal: 94.97,
-    voucherResult: { offered: '5.00' },
-  }
-
-  ctx.voucherDiscount = computed(guest, 'voucherDiscount', ctx)
-  ctx.bundleDiscount = computed(guest, 'bundleDiscount', ctx)
-
-  assert.strictEqual(computed(guest, 'payableTotal', ctx), 79.47)
+  assert.strictEqual(guestTotal({ bundle: 10.5, voucher: { offered: '5.00' } }).payable, 79.47)
 })
 
 test('the total never goes below zero', () => {
-  const ctx = {
-    $store: { state: bundleState(500) },
-    orderTotal: 20,
-    voucherResult: null,
-  }
+  assert.strictEqual(guestTotal({ goods: 20, bundle: 500 }).payable, 0)
+})
 
-  ctx.voucherDiscount = computed(guest, 'voucherDiscount', ctx)
-  ctx.bundleDiscount = computed(guest, 'bundleDiscount', ctx)
-
-  assert.strictEqual(computed(guest, 'payableTotal', ctx), 0)
+test('the flash discount the order takes comes off the guest pay button too', () => {
+  // 94.97 + 5.00 delivery - 9.50 flash - 10.50 bundle = 79.97
+  assert.strictEqual(guestTotal({ delivery: 5, flash: 9.5, bundle: 10.5 }).payable, 79.97)
 })
 
 test('one row per bundle, each named', () => {

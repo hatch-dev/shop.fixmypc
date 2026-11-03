@@ -76,7 +76,36 @@
           class="guest-cart-line"
         >
           <span>{{ line.label }}</span>
-          <b><price-format :price="formatPrice(line.price)" /></b>
+          <b>
+            <price-format v-if="line.price !== null" :price="formatPrice(line.price)" :decimals="2" />
+            <template v-else>&mdash;</template>
+          </b>
+        </div>
+
+        <!--
+          The goods' VAT, stated the way the Order Summary states it: what is
+          already inside VAT-inclusive prices, what is added to VAT-exclusive
+          ones, and the total - counted once. The lines above are incl. VAT.
+        -->
+        <div v-if="!pricesPending" class="guest-cart-line guest-cart-sub">
+          <span>{{ $t('ui.checkoutSummary.breakdown.subtotalEx') }}</span>
+          <b><price-format :price="formatPrice(goods.exVat)" :decimals="2" /></b>
+        </div>
+        <div v-if="!pricesPending && goods.vatIncluded > 0" class="guest-cart-line guest-cart-sub">
+          <span>{{ $t('ui.checkoutSummary.breakdown.vatIncluded') }}</span>
+          <b><price-format :price="formatPrice(goods.vatIncluded)" :decimals="2" /></b>
+        </div>
+        <div v-if="!pricesPending && goods.vatAdded > 0" class="guest-cart-line guest-cart-sub">
+          <span>{{ $t('ui.checkoutSummary.breakdown.vatAdded') }}</span>
+          <b>+ <price-format :price="formatPrice(goods.vatAdded)" :decimals="2" /></b>
+        </div>
+        <div v-if="!pricesPending" class="guest-cart-line guest-cart-sub">
+          <span>{{ $t('ui.checkoutSummary.breakdown.totalVat') }}</span>
+          <b><price-format :price="formatPrice(taxTotal)" :decimals="2" /></b>
+        </div>
+        <div v-if="!pricesPending" class="guest-cart-line">
+          <span>{{ $t('ui.checkoutSummary.breakdown.subtotalInc') }}</span>
+          <b><price-format :price="formatPrice(goods.incVat)" :decimals="2" /></b>
         </div>
 
         <div class="guest-cart-line">
@@ -85,17 +114,20 @@
             <price-format
               v-if="deliveryPrice > 0"
               :price="formatPrice(deliveryPrice)"
+              :decimals="2"
             />
             <template v-else>{{ $t('ui.guestCheckout.free') }}</template>
           </b>
         </div>
 
         <div
-          v-if="taxTotal > 0"
+          v-if="totals.flash > 0"
           class="guest-cart-line"
         >
-          <span>{{ $t('ui.guestCheckout.vat') }}</span>
-          <b><price-format :price="formatPrice(taxTotal)" /></b>
+          <span>{{ $t('ui.checkoutSummary.flashDiscount') }}</span>
+          <b class="guest-cart-off">
+            &minus; <price-format :price="formatPrice(totals.flash)" :decimals="2" />
+          </b>
         </div>
 
         <!--
@@ -120,13 +152,16 @@
         >
           <span>{{ $t('ui.guestCheckout.voucherLine', { code: appliedVoucherCode }) }}</span>
           <b class="guest-cart-off">
-            &minus; <price-format :price="formatPrice(voucherDiscount)" />
+            &minus; <price-format :price="formatPrice(totals.voucher)" :decimals="2" />
           </b>
         </div>
 
         <div class="guest-cart-line guest-cart-total">
           <span>{{ $t('ui.guestCheckout.totalToPay') }}</span>
-          <b><price-format :price="formatPrice(payableTotal)" /></b>
+          <b>
+            <price-format v-if="!pricesPending" :price="formatPrice(payableTotal)" :decimals="2" />
+            <template v-else>&mdash;</template>
+          </b>
         </div>
 
       </div>
@@ -326,7 +361,16 @@
           class="guest-cart-line"
         >
           <span>{{ line.label }}</span>
-          <b><price-format :price="formatPrice(line.price)" /></b>
+          <b>
+            <price-format v-if="line.price !== null" :price="formatPrice(line.price)" :decimals="2" />
+            <template v-else>&mdash;</template>
+          </b>
+        </div>
+
+        <!-- The VAT inside those lines and the VAT added to them, once. -->
+        <div v-if="!pricesPending && taxTotal > 0" class="guest-cart-line guest-cart-sub">
+          <span>{{ $t('ui.checkoutSummary.breakdown.totalVat') }}</span>
+          <b><price-format :price="formatPrice(taxTotal)" :decimals="2" /></b>
         </div>
 
         <div class="guest-cart-line">
@@ -335,22 +379,18 @@
             <price-format
               v-if="deliveryPrice > 0"
               :price="formatPrice(deliveryPrice)"
+              :decimals="2"
             />
             <template v-else>{{ $t('ui.guestCheckout.free') }}</template>
           </b>
         </div>
 
-        <div
-          v-if="taxTotal > 0"
-          class="guest-cart-line"
-        >
-          <span>{{ $t('ui.guestCheckout.vat') }}</span>
-          <b><price-format :price="formatPrice(taxTotal)" /></b>
-        </div>
-
         <div class="guest-cart-line guest-cart-total">
           <span>{{ $t('ui.guestCheckout.total') }}</span>
-          <b><price-format :price="formatPrice(orderTotal)" /></b>
+          <b>
+            <price-format v-if="!pricesPending" :price="formatPrice(orderTotal)" :decimals="2" />
+            <template v-else>&mdash;</template>
+          </b>
         </div>
 
       </div>
@@ -922,6 +962,7 @@
   import util from '~/mixin/util'
   import validation from '~/mixin/validation'
   import productPriceHelper from '~/mixin/productPriceHelper'
+  import { basketTotals, isPriced, payable } from '~/mixin/checkoutTotals'
   /*
    * Country -> county -> town -> postcode, from the same module the signed-in
    * address form uses, so a guest address is held to exactly the standard an
@@ -1062,9 +1103,14 @@
       bundleDiscount() {
         return Number(this.$store.state.cart.bundleDiscount?.total) || 0
       },
-      /* What the pay button is for; the server recalculates it either way. */
+      /*
+       * What the pay button is for. The flash discount is in it: the order
+       * takes it whenever the shopper opted in on the basket, and leaving it
+       * out here asked a guest's card for more than the order came to. Card
+       * gateways are charged the server's quote either way.
+       */
       payableTotal() {
-        return Math.max(0, this.orderTotal - this.voucherDiscount - this.bundleDiscount)
+        return this.totals.total
       },
       deliveryAddressLine() {
 
@@ -1222,17 +1268,37 @@
         return !!this.verifiedEmail &&
           this.verifiedEmail.toLowerCase() === (this.form.email || '').toLowerCase()
       },
+      /*
+       * Each line as it is charged, VAT included - the server's split
+       * (CartsController::describeVat), the same figures the registered
+       * checkout adds up. Null until the line has been priced.
+       */
       productLines() {
         return this.checkedProduct.map(product => ({
           id: product.id,
           label: `${product.quantity} × ${product?.flash_product?.title || ''}`,
-          price: this.linePrice(product)
+          price: isPriced(product) ? Number(product.line_inc_vat) : null
         }))
       },
+      /*
+       * The goods, added up exactly as CheckoutRight adds them up
+       * (checkoutTotals). This page used to work VAT out for itself - only
+       * for tax rule id 1, and on the full quantity, free units included -
+       * so a guest and a signed-in shopper could be shown different totals
+       * for the same basket.
+       */
+      goods() {
+        return basketTotals(this.checkedProduct)
+      },
+      pricesPending() {
+        return this.goods.stale > 0
+      },
       subtotal() {
-        return this.checkedProduct.reduce(
-          (total, product) => total + this.linePrice(product), 0
-        )
+        return this.goods.incVat
+      },
+      /* The store-wide flash discount, when the shopper asked for it on the basket. */
+      flashDiscount() {
+        return this.$store.getters['cart/flashDiscountAmount'] || 0
       },
       /* What postage would cost, whichever option is showing. */
       postagePrice() {
@@ -1241,27 +1307,27 @@
       deliveryPrice() {
         return this.shippingTotal(this.isCollection)
       },
-      /*
-       * Tax already inside the price needs no line of its own; only the
-       * exclusive kind is added on, exactly as CheckoutRight adds it.
-       */
+      /* All the VAT on the order, inside prices and added, counted once. */
       taxTotal() {
-
-        return this.checkedProduct.reduce((total, product) => {
-
-          const rule = product?.flash_product?.tax_rules
-
-          if (rule?.id !== 1 || parseInt(product?.flash_product?.excludeVAT) !== 1) {
-            return total
-          }
-
-          return total + this.priceByType(
-            this.unitPrice(product), rule.price || 0, rule.type
-          ) * parseInt(product?.quantity || 0)
-        }, 0)
+        return this.goods.vatTotal
       },
+      /* Before any discount: the goods with their VAT, and delivery. */
       orderTotal() {
-        return this.subtotal + this.deliveryPrice + this.taxTotal
+        return payable({ goodsIncVat: this.goods.incVat, shipping: this.deliveryPrice }).total
+      },
+      /*
+       * The order-wide discounts in the order's own order, each capped by
+       * what is still owed (CheckoutTotals::chain) - the same function the
+       * registered checkout's summary uses.
+       */
+      totals() {
+        return payable({
+          goodsIncVat: this.goods.incVat,
+          shipping: this.deliveryPrice,
+          voucher: this.voucherDiscount,
+          flash: this.flashDiscount,
+          bundle: this.bundleDiscount,
+        })
       },
       deliverySubLabel() {
 
@@ -1488,24 +1554,6 @@
 
         this.refreshQuote('delivery')
         this.refreshQuote('collection')
-      },
-      unitPrice(product) {
-        return product?.upsell_price && parseFloat(product.upsell_price) > 0
-          ? parseFloat(product.upsell_price)
-          : this.currentInventoryPriceCalc(
-            product?.updated_inventory, product?.flash_product
-          )
-      },
-      linePrice(product) {
-
-        const quantity = parseInt(product?.quantity || 0)
-        const unit = this.unitPrice(product)
-        const bundle = product?.flash_product?.bundle_deal
-        const free = (bundle?.buy <= quantity)
-          ? unit * parseInt(bundle?.free || 0)
-          : 0
-
-        return (quantity * unit) - free
       },
       buildCartShipping() {
 
@@ -2082,6 +2130,16 @@
 .guest-cart-line b {
     color: var(--auth-ink);
     white-space: nowrap;
+}
+
+/* the VAT statement under the lines: a step quieter, indented */
+.guest-cart-sub {
+    padding: 3px 0 3px 10px;
+    font-size: 12.5px;
+}
+
+.guest-cart-sub b {
+    font-weight: 600;
 }
 
 .guest-cart-total {

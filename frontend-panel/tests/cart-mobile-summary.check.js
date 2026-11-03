@@ -81,6 +81,8 @@ new Function('module', 'exports', 'require', transform(parsed.script.content, 'C
       const spread = () => ({})
       return { mapGetters: spread, mapActions: spread, mapState: spread, mapMutations: spread }
     }
+    // the summary's arithmetic, loaded for real so the card and bar run it
+    if (request.indexOf('mixin/checkoutTotals') !== -1) return loadMixin('checkoutTotals')
     return {}
   })
 

@@ -33,7 +33,8 @@
           Which group a line belongs to is the server's answer, not this
           component's: vat_rate and vat_inclusive come from
           CartsController::repriceForCustomer, and so does every line's ex /
-          VAT / inc split (Pricing::vatBreakdown). productGroups only sorts
+          VAT / inc split (Pricing::lineVat: VAT per unit to the cent, times
+          the units paid for - the rule the order charges by). productGroups only sorts
           the lines and adds those figures up.
 
           Nothing is added to ② - its tax is inside the price already. Only
@@ -526,6 +527,7 @@ import AjaxButton from '~/components/AjaxButton'
 import PriceFormat from "./PriceFormat";
 import InfoPopover from "~/components/InfoPopover"
 import SummaryProductGroups from "~/components/SummaryProductGroups"
+import { basketTotals, cents, goodsTotal, isPriced, payable, vatKind } from "~/mixin/checkoutTotals"
 
 export default {
   name: 'CheckoutRight',
@@ -816,8 +818,8 @@ export default {
     hasMixedVatBasis() {
       const bases = new Set(
         (this.checkedProduct || [])
-          .filter(row => parseFloat(row?.vat_rate || 0) > 0)
-          .map(row => !!row?.vat_inclusive)
+          .filter(row => isPriced(row) && vatKind(row) !== 'none')
+          .map(row => vatKind(row))
       )
 
       return bases.size > 1
@@ -851,87 +853,61 @@ export default {
       return this.$store.state.cart.pricesError || null
     },
 
+    /*
+     * The goods, added up from the server's per-line split (checkoutTotals).
+     *
+     * Every line was split server-side on the order's own rule -- VAT per unit
+     * rounded to the cent, times the units paid for -- so these sums are the
+     * figures the order charges, to the cent. Nothing here applies a rate.
+     */
+    goods() {
+      return basketTotals(this.checkedProduct)
+    },
+
+    /*
+     * The saving against list prices, gross.
+     *
+     * Both ends are inc-VAT for every line: the list price split on the same
+     * rule as the charge, over the full quantity, against what is charged for
+     * the units paid for. So it is one basis throughout - it used to add an
+     * ex-VAT line's NET saving (EUR 25.00) to an inc-VAT line's gross one,
+     * while the amount actually charged fell by EUR 30.75 for the same line.
+     * It is the figure the order confirmation states as its discount
+     * (OrderSummary discount_inc_vat), free units included, and it is
+     * information only: the prices above are already the reduced ones.
+     */
     productsDiscount() {
-      const saving = Number(this.originalTotal) - Number(this.cartPrice.totalPriceWithOffer)
-
-      return saving > 0 ? saving : 0
+      return this.goods.saving
     },
 
     /*
-     * The original prices, added as displayed.
-     *
-     * Addable because every term is a price as the shop states it, and because
-     * nothing is done to this figure except subtract the saving from it. The
-     * VAT that some of these carry and others do not is handled once, further
-     * down, by adding it only to the lines that lack it.
-     *
-     * line_list is the server's, per line; this only sums.
-     */
-    originalTotal() {
-      return (this.checkedProduct || []).reduce((sum, row) => {
-        const quantity = parseInt(row?.quantity || 0)
-        const unit = Number(row?.original_price ?? 0)
-
-        const lineList = row?.line_list != null
-          ? Number(row.line_list)
-          : this.formatPrice(unit * quantity)
-
-        return sum + lineList
-      }, 0)
-    },
-    /*
-     * One row per rate actually charged, highest first, the way a VAT invoice
-     * states them. Every figure is a sum of server splits; nothing here
-     * applies a rate to anything.
-     */
-    vatBreakdown() {
-      return Object.values(this.cartPrice.byRate || {})
-        .filter(row => row.inc > 0)
-        .sort((a, b) => b.rate - a.rate)
-    },
-    /*
-     * Where the "You Save" figure came from, line by line.
-     *
-     * The saving on an ex-VAT line is quoted net — €25 off a €699 net price —
-     * but the summary is gross throughout, so what the customer actually saves
-     * is that €25 plus the VAT that would have been charged on it. Adding a
-     * net saving to a gross one is the mistake this section exists to make
-     * visible rather than hide: both ends are the server's gross figures and
-     * the VAT on the saving is the difference between them, never a rate
-     * applied here.
+     * Where the saving came from, line by line, gross: the price reduction
+     * per unit, and separately any units a bundle gave away. The two add up
+     * to the saving above, so the popover's lines and its total agree.
      */
     savingsDetails() {
       return (this.checkedProduct || []).map((row) => {
+        if (!isPriced(row)) return null
+
         const quantity = parseInt(row?.quantity || 0)
+        const free = parseInt(row?.free_units || 0)
+        const unitFrom = Number(row?.unit_list_inc_vat ?? row?.unit_inc_vat ?? 0)
+        const unitTo = Number(row?.unit_inc_vat ?? 0)
 
-        const listInc = Number(
-          row?.line_list_inc_vat != null ? row.line_list_inc_vat : (row?.line_inc_vat || 0)
-        )
-        const chargedInc = Number(row?.line_inc_vat || 0)
-        const incSaving = listInc - chargedInc
+        const priceSaving = cents(Math.max(0, unitFrom - unitTo)) * quantity
+        const freeValue = cents(unitTo) * free
 
-        if (!(incSaving > 0.004)) {
-          return null
-        }
-
-        const unitFrom = Number(row?.original_price || 0)
-        const unitTo = Number(row?.unit_price ?? row?.upsell_price ?? 0)
-
-        // The saving as the line itself is quoted, before any VAT on it.
-        const baseSaving = Math.max(0, (unitFrom - unitTo)) * quantity
+        if (priceSaving + freeValue <= 0) return null
 
         return {
           id: row?.id,
           title: row?.flash_product?.title || row?.product?.title || '',
-          inclusive: !!row?.vat_inclusive,
           quantity,
+          free,
           unitFrom,
           unitTo,
-          unitSaving: Math.max(0, unitFrom - unitTo),
-          baseSaving,
-          // Only meaningful on a net line; on a gross one it is already inside.
-          vatOnSaving: Math.max(0, incSaving - baseSaving),
-          incSaving,
+          priceSaving: priceSaving / 100,
+          freeValue: freeValue / 100,
         }
       }).filter(Boolean)
     },
@@ -939,62 +915,50 @@ export default {
     /*
      * The basket's lines in the summary's three groups, always in this order:
      *
-     *   none      vat_rate 0 - zero-rated or margin scheme; no VAT either way
-     *   included  vat_rate > 0, price contains its VAT; nothing is added
-     *   added     vat_rate > 0, price is ex-VAT; VAT is added at checkout
+     *   none      no VAT either way - zero-rated or margin scheme
+     *   included  the price contains its VAT; nothing is added
+     *   added     the price is ex-VAT; VAT is added at checkout
      *
-     * Both the classification and every amount are the server's: vat_rate,
-     * vat_inclusive and line_ex_vat / line_vat / line_inc_vat come from
-     * CartsController::repriceForCustomer via Pricing::vatBreakdown. This only
-     * sorts and sums them; it applies no rate and splits nothing.
+     * Both the classification (vatKind) and every amount are the server's;
+     * this only sorts and sums. A flat-amount rule has no percentage but its
+     * tax is real, so it is classified by vat_flat as well as vat_rate.
      *
-     * Zero-rated and ex-VAT are told apart by the RATE, never by
-     * vat_inclusive alone: a 0% line carries vat_inclusive false as well, and
-     * calling it "VAT added" would promise tax that is never charged. A flat-
-     * amount tax rule also reports rate 0 here, exactly as the server splits it
-     * (Pricing::vatRate) - none is configured, and the summary does not second-
-     * guess the split.
-     *
-     * A line with no rate at all has not been priced yet (see hasStaleLines);
+     * A line with no split at all has not been priced yet (see hasStaleLines);
      * it is left out, and the summary shows a dash until it arrives.
-     *
-     * Each group's inc total is what it contributes to Total charges: the
-     * gross price for 0% and inc-VAT lines, and net + VAT added for ex-VAT
-     * ones. Summed, they are totalPriceWithOffer + exclusiveTax.
      */
     productGroups() {
-      const cents = (value) => Math.round(value * 100) / 100
       const groups = {}
 
       ;(this.checkedProduct || []).forEach((row) => {
-        if (row?.vat_rate === undefined || row?.vat_rate === null) {
+        if (!isPriced(row)) {
           return
         }
 
         const rate = Number(row.vat_rate)
-        const key = rate > 0 ? (row.vat_inclusive ? 'included' : 'added') : 'none'
+        const key = vatKind(row)
         const group = groups[key] || (groups[key] = {
           key, lines: [], count: 0, ex: 0, vat: 0, inc: 0, byRate: {},
         })
 
         const quantity = parseInt(row?.quantity || 0)
-        const ex = Number(row?.line_ex_vat || 0)
-        const vat = Number(row?.line_vat || 0)
-        const inc = Number(row?.line_inc_vat || 0)
+        const ex = cents(row?.line_ex_vat)
+        const vat = cents(row?.line_vat)
+        const inc = cents(row?.line_inc_vat)
 
         // The line as the product is quoted: net for an ex-VAT product,
         // gross for the others - the figure on its own cart card.
         const amount = key === 'added' ? ex : inc
 
         /*
-         * "€1,000.00 each" only where unit x quantity really is the line. A
+         * "EUR 1,000.00 each" only where unit x quantity really is the line. A
          * "buy X get Y free" line is charged for fewer units than it holds,
          * and an "each" beside it would not multiply out.
          */
-        const unit = Number(row?.unit_price ?? row?.upsell_price ?? 0)
-        const showUnit = quantity > 1 && Math.abs(unit * quantity - amount) < 0.005
+        const unit = cents(key === 'added' ? row?.unit_ex_vat : row?.unit_inc_vat)
+        const showUnit = quantity > 1 && unit * quantity === amount
 
         const attributes = row?.updated_inventory?.inventory_attributes || []
+        const rateLabel = this.vatLabelFor(row)
 
         group.lines.push({
           id: row?.id,
@@ -1002,12 +966,12 @@ export default {
           // "256GB • Black • Excellent", as the cart card names the variant
           variant: attributes.map(i => i?.attribute_value?.title).filter(Boolean).join(' • '),
           quantity,
-          rateLabel: this.formatVatRate(rate),
-          ex,
-          vat,
-          inc,
-          amount,
-          unit: showUnit ? unit : null,
+          rateLabel,
+          ex: ex / 100,
+          vat: vat / 100,
+          inc: inc / 100,
+          amount: amount / 100,
+          unit: showUnit ? unit / 100 : null,
         })
 
         group.count += quantity
@@ -1015,10 +979,10 @@ export default {
         group.vat += vat
         group.inc += inc
 
-        if (rate > 0) {
-          const rateKey = rate.toFixed(2)
+        if (key !== 'none') {
+          const rateKey = rate > 0 ? rate.toFixed(2) : `flat-${row.vat_flat}`
           const slot = group.byRate[rateKey] || (group.byRate[rateKey] = {
-            rate, rateLabel: this.formatVatRate(rate), vat: 0,
+            rate, rateLabel, vat: 0,
           })
 
           slot.vat += vat
@@ -1034,25 +998,43 @@ export default {
             key,
             lines: group.lines,
             count: group.count,
-            ex: cents(group.ex),
-            vat: cents(group.vat),
-            inc: cents(group.inc),
+            ex: group.ex / 100,
+            vat: group.vat / 100,
+            inc: group.inc / 100,
             // highest rate first, the way a VAT invoice lists them
             rates: Object.values(group.byRate)
-              .map(slot => Object.assign({}, slot, { vat: cents(slot.vat) }))
+              .map(slot => Object.assign({}, slot, { vat: slot.vat / 100 }))
               .sort((a, b) => b.rate - a.rate),
           }
         })
     },
 
     /*
-     * Total charges for all products: the goods with their VAT, before
-     * shipping and the order-wide discounts. Exactly the first two terms of
-     * totalPrice, so "Total charges + Shipping - Discounts = Final amount
-     * payable" is the same sum the order is charged, not a second one.
+     * The goods with their VAT: exactly what the order charges for them before
+     * shipping and the order-wide discounts.
      */
     productsCharge() {
-      return this.cartPrice.totalPriceWithOffer + this.cartPrice.exclusiveTax
+      return this.goods.incVat
+    },
+
+    /*
+     * The order-wide discounts and the amount payable, worked out the way the
+     * order works them out (checkoutTotals.payable mirrors
+     * CheckoutTotals::chain): each capped by what is still owed after the
+     * ones before it. The rows below and the total read the same object, so
+     * they cannot disagree with each other -- or with the order.
+     */
+    totals() {
+      return payable({
+        goodsIncVat: this.goods.incVat,
+        shipping: this.cartPrice.shippingPrice,
+        voucher: this.voucherResult?.offered || 0,
+        flash: this.flashDiscount,
+        bundle: this.bundleDiscount,
+        loyalty: this.loyaltyDiscount,
+        points: this.pointsDiscount,
+        wallet: this.walletApplied,
+      })
     },
 
     /*
@@ -1060,82 +1042,78 @@ export default {
      * and only those taking money off: a zero row is a promotion the
      * customer does not have, and listing it reads as one that failed.
      *
-     * Every amount is the same figure totalPrice subtracts, so the rows and
-     * the total cannot disagree.
-     *
      * The loyalty label is the merchant's customer-facing copy, defaulting to
-     * "Loyalty Discount" - never the group's internal admin title, which is
-     * how a shopper's basket came to read "Group 1  - €250.00".
+     * "Loyalty Discount" - never the group's internal admin title.
      *
      * One row per Essentials Bundle, named, because it is the one discount a
-     * shopper can lose by editing their basket: removing one item of a bundle
-     * ends the set price for the rest, and an unlabelled saving that quietly
-     * disappeared would read as the total going wrong.
+     * shopper can lose by editing their basket. When the chain caps the
+     * bundle saving (an order already taken to zero by the discounts before
+     * it), the rows are scaled with it, so they still add up to what is taken.
      */
     discountRows() {
+      const totals = this.totals
+      const offeredBundles = cents(this.bundleDiscount)
+      const grantedBundles = cents(totals.bundle)
+      let written = 0
+
+      const bundles = this.bundleDiscounts.map((bundle, index, all) => {
+        const share = index === all.length - 1
+          ? grantedBundles - written
+          : (offeredBundles > 0 ? Math.round(cents(bundle.discount) * grantedBundles / offeredBundles) : 0)
+
+        written += share
+
+        return {
+          key: `bundle-${bundle.id}`,
+          label: bundle.title || this.$t('ui.checkoutSummary.bundleSaving'),
+          note: this.$t('ui.checkoutSummary.bundleNote'),
+          amount: share / 100,
+        }
+      })
+
       const rows = [
-        {
-          key: 'flash',
-          label: this.$t('ui.checkoutSummary.flashDiscount'),
-          amount: this.flashDiscount,
-        },
-        {
-          key: 'voucher',
-          label: this.$t('ui.checkoutSummary.voucher'),
-          amount: this.cartPrice.voucher,
-        },
+        { key: 'flash', label: this.$t('ui.checkoutSummary.flashDiscount'), amount: totals.flash },
+        { key: 'voucher', label: this.$t('ui.checkoutSummary.voucher'), amount: totals.voucher },
+        ...bundles,
         {
           key: 'loyalty',
           label: this.loyaltyLabel,
           note: this.loyaltyBenefit ? `${this.loyaltyBenefit}${this.loyaltyExpiryNote}` : '',
-          amount: this.loyaltyDiscount,
+          amount: totals.loyalty,
         },
-        ...this.bundleDiscounts.map(bundle => ({
-          key: `bundle-${bundle.id}`,
-          label: bundle.title || this.$t('ui.checkoutSummary.bundleSaving'),
-          note: this.$t('ui.checkoutSummary.bundleNote'),
-          amount: bundle.discount,
-        })),
-        {
-          key: 'points',
-          label: this.$t('ui.checkoutSummary.cherryPoints'),
-          amount: this.pointsDiscount,
-        },
+        { key: 'points', label: this.$t('ui.checkoutSummary.cherryPoints'), amount: totals.points },
       ]
 
-      return rows.filter(row => Number(this.formatPrice(row.amount || 0)) > 0)
+      return rows.filter(row => cents(row.amount) > 0)
     },
 
     /*
      * ---- what the summary's info icons open ---------------------------
      *
-     * Each one explains the figure on its own row, not VAT in general. Every
-     * amount is the one already rendered beside it — the same server splits
-     * the rows read — so the popover can never disagree with the summary.
-     */
-
-    /* The basket's original price, normalised to net. Only the VAT popover
-       uses this now: it is what makes the two conventions comparable. */
-    originalExVat() {
-      return (this.checkedProduct || []).reduce(
-        (sum, row) => sum + Number(row?.line_list_ex_vat ?? row?.line_ex_vat ?? 0), 0
-      )
-    },
-
-    /*
-     * The saving on an ex-VAT line is quoted net, but this summary is gross
-     * throughout, so the working shows that saving being grossed up. Adding a
-     * net saving straight to a gross one is the mistake this exists to rule
-     * out, which is why each line states its own basis.
+     * Each one explains the figure on its own row. Every amount is the one
+     * already rendered beside it, so the popover can never disagree with the
+     * summary.
      */
     savingsExplainerGroups() {
       return this.savingsDetails.map((row) => {
-        const basis = row.inclusive ? this.$t('ui.checkoutSummary.incVat') : this.$t('ui.checkoutSummary.exVat')
+        const lines = []
+
+        if (row.priceSaving > 0) {
+          lines.push(this.$t('ui.checkoutSummary.explain.savingPriceLine', {
+            from: this.money(row.unitFrom), to: this.money(row.unitTo), qty: row.quantity,
+          }))
+        }
+
+        if (row.freeValue > 0) {
+          lines.push(this.$t('ui.checkoutSummary.explain.savingFreeLine', {
+            count: row.free, amount: this.money(row.freeValue),
+          }))
+        }
 
         return {
           name: row.title,
-          lines: [`${this.money(row.unitFrom)} → ${this.money(row.unitTo)} ${basis}`],
-          total: this.$t('ui.checkoutSummary.explain.savingLine', { amount: this.money(row.baseSaving), qty: row.quantity }),
+          lines,
+          total: this.money(row.priceSaving + row.freeValue),
         }
       })
     },
@@ -1146,122 +1124,70 @@ export default {
       ]
     },
 
-    /*
-     * On a mixed basket the saving is worth one sentence, because the ex-VAT
-     * part of it grows by the VAT that is added further down. €25 off a net
-     * price takes €30.75 off the amount finally charged; the summary never
-     * says so, and this is where someone checking the arithmetic finds it.
-     */
     savingsExplainerNote() {
-      if (!this.hasMixedVatBasis) return ''
-
-      return this.$t('ui.checkoutSummary.explain.savingsNote')
+      return this.$t('ui.checkoutSummary.explain.savingsGrossNote')
     },
 
-    /*
-     * The VAT working, in the order it is done: net, tax, gross.
-     *
-     * This is the whole of what the "VAT breakdown" table below the button
-     * used to show, and it is the only place the basket states it now. Where
-     * more than one rate is charged each gets its own line above the totals —
-     * a single "VAT 23%" across a basket holding a 23% and a 13.5% product
-     * would be a fiction, and the rates come from each product's own tax rule
-     * rather than from anything written here.
-     */
-    /*
-     * Both VAT figures, because the row can only show one of them.
-     *
-     * The row shows what is ADDED — the tax on the ex-VAT lines, which is the
-     * part that moves the amount charged. It is not the VAT contained in the
-     * order: an inc-VAT line's tax is already inside the price and never
-     * appears in that row, so on the brief's basket the row reads €465.06
-     * while the order actually carries €633.17.
-     *
-     * An invoice needs the second figure, so it is here, under the icon on the
-     * row that would otherwise be mistaken for it.
-     */
-    /*
-     * The VAT already inside Inc-VAT prices: the order's VAT less the part
-     * added for Ex-VAT lines. Shown, never added to the total.
-     */
+    /* The VAT already inside Inc-VAT prices. Shown, never added to the total. */
     vatIncluded() {
-      const included = Number(this.cartPrice.vat || 0) - Number(this.cartPrice.exclusiveTax || 0)
-      return included > 0 ? included : 0
+      return this.goods.vatIncluded
     },
 
-    /* All the VAT on the order, added and included: the line under Total charges. */
+    /* All the VAT on the order, added and included, counted once. */
     vatTotal() {
-      return Number(this.cartPrice.exclusiveTax || 0) + this.vatIncluded
+      return this.goods.vatTotal
     },
 
     vatExplainerRows() {
-      const added = Number(this.cartPrice.exclusiveTax)
-      const total = Number(this.cartPrice.vat)
-      const included = total - added
+      const rows = []
 
-      const rows = [
-        {
-          label: this.vatRateLabel ? this.$t('ui.checkoutSummary.explain.vatAddedRate', { rate: this.vatRateLabel }) : this.$t('ui.checkoutSummary.explain.vatAdded'),
-          value: this.money(added),
-        },
-      ]
+      this.productGroups
+        .filter(group => group.key !== 'none')
+        .forEach((group) => {
+          group.rates.forEach((slot) => {
+            rows.push({
+              label: this.$t(group.key === 'included'
+                ? 'ui.checkoutSummary.explain.vatInsideAt'
+                : 'ui.checkoutSummary.explain.vatAddedAt', { rate: slot.rateLabel }),
+              value: this.money(slot.vat),
+            })
+          })
+        })
 
-      // Only when some of the basket carries its VAT internally; on an all
-      // ex-VAT basket the two figures are the same and a zero row says nothing.
-      if (included > 0.004) {
-        rows.push({ label: this.$t('ui.checkoutSummary.explain.insideIncVat'), value: this.money(included) })
-        rows.push({ label: this.$t('ui.checkoutSummary.explain.totalVat'), value: this.money(total), strong: true })
-      }
-
-      rows.push({ label: this.$t('ui.checkoutSummary.explain.netExVat'), value: this.money(this.cartPrice.exVat) })
-      rows.push({ label: this.$t('ui.checkoutSummary.explain.totalIncVat'), value: this.money(this.cartPrice.incVat) })
+      rows.push({ label: this.$t('ui.checkoutSummary.explain.totalVat'), value: this.money(this.goods.vatTotal), strong: true })
+      rows.push({ label: this.$t('ui.checkoutSummary.explain.netExVat'), value: this.money(this.goods.exVat) })
+      rows.push({ label: this.$t('ui.checkoutSummary.explain.totalIncVat'), value: this.money(this.goods.incVat) })
 
       return rows
     },
 
     vatExplainerNote() {
-      if (this.vatRateLabel) return ''
-
-      return this.$t('ui.checkoutSummary.explain.mixedRates')
+      return this.$t('ui.checkoutSummary.explain.vatOnceNote')
     },
 
+    /* The amount payable: the goods with their VAT, shipping, less the discounts. */
     totalPrice() {
-      /*
-       * Never below zero. The discounts are capped server-side, but the
-       * shopper must not be shown a negative total while the preview and the
-       * server are momentarily out of step.
-       */
-      return Math.max(0,
-        this.cartPrice.totalPriceWithOffer
-        + this.cartPrice.shippingPrice
-        + this.cartPrice.exclusiveTax
-        - this.cartPrice.voucher
-        - this.flashDiscount
-        - this.bundleDiscount
-        - this.loyaltyDiscount
-        - this.pointsDiscount)
+      return this.totals.total
     },
+
     cartPrice() {
       let cp = {
-        priceBeforeOffer: 0,
         totalItems: 0,
+        // goods before any VAT is added (net on ex-VAT lines, gross otherwise)
         totalPriceWithOffer: 0,
+        // the amount payable, after shipping and every order-wide discount
         totalPrice: 0,
-        // VAT, split server-side per line. exVat + vat = incVat for the
-        // goods; exclusiveTax is the part actually added to the price and
-        // is the only one that moves the amount charged.
+        finalPayable: 0,
         exVat: 0,
         vat: 0,
         incVat: 0,
-        // list price of the goods, gross: the "Products (Inc-VAT)" row
         listIncVat: 0,
         vatRates: new Set(),
-        // goods grouped by the rate charged on them, for the VAT breakdown
-        byRate: {},
+        // the VAT added to ex-VAT lines - the only VAT that moves the total
         exclusiveTax: 0,
         shippingPrice: 0,
         voucher: 0,
-        // lines that arrived with no VAT split at all — see below
+        // lines that arrived with no VAT split at all - see hasStaleLines
         staleLines: 0
       }
 
@@ -1286,149 +1212,46 @@ export default {
         }
       }
 
-      this.checkedProduct.forEach((curr) => {
-        /*
-         * The unit price the server has decided for this line, which is the
-         * one the order will be charged at.
-         *
-         * It accounts for things this component cannot see: the business and
-         * trade quantity bands the signed-in customer is entitled to, and
-         * whether that entitlement still stands. Recomputing the retail ladder
-         * here instead showed a business customer the retail total and then
-         * took a different amount at the gateway.
-         *
-         * upsell_price is the same figure under the name the API has always
-         * used for it; the fallback keeps a cached or older payload working.
-         */
-        const serverPrice = curr?.unit_price ?? curr?.upsell_price
-        const hasServerPrice = serverPrice !== null && serverPrice !== undefined && parseFloat(serverPrice) > 0
-        const productPrice = hasServerPrice
-          ? parseFloat(serverPrice)
-          : this.currentInventoryPriceCalc(curr?.updated_inventory, curr?.flash_product);
+      const goods = basketTotals(this.checkedProduct)
 
-        const qty = parseInt(curr?.quantity || 0)
-        const bundleDeal = curr?.flash_product?.bundle_deal
-        cp.totalItems += qty
+      ;(this.checkedProduct || []).forEach((curr) => {
+        cp.totalItems += parseInt(curr?.quantity || 0)
 
-        // Use upsell price if available, otherwise use regular price
-        const bundleOffer = (bundleDeal?.buy <= qty) ? (productPrice * parseInt(bundleDeal?.free || 0)) : 0
-        cp.totalPriceWithOffer += qty * productPrice - bundleOffer
-
-        /*
-         * Units actually paid for: the ordered quantity less anything a
-         * "buy X get Y free" bundle gives away. Tax follows this rather than
-         * the ordered quantity, because Pricing::unitTax is multiplied by the
-         * payable quantity at checkout (QA audit ORD-03) — taxing the free
-         * ones here overstated the VAT on screen against the amount charged.
-         */
-        const freeUnits = (bundleDeal?.buy <= qty) ? parseInt(bundleDeal?.free || 0) : 0
-        const payableQty = Math.max(qty - freeUnits, 0)
-
-        /*
-         * VAT, as the server split it for this line.
-         *
-         * This used to be worked out here: the rule's rate times the price,
-         * for both conventions. That is right only for a price quoted ex-VAT.
-         * For the 111 products whose prices already contain their VAT it
-         * overstated the tax by 23% of the tax - €699 gross was reported as
-         * carrying €160.77 of VAT when it carries €130.71 - and the figure was
-         * only ever kept in `inclusiveTax`, which nothing displayed, so the
-         * error sat unnoticed on the one screen where being wrong means
-         * charging the wrong amount.
-         *
-         * Pricing::vatBreakdown now does it once, server-side, and the same
-         * numbers reach the order, the confirmation and the invoice.
-         */
-        cp.exVat += Number(curr?.line_ex_vat || 0)
-        cp.vat += Number(curr?.line_vat || 0)
-        cp.incVat += Number(curr?.line_inc_vat || 0)
-
-        /*
-         * The list price of the line, gross, so the summary can open with
-         * "Products (Inc-VAT)". Falls back to the charged gross when the
-         * server did not send one, which shows no saving rather than
-         * inventing one.
-         */
-        cp.listIncVat += Number(
-          curr?.line_list_inc_vat != null
-            ? curr.line_list_inc_vat
-            : (curr?.line_inc_vat || 0)
-        )
-
-        if (curr?.vat_rate > 0) {
+        if (Number(curr?.vat_rate) > 0) {
           cp.vatRates.add(Number(curr.vat_rate))
         }
-
-        /*
-         * The same figures grouped by the rate that produced them, for the
-         * breakdown a VAT invoice states. Aggregation only — each line was
-         * already split server-side on its own basis, and adding up two
-         * conventions is exactly why this cannot be re-derived from a single
-         * total and a single rate.
-         */
-        const rateKey = Number(curr?.vat_rate || 0).toFixed(2)
-
-        if (!cp.byRate[rateKey]) {
-          cp.byRate[rateKey] = {
-            rate: Number(curr?.vat_rate || 0), ex: 0, vat: 0, inc: 0,
-          }
-        }
-
-        cp.byRate[rateKey].ex += Number(curr?.line_ex_vat || 0)
-        cp.byRate[rateKey].vat += Number(curr?.line_vat || 0)
-        cp.byRate[rateKey].inc += Number(curr?.line_inc_vat || 0)
-
-        /*
-         * A line that carries no VAT split at all.
-         *
-         * Not the same thing as a zero-rated line, which has vat_rate 0 and a
-         * real split of zero. This is a row that predates the split being part
-         * of the payload — a basket rehydrated from localStorage by an older
-         * build, which is how the payment page came to show "VAT €0.00" under
-         * a Products Total of €699.00 on an ex-VAT product.
-         *
-         * It is flagged rather than patched, because the frontend must not
-         * work VAT out for itself: the page has to refresh from the server
-         * instead. `staleLines` is what the summary reads to say so out loud.
-         */
-        if (curr?.vat_rate === undefined || curr?.vat_rate === null) {
-          cp.staleLines += 1
-        }
-
-        /*
-         * The VAT that is *added* to the price, which is the part that moves
-         * the amount charged. Nothing is added to an inclusive line, so this
-         * stays zero there and the total is unaffected.
-         */
-        if (!curr?.vat_inclusive) {
-          cp.exclusiveTax += Number(curr?.line_vat || 0)
-        }
-
-        cp.totalPrice += qty * productPrice
-
-        /*
-         * The struck-through "before" figure the Subtotal and Discount rows
-         * are built from.
-         *
-         * original_price is decided by the same server pass as the unit price
-         * (CartsController::repriceForCustomer) and is the list price of the
-         * variant on the line. Reading products.selling here instead ignored
-         * the variant, so a product whose variant is priced away from the
-         * product-level figure showed a Subtotal — and therefore a Discount —
-         * that neither the basket nor the order agreed with.
-         */
-        const serverOriginal = curr?.original_price
-        const hasServerOriginal = serverOriginal !== null
-          && serverOriginal !== undefined
-          && parseFloat(serverOriginal) > 0
-
-        const listPrice = hasServerOriginal
-          ? parseFloat(serverOriginal)
-          : this.sellPriceCalc(curr?.flash_product)
-
-        cp.priceBeforeOffer += listPrice * qty
       })
+
+      cp.totalPriceWithOffer = goodsTotal(this.checkedProduct)
+      cp.exVat = goods.exVat
+      cp.vat = goods.vatTotal
+      cp.incVat = goods.incVat
+      cp.listIncVat = goods.listIncVat
+      cp.exclusiveTax = goods.vatAdded
+      cp.staleLines = goods.stale
       cp.voucher = this.voucherResult?.offered || 0
+
+      const discounts = {
+        goodsIncVat: goods.incVat,
+        shipping: cp.shippingPrice,
+        voucher: cp.voucher,
+        flash: this.flashDiscount,
+        bundle: this.bundleDiscount,
+        loyalty: this.loyaltyDiscount,
+      }
+
+      /*
+       * What a page hands PaymentGateways as its total-price: every discount
+       * except points, which the gateway panel takes off itself (it owns the
+       * points toggle) - so passing the figure after points would take them
+       * twice. The Essentials Bundle discount is in it: checkout.vue once
+       * built this figure on its own and left the bundle out, and SumUp was
+       * then asked for more than the order came to.
+       */
+      cp.totalPrice = payable(discounts).total
+
+      // The summary's own Final amount payable, points included.
+      cp.finalPayable = payable({ ...discounts, points: this.pointsDiscount }).total
 
       this.$emit('calculated-price', cp)
       return cp
@@ -1444,6 +1267,17 @@ export default {
      */
     money(value) {
       return this.priceFormat(this.currencyPosition, this.currencyIcon, value, this.setting, 2)
+    },
+
+    /* "23%", or "flat €5.00" for a flat-amount rule, from the line's own figures. */
+    vatLabelFor(row) {
+      if (Number(row?.vat_rate) > 0) return this.formatVatRate(row.vat_rate)
+
+      if (Number(row?.vat_flat) > 0) {
+        return this.$t('ui.checkoutSummary.flatRate', { amount: this.money(row.vat_flat) })
+      }
+
+      return ''
     },
 
     /*

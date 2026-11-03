@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Service from '@/services/service.js'
+import { lineGoods as lineGoodsCents } from '../mixin/checkoutTotals'
 
 // Customer-facing text in the selected language; the English stands in before the app is up.
 const translate = (key, english) => {
@@ -44,6 +45,16 @@ const SERVER_PRICE_FIELDS = [
    * here too.
    */
   'line_list', 'line_list_ex_vat', 'line_list_inc_vat',
+  /*
+   * The rest of CartsController::describeVat. line_goods is the base the
+   * flash discount is measured on: left behind, a line stepped from 1 to 2
+   * kept offering 15% of one unit while the order took 15% of two - and a
+   * basket could drop out of the promotion's minimum on screen while the
+   * order still granted it. payable_quantity and free_units are what the
+   * card's "x N" multiplies by.
+   */
+  'vat_flat', 'line_goods', 'free_units', 'payable_quantity',
+  'unit_list_ex_vat', 'unit_list_vat', 'unit_list_inc_vat',
 ]
 
 /*
@@ -158,27 +169,22 @@ const state = () => ({
 const safeCount = value => Math.max(0, parseInt(value) || 0)
 
 /*
- * The goods a line will actually be charged for.
+ * The goods a line will actually be charged for, before any VAT is added.
  *
- * The server reprices every line on each read and sends what it settled on,
- * and that is the base OrdersController hands Pricing::flashDiscount. Reading
- * flash_product.offered instead -- the product-level offer, blind to the sale
- * on the line, the customer's band and the variant's own price -- is what once
- * advertised EUR 104.85 on a basket the checkout would discount by EUR 89.85.
+ * The server reprices every line on each read and sends what it settled on:
+ * line_goods is unit price x the units PAID for, exactly the base
+ * OrdersController hands Pricing::flashDiscount ($totalCartPrice). This used
+ * to read line_total - unit price x the FULL quantity - so a "buy X get Y
+ * free" line previewed a discount on the units it gives away, and could clear
+ * a minimum cart value the order then said it had not. Reading
+ * flash_product.offered instead, as it did before that, once advertised
+ * EUR 104.85 on a basket the checkout would discount by EUR 89.85.
+ *
+ * A line the server has not priced yet counts for nothing rather than for a
+ * figure the page made up; it is priced on the next read. In whole cents
+ * (checkoutTotals), summed as integers.
  */
-const lineGoods = (item) => {
-  const lineTotal = Number(item.line_total)
-
-  if (lineTotal > 0) return lineTotal
-
-  const unit = Number(item.unit_price ?? item.upsell_price)
-
-  if (unit > 0) return item.quantity * unit
-
-  const p = item.flash_product || {}
-
-  return item.quantity * (Number(p.offered) > 0 ? Number(p.offered) : Number(p.selling || 0))
-}
+const goodsOf = lines => (lines || []).reduce((sum, item) => sum + lineGoodsCents(item), 0) / 100
 
 /*
  * A Buy Now line (carts.buy_now) is a checkout of one item, not part of the
@@ -226,8 +232,7 @@ const getters = {
     checkoutLines(cartProducts).filter(p => parseInt(p.selected) === 1),
 
   /** The goods those lines come to. */
-  selectedGoodsTotal: (state, get) =>
-    get.selectedCartProducts.reduce((sum, item) => sum + lineGoods(item), 0),
+  selectedGoodsTotal: (state, get) => goodsOf(get.selectedCartProducts),
 
   /** Is a promotion running right now? Checked against the clock, not trusted. */
   flashPromotionLive: ({ flashPromotion }) => {

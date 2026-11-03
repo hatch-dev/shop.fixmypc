@@ -27,6 +27,8 @@ const SERVER_DECIDED = [
   'unit_ex_vat', 'unit_vat', 'unit_inc_vat',
   'line_ex_vat', 'line_vat', 'line_inc_vat',
   'line_list', 'line_list_ex_vat', 'line_list_inc_vat',
+  'vat_flat', 'line_goods', 'free_units', 'payable_quantity',
+  'unit_list_ex_vat', 'unit_list_vat', 'unit_list_inc_vat',
 ]
 
 /*

@@ -3594,11 +3594,22 @@ class FrontendController extends Controller
              * its own rule charges. Never assumed: the catalogue runs both
              * conventions and two different rates.
              */
-            $vatSplit = Pricing::vatBreakdown(
+            $unitVat = Pricing::lineVat(
                 $unitPrice,
-                Pricing::vatRate($product->tax_rules ?? null),
+                1,
+                $product->tax_rules ?? null,
                 Pricing::isVatInclusive($product)
             );
+
+            // One unit on the basket's own rule, flat-amount rules included.
+            $vatSplit = [
+                'rate' => $unitVat['rate'],
+                'flat' => $unitVat['flat'],
+                'inclusive' => $unitVat['inclusive'],
+                'ex' => $unitVat['unit_ex'],
+                'vat' => $unitVat['unit_vat'],
+                'inc' => $unitVat['unit_inc'],
+            ];
 
             $data = [
                 'product_id' => $id,
@@ -3625,6 +3636,7 @@ class FrontendController extends Controller
                  * ex-VAT and one quoted inc-VAT are told apart correctly.
                  */
                 'vat_rate' => $vatSplit['rate'],
+                'vat_flat' => $vatSplit['flat'],
                 'vat_inclusive' => $vatSplit['inclusive'],
                 'unit_ex_vat' => $vatSplit['ex'],
                 'unit_vat' => $vatSplit['vat'],

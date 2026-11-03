@@ -1164,6 +1164,8 @@ Route::group([
         Route::post('notices/restore', [CartsController::class, 'restoreNotice']);
         // Before a pay-first gateway charges the card: can this checkout still be bought?
         Route::post('checkout-check', [CartsController::class, 'checkoutCheck']);
+        // What the checkout would be charged, worked out as placing the order would (read only).
+        Route::post('checkout-total', [CartsController::class, 'checkoutTotal']);
         /*
          * Move a line onto a better variant of the same product. Not an
          * add: the line changes, keeping its quantity, so the basket can
