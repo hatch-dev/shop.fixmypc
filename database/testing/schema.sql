@@ -1795,7 +1795,7 @@ CREATE TABLE `pay_links` (
   `gateway_session` varchar(255) DEFAULT NULL,
   `gateway_reference` varchar(255) DEFAULT NULL,
   `stock_reserved` tinyint(1) NOT NULL DEFAULT 0,
-  `expires_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `expires_at` timestamp NULL DEFAULT NULL,
   `paid_at` timestamp NULL DEFAULT NULL,
   `cancelled_at` timestamp NULL DEFAULT NULL,
   `created_by` int(10) unsigned DEFAULT NULL,
