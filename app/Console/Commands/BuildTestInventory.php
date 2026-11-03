@@ -209,7 +209,14 @@ class BuildTestInventory extends Command
     {
         $calls = [];
         $verbs = 'getJson|postJson|putJson|patchJson|deleteJson|get|post|put|patch|delete';
-        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(base_path('tests'), \FilesystemIterator::SKIP_DOTS));
+        $files = iterator_to_array(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(base_path('tests'), \FilesystemIterator::SKIP_DOTS)), false);
+
+        // Directory order differs between filesystems (sorted on Windows, not on
+        // Linux), and it decides the order tests are listed in the checklist, so
+        // sort here or CI's `--check` never matches a file generated locally.
+        usort($files, function ($a, $b) {
+            return strcmp(str_replace('\\', '/', $a->getPathname()), str_replace('\\', '/', $b->getPathname()));
+        });
 
         foreach ($files as $file) {
             if ($file->getExtension() !== 'php') continue;
