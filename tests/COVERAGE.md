@@ -13,7 +13,7 @@ Pages have no browser tests yet; the page lists are the plan for the Playwright 
 
 | Tier | Module | API routes | ✅ | 🟡 | ⬜ | Pages |
 |---|---|---:|---:|---:|---:|---:|
-| 1 | [Customer accounts & sign-in](#customer-accounts--sign-in) | 38 | 7 | 12 | 19 | 8 |
+| 1 | [Customer accounts & sign-in](#customer-accounts--sign-in) | 38 | 19 | 8 | 11 | 8 |
 | 1 | [Admin sign-in, staff & roles](#admin-sign-in-staff--roles) | 19 | 1 | 0 | 18 | 8 |
 | 1 | [Customer & trade account admin](#customer--trade-account-admin) | 13 | 4 | 6 | 3 | 4 |
 | 1 | [Cart & pricing](#cart--pricing) | 32 | 13 | 12 | 7 | 3 |
@@ -30,7 +30,7 @@ Pages have no browser tests yet; the page lists are the plan for the Playwright 
 | 3 | [Reviews, messages & newsletter](#reviews-messages--newsletter) | 19 | 0 | 1 | 18 | 5 |
 | 3 | [Sellers, stores & withdrawals](#sellers-stores--withdrawals) | 17 | 0 | 0 | 17 | 6 |
 | 3 | [Installer, OAuth & framework](#installer-oauth--framework) | 33 | 0 | 0 | 33 | 0 |
-| | **Total** | **580** | **85** | **136** | **359** | **169** |
+| | **Total** | **580** | **97** | **132** | **351** | **169** |
 
 ## Access review
 
@@ -47,7 +47,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | 🟡 | GET | `api/v1/user/address/all` | UsersController@addresses | anyone (sign-in optional) | customer-area URL without customer auth |
 | ⬜ | DELETE | `api/v1/user/address/delete/{id}` | UsersController@deleteAddress | anyone (sign-in optional) | customer-area URL without customer auth |
 | ⬜ | GET | `api/v1/user/gift-vouchers` | FrontendController@getGiftVouchers | anyone (sign-in optional) | customer-area URL without customer auth |
-| 🟡 | GET | `api/v1/user/profile` | UsersController@profile | anyone (sign-in optional) | customer-area URL without customer auth |
+| ✅ | GET | `api/v1/user/profile` | UsersController@profile | anyone (sign-in optional) | customer-area URL without customer auth |
 | ⬜ | POST | `api/v1/user/save-for-later/action` | SaveForLaterController@action | anyone (sign-in optional) | customer-area URL without customer auth |
 | ⬜ | GET | `api/v1/user/save-for-later/all` | SaveForLaterController@all | anyone (sign-in optional) | customer-area URL without customer auth |
 | ⬜ | DELETE | `api/v1/user/save-for-later/delete/{id}` | SaveForLaterController@delete | anyone (sign-in optional) | customer-area URL without customer auth |
@@ -59,7 +59,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Customer accounts & sign-in
 
-**API**: 38 routes · ✅ 7 · 🟡 12 · ⬜ 19
+**API**: 38 routes · ✅ 19 · 🟡 8 · ⬜ 11
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
@@ -77,30 +77,30 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | 🟡 | GET | `api/v1/user/address/all` | UsersController@addresses | anyone (sign-in optional) ⚠️ | SuspendedAccountAccessTest |
 | ⬜ | DELETE | `api/v1/user/address/delete/{id}` | UsersController@deleteAddress | anyone (sign-in optional) ⚠️ |  |
 | ⬜ | DELETE | `api/v1/user/delete` | UsersController@deleteUser | customer |  |
-| ⬜ | POST | `api/v1/user/forgot-password` | UsersController@forgotPassword | anyone (sign-in optional) |  |
-| ⬜ | POST | `api/v1/user/login-code` | UsersController@sendLoginCode | anyone (sign-in optional) |  |
+| ✅ | POST | `api/v1/user/forgot-password` | UsersController@forgotPassword | anyone (sign-in optional) | AuthenticationSecurityTest |
+| ✅ | POST | `api/v1/user/login-code` | UsersController@sendLoginCode | anyone (sign-in optional) | AuthenticationSecurityTest |
 | ✅ | POST | `api/v1/user/login-code/verify` | UsersController@verifyLoginCode | anyone (sign-in optional) | SignInLifetimeTest |
 | ⬜ | GET | `api/v1/user/logout` | UsersController@logout | customer |  |
 | ⬜ | POST | `api/v1/user/phone/send-code` | TwoFactorController@sendPhoneCode | customer |  |
 | 🟡 | POST | `api/v1/user/phone/verify` | TwoFactorController@verifyPhone | customer | RegistrationLifecycleTest |
-| 🟡 | GET | `api/v1/user/profile` | UsersController@profile | anyone (sign-in optional) ⚠️ | AccountTypeApiTest, GuestCheckoutTest, ManualQaSuiteTest +3 |
-| ⬜ | POST | `api/v1/user/reset-password` | UsersController@resetPassword | anyone (sign-in optional) |  |
-| ⬜ | POST | `api/v1/user/reset-password/check` | UsersController@checkResetToken | anyone (sign-in optional) |  |
-| ✅ | POST | `api/v1/user/signin` | UsersController@login | anyone (sign-in optional) | CartTraceTest, FoundationSmokeTest, SignInLifetimeTest +3 |
-| 🟡 | POST | `api/v1/user/signup` | UsersController@signup | anyone (sign-in optional) | AccountTypeApiTest, GuestCartMergeTest, ManualQaSuiteTest +3 |
-| ⬜ | GET | `api/v1/user/social-login/callback/{service}` | UsersController@handleProviderCallback | anyone (sign-in optional) |  |
-| ⬜ | GET | `api/v1/user/social-login/redirect/{service}` | UsersController@redirectToProvider | anyone (sign-in optional) |  |
-| 🟡 | POST | `api/v1/user/two-factor/challenge` | UsersController@verifyTwoFactor | anyone (sign-in optional) | RegistrationLifecycleTest |
+| ✅ | GET | `api/v1/user/profile` | UsersController@profile | anyone (sign-in optional) ⚠️ | AuthenticationSecurityTest, AccountTypeApiTest, GuestCheckoutTest +4 |
+| ✅ | POST | `api/v1/user/reset-password` | UsersController@resetPassword | anyone (sign-in optional) | AuthenticationSecurityTest |
+| ✅ | POST | `api/v1/user/reset-password/check` | UsersController@checkResetToken | anyone (sign-in optional) | AuthenticationSecurityTest |
+| ✅ | POST | `api/v1/user/signin` | UsersController@login | anyone (sign-in optional) | AuthenticationSecurityTest, CartTraceTest, FoundationSmokeTest +4 |
+| ✅ | POST | `api/v1/user/signup` | UsersController@signup | anyone (sign-in optional) | AuthenticationSecurityTest, AccountTypeApiTest, GuestCartMergeTest +4 |
+| ✅ | GET | `api/v1/user/social-login/callback/{service}` | UsersController@handleProviderCallback | anyone (sign-in optional) | AuthenticationSecurityTest |
+| ✅ | GET | `api/v1/user/social-login/redirect/{service}` | UsersController@redirectToProvider | anyone (sign-in optional) | AuthenticationSecurityTest |
+| ✅ | POST | `api/v1/user/two-factor/challenge` | UsersController@verifyTwoFactor | anyone (sign-in optional) | AuthenticationSecurityTest, RegistrationLifecycleTest |
 | 🟡 | POST | `api/v1/user/two-factor/confirm` | TwoFactorController@confirm | customer | RegistrationLifecycleTest |
 | 🟡 | POST | `api/v1/user/two-factor/disable` | TwoFactorController@disable | customer | RegistrationLifecycleTest |
 | 🟡 | POST | `api/v1/user/two-factor/setup` | TwoFactorController@setup | customer | RegistrationLifecycleTest |
 | ⬜ | POST | `api/v1/user/two-factor/sms/confirm` | TwoFactorController@confirmSms | customer |  |
 | ⬜ | POST | `api/v1/user/two-factor/sms/send` | TwoFactorController@sendSms | customer |  |
 | 🟡 | GET | `api/v1/user/two-factor/status` | TwoFactorController@status | customer | RegistrationLifecycleTest, SuspendedAccountAccessTest |
-| ⬜ | POST | `api/v1/user/update-password` | UsersController@updatePassword | anyone (sign-in optional) |  |
 | ✅ | POST | `api/v1/user/update-profile` | UsersController@updateProfile | customer | AccountUpgradeApiTest, AccountSecurityTest, ManualQaSuiteTest +2 |
-| 🟡 | POST | `api/v1/user/update-user-password` | UsersController@updateUserPassword | customer | SuspendedAccountAccessTest |
-| ⬜ | POST | `api/v1/user/verify` | UsersController@verify | anyone (sign-in optional) |  |
+| ✅ | POST | `api/v1/user/update-user-password` | UsersController@updateUserPassword | customer | AuthenticationSecurityTest, SuspendedAccountAccessTest |
+| ✅ | POST | `api/v1/user/verify` | UsersController@verify | anyone (sign-in optional) | AuthenticationSecurityTest |
+| ✅ | POST | `api/v1/user/verify/resend` | UsersController@resendVerification | anyone (sign-in optional) | AuthenticationSecurityTest |
 
 **Pages**: 8
 

@@ -314,6 +314,14 @@ export default {
 
     return apiClient.post(json.api.verify, params)
   },
+  /* a new code for a sign-up never confirmed: email + the password chosen at signup */
+  userResendVerification(params, lang = null) {
+    if (lang) {
+      apiClient.defaults.headers.common['Language'] = lang
+    }
+
+    return apiClient.post(json.api.verifyResend, params)
+  },
   /* ── two-factor authentication (all require a signed-in user) ── */
   twoFactorSetup(bearer) {
     apiClient.defaults.headers.common['Authorization'] = bearer
@@ -396,13 +404,7 @@ export default {
 
     return apiClient.post(json.api.resetPassword, params)
   },
-  userUpdatePassword(params, lang = null) {
-    if (lang) {
-      apiClient.defaults.headers.common['Language'] = lang
-    }
 
-    return apiClient.post(json.api.updatePassword, params)
-  },
   userAddressAll(params, bearer) {
     apiClient.defaults.headers.common['Authorization'] = bearer
     return apiClient.get(json.api.userAddressAll, {params: params})

@@ -201,6 +201,10 @@ const actions = {
     const {data} = await Service.userVerification(params, lang)
     return data
   },
+  async resendVerification({commit}, {params, lang}) {
+    const {data} = await Service.userResendVerification(params, lang)
+    return data
+  },
   async twoFactorSetup() {
     const {data} = await Service.twoFactorSetup(this.$auth.strategy.token.get())
     return data
@@ -272,10 +276,7 @@ const actions = {
     const {data} = await Service.userResetPassword(params, lang)
     return data
   },
-  async updatePassword({commit}, {params, lang}) {
-    const {data} = await Service.userUpdatePassword(params, lang)
-    return data
-  },
+
   setProfile({commit}, params) {
     commit('SET_PROFILE', params?.data)
   },

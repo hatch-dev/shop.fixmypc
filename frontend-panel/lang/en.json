@@ -1180,12 +1180,20 @@
       "emailInvalid": "Enter a valid email address.",
       "sending": "Sending...",
       "sendMyCode": "Send my code",
-      "codeSentNote": "Code sent to {email}. It expires in {minutes} minutes.",
+      "codeSentNote": "If {email} has an account, a code is on its way. It expires in {minutes} minutes.",
       "enterYourCode": "Enter your code",
       "sendNewCode": "Send a new code",
       "useDifferentEmail": "Use a different email",
-      "toastCodeSent": "We sent a code to {email}",
-      "codeAccepted": "Code accepted. Signing you in…"
+      "toastCodeSent": "If {email} has an account, we have sent it a code",
+      "codeAccepted": "Code accepted. Signing you in…",
+      "verifyPendingLede": "You signed up with {email} but have not confirmed it yet. We’ll email you a 6-digit code to finish.",
+      "verifyCodeSentNote": "Code sent to {email}. It expires in {minutes} minutes.",
+      "emailMeNewCode": "Email me a new code",
+      "confirmAndSignIn": "Confirm and sign in",
+      "toastNewCode": "We sent a new code to {email}",
+      "emailConfirmed": "Email confirmed. Signing you in…",
+      "haveCodeAlready": "I already have a code",
+      "verifyEnterCodeNote": "Enter the 6-digit code we emailed to {email}."
     },
     "navigationStep": {
       "cart": "Cart",
@@ -2699,7 +2707,8 @@
       "ledeCode": "We’ll email you a 6-digit code. No password needed.",
       "ledeLogin": "Track repairs, reorder parts and check out faster.",
       "ledeReset": "Choose a password you don’t use anywhere else.",
-      "ledeForgot": "Enter your email and we’ll send a reset link valid for {minutes} minutes."
+      "ledeForgot": "Enter your email and we’ll send a reset link valid for {minutes} minutes.",
+      "titleVerify": "Confirm your email address"
     },
     "errorLayout": {
       "errorImage": "Error image",

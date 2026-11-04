@@ -1055,12 +1055,20 @@
       "emailInvalid": "Saisissez une adresse e-mail valide.",
       "sending": "Envoi en cours...",
       "sendMyCode": "Envoyer mon code",
-      "codeSentNote": "Code envoyé à {email}. Il expire dans {minutes} minutes.",
+      "codeSentNote": "Si {email} correspond à un compte, un code est en route. Il expire dans {minutes} minutes.",
       "enterYourCode": "Saisissez votre code",
       "sendNewCode": "Envoyer un nouveau code",
       "useDifferentEmail": "Utiliser une autre adresse e-mail",
-      "toastCodeSent": "Nous avons envoyé un code à {email}",
-      "codeAccepted": "Code accepté. Connexion en cours…"
+      "toastCodeSent": "Si {email} correspond à un compte, nous lui avons envoyé un code",
+      "codeAccepted": "Code accepté. Connexion en cours…",
+      "verifyPendingLede": "Vous vous êtes inscrit avec {email} sans l’avoir encore confirmé. Nous vous enverrons un code à 6 chiffres pour terminer.",
+      "verifyCodeSentNote": "Code envoyé à {email}. Il expire dans {minutes} minutes.",
+      "emailMeNewCode": "M’envoyer un nouveau code",
+      "confirmAndSignIn": "Confirmer et se connecter",
+      "toastNewCode": "Nous avons envoyé un nouveau code à {email}",
+      "emailConfirmed": "E-mail confirmé. Connexion en cours…",
+      "haveCodeAlready": "J’ai déjà un code",
+      "verifyEnterCodeNote": "Saisissez le code à 6 chiffres envoyé à {email}."
     },
     "navigationStep": {
       "cart": "Panier",
@@ -2574,7 +2582,8 @@
       "ledeCode": "Nous vous enverrons un code à 6 chiffres par e-mail. Aucun mot de passe nécessaire.",
       "ledeLogin": "Suivez vos réparations, recommandez des pièces et payez plus rapidement.",
       "ledeReset": "Choisissez un mot de passe que vous n’utilisez nulle part ailleurs.",
-      "ledeForgot": "Saisissez votre e-mail et nous vous enverrons un lien de réinitialisation valable {minutes} minutes."
+      "ledeForgot": "Saisissez votre e-mail et nous vous enverrons un lien de réinitialisation valable {minutes} minutes.",
+      "titleVerify": "Confirmez votre adresse e-mail"
     },
     "errorLayout": {
       "errorImage": "Image d’erreur",

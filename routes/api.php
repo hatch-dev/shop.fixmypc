@@ -1353,13 +1353,20 @@ Route::group([
             Route::post('verify', [UsersController::class, 'verify']);
             Route::post('forgot-password', [UsersController::class, 'forgotPassword']);
             Route::post('reset-password', [UsersController::class, 'resetPassword']);
-            Route::post('update-password', [UsersController::class, 'updatePassword']);
+            /*
+             * update-password is gone (2026-11-04): it set a password from an
+             * email and the signup code with a loose comparison, no expiry, no
+             * attempt limit and a six-character rule, beside the reset-link
+             * flow above that does all of that properly. Nothing called it.
+             */
         });
 
         // Each one sends an email, so the cost of an unthrottled loop is
         // landing the sending domain on a blocklist.
         Route::group(['middleware' => 'throttle:5,1'], function () {
             Route::post('signup', [UsersController::class, 'signup']);
+            // A new code for a sign-up never confirmed (email + its password).
+            Route::post('verify/resend', [UsersController::class, 'resendVerification']);
         });
 
         Route::post('reset-password/check', [UsersController::class, 'checkResetToken']);

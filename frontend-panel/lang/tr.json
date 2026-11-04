@@ -1055,12 +1055,20 @@
       "emailInvalid": "Geçerli bir e-posta adresi girin.",
       "sending": "Gönderiliyor...",
       "sendMyCode": "Kodumu gönder",
-      "codeSentNote": "Kod {email} adresine gönderildi. {minutes} dakika içinde geçerliliğini yitirir.",
+      "codeSentNote": "{email} adresine ait bir hesap varsa kod yolda. {minutes} dakika içinde geçerliliğini yitirir.",
       "enterYourCode": "Kodunuzu girin",
       "sendNewCode": "Yeni kod gönder",
       "useDifferentEmail": "Farklı bir e-posta kullan",
-      "toastCodeSent": "{email} adresine bir kod gönderdik",
-      "codeAccepted": "Kod kabul edildi. Giriş yapılıyor…"
+      "toastCodeSent": "{email} adresine ait bir hesap varsa ona bir kod gönderdik",
+      "codeAccepted": "Kod kabul edildi. Giriş yapılıyor…",
+      "verifyPendingLede": "{email} ile kaydoldunuz ancak henüz onaylamadınız. Tamamlamanız için size 6 haneli bir kod göndereceğiz.",
+      "verifyCodeSentNote": "Kod {email} adresine gönderildi. {minutes} dakika içinde geçerliliğini yitirir.",
+      "emailMeNewCode": "Bana yeni bir kod gönder",
+      "confirmAndSignIn": "Onayla ve giriş yap",
+      "toastNewCode": "{email} adresine yeni bir kod gönderdik",
+      "emailConfirmed": "E-posta onaylandı. Giriş yapılıyor…",
+      "haveCodeAlready": "Zaten bir kodum var",
+      "verifyEnterCodeNote": "{email} adresine gönderdiğimiz 6 haneli kodu girin."
     },
     "navigationStep": {
       "cart": "Sepet",
@@ -2574,7 +2582,8 @@
       "ledeCode": "Size 6 haneli bir kod e-postayla göndereceğiz. Şifre gerekmez.",
       "ledeLogin": "Onarımlarınızı takip edin, parçaları yeniden sipariş edin ve daha hızlı ödeme yapın.",
       "ledeReset": "Başka hiçbir yerde kullanmadığınız bir şifre seçin.",
-      "ledeForgot": "E-posta adresinizi girin, size {minutes} dakika geçerli bir sıfırlama bağlantısı gönderelim."
+      "ledeForgot": "E-posta adresinizi girin, size {minutes} dakika geçerli bir sıfırlama bağlantısı gönderelim.",
+      "titleVerify": "E-posta adresinizi onaylayın"
     },
     "errorLayout": {
       "errorImage": "Hata görseli",

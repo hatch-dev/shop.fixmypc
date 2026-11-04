@@ -259,6 +259,121 @@
 
     </template>
 
+    <!-- ─────────── EMAIL NOT CONFIRMED YET ─────────── -->
+    <!-- Reached from the password step when the sign-up was never confirmed. -->
+    <template v-else-if="screen === 'verify'">
+
+      <div
+        v-if="errors.length"
+        class="auth-error-box"
+      >
+        <div
+          v-for="(value, index) in errors"
+          :key="index"
+        >
+          {{ value }}
+        </div>
+      </div>
+
+      <div
+        v-if="codeAccepted"
+        class="auth-note auth-note-go"
+      >
+        {{ successMessage }}
+      </div>
+
+      <i18n
+        v-else-if="!verifyCodeSent"
+        path="ui.loginPage.verifyPendingLede"
+        tag="p"
+        class="auth-lede"
+      >
+        <template #email><b>{{ email }}</b></template>
+      </i18n>
+
+      <div
+        v-else
+        class="auth-note auth-note-go"
+      >
+        <i18n
+          :path="verifyCodeSentNow ? 'ui.loginPage.verifyCodeSentNote' : 'ui.loginPage.verifyEnterCodeNote'"
+          tag="span"
+        >
+          <template #email><b>{{ email }}</b></template>
+          <template #minutes>{{ verifyExpiryMinutes }}</template>
+        </i18n>
+      </div>
+
+      <template v-if="!verifyCodeSent">
+        <ajax-button
+          class="auth-btn-primary"
+          type="button"
+          :fetching-data="sendingCode"
+          :loading-text="$t('ui.loginPage.sending')"
+          :text="$t('ui.loginPage.emailMeNewCode')"
+          @clicked="sendVerificationCode"
+        />
+
+        <!-- The code from the sign-up email may well still be good. -->
+        <div class="auth-btn-stack auth-btn-stack-spaced">
+          <button
+            type="button"
+            class="auth-btn-ghost"
+            @click="enterExistingCode"
+          >
+            {{ $t('ui.loginPage.haveCodeAlready') }}
+          </button>
+        </div>
+      </template>
+
+
+      <form
+        v-else
+        @submit.prevent="confirmEmail"
+      >
+
+        <div class="auth-form-group">
+
+          <label class="auth-label">
+            {{ $t('ui.loginPage.enterYourCode') }}
+            <span class="auth-label-required">*</span>
+          </label>
+
+          <otp-input
+            ref="otp"
+            :value="code"
+            :is-invalid="hasCodeError && !codeAccepted && code.length === 6"
+            :is-valid="codeAccepted"
+            @change="onCodeChange"
+            @complete="confirmEmail"
+          />
+
+        </div>
+
+        <ajax-button
+          class="auth-btn-primary"
+          :fetching-data="verifyingCode"
+          :loading-text="$t('login.loggingIn')"
+          :text="$t('ui.loginPage.confirmAndSignIn')"
+        >
+          {{ $t('ui.loginPage.confirmAndSignIn') }}
+        </ajax-button>
+
+        <div class="auth-btn-stack auth-btn-stack-spaced">
+          <button
+            type="button"
+            class="auth-btn-ghost"
+            :disabled="sendingCode"
+            @click="sendVerificationCode"
+          >
+            {{ sendingCode ? $t('ui.loginPage.sending') : $t('ui.loginPage.sendNewCode') }}
+          </button>
+        </div>
+
+      </form>
+
+    </template>
+
     <!-- ─────────── EMAIL SIGN-IN CODE ─────────── -->
     <template v-else>
 
@@ -421,6 +536,7 @@
   import AuthPasswordField from '~/components/AuthPasswordField'
   import OtpInput from '~/components/OtpInput'
   import global from '~/mixin/global'
+  import configJson from '~/config.json'
 
   export default {
     middleware: ['common-middleware', 'non-logged-in'],
@@ -445,7 +561,13 @@
         successMessage: '',
         /* Long enough to register the green state, short enough not to nag. */
         successPause: 1600,
-        rememberMe: false
+        rememberMe: false,
+        // Set by the password step when the sign-up was never confirmed.
+        pendingVerification: false,
+        // the code boxes are showing, and whether a code was sent just now
+        verifyCodeSent: false,
+        verifyCodeSentNow: false,
+        verifyExpiryMinutes: 30
       }
     },
     components: {
@@ -468,6 +590,9 @@
          * that can never succeed.
          */
         if (step === '2fa' && this.challenge) return '2fa'
+
+        // Same reasoning: only meaningful straight after the password step said so.
+        if (step === 'verify' && this.pendingVerification) return 'verify'
 
         return 'signin'
       },
@@ -509,6 +634,12 @@
         // Leaving the challenge abandons it; a new sign-in issues a fresh one.
         if (before === '2fa') {
           this.challenge = ''
+        }
+
+        if (before === 'verify') {
+          this.pendingVerification = false
+          this.verifyCodeSent = false
+          this.verifyCodeSentNow = false
         }
       }
     },
@@ -696,6 +827,19 @@
             this.setProfile(data.data?.user)
             localStorage.setItem('session_id', data.data.session_id);
             this.errors = []
+          } else if (data?.data?.verification_pending) {
+            /*
+             * Right password, but the email was never confirmed. Only the
+             * person who signed up gets this answer; offer them a new code.
+             */
+            this.hasFormError = false
+            this.errors = []
+            this.pendingVerification = true
+            this.verifyExpiryMinutes = data.data.expires_in_minutes || 30
+            return this.$router.replace({
+              path: this.$route.path,
+              query: {step: 'verify'}
+            })
           } else {
             this.errors = data?.data?.form || [data?.message]
           }
@@ -747,6 +891,101 @@
         }
       },
 
+      async sendVerificationCode() {
+
+        if (this.sendingCode) {
+          return
+        }
+
+        this.errors = []
+        this.sendingCode = true
+
+        try {
+
+          const data = await this.resendVerification({
+            params: {email: this.email, password: this.password},
+            lang: this.langCode
+          })
+
+          if (data?.status === 200) {
+            this.verifyCodeSent = true
+            this.verifyCodeSentNow = true
+            this.code = ''
+            this.hasCodeError = false
+            this.verifyExpiryMinutes = data.data?.expires_in_minutes || this.verifyExpiryMinutes
+            this.setToastMessage(this.$t('ui.loginPage.toastNewCode', { email: this.email }))
+          } else {
+            this.errors = data?.data?.form || [data?.message]
+          }
+
+        } catch (e) {
+          return this.$nuxt.error(e)
+        } finally {
+          this.sendingCode = false
+        }
+      },
+
+      enterExistingCode() {
+        this.errors = []
+        this.code = ''
+        this.hasCodeError = false
+        this.verifyCodeSent = true
+        this.verifyCodeSentNow = false
+      },
+
+      /*
+       * Confirming the email signs them in, as it does at the end of
+       * registration: through nuxt-auth, so the token lands where sign-in
+       * puts it. The password goes with the code (UsersController::verify).
+       */
+      async confirmEmail() {
+
+        this.hasCodeError = true
+
+        if (this.code.length !== 6 || this.verifyingCode || this.codeAccepted) {
+          return
+        }
+
+        this.errors = []
+        this.verifyingCode = true
+
+        try {
+
+          const base = process.env.apiBase?.trim() ? process.env.apiBase : window.location.origin + '/'
+
+          const {data} = await this.$auth.loginWith('local', {
+            url: base + configJson.api.url + configJson.api.verify,
+            data: {
+              email: this.email,
+              code: this.code,
+              password: this.password,
+              user_token: await this.getUserToken(),
+              remember_me: this.rememberMe
+            }
+          })
+
+          if (data?.status === 200) {
+            this.hasCodeError = false
+            this.codeAccepted = true
+            this.successMessage = this.$t('ui.loginPage.emailConfirmed')
+            this.setProfile(data.data?.user)
+            try {
+              localStorage.setItem('session_id', data.data.session_id)
+            } catch (e) {
+              // Storage unavailable; the session still works for this tab.
+            }
+          } else {
+            this.errors = data?.data?.form || [data?.message]
+            this.resetCode()
+          }
+
+        } catch (e) {
+          return this.$nuxt.error(e)
+        } finally {
+          this.verifyingCode = false
+        }
+      },
+
       /*
        * Shared tail for both code screens: show the accepted state, hold it
        * long enough to read, then hand the token to nuxt-auth — which is what
@@ -773,6 +1012,7 @@
         setProfile: 'setProfile',
         getUserToken: 'getUserToken',
         sendLoginCode: 'sendLoginCode',
+        resendVerification: 'resendVerification',
         verifyTwoFactorCode: 'verifyTwoFactor',
         verifySignInCode: 'verifyLoginCode'
       }),

@@ -135,6 +135,9 @@
           if (step === '2fa') {
             return this.$t('ui.emptyLayout.title2fa')
           }
+          if (step === 'verify') {
+            return this.$t('ui.emptyLayout.titleVerify')
+          }
           return this.$t('ui.emptyLayout.titleLogin')
         }
         /*
@@ -161,8 +164,8 @@
 
         if (path.includes('login')) {
           if (step === 'code') return this.$t('ui.emptyLayout.ledeCode')
-          // The 2FA screen explains its own method, so no lede here.
-          if (step === '2fa') return ''
+          // The 2FA and confirm-email screens explain themselves, so no lede here.
+          if (step === '2fa' || step === 'verify') return ''
           return this.$t('ui.emptyLayout.ledeLogin')
         }
 
@@ -187,7 +190,7 @@
       showFoot() {
 
         if (this.routeName === 'login') {
-          return !['code', '2fa'].includes(this.$route.query?.step)
+          return !['code', '2fa', 'verify'].includes(this.$route.query?.step)
         }
 
         // Register carries its own footer, which changes per wizard step.
@@ -217,7 +220,7 @@
         }
 
         if (this.routeName === 'login') {
-          return step === 'code'
+          return step === 'code' || step === 'verify'
         }
 
         return false

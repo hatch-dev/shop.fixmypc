@@ -103,11 +103,23 @@ class AccountStatus
      * mechanism beside it, plus the remember-me token so a closed browser
      * cannot sign itself back in.
      *
+     * $keepTokenId spares one token: a password change signs out every other
+     * device but leaves the browser that made the change to sign itself out.
+     *
      * Returns the number of tokens revoked.
      */
-    public static function revokeAllSessions(User $user)
+    public static function revokeAllSessions(User $user, $keepTokenId = null)
     {
-        $tokenIds = UserSession::where('user_id', $user->id)
+        // A session with no token_id is not the one being kept; `!=` alone would skip it.
+        $spare = function ($query, $column) use ($keepTokenId) {
+            return $keepTokenId
+                ? $query->where(function ($q) use ($column, $keepTokenId) {
+                    $q->whereNull($column)->orWhere($column, '!=', $keepTokenId);
+                })
+                : $query;
+        };
+
+        $tokenIds = $spare(UserSession::where('user_id', $user->id), 'token_id')
             ->pluck('token_id')
             ->filter()
             ->all();
@@ -117,7 +129,7 @@ class AccountStatus
          * token minted before session tracking existed, or one whose session
          * row was pruned, is still a working key to the account.
          */
-        $revoked = Token::where('user_id', $user->id)
+        $revoked = $spare(Token::where('user_id', $user->id), 'id')
             ->where('revoked', false)
             ->update(['revoked' => true]);
 
@@ -127,7 +139,7 @@ class AccountStatus
                 ->update(['revoked' => true]);
         }
 
-        UserSession::where('user_id', $user->id)
+        $spare(UserSession::where('user_id', $user->id), 'token_id')
             ->where('is_active', true)
             ->update(['is_active' => false]);
 
@@ -138,7 +150,9 @@ class AccountStatus
          * records that the customer asked to be remembered. Clearing it keeps
          * the flag honest; the access it once implied has already gone.
          */
-        $user->forceFill(['remember_token' => 0])->save();
+        if (!$keepTokenId) {
+            $user->forceFill(['remember_token' => 0])->save();
+        }
 
         return $revoked;
     }
