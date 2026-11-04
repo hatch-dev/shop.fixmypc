@@ -1730,7 +1730,7 @@
         }
       },
       invalidPassword() {
-        return !this.isValidLength(this.newPassword)
+        return !this.isStrongPassword(this.newPassword)
       },
 
       /* ── mobile number ── */

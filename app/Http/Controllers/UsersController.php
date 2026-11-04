@@ -37,64 +37,42 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Passport\Passport;
-use Laravel\Socialite\Facades\Socialite;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class UsersController extends ControllerHelper
 {
+    /*
+     * Google / Facebook sign-in is switched off (2026-11-04).
+     *
+     * The callback signed in whichever row matched the provider's email -
+     * an unconfirmed sign-up included - without the suspended-account check,
+     * without the second factor, without recording the session or merging the
+     * guest basket, and handed the access token, name and email to the
+     * storefront in the redirect URL, where history and logs keep them. No
+     * screen links to it, and it cannot be finished without a provider
+     * round trip to test against, so both ends now send the browser back to
+     * sign-in with nothing attached.
+     *
+     * Finishing it means: a one-time code in the redirect (never the token),
+     * exchanged by a POST that runs authenticationRefusal(), the 2FA
+     * challenge and issueUserSession() like password sign-in does, and
+     * refusing rows that are not verified.
+     */
     public function redirectToProvider($service)
     {
-        try {
-
-            return Socialite::driver($service)->stateless()->redirect();
-
-        } catch (\Exception $ex) {
-            return response()->json(Validation::error(null, $ex->getMessage()));
-        }
+        return redirect($this->socialSignInUnavailable());
     }
 
     public function handleProviderCallback(Request $request, $service)
     {
-        try {
+        return redirect($this->socialSignInUnavailable());
+    }
 
-            $user = Socialite::driver($service)->stateless()->user();
-        
-            $socialVariable = $service . '_id';
-
-            $existingUser = User::where($socialVariable, $user->id)
-                ->orWhere('email', $user->email)
-                ->first();
-
-            if ($existingUser) {
-
-                Auth::guard('web')->login($existingUser);
-
-            } else {
-
-                $newUser = [
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    $socialVariable => $user->id,
-                    'password' => encrypt(rand(1000, 9999)),
-                    'verified' => 1
-                ];
-                $newUser = User::create($newUser);
-                Auth::guard('web')->login($newUser);
-            }
-
-            $authUser = Auth::user();
-            $token = $authUser->createToken('user', ['user'])->accessToken;
-            $id = $authUser->id;
-            $name = $authUser->name;
-            $email = $authUser->email;
-
-            return redirect(env('FRONTEND_SOCIAL_REDIRECT', Utils::frontendSocialRedirect()) . '?token=' . $token . '&&user=' . $id . '&&email=' . $email . '&&name=' . $name);
-        } catch (\Exception $ex) {
-            // return response()->json($ex->getMessage());
-
-            return redirect(env('FRONTEND_SOCIAL_REDIRECT', Utils::frontendSocialRedirect()) . '?error=' . explode('response', $ex->getMessage())[0]);
-        }
+    private function socialSignInUnavailable()
+    {
+        return rtrim(config('env.url.CLIENT_BASE_URL'), '/') . '/login';
     }
 
 
@@ -616,8 +594,18 @@ class UsersController extends ControllerHelper
              * were not there at all — same message as a wrong password or an
              * unknown address, so the response can't be used to discover which
              * addresses are registered but unverified.
+             *
+             * Except to the person who signed up: with the password chosen at
+             * signup they are told the sign-up is waiting for its code, and the
+             * sign-in screen offers a new one (verify/resend). Without that
+             * password the answer is the same as for any wrong guess.
              */
             if ($user && !$user->verified) {
+
+                if ($this->ownsPendingSignup($user, request('password'))) {
+                    return response()->json($this->verificationPending($user));
+                }
+
                 $user = null;
             }
 
@@ -947,10 +935,16 @@ class UsersController extends ControllerHelper
             // Unverified accounts answer the same way as unknown ones.
             $user = User::where('email', request('email'))->verified()->first();
 
+            /*
+             * The same answer as a code that was sent, as forgot-password
+             * gives: "Email does not exists" told anyone which addresses have
+             * an account. A code is only sent when one does.
+             */
             if (!$user) {
-                return response()->json(Validation::error(null,
-                    __('lang.not_exists', [], $lang)
-                ));
+                return response()->json(new Response(null, [
+                    'email' => $request->email,
+                    'expires_in_minutes' => LoginCode::LIFETIME_MINUTES
+                ]));
             }
 
             $recent = LoginCode::where('email', $user->email)
@@ -1064,43 +1058,6 @@ class UsersController extends ControllerHelper
                 new Response($request->token, $this->issueUserSession($request, $user))
             );
 
-        } catch (\Exception $ex) {
-            return response()->json(Validation::error($request->token, $ex->getMessage()));
-        }
-    }
-
-    public function updatePassword(Request $request)
-    {
-        try {
-            $lang = $request->header('language');
-
-
-            $validator = Validation::update_password($request);
-            if ($validator) {
-                return response()->json($validator);
-            }
-
-            $existingUser = User::where('email', $request->email)
-                ->first();
-
-            if (!$existingUser) {
-                return response()->json(Validation::error(null,
-                    __('lang.no_email', [], $lang)
-                ));
-            }
-
-
-            if ($existingUser->code != $request->code) {
-                return response()->json(Validation::error(null,
-                    __('lang.code_invalid', [], $lang)
-                ));
-            }
-
-            User::where('email', $request->email)->update([
-                'password' => Hash::make($request->password)
-            ]);
-
-            return response()->json(new Response($request->token, $request->email));
         } catch (\Exception $ex) {
             return response()->json(Validation::error($request->token, $ex->getMessage()));
         }
@@ -1247,13 +1204,11 @@ class UsersController extends ControllerHelper
 
             /*
              * Changing the password signs every existing session out — the
-             * point of a reset is usually to lock somebody else out.
+             * point of a reset is usually to lock somebody else out. Every
+             * token the account owns, as suspension does, not only the ones
+             * named 'user'.
              */
-            $user->tokens->each(function ($token) {
-                if ($token->name === 'user') $token->delete();
-            });
-
-            UserSession::where('user_id', $user->id)->update(['is_active' => false]);
+            AccountStatus::revokeAllSessions($user);
 
             return response()->json(new Response(null, ['email' => $user->email]));
 
@@ -1284,7 +1239,33 @@ class UsersController extends ControllerHelper
                 __('lang.code_invalid', [], $lang)
             ));
 
-            if (!$existingUser) {
+            if (!$existingUser || $existingUser->verified) {
+                return $genericFailure;
+            }
+
+            /*
+             * The code proves the inbox; the password proves the details. Signing
+             * up again over an unconfirmed row replaces its details and sends a
+             * new code to the address, so without this the owner of the address
+             * typing in that code would confirm an account carrying somebody
+             * else's password and phone number.
+             */
+            if (!$this->ownsPendingSignup($existingUser, request('password'))) {
+
+                if (User::codeMatches($existingUser, request('code'))) {
+                    // The right code against details this person did not submit:
+                    // burn it, so those details can never be confirmed with it.
+                    $this->burnSignupCode($existingUser);
+
+                    return response()->json(Validation::error(null,
+                        'This sign-up was changed after your code was sent. Please register again to get a new code.'
+                    ));
+                }
+
+                if ($existingUser->code) {
+                    User::where('id', $existingUser->id)->increment('code_attempts');
+                }
+
                 return $genericFailure;
             }
 
@@ -1294,13 +1275,19 @@ class UsersController extends ControllerHelper
              * minutes. Strict comparison, five tries, then the code is burned.
              */
             if ((int)$existingUser->code_attempts >= User::MAX_CODE_ATTEMPTS) {
-                User::where('id', $existingUser->id)->update([
-                    'code' => null,
-                    'code_expires_at' => null,
-                    'code_attempts' => 0
-                ]);
+                $this->burnSignupCode($existingUser);
 
-                return $genericFailure;
+                return response()->json(Validation::error(null,
+                    'Too many incorrect codes. Send yourself a new one.'
+                ));
+            }
+
+            // Past this point the caller is the person who signed up, so the
+            // reason a code fails can be given plainly.
+            if (!$existingUser->code || !$existingUser->code_expires_at || $existingUser->code_expires_at->isPast()) {
+                return response()->json(Validation::error(null,
+                    'That code has expired. Send yourself a new one.'
+                ));
             }
 
             if (User::codeMatches($existingUser, request('code'))) {
@@ -1370,6 +1357,132 @@ class UsersController extends ControllerHelper
     }
 
 
+    /**
+     * A new code for a sign-up that was never confirmed, asked for with the
+     * email and the password chosen at signup - the sign-in screen offers it
+     * when that password is entered (verificationPending). It replaces the
+     * code and nothing else: no row is created, no detail is changed.
+     *
+     * Every refusal reads the same, whether the address is unknown, already
+     * confirmed or the password is wrong.
+     */
+    public function resendVerification(Request $request)
+    {
+        try {
+            $lang = $request->header('language');
+
+            $validator = Validation::email_verification($request);
+            if ($validator) {
+                return response()->json($validator);
+            }
+
+            $refused = response()->json(Validation::error(null,
+                'We could not send a code for those details. Check the email address and password you signed up with.'
+            ));
+
+            $user = User::where('email', request('email'))->first();
+
+            if (!$user || $user->verified || !$user->isActive() || !$this->ownsPendingSignup($user, request('password'))) {
+                return $refused;
+            }
+
+            // One code a minute is plenty for a person and slows a loop down.
+            $issuedAt = $user->code && $user->code_expires_at
+                ? $user->code_expires_at->copy()->subMinutes(User::CODE_LIFETIME_MINUTES)
+                : null;
+
+            if ($issuedAt && $issuedAt->gt(now()->subMinute())) {
+                return response()->json(Validation::error(null,
+                    'A code was sent less than a minute ago. Check your inbox, or try again shortly.'
+                ));
+            }
+
+            $request->merge(['email' => $user->email, 'name' => $user->name]);
+
+            try {
+                $code = MailHelper::codeSender($request, null,
+                    __('lang.account_registration', [], $lang),
+                    $lang
+                );
+            } catch (\Exception $ex) {
+                return response()->json(Validation::error(null,
+                    'We could not send the code just now. Try again shortly.'
+                ));
+            }
+
+            User::where('id', $user->id)->update([
+                'code' => $code,
+                'code_expires_at' => now()->addMinutes(User::CODE_LIFETIME_MINUTES),
+                'code_attempts' => 0
+            ]);
+
+            return response()->json(new Response(null, [
+                'email' => $user->email,
+                'expires_in_minutes' => User::CODE_LIFETIME_MINUTES
+            ]));
+
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+    /** Is this the person who made the sign-up? The password they chose says so. */
+    private function ownsPendingSignup($user, $password)
+    {
+        return $user && !$user->verified
+            && is_string($password) && $password !== ''
+            && Hash::check($password, $user->password);
+    }
+
+    /**
+     * May a new signup replace this unconfirmed one? Its owner may, and so may
+     * anyone once its code has expired or been used up.
+     */
+    private function mayReplacePendingSignup($user, $password)
+    {
+        if ($user->verified || $this->ownsPendingSignup($user, $password)) {
+            return true;
+        }
+
+        return !$user->code
+            || !$user->code_expires_at
+            || $user->code_expires_at->isPast()
+            || (int)$user->code_attempts >= User::MAX_CODE_ATTEMPTS;
+    }
+
+    /**
+     * What sign-in answers the person who signed up but never confirmed:
+     * a refusal, flagged so the screen can offer a new code. The status is
+     * still checked first - confirming an email does not lift a suspension.
+     */
+    private function verificationPending($user)
+    {
+        $blocked = AccountStatus::authenticationBlock($user);
+
+        if ($blocked) {
+            return Validation::error(null, $blocked);
+        }
+
+        $message = 'You have not confirmed your email address yet. Send yourself a new code to finish signing up.';
+
+        return new Response(null, [
+            'form' => [$message],
+            'verification_pending' => true,
+            'email' => $user->email,
+            'expires_in_minutes' => User::CODE_LIFETIME_MINUTES
+        ], 201, $message);
+    }
+
+    private function burnSignupCode($user)
+    {
+        User::where('id', $user->id)->update([
+            'code' => null,
+            'code_expires_at' => null,
+            'code_attempts' => 0
+        ]);
+    }
+
+
     public function signup(Request $request)
     {
         try {
@@ -1405,6 +1518,23 @@ class UsersController extends ControllerHelper
             if ($existingUser && !$existingUser->isActive()) {
                 return response()->json(Validation::error(null,
                     'We cannot open an account for this email address. Please contact us.'
+                ));
+            }
+
+            /*
+             * Signing up again replaces an unconfirmed sign-up's details. Only
+             * the person who made it may do that while its code is live - shown
+             * by the password they chose - so somebody else cannot swap in their
+             * own password and phone and wait for the owner to confirm them.
+             * Once the code has expired the sign-up counts as abandoned and
+             * anyone may start again; verify() still holds the code to the
+             * details it was sent for.
+             */
+            if ($existingUser && !$this->mayReplacePendingSignup($existingUser, request('password'))) {
+                return response()->json(Validation::error(null,
+                    'A sign-up for this email address is waiting to be confirmed. Enter the code we emailed, '
+                    . 'or sign in with the password you chose to get a new one. You can start again in '
+                    . max(1, (int)ceil(now()->diffInSeconds($existingUser->code_expires_at) / 60)) . ' minutes.'
                 ));
             }
 
@@ -1744,6 +1874,15 @@ class UsersController extends ControllerHelper
             User::where('id', Auth::user()->id)->update([
                 'password' => Hash::make($request->new_password)
             ]);
+
+            /*
+             * Every other device is signed out, as a reset does. The browser
+             * that made the change keeps its token long enough to sign itself
+             * out (the profile page does that straight after).
+             */
+            $current = optional($request->user('user'))->token();
+
+            AccountStatus::revokeAllSessions($user, $current ? $current->id : null);
 
             return Validation::success($request,
                 __('lang.password_updated', [], $lang)

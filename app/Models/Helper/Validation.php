@@ -339,16 +339,7 @@ class Validation
         return self::validationMessage($request, $rules, 'form', $messages);
     }
 
-    public static function update_password($request)
-    {
-        $rules = [
-            'code' => 'required|min:4',
-            'email' => 'required|email',
-            'password' => 'required|min:6'
-        ];
 
-        return self::validationMessage($request, $rules);
-    }
 
     /**
      * Setting a new password from a reset link. Same strength rule as signup.
@@ -358,12 +349,12 @@ class Validation
         $rules = [
             'token' => 'required',
             'email' => 'required|email',
-            'password' => ['required', 'min:10', 'regex:/[A-Z]/', 'regex:/\d/']
+            'password' => self::strongPassword()
         ];
 
         $messages = [
-            'password.min' => 'Use at least 10 characters, with a capital letter and a number.',
-            'password.regex' => 'Use at least 10 characters, with a capital letter and a number.',
+            'password.min' => self::PASSWORD_RULE_MESSAGE,
+            'password.regex' => self::PASSWORD_RULE_MESSAGE,
             'token.required' => 'This reset link is not valid.'
         ];
 
@@ -372,12 +363,22 @@ class Validation
 
     public static function updateUserPassword($request)
     {
+        /*
+         * The current password is only compared, so it keeps the old length
+         * floor: an account whose password predates the rule can still change
+         * it. The new one has to meet the rule registration sets.
+         */
         $rules = [
             'current_password' => 'required|min:6',
-            'new_password' => 'required|min:6'
+            'new_password' => self::strongPassword()
         ];
 
-        return self::validationMessage($request, $rules);
+        $messages = [
+            'new_password.min' => self::PASSWORD_RULE_MESSAGE,
+            'new_password.regex' => self::PASSWORD_RULE_MESSAGE
+        ];
+
+        return self::validationMessage($request, $rules, 'form', $messages);
     }
 
     /*
@@ -457,12 +458,23 @@ class Validation
 
     public static function user_verification($request)
     {
+        /*
+         * The password chosen at signup comes with the code. The code proves
+         * the inbox; the password proves these are the details that person
+         * submitted, so a sign-up someone else restarted cannot be confirmed
+         * by the owner of the address typing in the code they were sent.
+         */
         $rules = [
             'code' => 'required|min:4',
             'email' => 'required|email',
+            'password' => 'required'
         ];
 
-        return self::validationMessage($request, $rules);
+        $messages = [
+            'password.required' => 'Enter the password you chose when you signed up.'
+        ];
+
+        return self::validationMessage($request, $rules, 'form', $messages);
     }
 
 
@@ -479,15 +491,34 @@ class Validation
         return self::validationMessage($request, $rules);
     }
 
+    /** What a customer is told when a password they chose falls short of strongPassword(). */
+    public const PASSWORD_RULE_MESSAGE = 'Use at least 10 characters, with a capital letter and a number.';
+
+    /**
+     * The one rule for every password a customer sets: either registration
+     * path, a reset link, and the change form in their account. The forms
+     * check the same thing before sending (register, reset-password, profile).
+     */
+    public static function strongPassword()
+    {
+        return ['required', 'min:10', 'regex:/[A-Z]/', 'regex:/\d/'];
+    }
+
     public static function user_signup($request)
     {
+        // The legacy signup path (no account_type) used to accept six characters.
         $rules = [
             'name' => 'required',
             'email' => 'required|email',
-            'password' => 'required|min:6'
+            'password' => self::strongPassword()
         ];
 
-        return self::validationMessage($request, $rules);
+        $messages = [
+            'password.min' => self::PASSWORD_RULE_MESSAGE,
+            'password.regex' => self::PASSWORD_RULE_MESSAGE
+        ];
+
+        return self::validationMessage($request, $rules, 'form', $messages);
     }
 
     /**
@@ -530,15 +561,15 @@ class Validation
             ],
             'account_type' => 'required|in:personal,business,trade',
             // Matches the strength rule shown on the form.
-            'password' => ['required', 'min:10', 'regex:/[A-Z]/', 'regex:/\d/'],
+            'password' => self::strongPassword(),
             'terms' => 'accepted'
         ];
 
         $rules = array_merge($rules, self::companyRules($request, $type));
 
         $messages = array_merge([
-            'password.min' => 'Use at least 10 characters, with a capital letter and a number.',
-            'password.regex' => 'Use at least 10 characters, with a capital letter and a number.',
+            'password.min' => self::PASSWORD_RULE_MESSAGE,
+            'password.regex' => self::PASSWORD_RULE_MESSAGE,
             'terms.accepted' => 'Tick the box to continue.',
             'phone.required' => 'Enter a mobile number we can text.',
             'email.unique' => 'That email address already has an account. Sign in instead, or reset your password.',

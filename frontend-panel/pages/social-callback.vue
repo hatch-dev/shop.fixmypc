@@ -10,45 +10,22 @@
 <script>
   import global from '~/mixin/global'
 
+  /*
+   * Google / Facebook sign-in is switched off (UsersController::
+   * handleProviderCallback), so nothing legitimate lands here any more.
+   *
+   * This page used to take ?token= from the address bar and sign the browser
+   * in with it - which also meant a link carrying somebody else's token signed
+   * a visitor into that account. It now ignores the query and sends them to
+   * the sign-in screen. Whatever replaces social sign-in must not bring the
+   * token back into the URL.
+   */
   export default {
     middleware: ['common-middleware', 'non-logged-in'],
     layout: "social-login",
-    data() {
-      return {
-      }
-    },
-    components: {
-    },
     mixins: [global],
-    computed: {
-      error(){
-        return this.$route.query.error || null
-      },
-      id(){
-        return this.$route.query.id || null
-      },
-      name(){
-        return this.$route.query.name || null
-      },
-      email(){
-        return this.$route.query.email || null
-      },
-      token(){
-        return this.$route.query.token || null
-      }
-    },
-    methods: {
-    },
-    async mounted() {
-
-      if(this.error){
-        return this.$nuxt.error({statusCode: 400, message: this.error })
-      } else {
-        this.$auth.setUser({
-          email: this.email
-        })
-        await this.$auth.setUserToken('Bearer ' + this.token, null)
-      }
+    mounted() {
+      this.$router.replace('/login')
     }
   }
 </script>

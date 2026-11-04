@@ -24,5 +24,12 @@ export default {
     isValidLength(password) {
       return password.length >= this.passwordLength
     },
+    /*
+     * The rule for a password a customer chooses, as the API enforces it
+     * (Validation::strongPassword): ten characters, a capital and a number.
+     */
+    isStrongPassword(password) {
+      return !!password && password.length >= 10 && /[A-Z]/.test(password) && /\d/.test(password)
+    },
   }
 }

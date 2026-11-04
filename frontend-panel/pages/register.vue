@@ -1537,6 +1537,9 @@
             data: {
               email: this.form.email,
               code: this.code,
+              // The code confirms the inbox; the password confirms these are
+              // the details this person submitted (UsersController::verify).
+              password: this.form.password,
               user_token: await this.getUserToken()
             }
           })

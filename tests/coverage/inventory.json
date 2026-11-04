@@ -6929,7 +6929,9 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AuthenticationSecurityTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -7002,7 +7004,9 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AuthenticationSecurityTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -7298,7 +7302,9 @@
             "access": "anyone (sign-in optional)",
             "review": "customer-area URL without customer auth",
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AuthenticationSecurityTest.php"
+                ],
                 "legacy": [
                     "Feature/AccountTypeApiTest.php",
                     "Feature/GuestCheckoutTest.php",
@@ -7410,7 +7416,9 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AuthenticationSecurityTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -7423,7 +7431,9 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AuthenticationSecurityTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -7491,6 +7501,7 @@
             "review": null,
             "tests": {
                 "isolated": [
+                    "Isolated/AuthenticationSecurityTest.php",
                     "Isolated/CartTraceTest.php",
                     "Isolated/FoundationSmokeTest.php",
                     "Isolated/SignInLifetimeTest.php"
@@ -7511,7 +7522,9 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AuthenticationSecurityTest.php"
+                ],
                 "legacy": [
                     "Feature/AccountTypeApiTest.php",
                     "Feature/GuestCartMergeTest.php",
@@ -7531,7 +7544,9 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AuthenticationSecurityTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -7544,7 +7559,9 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AuthenticationSecurityTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -7583,7 +7600,9 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AuthenticationSecurityTest.php"
+                ],
                 "legacy": [
                     "Feature/RegistrationLifecycleTest.php"
                 ]
@@ -7678,19 +7697,6 @@
         },
         {
             "method": "POST",
-            "uri": "api/v1/user/update-password",
-            "handler": "UsersController@updatePassword",
-            "module": "accounts",
-            "tier": 1,
-            "access": "anyone (sign-in optional)",
-            "review": null,
-            "tests": {
-                "isolated": [],
-                "legacy": []
-            }
-        },
-        {
-            "method": "POST",
             "uri": "api/v1/user/update-profile",
             "handler": "UsersController@updateProfile",
             "module": "accounts",
@@ -7718,7 +7724,9 @@
             "access": "customer",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AuthenticationSecurityTest.php"
+                ],
                 "legacy": [
                     "Feature/SuspendedAccountAccessTest.php"
                 ]
@@ -7748,7 +7756,24 @@
             "access": "anyone (sign-in optional)",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AuthenticationSecurityTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/v1/user/verify/resend",
+            "handler": "UsersController@resendVerification",
+            "module": "accounts",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/AuthenticationSecurityTest.php"
+                ],
                 "legacy": []
             }
         },

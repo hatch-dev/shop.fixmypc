@@ -66,14 +66,14 @@ return [
         'api/v1/user/signin',
         'api/v1/user/signup',
         'api/v1/user/verify',
+        'api/v1/user/verify/resend',          // needs the email and the password chosen at signup
         'api/v1/user/forgot-password',
         'api/v1/user/reset-password',
         'api/v1/user/reset-password/check',
-        'api/v1/user/update-password',        // the reset step: requires the emailed code
         'api/v1/user/login-code',
         'api/v1/user/login-code/verify',
         'api/v1/user/two-factor/challenge',
-        'api/v1/user/social-login/redirect/{service}',
+        'api/v1/user/social-login/redirect/{service}',   // switched off: both redirect to /login
         'api/v1/user/social-login/callback/{service}',
     ],
 

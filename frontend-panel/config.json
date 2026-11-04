@@ -60,11 +60,13 @@
     "accountUpgradeWithdraw": "user/account-upgrade/withdraw",
     "updateUserPassword": "user/update-user-password",
     "verify": "user/verify",
+    "verifyResend": "user/verify/resend",
+
     "sellerVerify": "seller/verify",
     "forgotPassword": "user/forgot-password",
     "checkResetToken": "user/reset-password/check",
     "resetPassword": "user/reset-password",
-    "updatePassword": "user/update-password",
+
     "socialLogin": "user/social-login/redirect",
     "guestToken": "guest/token",
     "guestVerifyEmail": "guest/verify-email",
