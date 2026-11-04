@@ -2269,11 +2269,11 @@
           "tag": "VAT not applicable (0%)"
         },
         "included": {
-          "title": "Products with VAT included",
+          "title": "Products where VAT is already included",
           "tag": "VAT is already in the price"
         },
         "added": {
-          "title": "Products with VAT added at checkout",
+          "title": "Products where VAT is added separately",
           "tag": "Prices shown excluding VAT"
         },
         "items": "{count} item | {count} items",
@@ -2318,6 +2318,40 @@
         "vatAdded": "VAT added to VAT-exclusive prices",
         "totalVat": "Total VAT",
         "subtotalInc": "Subtotal (incl. VAT)"
+      },
+      "savingsBreakdown": {
+        "lines": "Selected product with a discount | Selected products with a discount",
+        "originalExVat": "Original price (Ex-VAT)",
+        "productDiscount": "Product discount",
+        "discountedExVat": "Discounted price (Ex-VAT)",
+        "vatAt": "VAT ({rate})",
+        "vat": "VAT",
+        "noVat": "No VAT on this item",
+        "finalIncVat": "Final product price (Inc-VAT)",
+        "freeIncluded": "includes {count} free item | includes {count} free items",
+        "title": "Your Savings Breakdown",
+        "productDiscountExVat": "Product discount (Ex-VAT)",
+        "vatDifference": "VAT difference due to discount",
+        "totalSavings": "Total savings (Inc-VAT)",
+        "explainVat": "You save {discount} on the products. VAT is calculated at the applicable rate on the discounted price, so the VAT you pay is also {vat} lower. That makes {total} in total savings, including VAT.",
+        "explainNoVat": "You save {total} on the products. No VAT is charged on them, so there is no VAT difference."
+      },
+      "table": {
+        "product": "Product",
+        "price": "Price",
+        "priceIncVat": "Price (Inc-VAT)",
+        "subtotal": "Subtotal",
+        "details": "Details",
+        "amount": "Amount",
+        "priceExVat": "{name} - discounted price (Ex-VAT)",
+        "vat": "VAT",
+        "finalIncVat": "{name} - final price (Inc-VAT)",
+        "includedVat": "These prices already include {vat} VAT.",
+        "finalTitle": "Final amount payable",
+        "partIncluded": "Products with VAT included",
+        "partAdded": "Products with VAT added (incl. VAT)",
+        "partNone": "Products without VAT",
+        "totalCharges": "Total product charges"
       }
     },
     "flashDiscount": {

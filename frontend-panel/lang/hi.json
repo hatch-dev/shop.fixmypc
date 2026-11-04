@@ -2193,6 +2193,40 @@
         "vatAdded": "VAT-रहित कीमतों पर जोड़ा गया VAT",
         "totalVat": "कुल VAT",
         "subtotalInc": "उप-योग (VAT सहित)"
+      },
+      "savingsBreakdown": {
+        "lines": "छूट वाला चयनित उत्पाद | छूट वाले चयनित उत्पाद",
+        "originalExVat": "मूल कीमत (VAT के बिना)",
+        "productDiscount": "उत्पाद छूट",
+        "discountedExVat": "छूट के बाद कीमत (VAT के बिना)",
+        "vatAt": "VAT ({rate})",
+        "vat": "VAT",
+        "noVat": "इस आइटम पर कोई VAT नहीं",
+        "finalIncVat": "उत्पाद की अंतिम कीमत (VAT सहित)",
+        "freeIncluded": "{count} मुफ़्त आइटम सहित | {count} मुफ़्त आइटम सहित",
+        "title": "आपकी बचत का विवरण",
+        "productDiscountExVat": "उत्पाद छूट (VAT के बिना)",
+        "vatDifference": "छूट के कारण VAT में अंतर",
+        "totalSavings": "कुल बचत (VAT सहित)",
+        "explainVat": "आप उत्पादों पर {discount} बचाते हैं। VAT लागू दर से छूट के बाद की कीमत पर लगता है, इसलिए आपका VAT भी {vat} कम है। इस तरह VAT सहित आपकी कुल बचत {total} है।",
+        "explainNoVat": "आप उत्पादों पर {total} बचाते हैं। इन पर कोई VAT नहीं लगता, इसलिए VAT में कोई अंतर नहीं है।"
+      },
+      "table": {
+        "product": "उत्पाद",
+        "price": "कीमत",
+        "priceIncVat": "कीमत (VAT सहित)",
+        "subtotal": "उप-योग",
+        "details": "विवरण",
+        "amount": "राशि",
+        "priceExVat": "{name} - छूट के बाद कीमत (VAT के बिना)",
+        "vat": "VAT",
+        "finalIncVat": "{name} - अंतिम कीमत (VAT सहित)",
+        "includedVat": "इन कीमतों में पहले से {vat} VAT शामिल है।",
+        "finalTitle": "देय अंतिम राशि",
+        "partIncluded": "VAT सहित उत्पाद",
+        "partAdded": "अलग से VAT जोड़े गए उत्पाद (VAT सहित)",
+        "partNone": "बिना VAT के उत्पाद",
+        "totalCharges": "उत्पादों का कुल शुल्क"
       }
     },
     "flashDiscount": {

@@ -2193,6 +2193,40 @@
         "vatAdded": "TVA ajoutée aux prix HT",
         "totalVat": "TVA totale",
         "subtotalInc": "Sous-total (TTC)"
+      },
+      "savingsBreakdown": {
+        "lines": "Produit sélectionné avec une remise | Produits sélectionnés avec une remise",
+        "originalExVat": "Prix d’origine (HT)",
+        "productDiscount": "Remise sur le produit",
+        "discountedExVat": "Prix remisé (HT)",
+        "vatAt": "TVA ({rate})",
+        "vat": "TVA",
+        "noVat": "Pas de TVA sur cet article",
+        "finalIncVat": "Prix final du produit (TTC)",
+        "freeIncluded": "dont {count} article offert | dont {count} articles offerts",
+        "title": "Détail de vos économies",
+        "productDiscountExVat": "Remise sur les produits (HT)",
+        "vatDifference": "Différence de TVA due à la remise",
+        "totalSavings": "Économies totales (TTC)",
+        "explainVat": "Vous économisez {discount} sur les produits. La TVA est calculée au taux applicable sur le prix remisé : la TVA que vous payez est donc aussi inférieure de {vat}. Cela fait {total} d’économies au total, TVA comprise.",
+        "explainNoVat": "Vous économisez {total} sur les produits. Aucune TVA n’est appliquée, il n’y a donc pas de différence de TVA."
+      },
+      "table": {
+        "product": "Produit",
+        "price": "Prix",
+        "priceIncVat": "Prix (TTC)",
+        "subtotal": "Sous-total",
+        "details": "Détail",
+        "amount": "Montant",
+        "priceExVat": "{name} - prix remisé (HT)",
+        "vat": "TVA",
+        "finalIncVat": "{name} - prix final (TTC)",
+        "includedVat": "Ces prix incluent déjà {vat} de TVA.",
+        "finalTitle": "Montant final à payer",
+        "partIncluded": "Produits TVA incluse",
+        "partAdded": "Produits avec TVA ajoutée (TTC)",
+        "partNone": "Produits sans TVA",
+        "totalCharges": "Total des produits"
       }
     },
     "flashDiscount": {

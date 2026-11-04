@@ -2193,6 +2193,40 @@
         "vatAdded": "KDV hariç fiyatlara eklenen KDV",
         "totalVat": "Toplam KDV",
         "subtotalInc": "Ara toplam (KDV dahil)"
+      },
+      "savingsBreakdown": {
+        "lines": "İndirimli seçili ürün | İndirimli seçili ürünler",
+        "originalExVat": "Orijinal fiyat (KDV hariç)",
+        "productDiscount": "Ürün indirimi",
+        "discountedExVat": "İndirimli fiyat (KDV hariç)",
+        "vatAt": "KDV ({rate})",
+        "vat": "KDV",
+        "noVat": "Bu üründe KDV yok",
+        "finalIncVat": "Ürünün son fiyatı (KDV dahil)",
+        "freeIncluded": "{count} ücretsiz ürün dahil | {count} ücretsiz ürün dahil",
+        "title": "Tasarruf dökümünüz",
+        "productDiscountExVat": "Ürün indirimi (KDV hariç)",
+        "vatDifference": "İndirimden kaynaklanan KDV farkı",
+        "totalSavings": "Toplam tasarruf (KDV dahil)",
+        "explainVat": "Ürünlerde {discount} tasarruf ediyorsunuz. KDV, geçerli oran üzerinden indirimli fiyata uygulandığı için ödediğiniz KDV de {vat} daha az. Böylece KDV dahil toplam tasarrufunuz {total} olur.",
+        "explainNoVat": "Ürünlerde {total} tasarruf ediyorsunuz. Bu ürünlere KDV uygulanmadığı için KDV farkı yok."
+      },
+      "table": {
+        "product": "Ürün",
+        "price": "Fiyat",
+        "priceIncVat": "Fiyat (KDV dahil)",
+        "subtotal": "Ara toplam",
+        "details": "Ayrıntı",
+        "amount": "Tutar",
+        "priceExVat": "{name} - indirimli fiyat (KDV hariç)",
+        "vat": "KDV",
+        "finalIncVat": "{name} - son fiyat (KDV dahil)",
+        "includedVat": "Bu fiyatlara {vat} KDV zaten dahildir.",
+        "finalTitle": "Ödenecek son tutar",
+        "partIncluded": "KDV dahil ürünler",
+        "partAdded": "KDV eklenen ürünler (KDV dahil)",
+        "partNone": "KDV’siz ürünler",
+        "totalCharges": "Ürünlerin toplam tutarı"
       }
     },
     "flashDiscount": {
