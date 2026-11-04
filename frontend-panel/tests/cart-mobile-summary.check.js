@@ -332,8 +332,8 @@ check('the breakdown restates the card group for group', () => {
   assert.strictEqual(charges(panel), charges(card))
   assert.strictEqual(charges(card), Number((899 + 2487.06).toFixed(2)))
 
-  assert.ok(/Products with VAT included/.test(text(panel)))
-  assert.ok(/Products with VAT added at checkout/.test(text(panel)))
+  assert.ok(/Products where VAT is already included/.test(text(panel)))
+  assert.ok(/Products where VAT is added separately/.test(text(panel)))
   assert.ok(/Includes €633\.17 VAT/.test(text(panel)), 'the VAT is not stated')
   assert.ok(/Free/.test(text(panel)), 'shipping is not stated')
 })

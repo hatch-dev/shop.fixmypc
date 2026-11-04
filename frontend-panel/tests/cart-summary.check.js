@@ -969,6 +969,99 @@ check('an empty basket says nothing', () => {
   assert.strictEqual(mixed([]), false)
 })
 
+/*
+ * The savings breakdown (2026-11-03): per selected line, list price and
+ * discount before VAT, the discounted price, its VAT and the final price;
+ * then the product discount, the VAT that is lower because it is charged on
+ * the lower price, and their total - which is productsDiscount, the one
+ * saving figure. Never a "discount on VAT": the VAT is the line's own.
+ */
+console.log('\nthe savings breakdown: product discount + lower VAT = total saving')
+
+// The brief's Dell: 589.99 list, 501.49 charged, both ex-VAT, VAT 23% added.
+const DELL = {
+  id: 40, quantity: 1, vat_rate: 23, vat_inclusive: false, vat_flat: 0,
+  original_price: 589.99, unit_price: 501.49,
+  unit_ex_vat: 501.49, unit_vat: 115.34, unit_inc_vat: 616.83,
+  line_ex_vat: 501.49, line_vat: 115.34, line_inc_vat: 616.83,
+  unit_list_ex_vat: 589.99, unit_list_vat: 135.70, unit_list_inc_vat: 725.69,
+  line_list: 589.99, line_list_ex_vat: 589.99, line_list_inc_vat: 725.69,
+  line_goods: 501.49, free_units: 0, payable_quantity: 1,
+  product: { title: 'DELL Latitude 3520' },
+}
+
+check('the Dell: 88.50 discount, 115.34 VAT, 616.83 final, 20.36 less VAT, 108.86 saved', () => {
+  const vm = summaryVm([DELL])
+  const row = vm.savingsDetails[0]
+  close(row.listExVat, 589.99, 'original price (ex-VAT)')
+  close(row.discountExVat, 88.50, 'product discount')
+  close(row.exVat, 501.49, 'discounted price (ex-VAT)')
+  close(row.vat, 115.34, 'VAT on the discounted price')
+  close(row.incVat, 616.83, 'final price (inc-VAT)')
+  assert.ok(/23/.test(vm.savingsVatLabel(row)), 'the VAT row names the rate: ' + vm.savingsVatLabel(row))
+  close(vm.savingsSummary.discountExVat, 88.50, 'product discount')
+  close(vm.savingsSummary.vatDifference, 20.36, 'VAT difference')
+  close(vm.savingsSummary.savingIncVat, 108.86, 'total saving')
+  close(vm.savingsSummary.savingIncVat, vm.productsDiscount, 'the total is the one saving figure')
+})
+
+check('only the selected lines count, and a line with no discount adds nothing', () => {
+  const plain = Object.assign({}, SAMSUNG, {
+    id: 41, original_price: 899, line_list_ex_vat: 730.89, line_list_inc_vat: 899, unit_list_inc_vat: 899,
+  })
+  // the page passes only the ticked lines (checkedProduct)
+  assert.strictEqual(summaryVm([plain]).savingsDetails.length, 0, 'nothing saved, nothing shown')
+  close(summaryVm([plain]).savingsSummary.savingIncVat, 0, 'no saving')
+  const withPlain = summaryVm([DELL, plain]).savingsSummary
+  close(withPlain.savingIncVat, 108.86, 'an undiscounted line beside the Dell changes nothing')
+  close(withPlain.vatDifference, 20.36, 'nor its VAT difference')
+})
+
+check('mixed baskets: ex-VAT and inc-VAT lines add up exactly', () => {
+  const vm = summaryVm([IPHONE, SAMSUNG, DELL])
+  const s = vm.savingsSummary
+  // iPhone 2097 -> 2022 ex (75.00), 92.25 incl.; Samsung 813.01 -> 730.89 ex (82.12), 101.00 incl.
+  close(s.discountExVat, 75 + 82.12 + 88.50, 'product discounts before VAT')
+  close(s.savingIncVat, 92.25 + 101 + 108.86, 'total saving incl. VAT')
+  close(s.vatDifference, (92.25 - 75) + (101 - 82.12) + 20.36, 'VAT difference')
+  close(s.discountExVat + s.vatDifference, s.savingIncVat, 'discount + lower VAT = total')
+  close(s.savingIncVat, vm.productsDiscount, 'the same figure as before')
+  vm.savingsDetails.forEach((row) => close(row.listExVat - row.discountExVat, row.exVat, row.title + ': list - discount = discounted'))
+})
+
+check('no VAT on a line: the saving is the discount, nothing more', () => {
+  const margin = Object.assign({}, SAMSUNG, {
+    id: 42, vat_rate: 0, vat_flat: 0, vat_inclusive: false,
+    unit_ex_vat: 250, unit_vat: 0, unit_inc_vat: 250, line_ex_vat: 250, line_vat: 0, line_inc_vat: 250,
+    unit_list_ex_vat: 300, unit_list_vat: 0, unit_list_inc_vat: 300, line_list_ex_vat: 300, line_list_inc_vat: 300,
+  })
+  const vm = summaryVm([margin])
+  close(vm.savingsSummary.discountExVat, 50, 'discount')
+  close(vm.savingsSummary.vatDifference, 0, 'no VAT difference')
+  close(vm.savingsSummary.savingIncVat, 50, 'total')
+  assert.ok(!/\d+%/.test(vm.savingsVatLabel(vm.savingsDetails[0])), 'no rate is claimed for it')
+})
+
+console.log('\nfinal amount payable: the group subtotals, added up')
+
+check('the parts are the groups, in table order, and add up to Total product charges', () => {
+  const margin = Object.assign({}, SAMSUNG, {
+    id: 43, vat_rate: 0, vat_flat: 0, vat_inclusive: false,
+    unit_ex_vat: 250, unit_vat: 0, unit_inc_vat: 250, line_ex_vat: 250, line_vat: 0, line_inc_vat: 250,
+    unit_list_ex_vat: 250, unit_list_vat: 0, unit_list_inc_vat: 250, line_list_ex_vat: 250, line_list_inc_vat: 250,
+  })
+  const vm = summaryVm([IPHONE, SAMSUNG, DELL, margin])
+  assert.deepStrictEqual(vm.finalParts.map(p => p.key), ['included', 'added', 'none'])
+  const sum = vm.finalParts.reduce((s, p) => s + Math.round(p.amount * 100), 0) / 100
+  close(sum, vm.productsCharge, 'the parts are Total product charges')
+  assert.strictEqual(vm.finalSectionNumber, 4, 'three tables, then this section')
+
+  const one = summaryVm([DELL])
+  assert.deepStrictEqual(one.finalParts.map(p => p.key), ['added'])
+  close(one.finalParts[0].amount, one.productsCharge, 'a single group is the whole charge')
+  assert.strictEqual(one.finalSectionNumber, 2, 'one table, then this section')
+})
+
 console.log('')
 
 if (failures > 0) {
