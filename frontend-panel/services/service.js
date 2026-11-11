@@ -596,6 +596,16 @@ export default {
     }
     return apiClient.post(`${json.api.orderByUser}`, params)
   },
+  // Buy again: a past order's lines back in the basket (CartsController::reorder).
+  orderReorder(orderId, params, bearer, lang = null) {
+    if (lang) {
+      apiClient.defaults.headers.common['Language'] = lang
+    }
+    if (bearer) {
+      apiClient.defaults.headers.common['Authorization'] = bearer
+    }
+    return apiClient.post(`${json.api.orderReorder}/${orderId}/reorder`, params)
+  },
   orderAction(params, bearer, lang = null) {
     if (lang) {
       apiClient.defaults.headers.common['Language'] = lang

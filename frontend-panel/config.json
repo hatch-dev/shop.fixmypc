@@ -90,6 +90,7 @@
     "cancelOrder": "cancellation/cancel-order",
     "cancellationFind": "cancellation/find",
     "orderByUser": "order/by-user",
+    "orderReorder": "order",
     "returnOptions": "order-return/options",
     "returnRequest": "order-return/request",
     "returnCancel": "order-return/cancel",

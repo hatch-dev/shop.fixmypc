@@ -747,7 +747,17 @@
       "delivered": "अभी तक कोई ऑर्डर डिलीवर नहीं हुआ।",
       "cancelled": "आपका कोई रद्द ऑर्डर नहीं है।",
       "returns": "आपकी कोई वापसी या रिफ़ंड नहीं है।"
-    }
+    },
+    "reorderAdding": "जोड़ा जा रहा है…",
+    "reorderAdded": "आज की कीमतों पर आपकी टोकरी में जोड़ दिया गया।",
+    "reorderPartial": "कुछ आइटम आपकी टोकरी में नहीं जोड़े जा सके:",
+    "reorderNone": "इनमें से कोई भी आइटम आपकी टोकरी में नहीं जोड़ा जा सका:",
+    "reorderSkippedGone": "{title} अब उपलब्ध नहीं है।",
+    "reorderSkippedStock": "{title} का अभी पर्याप्त स्टॉक नहीं है।",
+    "reorderAnItem": "एक आइटम",
+    "reorderGoToBasket": "टोकरी पर जाएँ",
+    "reorderDismiss": "बंद करें",
+    "reorderFailed": "यह ऑर्डर आपकी टोकरी में नहीं जोड़ा जा सका। कृपया फिर से प्रयास करें।"
   },
   "ui": {
     "bankPopup": {
@@ -3270,6 +3280,21 @@
       "paymentNotConfirmed": "भुगतान की पुष्टि नहीं हो सकी",
       "basketUpdateFailed": "आपका कार्ट अपडेट नहीं हो सका।",
       "basketLoadFailed": "आपका कार्ट लोड नहीं हो सका। कृपया फिर से प्रयास करें।"
+    },
+    "comparedPage": {
+      "heading": "साथ-साथ तुलना",
+      "feature": "विशेषता",
+      "price": "कीमत",
+      "availability": "उपलब्धता",
+      "inStock": "स्टॉक में",
+      "outOfStock": "स्टॉक में नहीं",
+      "brand": "ब्रांड",
+      "rating": "रेटिंग",
+      "ratingValue": "{rating} / 5",
+      "reviewCount": "समीक्षाएँ: {count}",
+      "noReviews": "अभी तक कोई समीक्षा नहीं",
+      "specifications": "विनिर्देश",
+      "noSpecs": "इन उत्पादों के लिए कोई विनिर्देश सूचीबद्ध नहीं है।"
     }
   },
   "crossSell": {

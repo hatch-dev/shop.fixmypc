@@ -251,6 +251,29 @@ class GiftCardStabilisationTest extends IsolatedTestCase
         $this->assertEqualsWithDelta(2000, $this->balance($voucher), 0.001, 'cancelling gives it back');
     }
 
+    /**
+     * The live rule (Voucher::reservingOrderSql), kept until the owner picks
+     * one: an open card order that is not marked paid still holds the value.
+     */
+    public function test_an_unpaid_card_order_holds_the_card_until_cancelled()
+    {
+        [, $voucher] = $this->card($this->a, 2000);
+        $this->addLaptop($this->a);
+        $this->assertApiOk($this->placeOrder($this->a, $voucher->code, (int)config('constants.paymentMethod.BANK')));
+        $order = $this->lastOrder($this->a);
+        Order::where('id', $order->id)->update([
+            'order_method' => (int)config('constants.paymentMethod.SUMUP'), 'payment_done' => 0,
+        ]);
+
+        $held = $this->spentOn($order);
+        $this->assertGreaterThan(0, $held);
+        $this->assertEqualsWithDelta(2000 - $held, $this->balance($voucher), 0.001,
+            'an unpaid card order holds the value under the live rule');
+
+        Order::where('id', $order->id)->update(['cancelled' => 1]);
+        $this->assertEqualsWithDelta(2000, $this->balance($voucher), 0.001, 'cancelling gives it back');
+    }
+
     public function test_a_second_checkout_with_the_same_card_waits_for_the_first()
     {
         [, $voucher] = $this->card($this->a, 2000);

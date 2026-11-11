@@ -72,7 +72,8 @@ class GiftCardHistory
         }
 
         if ($voucher) {
-            $holding = Voucher::giftHoldingOrderSql('o');
+            // Same rule as the balance (Voucher::giftUsedSql).
+            $holding = Voucher::reservingOrderSql('o');
             $uses = DB::select(
                 "SELECT o.id, o.`order` AS number, o.created_at, ov.discount, COALESCE(ov.returned_amount, 0) AS returned,"
                 . " CASE WHEN $holding THEN 1 ELSE 0 END AS holds"

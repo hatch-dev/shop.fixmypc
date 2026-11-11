@@ -196,9 +196,11 @@
                     v-if="statusInfo(order).closed || statusInfo(order).delivered"
                     type="button"
                     class="ord-btn ord-btn-primary"
+                    :disabled="reordering === order.id"
+                    :aria-busy="reordering === order.id ? 'true' : 'false'"
                     @click="buyAgain(order)"
                   >
-                    {{ $t('myOrders.buyAgain') }}
+                    {{ reordering === order.id ? $t('myOrders.reorderAdding') : $t('myOrders.buyAgain') }}
                   </button>
 
                   <template v-else>
@@ -223,6 +225,36 @@
                   </template>
                 </div>
               </footer>
+
+              <!-- Buy again added only some of the lines, or none: say which and why. -->
+              <div
+                v-if="reorderNotice && reorderNotice.orderId === order.id"
+                class="ord-reorder-note"
+                role="status"
+              >
+                <p class="ord-reorder-title">
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  {{ reorderNotice.added ? $t('myOrders.reorderPartial') : $t('myOrders.reorderNone') }}
+                </p>
+                <ul class="ord-reorder-list">
+                  <li
+                    v-for="line in reorderNotice.skipped"
+                    :key="line.product_id + '-' + line.inventory_id"
+                  >
+                    {{ $t(line.reason === 'stock' ? 'myOrders.reorderSkippedStock' : 'myOrders.reorderSkippedGone',
+                          { title: line.title || $t('myOrders.reorderAnItem') }) }}
+                  </li>
+                </ul>
+                <div class="ord-reorder-actions">
+                  <nuxt-link v-if="reorderNotice.added" to="/cart" class="ord-link">
+                    <i class="fa-solid fa-basket-shopping" aria-hidden="true"></i>
+                    {{ $t('myOrders.reorderGoToBasket') }}
+                  </nuxt-link>
+                  <button type="button" class="ord-link ord-reorder-dismiss" @click="reorderNotice = null">
+                    {{ $t('myOrders.reorderDismiss') }}
+                  </button>
+                </div>
+              </div>
             </article>
           </div>
 
@@ -497,7 +529,10 @@
         searchText: this.$route.query.q || '',
         searchTimer: null,
         // the newest request: an older answer that lands later is ignored
-        requestSeq: 0
+        requestSeq: 0,
+        // Buy again: the order being added, and what could not be added
+        reordering: null,
+        reorderNotice: null
       }
     },
     watch: {},
@@ -719,15 +754,48 @@
           html: collect ? t('readyBy', {when}) : t('arriving', {when})
         }
       },
-      // One product: open it. Several: the order, where each one links.
-      buyAgain(order) {
-        const products = (order?.ordered_products || []).map(l => l.product).filter(Boolean)
-        const unique = [...new Map(products.map(p => [p.id, p])).values()]
+      /*
+       * Put the order's lines back in the basket at today's prices
+       * (CartsController::reorder). All of them: on to the basket. Some or
+       * none: a note under the order says which could not be added and why.
+       */
+      async buyAgain(order) {
+        if (this.reordering) {
+          return
+        }
+        this.reordering = order.id
+        this.reorderNotice = null
 
-        if (unique.length === 1) {
-          this.$router.push(this.productLink(unique[0]))
-        } else {
-          this.$router.push(`/user/order/${order.id}`)
+        try {
+          const userToken = this.$auth?.loggedIn ? null : await this.getUserToken()
+          const data = await this.reorder({
+            orderId: order.id,
+            payload: {user_token: userToken},
+            lang: this.langCode
+          })
+          const added = data?.data?.added || []
+          const skipped = data?.data?.skipped || []
+
+          if (added.length) {
+            await this.getCartByUser({lang: this.langCode, params: {user_token: userToken}})
+          }
+
+          if (data?.status === 200 && !skipped.length) {
+            this.setToastMessage(this.$t('myOrders.reorderAdded'))
+            this.$router.push('/cart')
+            return
+          }
+
+          if (skipped.length) {
+            this.reorderNotice = {orderId: order.id, added: added.length > 0, skipped}
+          } else {
+            this.setToastError(data?.message || this.$t('myOrders.reorderFailed'))
+          }
+        } catch (e) {
+          console.error('Buy again failed', e)
+          this.setToastError(this.$t('myOrders.reorderFailed'))
+        } finally {
+          this.reordering = null
         }
       },
       goToTrack(order) {
@@ -826,8 +894,9 @@
         }
       },
       ...mapActions('user', ['getUserToken']),
-      ...mapActions('common', ['setToastError']),
-      ...mapActions('order', ['getOrderByUser']),
+      ...mapActions('common', ['setToastError', 'setToastMessage']),
+      ...mapActions('order', ['getOrderByUser', 'reorder']),
+      ...mapActions('cart', ['getCartByUser']),
     },
 
     async mounted(){
@@ -1328,6 +1397,28 @@
 }
 
 .ord-link:hover { text-decoration: underline; color: var(--brand); }
+
+/* Buy again: what could not be added (same look as live, 26 Oct build) */
+.ord-reorder-note {
+  background: #fff7e6;
+  border-radius: 12px;
+  color: var(--ink);
+  font-size: 14px;
+  margin: 0 var(--pad) 14px;
+  padding: 12px 14px;
+}
+.ord-reorder-title { font-weight: 600; margin: 0 0 6px; }
+.ord-reorder-title i { color: #b45309; margin-right: 6px; }
+.ord-reorder-list { margin: 0 0 8px; padding-left: 20px; }
+.ord-reorder-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 18px; }
+.ord-reorder-actions .ord-reorder-dismiss {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  height: auto;
+  line-height: 1.4;
+  padding: 0;
+}
 
 .ord-actions {
   display: flex;

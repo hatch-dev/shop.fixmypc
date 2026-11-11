@@ -747,7 +747,17 @@
       "delivered": "Aucune commande livrée pour le moment.",
       "cancelled": "Vous n'avez aucune commande annulée.",
       "returns": "Vous n'avez aucun retour ni remboursement."
-    }
+    },
+    "reorderAdding": "Ajout…",
+    "reorderAdded": "Ajouté à votre panier aux prix du jour.",
+    "reorderPartial": "Certains articles n'ont pas pu être ajoutés à votre panier :",
+    "reorderNone": "Aucun de ces articles n'a pu être ajouté à votre panier :",
+    "reorderSkippedGone": "{title} n'est plus disponible.",
+    "reorderSkippedStock": "{title} n'a pas assez de stock pour le moment.",
+    "reorderAnItem": "Un article",
+    "reorderGoToBasket": "Voir le panier",
+    "reorderDismiss": "Fermer",
+    "reorderFailed": "Impossible d'ajouter cette commande à votre panier. Veuillez réessayer."
   },
   "ui": {
     "bankPopup": {
@@ -3270,6 +3280,21 @@
       "paymentNotConfirmed": "Le paiement n’a pas pu être confirmé",
       "basketUpdateFailed": "Impossible de mettre à jour votre panier.",
       "basketLoadFailed": "Impossible de charger votre panier. Veuillez réessayer."
+    },
+    "comparedPage": {
+      "heading": "Comparaison côte à côte",
+      "feature": "Caractéristique",
+      "price": "Prix",
+      "availability": "Disponibilité",
+      "inStock": "En stock",
+      "outOfStock": "Rupture de stock",
+      "brand": "Marque",
+      "rating": "Note",
+      "ratingValue": "{rating} / 5",
+      "reviewCount": "Avis : {count}",
+      "noReviews": "Pas encore d'avis",
+      "specifications": "Caractéristiques techniques",
+      "noSpecs": "Aucune caractéristique technique renseignée pour ces produits."
     }
   },
   "crossSell": {

@@ -747,7 +747,17 @@
       "delivered": "Henüz teslim edilen sipariş yok.",
       "cancelled": "İptal edilmiş siparişiniz yok.",
       "returns": "İadeniz veya geri ödemeniz yok."
-    }
+    },
+    "reorderAdding": "Ekleniyor…",
+    "reorderAdded": "Bugünkü fiyatlarla sepetinize eklendi.",
+    "reorderPartial": "Bazı ürünler sepetinize eklenemedi:",
+    "reorderNone": "Bu ürünlerin hiçbiri sepetinize eklenemedi:",
+    "reorderSkippedGone": "{title} artık satışta değil.",
+    "reorderSkippedStock": "{title} için şu anda yeterli stok yok.",
+    "reorderAnItem": "Bir ürün",
+    "reorderGoToBasket": "Sepete git",
+    "reorderDismiss": "Kapat",
+    "reorderFailed": "Bu sipariş sepetinize eklenemedi. Lütfen tekrar deneyin."
   },
   "ui": {
     "bankPopup": {
@@ -3270,6 +3280,21 @@
       "paymentNotConfirmed": "Ödeme onaylanamadı",
       "basketUpdateFailed": "Sepetiniz güncellenemedi.",
       "basketLoadFailed": "Sepetiniz yüklenemedi. Lütfen tekrar deneyin."
+    },
+    "comparedPage": {
+      "heading": "Yan yana karşılaştırma",
+      "feature": "Özellik",
+      "price": "Fiyat",
+      "availability": "Stok durumu",
+      "inStock": "Stokta",
+      "outOfStock": "Stokta yok",
+      "brand": "Marka",
+      "rating": "Puan",
+      "ratingValue": "{rating} / 5",
+      "reviewCount": "Değerlendirme: {count}",
+      "noReviews": "Henüz değerlendirme yok",
+      "specifications": "Teknik özellikler",
+      "noSpecs": "Bu ürünler için teknik özellik girilmemiş."
     }
   },
   "crossSell": {

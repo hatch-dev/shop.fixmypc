@@ -88,12 +88,13 @@
                             :class="{ 'z-2': imagePopup }"
                           >
                             <product-images
-                              v-if="productImage || productImageList"
+                              v-if="galleryMainImage || galleryImageList"
+                              :key="galleryKey"
                               ref="productImagesRef"
                               :title="productTitle"
                               :product="product"
-                              :main-image="productImage"
-                              :images="productImageList"
+                              :main-image="galleryMainImage"
+                              :images="galleryImageList"
                               @image-popup="imagePopup = $event"
                               @add-to-wishlist="$refs.detailRight.wishListAction()"
                             />
@@ -1459,6 +1460,25 @@ export default {
     productImageList() {
       return this.product?.images || null
     },
+    /*
+     * The selected variant's own pictures (inventory.images, linked in the
+     * admin under Variant Images), or null when it has none. Those replace
+     * the product gallery while that variant is chosen.
+     */
+    variantImages() {
+      const images = this.selectedInventory?.images
+      return Array.isArray(images) && images.length ? images : null
+    },
+    galleryMainImage() {
+      return this.variantImages ? this.variantImages[0].image : this.productImage
+    },
+    galleryImageList() {
+      return this.variantImages ? this.variantImages.slice(1) : this.productImageList
+    },
+    // a new gallery (fresh zoom state) whenever the pictures change
+    galleryKey() {
+      return this.variantImages ? 'variant-' + this.variantImages.map(i => i.id).join('-') : 'product'
+    },
     timeDifference() {
       const len = this.product.id.toString()?.length
       let highest = ''
@@ -2387,7 +2407,8 @@ export default {
      * attribute (the colour) and not the whole combination.
      */
     syncImageToSelection() {
-      if (!this.product?.product_image_names) return
+      // A variant with its own pictures already has the gallery to itself.
+      if (this.variantImages || !this.product?.product_image_names) return
 
       const imageMap = []
 

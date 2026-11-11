@@ -71,6 +71,15 @@ const actions = {
     }
     return data
   },
+  // Buy again. Signed out, the guest basket's user_token says whose order it is.
+  async reorder ({ commit }, {orderId, payload, lang}) {
+    const bearer = this.$auth?.loggedIn
+      ? this.$auth.strategy.token.get()
+      : null
+
+    const {data} = await Service.orderReorder(orderId, payload, bearer, lang)
+    return data
+  },
   async orderAction ({ commit, dispatch }, {payload, lang}) {
     const {data} = await Service.orderAction(payload, this.$auth.strategy.token.get(), lang)
     return data

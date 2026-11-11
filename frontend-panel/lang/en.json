@@ -872,7 +872,17 @@
       "delivered": "No delivered orders yet.",
       "cancelled": "You have no cancelled orders.",
       "returns": "You have no returns or refunds."
-    }
+    },
+    "reorderAdding": "Adding…",
+    "reorderAdded": "Added to your basket at today's prices.",
+    "reorderPartial": "Some items could not be added to your basket:",
+    "reorderNone": "None of these items could be added to your basket:",
+    "reorderSkippedGone": "{title} is no longer available.",
+    "reorderSkippedStock": "{title} does not have enough stock right now.",
+    "reorderAnItem": "An item",
+    "reorderGoToBasket": "Go to basket",
+    "reorderDismiss": "Dismiss",
+    "reorderFailed": "We could not add this order to your basket. Please try again."
   },
   "ui": {
     "bankPopup": {
@@ -3395,6 +3405,21 @@
       "paymentNotConfirmed": "Payment could not be confirmed",
       "basketUpdateFailed": "We could not update your basket.",
       "basketLoadFailed": "Your basket could not be loaded. Please try again."
+    },
+    "comparedPage": {
+      "heading": "Side-by-side comparison",
+      "feature": "Feature",
+      "price": "Price",
+      "availability": "Availability",
+      "inStock": "In stock",
+      "outOfStock": "Out of stock",
+      "brand": "Brand",
+      "rating": "Rating",
+      "ratingValue": "{rating} / 5",
+      "reviewCount": "Reviews: {count}",
+      "noReviews": "No reviews yet",
+      "specifications": "Specifications",
+      "noSpecs": "No specifications listed for these products."
     }
   }
 }

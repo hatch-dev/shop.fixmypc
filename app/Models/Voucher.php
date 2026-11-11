@@ -50,19 +50,45 @@ class Voucher extends Model
      * Less returned_amount: the gift card's share of items sent back on an
      * order that still stands (a partial return), which goes back on the card.
      *
-     * Counted through giftHoldingOrderSql, not standingOrderSql: a bank
-     * transfer awaiting its payment holds the card's value too (2026-11-03).
+     * Counted through reservingOrderSql, the rule live runs today: every
+     * open order holds the card's value, paid or not. The owner has not yet
+     * chosen between it and giftHoldingOrderSql below (2026-11-11), so the
+     * live rule stands until they do.
      */
     public static function giftUsedSql($voucherId)
     {
         return "(SELECT COALESCE(SUM(ov.discount - COALESCE(ov.returned_amount, 0)), 0) FROM ordered_voucher ov"
             . " JOIN orders o ON o.id = ov.order_id AND o.voucher_id = ov.voucher_id"
             . " WHERE ov.voucher_id = $voucherId"
-            . " AND " . static::giftHoldingOrderSql('o') . ")";
+            . " AND " . static::reservingOrderSql('o') . ")";
     }
 
     /**
-     * An order that has taken value off a gift card: one that stands, or a
+     * An order that holds a gift card's balance: not deleted, not cancelled,
+     * not returned or refunded -- paid or not. Unlike standingOrderSql, an
+     * order still waiting for its bank transfer (or an unpaid card payment)
+     * reserves what it took off, or the same balance could be spent again on
+     * another order while the first is outstanding. Cancelling the order (by
+     * the customer, staff or the unpaid-transfer sweep) releases it.
+     *
+     * Gift cards only: an ordinary voucher's usage limit still counts only
+     * orders that stand (redemptionQuery, QA audit CPN-05).
+     */
+    public static function reservingOrderSql($alias)
+    {
+        $status = function ($k) {
+            return (int)\Illuminate\Support\Facades\Config::get("constants.orderStatus.$k");
+        };
+        $released = implode(',', [$status('CANCELLED'), $status('RETURNED'), $status('REFUNDED')]);
+
+        return "$alias.deleted_at IS NULL"
+            . " AND ($alias.cancelled != 1 OR $alias.cancelled IS NULL)"
+            . " AND $alias.status NOT IN ($released)";
+    }
+
+    /**
+     * The November rule, not in use while the owner decides (see giftUsedSql):
+     * an order that has taken value off a gift card: one that stands, or a
      * bank transfer still awaiting its payment.
      *
      * A transfer order is placed unpaid and stays that way until the money

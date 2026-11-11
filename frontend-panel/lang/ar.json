@@ -747,7 +747,17 @@
       "delivered": "لا توجد طلبات مسلّمة بعد.",
       "cancelled": "ليست لديك طلبات ملغاة.",
       "returns": "ليست لديك مرتجعات أو مبالغ مستردة."
-    }
+    },
+    "reorderAdding": "جارٍ الإضافة…",
+    "reorderAdded": "تمت الإضافة إلى سلتك بأسعار اليوم.",
+    "reorderPartial": "تعذّرت إضافة بعض المنتجات إلى سلتك:",
+    "reorderNone": "تعذّرت إضافة أيٍّ من هذه المنتجات إلى سلتك:",
+    "reorderSkippedGone": "{title} لم يعد متوفرًا.",
+    "reorderSkippedStock": "لا يتوفر مخزون كافٍ من {title} حاليًا.",
+    "reorderAnItem": "منتج",
+    "reorderGoToBasket": "الذهاب إلى السلة",
+    "reorderDismiss": "إغلاق",
+    "reorderFailed": "تعذّرت إضافة هذا الطلب إلى سلتك. يرجى المحاولة مرة أخرى."
   },
   "ui": {
     "bankPopup": {
@@ -3270,6 +3280,21 @@
       "paymentNotConfirmed": "تعذّر تأكيد الدفع",
       "basketUpdateFailed": "تعذّر تحديث سلتك.",
       "basketLoadFailed": "تعذّر تحميل سلتك. يُرجى المحاولة مرة أخرى."
+    },
+    "comparedPage": {
+      "heading": "مقارنة جنبًا إلى جنب",
+      "feature": "الميزة",
+      "price": "السعر",
+      "availability": "التوفر",
+      "inStock": "متوفر",
+      "outOfStock": "غير متوفر",
+      "brand": "العلامة التجارية",
+      "rating": "التقييم",
+      "ratingValue": "{rating} / 5",
+      "reviewCount": "المراجعات: {count}",
+      "noReviews": "لا توجد مراجعات بعد",
+      "specifications": "المواصفات",
+      "noSpecs": "لا توجد مواصفات مدرجة لهذه المنتجات."
     }
   },
   "crossSell": {
