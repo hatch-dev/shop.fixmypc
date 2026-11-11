@@ -273,16 +273,42 @@ class GuestUsersController extends ControllerHelper
                 return $can;
             }
 
+            /*
+             * Each guest with their orders: how many, and the latest one. The
+             * admin screen links to the orders list by the guest's id, which
+             * OrdersController::all resolves to the token server-side.
+             */
+            $guestOrders = function () {
+                return \App\Models\Order::query()
+                    ->whereColumn('orders.user_token', 'guest_users.user_token')
+                    ->whereNotNull('orders.user_token');
+            };
+
+            $query = GuestUser::query()
+                ->select('guest_users.*')
+                ->selectSub($guestOrders()->selectRaw('COUNT(*)'), 'orders_count')
+                ->selectSub($guestOrders()->select('orders.order')->orderByDesc('orders.id')->limit(1), 'last_order')
+                ->selectSub($guestOrders()->select('orders.id')->orderByDesc('orders.id')->limit(1), 'last_order_id')
+                ->orderBy($request->orderby, $request->type);
+
+            // Grouped: a bare orWhere here used to escape every other condition.
             if ($request->q) {
-                $data = GuestUser::query()
-                    ->orderBy($request->orderby, $request->type)
-                    ->where('name', 'LIKE', "%{$request->q}%")
-                    ->orWhere('email', 'LIKE', "%{$request->q}%")
-                    ->paginate(Config::get('constants.api.PAGINATION'));
-            } else {
-                $data = GuestUser::orderBy($request->orderby, $request->type)
-                    ->paginate(Config::get('constants.api.PAGINATION'));
+                $query->where(function ($q) use ($request) {
+                    $q->where('name', 'LIKE', "%{$request->q}%")
+                        ->orWhere('email', 'LIKE', "%{$request->q}%");
+                });
             }
+
+            $data = $query->paginate(Config::get('constants.api.PAGINATION'));
+
+            /*
+             * user_token is the credential a guest's basket and order pages
+             * are opened with. Staff never need it, and the list must not
+             * hand it out.
+             */
+            $data->getCollection()->each(function ($guest) {
+                $guest->makeHidden('user_token');
+            });
 
             $ids = [];
             if ($request->time_zone) {

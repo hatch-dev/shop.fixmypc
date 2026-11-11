@@ -40,6 +40,7 @@ use App\Models\Page;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\ProductSubcategory;
 use App\Models\ProductCollection;
 use App\Models\OrderedProductsInventory;
 use App\Models\RatingReview;
@@ -286,6 +287,42 @@ class FrontendController extends Controller
 
             }
 
+            // Sub-category page (/all/<category>/<subCategory>). A sub-category is a
+            // category with a parent; a product reaches it through the admin picker
+            // (product_subcategories.subcategory_id) or a plain product_categories row.
+            $subCategory = null;
+            if ($request->sub_category) {
+                $findCategory = function ($where) use ($lang) {
+                    $q = Category::query()->where('categories.status', Config::get('constants.status.PUBLIC'));
+                    if ($lang) {
+                        $q->leftJoin('category_langs as cl', function ($join) use ($lang) {
+                            $join->on('cl.category_id', '=', 'categories.id');
+                            $join->where('cl.lang', $lang);
+                        })->select('categories.*', 'cl.title');
+                    }
+                    $where($q);
+
+                    return $q->first();
+                };
+
+                $subCategory = $findCategory(function ($q) use ($request) {
+                    $q->where('categories.slug', $request->sub_category)->where('categories.in_frontend', 1);
+                });
+                if (!$subCategory) {
+                    return response()->json(Validation::error($request->token, __('lang.category_not_found', [], $lang)));
+                }
+                // _subCategory.vue reads sub_category.category for the breadcrumb.
+                $subCategory->setRelation('category', $subCategory->parent ? $findCategory(function ($q) use ($subCategory) {
+                    $q->where('categories.id', $subCategory->parent);
+                }) : null);
+
+                $subCategoryId = $subCategory->id;
+                $query = $query->where(function ($q) use ($subCategoryId) {
+                    $q->whereIn('products.id', ProductCategory::where('category_id', $subCategoryId)->select('product_id'))
+                        ->orWhereIn('products.id', ProductSubcategory::where('subcategory_id', $subCategoryId)->select('product_id'));
+                });
+            }
+
 
             if ($request->rating != 0) {
                 $query = $query->where('products.rating', '>=', $request->rating);
@@ -299,9 +336,7 @@ class FrontendController extends Controller
                 $query = $query->where(function ($q) use ($request) {
                     $q->where(function ($qr) use ($request) {
                         $qr->whereNotNull('flash_sales.end_time');
-                        $qr->whereBetween('flash_sale_products.price',
-                        'flash_sale_products.discount_type as flash_discount_type',
-                        'flash_sale_products.discount_value as flash_discount_value', [$request->min, $request->max]);
+                        $qr->whereBetween('flash_sale_products.price', [$request->min, $request->max]);
 
                     });
                     $q->orWhere(function ($qr) use ($request) {
@@ -387,7 +422,7 @@ class FrontendController extends Controller
             $data['result'] = $query->paginate($pagination);
             $this->applyClearanceToProducts($data['result']->getCollection());
 
-            //$data['sub_category'] = $subCategory;
+            $data['sub_category'] = $subCategory;
             $data['category'] = $category;
             $data['shipping'] = $allShipping;
             $data['shipping'] = $allShipping;
@@ -1314,9 +1349,7 @@ class FrontendController extends Controller
                 $query = $query->where(function ($q) use ($request) {
                     $q->where(function ($qr) use ($request) {
                         $qr->whereNotNull('flash_sales.end_time');
-                        $qr->whereBetween('flash_sale_products.price',
-                        'flash_sale_products.discount_type as flash_discount_type',
-                        'flash_sale_products.discount_value as flash_discount_value', [$request->min, $request->max]);
+                        $qr->whereBetween('flash_sale_products.price', [$request->min, $request->max]);
 
                     });
                     $q->orWhere(function ($qr) use ($request) {
@@ -2075,9 +2108,12 @@ class FrontendController extends Controller
     {
         try {
             if ($request->get_total && $request->get_total === 'true') {
+                // only approved reviews are public: a pending one is in neither
+                // the list nor the star breakdown
                 $data['total'] = RatingReview::select(DB::raw('count(id) as total'), DB::raw('rating'))
                     ->groupBy(DB::raw('rating'))
                     ->where('product_id', $id)
+                    ->where('approved', 1)
                     ->get();
 
 
@@ -2090,6 +2126,7 @@ class FrontendController extends Controller
                 ->with('guest_user')
                 ->with('review_images')
                 ->where('product_id', $id)
+                ->where('approved', 1)
                 ->orderBy($request->order_by, $request->type)
                 ->paginate(Config::get('constants.pagination.FRONTEND_PRODUCT_RATING'));
 
@@ -2160,6 +2197,30 @@ class FrontendController extends Controller
         }
 
         return $query->value('id');
+    }
+
+    /**
+     * Each variant's own pictures, as `images` [{id, image}] on the inventory
+     * row: the product images the admin linked to it (set-variant-images ->
+     * inventory_images). `id` is the product_images id, so it matches the
+     * gallery entries in data.images; the product page switches the gallery to
+     * these when that variant is selected. Empty = the variant uses the gallery.
+     */
+    private function attachVariantImages($inventories)
+    {
+        $ids = collect($inventories)->pluck('id')->all();
+        $links = $ids ? \DB::table('inventory_images as ii')
+            ->join('product_images as pi', 'pi.id', '=', 'ii.product_image_id')
+            ->whereIn('ii.inventory_id', $ids)
+            ->orderBy('ii.id')
+            ->get(['ii.inventory_id', 'pi.id', 'pi.image'])
+            ->groupBy('inventory_id') : collect();
+
+        foreach ($inventories as $inventory) {
+            $inventory->setRelation('images', collect($links->get($inventory->id, []))->map(function ($row) {
+                return ['id' => (int)$row->id, 'image' => $row->image];
+            })->values());
+        }
     }
 
     /**
@@ -2347,6 +2408,7 @@ class FrontendController extends Controller
 
                     $data['inventory'] = UpdatedInventory::with('inventory_attributes')
                         ->where('product_id', $id)->get();
+                    $this->attachVariantImages($data['inventory']);
 
                     $currentTime = Carbon::now()->format('Y-m-d H:i:s');
 
@@ -2579,6 +2641,7 @@ class FrontendController extends Controller
 
                     $data['inventory'] = UpdatedInventory::with('inventory_attributes')
                         ->where('product_id', $id)->get();
+                    $this->attachVariantImages($data['inventory']);
 
                     $currentTime = Carbon::now()->format('Y-m-d H:i:s');
 
@@ -3274,7 +3337,7 @@ class FrontendController extends Controller
                 return response()->json(new Response(null, ['suggestion_1' => [], 'suggestion_2' => []]));
             }
 
-            $rank = $this->suggestionRank();
+            $rank = $this->suggestionRank($buyable);
             $order = function ($ids) use ($rank) {
                 return collect($ids)->unique()->filter(function ($pid) use ($rank) {
                     return isset($rank[$pid]);
@@ -3300,6 +3363,7 @@ class FrontendController extends Controller
                 ->pluck('viewers', 'b.product_id');
 
             // most shared first; the stock/popularity order only breaks ties
+            // (buyable products are still moved ahead of the rest further down)
             $alsoViewed = collect($coViewed->keys())->map(function ($pid) { return (int)$pid; })
                 ->filter(function ($pid) use ($rank, $id) { return $pid !== $id && isset($rank[$pid]); })
                 ->sort(function ($x, $y) use ($coViewed, $rank) {
@@ -3353,6 +3417,16 @@ class FrontendController extends Controller
             $alsoViewed = $pad($alsoViewed, []);
             $recommended = $pad($recommended, $alsoViewed->all());
 
+            // buyable first across the whole row: a sold-out co-view or a sold-out
+            // product of the most-browsed category goes behind everything that can
+            // be bought, keeping each part's own order (stable partition)
+            $buyableFirst = function ($list) use ($buyable) {
+                [$yes, $no] = $list->partition(function ($pid) use ($buyable) { return isset($buyable[$pid]); });
+                return $yes->merge($no)->values();
+            };
+            $alsoViewed = $buyableFirst($alsoViewed);
+            $recommended = $buyableFirst($recommended);
+
             $data['suggestion_2'] = $this->suggestionPage($alsoViewed, $page, $perPage, $lang, $request);
             $data['suggestion_1'] = $this->suggestionPage($recommended, $page, $perPage, $lang, $request);
 
@@ -3373,23 +3447,33 @@ class FrontendController extends Controller
      * default order: buyable first (stock above zero, or backorder), then most
      * viewed, then newest. Published products with a slug only - the tile
      * links by slug.
+     *
+     * Buyable is Pricing::isPurchasable on any variant: quantity > 0 or
+     * updated_inventories.is_active = 1 (the backorder flag). products.back_order
+     * is vestigial - the admin form always saves 0. $buyable receives the
+     * buyable product ids as keys.
      */
-    private function suggestionRank()
+    private function suggestionRank(&$buyable = null)
     {
         $stock = \DB::table('updated_inventories')->groupBy('product_id')
-            ->selectRaw('product_id, SUM(quantity) AS qty');
+            ->selectRaw('product_id, MAX(CASE WHEN quantity > 0 OR is_active = 1 THEN 1 ELSE 0 END) AS buyable');
         $views = \DB::table('product_views')->groupBy('product_id')
             ->selectRaw('product_id, SUM(views) AS views');
 
-        return \DB::table('products as p')
+        $rows = \DB::table('products as p')
             ->leftJoinSub($stock, 's', 's.product_id', '=', 'p.id')
             ->leftJoinSub($views, 'v', 'v.product_id', '=', 'p.id')
             ->where('p.status', Config::get('constants.status.PUBLIC'))
             ->whereNotNull('p.slug')
-            ->orderByRaw('CASE WHEN p.back_order = 1 OR COALESCE(s.qty, 0) > 0 THEN 0 ELSE 1 END')
+            ->orderByRaw('CASE WHEN COALESCE(s.buyable, 0) = 1 THEN 0 ELSE 1 END')
             ->orderByDesc(\DB::raw('COALESCE(v.views, 0)'))
             ->orderByDesc('p.id')
-            ->pluck('p.id')
+            ->get(['p.id', \DB::raw('COALESCE(s.buyable, 0) AS buyable')]);
+
+        $buyable = $rows->filter(function ($r) { return (int)$r->buyable === 1; })
+            ->mapWithKeys(function ($r) { return [(int)$r->id => true]; })->all();
+
+        return $rows->pluck('id')
             ->values()
             ->flip()
             ->mapWithKeys(function ($position, $pid) { return [(int)$pid => $position]; })

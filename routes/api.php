@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Plugin;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminsController;
+use App\Http\Controllers\AdminNotificationsController;
 use App\Http\Controllers\GiftVoucherController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\UsersController;
@@ -223,7 +224,8 @@ Route::group([
     'prefix' => 'admin'
 ], function () {
     Route::post('login', [AdminsController::class, 'login']);
-    Route::post('signup', [AdminsController::class, 'signup']);
+    // No public admin signup (SEC-003 / F-01): admins are created only by a
+    // signed-in admin with admin.create, through admin-data/action.
     Route::post('forgot-password', [AdminsController::class, 'forgotPassword']);
     Route::post('verify-code', [AdminsController::class, 'verifyCode']);
 
@@ -264,6 +266,9 @@ Route::group([
         Route::get('profile', [AdminsController::class, 'profile']);
         Route::get('dashboard', [AdminsController::class, 'dashboard']);
         Route::get('activity', [AdminsController::class, 'activity']);
+        // Header bell: new orders and requests that only staff can answer.
+        Route::get('notifications', [AdminNotificationsController::class, 'index']);
+        Route::post('notifications/read', [AdminNotificationsController::class, 'read']);
         Route::get('order-statistic', [AdminsController::class, 'statistic']);
         Route::get('low-stock-products', [AdminsController::class, 'lowStockProducts']);
         Route::post('update', [AdminsController::class, 'update']);
@@ -945,6 +950,12 @@ Route::group([
         ], function (){
             Route::get('all', [RatingReviewsController::class, 'all']);
             Route::delete('delete/{id}', [RatingReviewsController::class, 'delete']);
+            // Show (1) or hide (0) a review on the product page; rating re-derived.
+            Route::post('approve', [RatingReviewsController::class, 'approve']);
+            // Hand-entered reviews (Google / Facebook / shop). These were public
+            // v1 routes that let anyone post or rewrite a review.
+            Route::post('store', [RatingReviewsController::class, 'store']);
+            Route::post('update', [RatingReviewsController::class, 'update']);
         });
 		
 	
@@ -1227,10 +1238,9 @@ Route::group([
         'prefix' => 'rating-review',
     ], function (){
         Route::post('action', [RatingReviewsController::class, "action"]);
-		Route::post('store', [RatingReviewsController::class, 'store']);
 		Route::get('show/{productId}', [RatingReviewsController::class, 'show']);
         Route::get('find/{productId}', [RatingReviewsController::class, "find"]);
-		Route::post('update', [RatingReviewsController::class, 'update']);
+        // store / update (hand-entered reviews) moved to the admin group.
     });
 
 	
@@ -1239,6 +1249,8 @@ Route::group([
         'prefix' => 'order',
     ], function (){
         Route::post('by-user', [OrdersController::class, "byUser"]);
+        // Buy again: the order's lines back in the basket at today's prices; unavailable ones reported.
+        Route::post('{id}/reorder', [CartsController::class, 'reorder'])->where('id', '[0-9]+')->middleware('cart.hold');
         // cart.hold:checkout - a basket whose 20 minutes have lapsed is emptied
         // before it can be bought, and placing the order counts as activity.
         Route::post('action', [OrdersController::class, "action"])->middleware('cart.hold:checkout');

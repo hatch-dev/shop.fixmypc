@@ -57,6 +57,33 @@ class Payment extends Model
         'iban', 'bic_swift',
     ];
 
+    /**
+     * Gateway secrets. The admin never reads these back (SEC-004 / ADS-005):
+     * adminView() blanks them and says only whether each is set, and a blank
+     * one on save keeps the stored value (PaymentsController::save).
+     */
+    const SECRET_FIELDS = [
+        'paypal_secret', 'razorpay_secret', 'stripe_secret', 'stripe_webhook_secret',
+        'fw_secret_key', 'fw_encryption_key', 'ip_secret_key',
+        'payfast_merchant_key', 'payfast_passphrase', 'sumup_api_key',
+    ];
+
+    /** The row as the admin settings form gets it: secrets as {set, hint} under `secrets`. */
+    public function adminView()
+    {
+        $data = $this->toArray();
+        $secrets = [];
+
+        foreach (self::SECRET_FIELDS as $field) {
+            $secrets[$field] = \App\Models\Helper\Utils::secretHint($this->getAttribute($field));
+            $data[$field] = null;
+        }
+
+        $data['secrets'] = $secrets;
+
+        return $data;
+    }
+
     public static function publicSettings()
     {
         $payment = self::first();

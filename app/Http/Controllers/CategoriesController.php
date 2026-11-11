@@ -1416,7 +1416,30 @@ class CategoriesController extends ControllerHelper
                     __('lang.category_has_children', [], $lang), 'children'));
             }
 
-            $removed = DB::transaction(function () use ($categories, $ids, $mode, $impact) {
+            /*
+             * The products. Dropping the category's product links and nothing
+             * else left a product whose only category it was in no category
+             * at all, gone from every listing (ADC-006). Such products now move
+             * to the nearest surviving parent category; when there is none the
+             * delete is refused, naming them, so nothing is orphaned silently.
+             */
+            $rehome = CategoryTree::rehomePlan($ids, $mode);
+
+            if ($rehome['orphans']) {
+                $summary = CategoryTree::rehomeSummary($rehome);
+                $titles = implode(', ', $summary['orphan_titles'])
+                    . ($summary['orphans'] > count($summary['orphan_titles']) ? ', …' : '');
+
+                return response()->json(Validation::error($request->token,
+                    __('lang.category_products_orphaned', [
+                        'count' => $summary['orphans'],
+                        'products' => $titles,
+                    ], $lang), 'form'));
+            }
+
+            $removed = DB::transaction(function () use ($categories, $ids, $mode, $impact, $rehome) {
+
+                CategoryTree::applyRehome($rehome);
 
                 $toDelete = $ids;
 

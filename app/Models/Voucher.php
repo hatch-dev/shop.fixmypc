@@ -22,7 +22,7 @@ class Voucher extends Model
 
     /**
      * What is left on a gift card voucher: its value less what orders that
-     * stand (paid, or cash on delivery and not cancelled) took off. Derived
+     * hold it (placed and not cancelled, paid or not) took off. Derived
      * rather than stored, so a cancelled order puts the money back on the
      * card with nothing to undo. Null for an ordinary voucher.
      */
@@ -40,9 +40,9 @@ class Voucher extends Model
     }
 
     /**
-     * SQL for what orders have taken off a gift card voucher: the orders
-     * redemptionQuery() counts (paid, or cash on delivery; not cancelled;
-     * not deleted), less any that were returned or refunded -- a status
+     * SQL for what orders have taken off a gift card voucher: every order
+     * that reserves it (reservingOrderSql: not cancelled, not deleted, paid
+     * or not), less any that were returned or refunded -- a status
      * change does not set the cancelled flag, and the money goes back on
      * the card either way. A SQL expression so the admin report can filter
      * and total on it; $voucherId is an int or a column name.
@@ -55,7 +55,30 @@ class Voucher extends Model
         return "(SELECT COALESCE(SUM(ov.discount - COALESCE(ov.returned_amount, 0)), 0) FROM ordered_voucher ov"
             . " JOIN orders o ON o.id = ov.order_id AND o.voucher_id = ov.voucher_id"
             . " WHERE ov.voucher_id = $voucherId"
-            . " AND " . static::standingOrderSql('o') . ")";
+            . " AND " . static::reservingOrderSql('o') . ")";
+    }
+
+    /**
+     * An order that holds a gift card's balance: not deleted, not cancelled,
+     * not returned or refunded -- paid or not. Unlike standingOrderSql, an
+     * order still waiting for its bank transfer (or an unpaid card payment)
+     * reserves what it took off, or the same balance could be spent again on
+     * another order while the first is outstanding. Cancelling the order (by
+     * the customer, staff or the unpaid-transfer sweep) releases it.
+     *
+     * Gift cards only: an ordinary voucher's usage limit still counts only
+     * orders that stand (redemptionQuery, QA audit CPN-05).
+     */
+    public static function reservingOrderSql($alias)
+    {
+        $status = function ($k) {
+            return (int)\Illuminate\Support\Facades\Config::get("constants.orderStatus.$k");
+        };
+        $released = implode(',', [$status('CANCELLED'), $status('RETURNED'), $status('REFUNDED')]);
+
+        return "$alias.deleted_at IS NULL"
+            . " AND ($alias.cancelled != 1 OR $alias.cancelled IS NULL)"
+            . " AND $alias.status NOT IN ($released)";
     }
 
     /**

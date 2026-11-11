@@ -116,13 +116,19 @@ class AccountStatus
          * Revoke by owner, not only by the ids user_sessions knows about: a
          * token minted before session tracking existed, or one whose session
          * row was pruned, is still a working key to the account.
+         *
+         * Customer and admin tokens share oauth_access_tokens and are told
+         * apart only by scope, so the owner match is limited to customer
+         * ("user") tokens - otherwise suspending customer N signs out admin N.
          */
         $revoked = Token::where('user_id', $user->id)
+            ->where('scopes', 'like', '%"user"%')
             ->where('revoked', false)
             ->update(['revoked' => true]);
 
         if ($tokenIds) {
             Token::whereIn('id', $tokenIds)
+                ->where('scopes', 'like', '%"user"%')
                 ->where('revoked', false)
                 ->update(['revoked' => true]);
         }

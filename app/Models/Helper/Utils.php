@@ -222,6 +222,21 @@ class Utils
         return false;
     }
 
+    /**
+     * How a stored secret is shown in the admin: whether one is set and, for
+     * a long enough value, its last four characters - never the value itself
+     * (SEC-004). Pair with "blank on save = keep the stored one".
+     */
+    public static function secretHint($value)
+    {
+        $value = trim((string)$value);
+
+        return [
+            'set' => $value !== '',
+            'hint' => strlen($value) >= 8 ? substr($value, -4) : null,
+        ];
+    }
+
     public static function isDataOwner($user, $data){
         if(is_null($user) || ($user->id != $data->admin_id)){
             return response()->json(Validation::unauthorized());

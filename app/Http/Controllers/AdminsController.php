@@ -2632,24 +2632,14 @@ class AdminsController extends Controller
     }
 
 
+    /**
+     * Public admin signup is closed (SEC-003 / F-01): its route is gone and
+     * this refuses if one is ever wired back. Admins are created by a
+     * signed-in admin with admin.create through action().
+     */
     public function signup(Request $request)
     {
-        try {
-            $validator = Validation::admin_signup($request);
-
-            if ($validator) {
-                return response()->json($validator);
-
-            }
-
-            $request['password'] = Hash::make(request('password'));
-
-            return response()->json(new Response($request->token, Admin::create($request->all())));
-
-        } catch (\Exception $ex) {
-            return response()->json(Validation::error($request->token, $ex->getMessage()));
-        }
-
+        return response()->json(new Response(null, null, 403, 'Not Authorized.'), 201);
     }
 
     public function logout(Request $request)
@@ -2976,6 +2966,13 @@ class AdminsController extends Controller
                 }
 
                 $admin = Admin::create($filtered);
+
+                // Not mass assignable (see Admin::$fillable), so set here,
+                // where admin.create has already been checked.
+                $admin->forceFill([
+                    'active' => !empty($filtered['active']) ? 1 : 0,
+                    'verified' => !empty($filtered['verified']) ? 1 : 0,
+                ])->save();
 
                 $store['name'] = $admin->name;
                 $store['slug'] = $admin->username;

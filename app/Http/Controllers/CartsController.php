@@ -1650,6 +1650,110 @@ class CartsController extends ControllerHelper
     }
 
     /**
+     * Buy again: put a past order's lines back in the basket.
+     *
+     * Only for the order's owner (the signed-in customer, or the guest token
+     * it was placed with). Each variant goes through the same add as a
+     * cross-sell line -- variant re-proved against the product, line cap,
+     * stock (backorder allowed where is_active says so, this basket's own
+     * reservation counted), merge into an existing line, and priced from the
+     * catalogue today, never at what the order paid. A line that cannot be
+     * added is skipped and reported, with a reason the storefront words:
+     * 'unavailable' (withdrawn or no longer sold) or 'stock' (not enough left,
+     * or past the line cap). Reservations follow from the cart.hold middleware.
+     */
+    public function reorder(Request $request, $id)
+    {
+        try {
+            $lang = $request->header('language');
+
+            $query = \App\Models\Order::where('id', (int)$id);
+
+            if ($request->user('user')) {
+
+                $query->where('user_id', $request->user('user')->id);
+
+            } else if ($request->user_token) {
+
+                if (!Setting::select('guest_checkout')->first()->guest_checkout) {
+                    return response()->json(Validation::unauthorized());
+                }
+
+                $query->whereNull('user_id')->where('user_token', $request->user_token);
+
+            } else {
+                return response()->json(Validation::errorLang($lang));
+            }
+
+            $order = $query->first();
+
+            if (is_null($order)) {
+                return response()->json(Validation::error($request->token, __('lang.nothing_found', [], $lang)));
+            }
+
+            // One add per variant, even if the order carried it on two rows.
+            $lines = \App\Models\OrderedProduct::where('order_id', $order->id)
+                ->selectRaw('product_id, inventory_id, SUM(quantity) as quantity')
+                ->groupBy('product_id', 'inventory_id')
+                ->get();
+
+            $products = Product::withoutGlobalScopes()->whereIn('id', $lines->pluck('product_id')->all())
+                ->get(['id', 'title', 'status'])
+                ->keyBy('id');
+
+            $added = [];
+            $skipped = [];
+
+            foreach ($lines as $line) {
+                $product = $products->get($line->product_id);
+
+                $skip = [
+                    'product_id' => (int)$line->product_id,
+                    'inventory_id' => (int)$line->inventory_id,
+                    'quantity' => (int)$line->quantity,
+                    'title' => optional($product)->title,
+                ];
+
+                if (!$product || (int)$product->status !== (int)Config::get('constants.status.PUBLIC')) {
+                    $skipped[] = $skip + ['reason' => 'unavailable', 'message' => __('lang.nothing_found', [], $lang)];
+                    continue;
+                }
+
+                $result = $this->addCrossSellLine(
+                    $request, (int)$line->product_id, (int)$line->inventory_id, max(1, (int)$line->quantity), $lang
+                );
+
+                if (isset($result['error'])) {
+                    // A variant that is gone fails the product check; anything else is stock or the cap.
+                    $gone = !UpdatedInventory::where('id', $line->inventory_id)->where('product_id', $line->product_id)->exists();
+
+                    $skipped[] = $skip + ['reason' => $gone ? 'unavailable' : 'stock', 'message' => $result['error']];
+                    continue;
+                }
+
+                $added[] = $result['cart'];
+            }
+
+            if (empty($added)) {
+                return response()->json(new Response(
+                    $request->token,
+                    ['added' => [], 'skipped' => $skipped],
+                    201,
+                    $skipped[0]['message'] ?? __('lang.nothing_found', [], $lang)
+                ));
+            }
+
+            return response()->json(new Response($request->token, [
+                'added' => $added,
+                'skipped' => $skipped,
+            ]));
+
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+    /**
      * Take an Essentials Bundle: every product in it, in one go.
      *
      * The bundle equivalent of addCrossSell, and different from it in exactly

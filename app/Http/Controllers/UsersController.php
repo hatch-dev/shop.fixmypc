@@ -8,6 +8,7 @@ use App\Models\UserSession;
 use App\Models\Cart;
 use App\Models\CompareList;
 use App\Models\GuestUser;
+use App\Models\Helper\AccountErasure;
 use App\Models\Helper\AccountStatus;
 use App\Models\Helper\CartMerge;
 use App\Models\Helper\ControllerHelper;
@@ -43,9 +44,21 @@ use Illuminate\Support\Str;
 
 class UsersController extends ControllerHelper
 {
+    /** Google / Facebook, and only while switched on in admin Settings. */
+    private function socialProviderEnabled($service)
+    {
+        return in_array($service, ['google', 'facebook'], true)
+            && (int)Setting::value($service . '_login') === 1;
+    }
+
     public function redirectToProvider($service)
     {
         try {
+
+            if (!$this->socialProviderEnabled($service)) {
+                return redirect(env('FRONTEND_SOCIAL_REDIRECT', Utils::frontendSocialRedirect())
+                    . '?' . http_build_query(['error' => 'This sign-in option is not available.']));
+            }
 
             return Socialite::driver($service)->stateless()->redirect();
 
@@ -54,42 +67,104 @@ class UsersController extends ControllerHelper
         }
     }
 
+    /**
+     * Back from Google / Facebook (AUTH-014). Answers to the same gates as
+     * password sign-in: a suspended or rejected account is refused before
+     * anything is linked or minted, and an account with 2FA gets the second
+     * factor challenge on /login instead of a session.
+     */
     public function handleProviderCallback(Request $request, $service)
     {
+        $frontend = env('FRONTEND_SOCIAL_REDIRECT', Utils::frontendSocialRedirect());
+        $refuse = function ($message) use ($frontend) {
+            return redirect($frontend . '?' . http_build_query(['error' => $message]));
+        };
+
         try {
 
-            $user = Socialite::driver($service)->stateless()->user();
-        
+            if (!$this->socialProviderEnabled($service)) {
+                return $refuse('This sign-in option is not available.');
+            }
+
+            $social = Socialite::driver($service)->stateless()->user();
+
             $socialVariable = $service . '_id';
+            $email = trim((string)$social->email);
 
-            $existingUser = User::where($socialVariable, $user->id)
-                ->orWhere('email', $user->email)
-                ->first();
+            /*
+             * By provider id first, then by email. A blank email must never
+             * reach the query: where('email', null) matches every row
+             * without one.
+             */
+            $authUser = User::where($socialVariable, $social->id)->first();
 
-            if ($existingUser) {
+            if (!$authUser && $email !== '') {
+                $authUser = User::where('email', $email)->first();
+            }
 
-                Auth::guard('web')->login($existingUser);
+            if ($authUser) {
+
+                if ($refusal = AccountStatus::authenticationBlock($authUser)) {
+                    return $refuse($refusal);
+                }
+
+                $link = [];
+
+                if ((string)$authUser->{$socialVariable} !== (string)$social->id) {
+                    $link[$socialVariable] = $social->id;
+                }
+
+                /*
+                 * An unconfirmed row with this address: the provider has now
+                 * proved who owns it. Whoever registered it without confirming
+                 * keeps no working password on it.
+                 */
+                if (!$authUser->verified) {
+                    $link['verified'] = 1;
+                    $link['password'] = Hash::make(Str::random(40));
+                }
+
+                if ($link) {
+                    $authUser->forceFill($link)->save();
+                }
 
             } else {
 
-                $newUser = [
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    $socialVariable => $user->id,
-                    'password' => encrypt(rand(1000, 9999)),
+                if ($email === '') {
+                    return $refuse('Your ' . ucfirst($service) . ' account did not share an email address.');
+                }
+
+                $authUser = User::create([
+                    'name' => $social->name,
+                    'email' => $email,
+                    $socialVariable => $social->id,
+                    'password' => Hash::make(Str::random(40)),
                     'verified' => 1
-                ];
-                $newUser = User::create($newUser);
-                Auth::guard('web')->login($newUser);
+                ]);
             }
 
-            $authUser = Auth::user();
-            $token = $authUser->createToken('user', ['user'])->accessToken;
-            $id = $authUser->id;
-            $name = $authUser->name;
-            $email = $authUser->email;
+            if ($authUser->twoFactorEnabled()) {
+                $challenge = $this->startTwoFactorChallenge($request, $authUser);
+                $login = preg_replace('#/social-callback/?$#', '/login', $frontend);
 
-            return redirect(env('FRONTEND_SOCIAL_REDIRECT', Utils::frontendSocialRedirect()) . '?token=' . $token . '&&user=' . $id . '&&email=' . $email . '&&name=' . $name);
+                return redirect($login . '?' . http_build_query([
+                    'step' => '2fa',
+                    'challenge' => $challenge['challenge'],
+                    'method' => $challenge['method'],
+                ]));
+            }
+
+            Auth::guard('web')->login($authUser);
+
+            $session = $this->issueUserSession($request, $authUser);
+
+            return redirect($frontend . '?' . http_build_query([
+                'token' => $session['token'],
+                'session_id' => (string)$session['session_id'],
+                'user' => $authUser->id,
+                'email' => $authUser->email,
+                'name' => $authUser->name,
+            ]));
         } catch (\Exception $ex) {
             // return response()->json($ex->getMessage());
 
@@ -151,6 +226,7 @@ class UsersController extends ControllerHelper
                 ->where('orders.created_at', '>=', Carbon::now()->subDays(30));
 
             $query = User::query()
+                ->whereNull('users.erased_at')
                 ->select('users.*')
                 ->selectSub($totalSpend, 'total_spend')
                 ->selectSub($totalPoints, 'total_points')
@@ -298,7 +374,7 @@ class UsersController extends ControllerHelper
                 return $can;
             }
 
-            $user = User::with('businessProfile')->find($id);
+            $user = User::with('businessProfile')->whereNull('erased_at')->find($id);
 
             if (is_null($user)) {
                 return response()->json(Validation::noDataLang($lang));
@@ -522,56 +598,31 @@ class UsersController extends ControllerHelper
             }
 
 
-            $ids = explode(",", $id);
+            /*
+             * AccountErasure decides delete vs erase: a customer with orders
+             * (or wallet, voucher, membership records) keeps a scrubbed row
+             * so those records stay whole. Every id is checked before any is
+             * touched, so one bad id in a multi-delete removes nobody.
+             */
+            $users = [];
 
-            foreach ($ids as $i) {
-                $user = User::find($i);
+            foreach (explode(",", $id) as $i) {
+                $user = User::whereNull('erased_at')->find($i);
 
                 if (is_null($user)) {
                     return response()->json(Validation::noDataLang($lang));
                 }
 
-                Cart::where('user_id', $i)->delete();
-
-                UserWishlist::where('user_id', $i)->delete();
-
-                CompareList::where('user_id', $i)->delete();
-
-                // Ordered products delete
-                $orderedProducts = OrderedProduct::leftJoin('orders', 'ordered_products.order_id', '=', 'orders.id')
-                    ->where('orders.user_id', $i);
-
-                $orderedProducts->delete();
-
-                // Cancellation message  delete
-                $cancellation = Cancellation::leftJoin('orders', 'cancellations.order_id', '=', 'orders.id')
-                    ->where('orders.user_id', $i);
-
-                $cancellation->delete();
-
-                Order::where('user_id', $i)->delete();
-
-                // Review delete
-                $reviewImages = ReviewImage::leftJoin('rating_reviews', 'review_images.rating_review_id', '=', 'rating_reviews.id')
-                    ->where('rating_reviews.user_id', $i);
-
-                $rimages = $reviewImages->get();
-                foreach ($rimages as $img) {
-                    FileHelper::deleteFile($img->image);
+                if ($blocker = AccountErasure::blocker($user)) {
+                    return response()->json(Validation::error($request->token, $user->name . ': ' . $blocker));
                 }
 
-                $reviewImages->delete();
-
-                RatingReview::where('user_id', $i)->delete();
-
-
-                // Address delete
-                UserAddress::where('user_id', $i)->delete();
-
-                $user->delete();
-
+                $users[] = $user;
             }
 
+            foreach ($users as $user) {
+                AccountErasure::remove($user);
+            }
 
             return response()->json(new Response($request->token, true));
 
@@ -1160,15 +1211,19 @@ class UsersController extends ControllerHelper
 
             } else {
                 /*
-                 * QA audit ACC-01. This used to answer "no such account" for an
-                 * unknown address, which told an attacker exactly which emails
-                 * are registered. The response is now identical either way; a
-                 * link is only actually sent when the account exists.
+                 * No confirmed account has this address (an unknown email, or a
+                 * sign-up that never entered its code): nothing is issued or
+                 * sent, and the customer is told to register instead.
+                 *
+                 * This reverses QA audit ACC-01, which gave the same "link sent"
+                 * answer either way so the form could not be used to find out
+                 * which emails have accounts. Telling people their email is not
+                 * registered was the owner's choice (2026-11-06); the throttle on
+                 * this route is what limits anyone probing it.
                  */
-                return response()->json(new Response(null, [
-                    'email' => $request->email,
-                    'expires_in_minutes' => PasswordResetToken::LIFETIME_MINUTES
-                ]));
+                return response()->json(Validation::error(null,
+                    __('lang.no_account_for_email', [], $lang)
+                ));
             }
         } catch (\Exception $ex) {
             return response()->json(Validation::error($request->token, $ex->getMessage()));
@@ -1536,7 +1591,9 @@ class UsersController extends ControllerHelper
             if ($request->hasFile('image')) {
 
                 $file = $request->file('image');
-                $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+                // Extension from the detected type, never the client's name
+                // (ACC-003); validation has already limited it to images.
+                $filename = FileHelper::safeFilename($file, 'user');
                 $file->move(base_path('uploads'), $filename);
 
                 $user->image = $filename;
@@ -1815,6 +1872,30 @@ class UsersController extends ControllerHelper
     }
 
 
+    /**
+     * Whether this request may act on another customer's addresses: only the
+     * admin copy of the address routes, which sits behind auth:admin and
+     * scope:admin. Admin and customer tokens share user ids, so the admin
+     * guard or a role check cannot be trusted on the storefront copy - a
+     * customer whose id matched an admin's read and wrote anyone's addresses.
+     */
+    private function addressAsAdmin(Request $request): bool
+    {
+        return $request->is('api/admin/*') && Auth::guard('admin')->check();
+    }
+
+    /** The signed-in customer, only when the bearer really is a customer token. */
+    private function addressCustomer(Request $request)
+    {
+        if ($this->addressAsAdmin($request)) {
+            return null;
+        }
+
+        $user = $request->user('user');
+
+        return $user && $user->tokenCan('user') ? $user : null;
+    }
+
     public function addressAction(Request $request)
     {
         try {
@@ -1825,15 +1906,32 @@ class UsersController extends ControllerHelper
                 return response()->json($validate);
             }
 
+            $asAdmin = $this->addressAsAdmin($request);
+            $customer = $this->addressCustomer($request);
+
+            /*
+             * On the storefront the owner is the bearer or the guest token,
+             * never something the form posts: a posted user_id used to pick
+             * whose address was edited or created.
+             */
+            if (!$asAdmin) {
+                foreach ([$request->query, $request->request, $request->json()] as $bag) {
+                    $bag->remove('user_id');
+                }
+            }
+
             if (!$request->name) {
                 $request['name'] = trim(($request->first_name ?? '') . ' ' . ($request->last_name ?? ''));
             }
 
             if ($request->default == 1) {
-                if ($request->user('user')) {
-                    UserAddress::where('user_id', $request->user('user')->id)
+                if ($customer) {
+                    UserAddress::where('user_id', $customer->id)
                         ->update(['default' => 0]);
-                } else if ($request->user_token) {
+                } else if ($asAdmin && $request->user_id && $request->user_id != -1) {
+                    UserAddress::where('user_id', $request->user_id)
+                        ->update(['default' => 0]);
+                } else if (!$asAdmin && $request->user_token) {
                     UserAddress::where('user_token', $request->user_token)
                         ->update(['default' => 0]);
                 }
@@ -1842,7 +1940,7 @@ class UsersController extends ControllerHelper
             $userAddress = null;
 
 
-            if ($request->user_token && !$request->user('user')) {
+            if (!$asAdmin && !$customer && $request->user_token) {
 
                 $guestUser = GuestUser::where('user_token', $request->user_token)
                     ->first();
@@ -1865,7 +1963,7 @@ class UsersController extends ControllerHelper
                 }
             }
 
-            if($request->user('user')){
+            if ($asAdmin || $customer) {
                 $request['user_token'] = null;
             }
 
@@ -1873,22 +1971,15 @@ class UsersController extends ControllerHelper
 
                 $query = UserAddress::query();
 
-                if ($request->user('user')) {
+                if ($asAdmin) {
 
-
-
-
-                    if($request->user_id && $request->user_id != -1){
+                    if ($request->user_id && $request->user_id != -1) {
                         $query = $query->where('user_id', $request->user_id);
-                    } else {
-
-                        if(Auth::user() && !empty(Auth::user()->roles) && count(Auth::user()->roles) > 0 && Auth::user()->roles[0]->guard_name == 'admin'){
-
-                        } else {
-                            $query = $query->where('user_id', $request->user('user')->id);
-                        }
-
                     }
+
+                } else if ($customer) {
+
+                    $query = $query->where('user_id', $customer->id);
 
                 } else if ($request->user_token) {
 
@@ -1898,61 +1989,53 @@ class UsersController extends ControllerHelper
                     return response()->json(Validation::errorLang($lang));
                 }
 
-                $userAddress = $query->first();
+                $userAddress = $query->where('id', $request->id)->first();
+
+                // An id the caller does not own is refused, not quietly created anew.
+                if (is_null($userAddress)) {
+                    return response()->json(Validation::nothingFoundLang($lang, 201));
+                }
             }
 
             $message = '';
 
             if (is_null($userAddress)) {
 
-                if ($request->user('user')) {
+                if ($asAdmin) {
 
-                    if(!$request->user_id || $request->user_id == -1){
+                    if (!$request->user_id || $request->user_id == -1) {
 
-
-
-
-                        if(Auth::user() && !empty(Auth::user()->roles) && count(Auth::user()->roles) > 0 && Auth::user()->roles[0]->guard_name == 'admin'){
-
-
-                            $userByEmail = User::where('email', $request->email)->first();
-                            if($userByEmail) {
-                                $request['user_id'] = $userByEmail->id;
-                            } else {
-
-                                $user = User::create([
-                                    'email' => $request->email,
-                                    'password' => '',
-                                    'name' => $request->name
-                                ]);
-
-                                $request['user_id'] = $user->id;
-
-                            }
-
-
-
+                        $userByEmail = User::where('email', $request->email)->first();
+                        if ($userByEmail) {
+                            $request['user_id'] = $userByEmail->id;
                         } else {
-                            $request['user_id'] = $request->user('user')->id;
-                        }
 
+                            $user = User::create([
+                                'email' => $request->email,
+                                'password' => '',
+                                'name' => $request->name
+                            ]);
+
+                            $request['user_id'] = $user->id;
+
+                        }
                     }
 
+                } else if ($customer) {
 
-
-
+                    $request['user_id'] = $customer->id;
 
                 } else if ($request->user_token) {
 
-                    $request['user_token'] = $request->user_token;
+                    $request['user_id'] = null;
 
                 } else {
                     return response()->json(Validation::errorLang($lang));
                 }
 
                 $data = $request->all();
-                unset($data['first_name'], $data['last_name'], $data['user']);
-                $userAddress = UserAddress::create($request->all());
+                unset($data['first_name'], $data['last_name'], $data['user'], $data['id']);
+                $userAddress = UserAddress::create($data);
 
                 $message = __('lang.created', [], $lang);
 
@@ -1966,13 +2049,16 @@ class UsersController extends ControllerHelper
                 // and failed with "Unknown column".
                 $data = array_intersect_key($data, array_flip((new UserAddress)->getFillable()));
 
+                // Who owns an address is not something an edit can change.
+                unset($data['user_id'], $data['user_token']);
+
                 $filtered = array_filter($data, function ($value) {
                     return $value !== null && $value !== '';
                 });
 
-                UserAddress::where('id', $request->id)->update($filtered);
+                UserAddress::where('id', $userAddress->id)->update($filtered);
 
-                $userAddress = UserAddress::find($request->id);
+                $userAddress = UserAddress::find($userAddress->id);
 
                 $message = __('lang.updated', [], $lang);
             }
@@ -1998,9 +2084,13 @@ class UsersController extends ControllerHelper
 
             $query = UserAddress::where('id', $id);
 
-            if ($request->user('user')) {
+            if ($this->addressAsAdmin($request)) {
 
-                $query = $query->where('user_id', $request->user('user')->id);
+                // Staff may remove any customer's address that no order uses.
+
+            } else if ($customer = $this->addressCustomer($request)) {
+
+                $query = $query->where('user_id', $customer->id);
 
             } else if ($request->user_token) {
 
@@ -2053,14 +2143,14 @@ class UsersController extends ControllerHelper
                 $query = $query->where('address_1', 'LIKE', "%{$request->q}%");
             }
 
-            if ($request->user_id && $this->user) {
+            if ($request->user_id && $this->addressAsAdmin($request)) {
 
                 $query = $query->where('user_id', $request->user_id);
                 $query = $query->with('user');
 
-            } else if ($request->user('user')) {
+            } else if ($customer = $this->addressCustomer($request)) {
 
-                $query = $query->where('user_id', $request->user('user')->id);
+                $query = $query->where('user_id', $customer->id);
                 $query = $query->with('user');
 
             } else if ($request->user_token) {

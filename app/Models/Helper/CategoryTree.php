@@ -279,6 +279,232 @@ class CategoryTree
             'names' => Category::whereIn('id', $ids)->pluck('title', 'id')->all(),
             'subcategory_names' => Category::whereIn('id', $descendantIds)
                 ->pluck('title', 'id')->all(),
+
+            // What happens to the products, per subcategory choice.
+            'rehome' => [
+                'reparent' => self::rehomeSummary(self::rehomePlan($ids, 'reparent')),
+                'cascade' => self::rehomeSummary(self::rehomePlan($ids, 'cascade')),
+            ],
         ];
+    }
+
+    /**
+     * Where the products of the categories being deleted end up.
+     *
+     * Deleting a category used to drop its product_categories rows and stop
+     * there, so a product whose only category it was belonged to nothing
+     * afterwards and fell out of every listing (ADC-006). Its
+     * product_subcategories rows were left pointing at the deleted id too -
+     * and that table has a foreign key on category_id, so a root that still
+     * had one could not be deleted at all.
+     *
+     * Rules, in order:
+     *   - a product with a category outside the deleted set keeps that and
+     *     simply loses the deleted one;
+     *   - a subcategory row whose subcategory is deleted goes;
+     *   - a subcategory row whose subcategory survives (children "moved up")
+     *     follows it: re-pointed at its new parent, or turned into a plain
+     *     category link when the subcategory becomes a root;
+     *   - a product left with nothing moves to the nearest surviving ancestor
+     *     of the category it was in;
+     *   - one with no such ancestor (it was only in a top-level category) is
+     *     an orphan, and the caller refuses the delete over it.
+     *
+     * Read-only: applyRehome() carries the plan out.
+     */
+    public static function rehomePlan(array $categoryIds, $mode = 'reparent')
+    {
+        $edges = self::edges();
+
+        $ids = array_values(array_unique(array_map('intval', $categoryIds)));
+        $doomed = array_fill_keys($ids, true);
+
+        if ($mode === 'cascade') {
+            foreach ($ids as $id) {
+                foreach (self::descendantIds($id, $edges) as $descendant) {
+                    $doomed[$descendant] = true;
+                }
+            }
+        }
+
+        $doomedIds = array_keys($doomed);
+
+        // The nearest ancestor of a category that is not itself being deleted.
+        $ancestor = function ($id) use ($edges, $doomed) {
+            $seen = [];
+            $parent = $edges[$id] ?? null;
+
+            while ($parent !== null && isset($doomed[$parent]) && !isset($seen[$parent])) {
+                $seen[$parent] = true;
+                $parent = $edges[$parent] ?? null;
+            }
+
+            // array_key_exists: a root maps to null, which isset() reads as absent.
+            return ($parent !== null && array_key_exists($parent, $edges) && !isset($doomed[$parent])) ? $parent : null;
+        };
+
+        $plan = [
+            'doomed' => $doomedIds,
+            'products' => [],
+            'add' => [],
+            'sub_update' => [],
+            'sub_delete' => [],
+            'moved' => [],
+            'orphans' => [],
+        ];
+
+        $add = function ($productId, $categoryId) use (&$plan) {
+            $plan['add'][$productId . ':' . $categoryId] = [(int)$productId, (int)$categoryId];
+        };
+
+        // Subcategory rows that name a deleted category on either side.
+        $subRows = DB::table('product_subcategories')
+            ->where(function ($query) use ($doomedIds) {
+                $query->whereIn('category_id', $doomedIds)->orWhereIn('subcategory_id', $doomedIds);
+            })
+            ->get(['id', 'product_id', 'category_id', 'subcategory_id']);
+
+        $keeps = [];
+
+        foreach ($subRows as $row) {
+            $sub = (int)$row->subcategory_id;
+
+            // Gone with the category, or already pointing at nothing.
+            if (isset($doomed[$sub]) || !array_key_exists($sub, $edges)) {
+                $plan['sub_delete'][] = (int)$row->id;
+                continue;
+            }
+
+            if (!isset($doomed[(int)$row->category_id])) {
+                continue;
+            }
+
+            $newParent = $ancestor((int)$row->category_id);
+
+            if ($newParent !== null) {
+                $plan['sub_update'][(int)$row->id] = $newParent;
+                $add($row->product_id, $newParent);
+            } else {
+                $plan['sub_delete'][] = (int)$row->id;
+                $add($row->product_id, $sub);
+            }
+
+            $keeps[(int)$row->product_id] = true;
+        }
+
+        $links = DB::table('product_categories')
+            ->whereIn('category_id', $doomedIds)
+            ->orderByDesc('primary')->orderBy('id')
+            ->get(['product_id', 'category_id']);
+
+        $productIds = $links->pluck('product_id')->map(function ($id) { return (int)$id; })
+            ->unique()->values()->all();
+
+        $plan['products'] = array_values(array_unique(array_merge(
+            $productIds, array_keys($keeps)
+        )));
+
+        // Products that still have a real category outside the deleted set.
+        $surviving = DB::table('product_categories')
+            ->join('categories', 'categories.id', '=', 'product_categories.category_id')
+            ->whereIn('product_categories.product_id', $productIds ?: [0])
+            ->whereNotIn('product_categories.category_id', $doomedIds)
+            ->pluck('product_categories.product_id')
+            ->map(function ($id) { return (int)$id; })
+            ->flip()->all();
+
+        foreach ($links->groupBy('product_id') as $productId => $rows) {
+            $productId = (int)$productId;
+
+            if (isset($surviving[$productId]) || isset($keeps[$productId])) {
+                continue;
+            }
+
+            $target = null;
+
+            // Primary link first, so the product follows its main category.
+            foreach ($rows as $row) {
+                if (($target = $ancestor((int)$row->category_id)) !== null) {
+                    break;
+                }
+            }
+
+            if ($target !== null) {
+                $add($productId, $target);
+                $plan['moved'][$productId] = $target;
+            } else {
+                $plan['orphans'][] = $productId;
+            }
+        }
+
+        $plan['add'] = array_values($plan['add']);
+
+        return $plan;
+    }
+
+    /**
+     * The part of a plan the confirm dialog and a refusal need to say.
+     */
+    public static function rehomeSummary(array $plan, $limit = 10)
+    {
+        $orphanTitles = $plan['orphans']
+            ? DB::table('products')->whereIn('id', $plan['orphans'])
+                ->orderBy('title')->limit($limit)->pluck('title')->all()
+            : [];
+
+        return [
+            'moved' => count($plan['moved']),
+            'moved_to' => $plan['moved']
+                ? Category::whereIn('id', array_unique(array_values($plan['moved'])))
+                    ->pluck('title')->all()
+                : [],
+            'orphans' => count($plan['orphans']),
+            'orphan_titles' => $orphanTitles,
+        ];
+    }
+
+    /**
+     * Carry out a rehomePlan(). Call it inside the delete's transaction and
+     * before the categories go: the product_subcategories foreign key needs
+     * the rows moved off them first.
+     */
+    public static function applyRehome(array $plan)
+    {
+        if ($plan['sub_delete']) {
+            DB::table('product_subcategories')->whereIn('id', $plan['sub_delete'])->delete();
+        }
+
+        foreach ($plan['sub_update'] as $rowId => $categoryId) {
+            DB::table('product_subcategories')->where('id', $rowId)
+                ->update(['category_id' => $categoryId, 'updated_at' => now()]);
+        }
+
+        foreach ($plan['add'] as list($productId, $categoryId)) {
+            $exists = DB::table('product_categories')
+                ->where('product_id', $productId)->where('category_id', $categoryId)->exists();
+
+            if (!$exists) {
+                DB::table('product_categories')->insert([
+                    'product_id' => $productId, 'category_id' => $categoryId, 'primary' => 0,
+                    'created_at' => now(), 'updated_at' => now(),
+                ]);
+            }
+        }
+
+        if (!$plan['products']) {
+            return;
+        }
+
+        DB::table('product_categories')->whereIn('category_id', $plan['doomed'])->delete();
+
+        // A product whose primary category was deleted takes its next one.
+        foreach ($plan['products'] as $productId) {
+            $rows = DB::table('product_categories')->where('product_id', $productId);
+
+            if ((clone $rows)->exists() && !(clone $rows)->where('primary', 1)->exists()) {
+                DB::table('product_categories')->where('id', (clone $rows)->min('id'))
+                    ->update(['primary' => 1]);
+            }
+        }
     }
 }
