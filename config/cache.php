@@ -92,7 +92,24 @@ return [
             'driver' => 'octane',
         ],
 
+        /*
+         * The rate limiter's own store (SEC-007). ClearCacheAfterWrite runs
+         * cache:clear after every API write, which flushes the default store;
+         * with the limiter's counters in it, every throttle restarted on each
+         * POST and the 10-a-minute sign-in cap never fired. Its own directory
+         * (or its own in-process store under phpunit's array driver) survives
+         * that flush.
+         */
+        'limiter' => [
+            'driver' => env('CACHE_DRIVER', 'file') === 'array' ? 'array' : 'file',
+            'path' => storage_path('framework/cache/limiter'),
+            'serialize' => false,
+        ],
+
     ],
+
+    // Store used by RateLimiter / the throttle middleware (see 'limiter' above).
+    'limiter' => 'limiter',
 
     /*
     |--------------------------------------------------------------------------

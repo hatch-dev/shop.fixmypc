@@ -37,9 +37,11 @@ class Admin extends Authenticatable
         'code',
         'code_expires_at',
         'code_attempts',
-        'verified',
         'viewed',
-        'active'
+        // 'verified' and 'active' are deliberately not mass assignable: the
+        // public seller signup creates rows with Admin::create($request->all()),
+        // and a posted active=1/verified=1 made a working admin login (SEC-003).
+        // AdminsController::action sets them explicitly behind admin.create.
     ];
 
     /**

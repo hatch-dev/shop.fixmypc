@@ -360,7 +360,7 @@ class AuthenticationSecurityTest extends IsolatedTestCase
         $this->assertTrue(Hash::check(Fixture::PASSWORD, User::find(Fixture::USER_PERSONAL_ID)->password));
     }
 
-    public function test_an_unregistered_or_unconfirmed_address_gets_the_same_answer_and_no_link()
+    public function test_an_unregistered_or_unconfirmed_address_is_told_to_register_and_gets_no_link()
     {
         $this->asGuest();
 
@@ -369,8 +369,7 @@ class AuthenticationSecurityTest extends IsolatedTestCase
 
             $response = $this->postJson('/api/v1/user/forgot-password', ['email' => $email]);
 
-            $this->assertApiOk($response);
-            $this->assertSame($email, $response->json('data.email'));
+            $this->assertFormRefused($response, 'No account found with this email address. Please register first and then log in.');
             $this->assertCount(0, $this->mailsTo($email), "no mail to $email");
             $this->assertSame(0, PasswordResetToken::where('email', $email)->count(), "no link issued for $email");
             $this->assertSame($usersBefore, User::count(), 'no account created');

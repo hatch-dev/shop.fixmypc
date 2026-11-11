@@ -126,6 +126,15 @@ class Validation
             }
         }
 
+        /*
+         * The profile photo is an image and nothing else (ACC-003): mimes
+         * checks the file's content, not its name, and SVG is left out
+         * because it can carry script. Any .exe used to be saved as-is.
+         */
+        if ($request->has('image') || $request->hasFile('image')) {
+            $rules['image'] = 'nullable|file|mimes:jpeg,jpg,png,gif,webp|max:2048';
+        }
+
         $type = $user ? $user->account_type : null;
 
         // Company details only exist on a business or trade account.

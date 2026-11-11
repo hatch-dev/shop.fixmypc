@@ -38,20 +38,29 @@ class PaymentsController extends ControllerHelper
                 $request[$gateway] = 0;
             }
 
-            $request['created_at'] =  null;
-            $request['updated_at'] =  null;
+            // Only real settings columns: find() adds `secrets`, which the
+            // form sends straight back.
+            $input = $request->only((new Payment)->getFillable());
+
+            // find() never sends a secret out, so a blank one means "keep the
+            // stored value", not "erase it".
+            foreach (Payment::SECRET_FIELDS as $field) {
+                if (array_key_exists($field, $input) && trim((string)$input[$field]) === '') {
+                    unset($input[$field]);
+                }
+            }
 
             $data = Payment::first();
 
             if(is_null($data)){
-                $request['admin_id'] = $this->user->id;
+                $input['admin_id'] = $this->user->id;
 
-                Payment::create($request->all());
+                Payment::create($input);
             }else{
-                Payment::where('id', $data->id)->update($request->all());
+                Payment::where('id', $data->id)->update($input);
             }
 
-            return response()->json(new Response($request->token, $request->all()));
+            return response()->json(new Response($request->token, Payment::first()->adminView()));
 
         } catch (\Exception $ex) {
             return response()->json(Validation::error($request->token, $ex->getMessage()));
@@ -61,8 +70,12 @@ class PaymentsController extends ControllerHelper
 
     public function find(Request $request)
     {
+        if ($can = Utils::userCan($this->user, 'setting.view')) {
+            return $can;
+        }
+
         $payment = Payment::first();
 
-        return response()->json(new Response($request->token, $payment));
+        return response()->json(new Response($request->token, $payment ? $payment->adminView() : null));
     }
 }

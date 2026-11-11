@@ -14,9 +14,9 @@ Pages have no browser tests yet; the page lists are the plan for the Playwright 
 | Tier | Module | API routes | ✅ | 🟡 | ⬜ | Pages |
 |---|---|---:|---:|---:|---:|---:|
 | 1 | [Customer accounts & sign-in](#customer-accounts--sign-in) | 38 | 19 | 8 | 11 | 8 |
-| 1 | [Admin sign-in, staff & roles](#admin-sign-in-staff--roles) | 19 | 1 | 0 | 18 | 8 |
-| 1 | [Customer & trade account admin](#customer--trade-account-admin) | 13 | 4 | 6 | 3 | 4 |
-| 1 | [Cart & pricing](#cart--pricing) | 32 | 13 | 12 | 7 | 3 |
+| 1 | [Admin sign-in, staff & roles](#admin-sign-in-staff--roles) | 18 | 1 | 0 | 17 | 8 |
+| 1 | [Customer & trade account admin](#customer--trade-account-admin) | 13 | 6 | 5 | 2 | 4 |
+| 1 | [Cart & pricing](#cart--pricing) | 33 | 13 | 12 | 8 | 3 |
 | 1 | [Checkout & payments](#checkout--payments) | 14 | 5 | 3 | 6 | 7 |
 | 1 | [Orders, POS & after-sales](#orders-pos--after-sales) | 42 | 15 | 9 | 18 | 10 |
 | 1 | [Wallet, gift cards & loyalty](#wallet-gift-cards--loyalty) | 59 | 26 | 9 | 24 | 9 |
@@ -24,13 +24,13 @@ Pages have no browser tests yet; the page lists are the plan for the Playwright 
 | 1 | [Tax, shipping & payment settings](#tax-shipping--payment-settings) | 16 | 1 | 3 | 12 | 6 |
 | 2 | [Catalogue & browsing](#catalogue--browsing) | 96 | 5 | 33 | 58 | 33 |
 | 2 | [Procurement & suppliers](#procurement--suppliers) | 10 | 0 | 9 | 1 | 4 |
-| 2 | [Dashboard & reports](#dashboard--reports) | 4 | 1 | 0 | 3 | 2 |
+| 2 | [Dashboard & reports](#dashboard--reports) | 6 | 3 | 0 | 3 | 2 |
 | 2 | [Store settings & system](#store-settings--system) | 54 | 4 | 0 | 50 | 27 |
 | 3 | [Content & CMS](#content--cms) | 61 | 0 | 0 | 61 | 16 |
-| 3 | [Reviews, messages & newsletter](#reviews-messages--newsletter) | 19 | 0 | 1 | 18 | 5 |
+| 3 | [Reviews, messages & newsletter](#reviews-messages--newsletter) | 20 | 0 | 1 | 19 | 5 |
 | 3 | [Sellers, stores & withdrawals](#sellers-stores--withdrawals) | 17 | 0 | 0 | 17 | 6 |
 | 3 | [Installer, OAuth & framework](#installer-oauth--framework) | 33 | 0 | 0 | 33 | 0 |
-| | **Total** | **580** | **97** | **132** | **351** | **169** |
+| | **Total** | **583** | **101** | **131** | **351** | **169** |
 
 ## Access review
 
@@ -42,7 +42,6 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 |---|---|---|---|---|---|
 | ⬜ | GET | `api/admin/countries-phones` | FrontendController@countriesPhones | anyone | admin URL without admin auth |
 | ⬜ | GET | `api/admin/resource/{name}` | FrontendController@resource | anyone | admin URL without admin auth |
-| ⬜ | POST | `api/admin/signup` | AdminsController@signup | anyone | admin URL without admin auth |
 | 🟡 | POST | `api/v1/user/address/action` | UsersController@addressAction | anyone (sign-in optional) | customer-area URL without customer auth |
 | 🟡 | GET | `api/v1/user/address/all` | UsersController@addresses | anyone (sign-in optional) | customer-area URL without customer auth |
 | ⬜ | DELETE | `api/v1/user/address/delete/{id}` | UsersController@deleteAddress | anyone (sign-in optional) | customer-area URL without customer auth |
@@ -86,7 +85,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ✅ | GET | `api/v1/user/profile` | UsersController@profile | anyone (sign-in optional) ⚠️ | AuthenticationSecurityTest, AccountTypeApiTest, GuestCheckoutTest +4 |
 | ✅ | POST | `api/v1/user/reset-password` | UsersController@resetPassword | anyone (sign-in optional) | AuthenticationSecurityTest |
 | ✅ | POST | `api/v1/user/reset-password/check` | UsersController@checkResetToken | anyone (sign-in optional) | AuthenticationSecurityTest |
-| ✅ | POST | `api/v1/user/signin` | UsersController@login | anyone (sign-in optional) | AuthenticationSecurityTest, CartTraceTest, FoundationSmokeTest +4 |
+| ✅ | POST | `api/v1/user/signin` | UsersController@login | anyone (sign-in optional) | AccountErasureTest, AuthenticationSecurityTest, CartTraceTest +5 |
 | ✅ | POST | `api/v1/user/signup` | UsersController@signup | anyone (sign-in optional) | AuthenticationSecurityTest, AccountTypeApiTest, GuestCartMergeTest +4 |
 | ✅ | GET | `api/v1/user/social-login/callback/{service}` | UsersController@handleProviderCallback | anyone (sign-in optional) | AuthenticationSecurityTest |
 | ✅ | GET | `api/v1/user/social-login/redirect/{service}` | UsersController@redirectToProvider | anyone (sign-in optional) | AuthenticationSecurityTest |
@@ -115,7 +114,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Admin sign-in, staff & roles
 
-**API**: 19 routes · ✅ 1 · 🟡 0 · ⬜ 18
+**API**: 18 routes · ✅ 1 · 🟡 0 · ⬜ 17
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
@@ -133,7 +132,6 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ⬜ | GET | `api/admin/role/all-roles` | RolesController@allRoles | admin |  |
 | ⬜ | DELETE | `api/admin/role/delete/{id}` | RolesController@delete | admin |  |
 | ⬜ | GET | `api/admin/role/find/{id}` | RolesController@find | admin |  |
-| ⬜ | POST | `api/admin/signup` | AdminsController@signup | anyone ⚠️ |  |
 | ⬜ | POST | `api/admin/update` | AdminsController@update | admin |  |
 | ⬜ | POST | `api/admin/update-password` | AdminsController@updatePassword | admin |  |
 | ⬜ | POST | `api/admin/update-profile-image` | AdminsController@updateProfileImage | admin |  |
@@ -152,7 +150,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Customer & trade account admin
 
-**API**: 13 routes · ✅ 4 · 🟡 6 · ⬜ 3
+**API**: 13 routes · ✅ 6 · 🟡 5 · ⬜ 2
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
@@ -164,9 +162,9 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ✅ | GET | `api/admin/trade-application/upgrades` | TradeApplicationsController@upgrades | admin | AccountUpgradeAdminApiTest |
 | ✅ | POST | `api/admin/trade-application/upgrades/action/{id}` | TradeApplicationsController@upgradeAction | admin | AccountUpgradeAdminApiTest, AccountUpgradeEmailTest |
 | ✅ | GET | `api/admin/trade-application/upgrades/{id}` | TradeApplicationsController@upgrade | admin | AccountUpgradeAdminApiTest |
-| 🟡 | GET | `api/admin/user/all` | UsersController@all | admin | ManualQaSuiteTest, TradeLifecycleTest |
-| ⬜ | DELETE | `api/admin/user/delete/{id}` | UsersController@delete | admin |  |
-| ✅ | GET | `api/admin/user/find/{id}` | UsersController@find | admin | AccountUpgradeAdminApiTest, AdminCustomerPreviewTest, ManualQaSuiteTest +2 |
+| ✅ | GET | `api/admin/user/all` | UsersController@all | admin | AccountErasureTest, ManualQaSuiteTest, TradeLifecycleTest |
+| ✅ | DELETE | `api/admin/user/delete/{id}` | UsersController@delete | admin | AccountErasureTest |
+| ✅ | GET | `api/admin/user/find/{id}` | UsersController@find | admin | AccountErasureTest, AccountUpgradeAdminApiTest, AdminCustomerPreviewTest +3 |
 | 🟡 | POST | `api/admin/user/status/{id}` | UsersController@status | admin | AccountTypeApiTest, ManualQaSuiteTest, SuspendedAccountAccessTest +1 |
 | 🟡 | POST | `api/admin/user/verification/{id}` | UsersController@verification | admin | AccountTypeApiTest, ManualQaSuiteTest, TradeLifecycleTest |
 
@@ -179,7 +177,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Cart & pricing
 
-**API**: 32 routes · ✅ 13 · 🟡 12 · ⬜ 7
+**API**: 33 routes · ✅ 13 · 🟡 12 · ⬜ 8
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
@@ -212,6 +210,7 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ✅ | POST | `api/v1/cart/shipping-quote` | CartsController@shippingQuote | anyone (sign-in optional) | MembershipTest, ShippingByAddressTest, ShippingByWeightTest |
 | 🟡 | POST | `api/v1/cart/switch-variant` | CartsController@switchVariant | anyone (sign-in optional) | ProductUpgradeEngineTest |
 | 🟡 | POST | `api/v1/cart/update-shipping` | CartsController@updateShipping | anyone (sign-in optional) | CheckoutBasketRetrievalTest, GuestCartMergeTest, OrderLifecycleEmailTest +2 |
+| ⬜ | POST | `api/v1/order/{id}/reorder` | CartsController@reorder | anyone (sign-in optional) |  |
 | ⬜ | GET | `api/v1/product/{id}/upgrades` | ProductUpgradesController@forVariant | anyone (sign-in optional) |  |
 | 🟡 | POST | `api/v1/product/{id}/upgrades/validate` | ProductUpgradesController@validateUpgrade | anyone (sign-in optional) | ProductUpgradeEngineTest |
 | 🟡 | GET | `api/v1/user/product/qualifying` | FrontendController@qualifyingProducts | customer | SaversClubTest |
@@ -676,13 +675,15 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Dashboard & reports
 
-**API**: 4 routes · ✅ 1 · 🟡 0 · ⬜ 3
+**API**: 6 routes · ✅ 3 · 🟡 0 · ⬜ 3
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
 | ⬜ | GET | `api/admin/activity` | AdminsController@activity | admin |  |
 | ✅ | GET | `api/admin/dashboard` | AdminsController@dashboard | admin | OrderReturnTest |
 | ⬜ | GET | `api/admin/low-stock-products` | AdminsController@lowStockProducts | admin |  |
+| ✅ | GET | `api/admin/notifications` | AdminNotificationsController@index | admin | AdminNotificationsTest |
+| ✅ | POST | `api/admin/notifications/read` | AdminNotificationsController@read | admin | AdminNotificationsTest |
 | ⬜ | GET | `api/admin/order-statistic` | AdminsController@statistic | admin |  |
 
 **Pages**: 2
@@ -872,12 +873,15 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 
 ### Reviews, messages & newsletter
 
-**API**: 19 routes · ✅ 0 · 🟡 1 · ⬜ 18
+**API**: 20 routes · ✅ 0 · 🟡 1 · ⬜ 19
 
 | | Method | URI | Handler | Access | Tests |
 |---|---|---|---|---|---|
 | ⬜ | GET | `api/admin/rating-review/all` | RatingReviewsController@all | admin |  |
+| ⬜ | POST | `api/admin/rating-review/approve` | RatingReviewsController@approve | admin |  |
 | ⬜ | DELETE | `api/admin/rating-review/delete/{id}` | RatingReviewsController@delete | admin |  |
+| ⬜ | POST | `api/admin/rating-review/store` | RatingReviewsController@store | admin |  |
+| ⬜ | POST | `api/admin/rating-review/update` | RatingReviewsController@update | admin |  |
 | ⬜ | GET | `api/admin/subscriber/all` | SubscriptionEmailsController@all | admin |  |
 | ⬜ | GET | `api/admin/subscriber/all-subscribers` | SubscriptionEmailsController@allSubscribers | admin |  |
 | ⬜ | DELETE | `api/admin/subscriber/delete/{id}` | SubscriptionEmailsController@delete | admin |  |
@@ -891,8 +895,6 @@ who is refused. Mark an intended one in `public_by_design` in `tests/coverage/mo
 | ⬜ | POST | `api/v1/rating-review/action` | RatingReviewsController@action | anyone (sign-in optional) |  |
 | ⬜ | GET | `api/v1/rating-review/find/{productId}` | RatingReviewsController@find | anyone (sign-in optional) |  |
 | ⬜ | GET | `api/v1/rating-review/show/{productId}` | RatingReviewsController@show | anyone (sign-in optional) |  |
-| ⬜ | POST | `api/v1/rating-review/store` | RatingReviewsController@store | anyone (sign-in optional) |  |
-| ⬜ | POST | `api/v1/rating-review/update` | RatingReviewsController@update | anyone (sign-in optional) |  |
 | ⬜ | GET | `newsletter/unsubscribe` | NewsletterSubscriptionController@unsubscribe | anyone |  |
 | ⬜ | POST | `newsletter/unsubscribe` | NewsletterSubscriptionController@unsubscribe | anyone |  |
 

@@ -29,6 +29,29 @@ CREATE TABLE `account_upgrade_requests` (
   KEY `account_upgrade_requests_status_created_at_index` (`status`,`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `admin_notification_reads`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `admin_notification_reads` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `admin_id` bigint(20) unsigned NOT NULL,
+  `notification_id` varchar(64) NOT NULL,
+  `read_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `admin_notification_reads_unique` (`admin_id`,`notification_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `admin_notification_states`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `admin_notification_states` (
+  `admin_id` bigint(20) unsigned NOT NULL,
+  `cleared_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`admin_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `admins`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -3158,6 +3181,7 @@ CREATE TABLE `users` (
   `wishlist_share_token` varchar(40) DEFAULT NULL,
   `stripe_customer_id` varchar(255) DEFAULT NULL,
   `member_digest_opt_out` tinyint(1) NOT NULL DEFAULT 0,
+  `erased_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_email_unique` (`email`),
   UNIQUE KEY `users_wishlist_share_token_unique` (`wishlist_share_token`),

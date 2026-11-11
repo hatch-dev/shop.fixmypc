@@ -8,6 +8,7 @@ use App\Models\Helper\Response;
 use App\Models\Helper\Utils;
 use App\Models\Helper\Validation;
 use App\Models\Order;
+use App\Models\OrderedProduct;
 use App\Models\Product;
 use App\Models\RatingReview;
 use App\Models\ReviewImage;
@@ -95,23 +96,8 @@ class RatingReviewsController extends ControllerHelper
                 }
 
                 if ($ratingReview->where('id', $rv)->delete()) {
-
-                    $product = Product::find($ratingReview->product_id);
-                    $total = $product->rating * $product->review_count;
-
-
-                    if($product->review_count > 1){
-                        $avg = 0;
-                    } else {
-                        $avg = ($total - $ratingReview->rating) / $product->review_count - 1;
-                    }
-
-
-                    Product::where('id', $ratingReview->product_id)
-                        ->update([
-                            'rating' => $avg,
-                            'review_count' => $product->review_count - 1
-                        ]);
+                    // rating and count are re-derived from the approved reviews left
+                    $this->updateProductRating($ratingReview->product_id);
                 }
             }
 
@@ -221,12 +207,23 @@ class RatingReviewsController extends ControllerHelper
             return response()->json(Validation::nothing_found(201, null, 'form', $lang));
         }
 
+        // Only a product this delivered order contains can be reviewed through
+        // it - that is what makes the review a verified purchase.
+        if (!OrderedProduct::where('order_id', $order->id)->where('product_id', $product->id)->exists()) {
+            return response()->json(Validation::error($request->token,
+                __('lang.review_not_in_order', [], $lang)
+            ));
+        }
+
         if ($ratingReview) {
 
+            // An edited review is new text: it goes back to awaiting approval.
             RatingReview::where('id', $ratingReview->id)
                 ->update([
                     'rating' => $request->rating,
-                    'review' => $request->review
+                    'review' => $request->review,
+                    'is_verified' => 1,
+                    'approved' => 0,
                 ]);
 
             if ($request->deleted_images) {
@@ -236,11 +233,8 @@ class RatingReviewsController extends ControllerHelper
                 }
             }
 
-            $reviewCount = $product->review_count;
-            $avgRating = (($product->rating * $product->review_count)
-                    + $request->rating - $ratingReview->rating) / $reviewCount;
-
             $ratingReviewId = $ratingReview->id;
+            $ratingReview = RatingReview::find($ratingReviewId);
 
         } else {
 
@@ -251,6 +245,11 @@ class RatingReviewsController extends ControllerHelper
                 'rating' => $request->rating,
                 'order_id' => $request->order_id,
                 'review' => $request->review,
+                // derived here from the delivered order checked above, never
+                // taken from the request
+                'is_verified' => 1,
+                // shown on the product page only once an admin approves it
+                'approved' => 0,
             ];
 
             if ($request->user('user')) {
@@ -267,9 +266,6 @@ class RatingReviewsController extends ControllerHelper
             }
 
             $ratingReview = RatingReview::create($ratingReviewArr);
-
-            $reviewCount = $product->review_count + 1;
-            $avgRating = (($product->rating * $product->review_count) + $request->rating) / $reviewCount;
 
             $ratingReviewId = $ratingReview->id;
         }
@@ -293,10 +289,9 @@ class RatingReviewsController extends ControllerHelper
             }
         }
 
-        Product::where('id', $product->id)->update([
-            'review_count' => $reviewCount,
-            'rating' => round($avgRating, 2)
-        ]);
+        // A pending review does not count yet; an edit may have just taken an
+        // approved one out of the figures.
+        $this->updateProductRating($product->id);
 
         if (count($reviewImages) > 0) {
             ReviewImage::insert($reviewImages);
@@ -310,95 +305,161 @@ class RatingReviewsController extends ControllerHelper
         }
 
         return response()->json(new Response($request->token, $ratingReview, 200,
-            __('lang.thank_feedback', [], $lang)
+            __('lang.review_pending', [], $lang)
         ));
     } 
 	
 	
-	public function store(Request $request)
+    /**
+     * Admin: add a review by hand - one left on Google, Facebook or in the shop.
+     *
+     * This used to be a public v1 route: anyone could post an auto-approved
+     * "verified" review under any name and source. It is now admin/rating-review/store,
+     * behind the admin guard and the rating-review moderation permission
+     * (rating_review.delete, the same one the list's Edit button uses). An
+     * admin-entered review is approved at once and carries that admin's id;
+     * is_verified is the admin's own statement, not a customer's.
+     */
+    public function store(Request $request)
     {
-        // Validate the request data
-        $validator = Validator::make($request->all(), [
+        $lang = $request->header('language');
+        if ($can = Utils::userCan($this->user, 'rating_review.delete')) {
+            return $can;
+        }
+
+        $validator = Validator::make($request->all(), $this->manualReviewRules());
+        if ($validator->fails()) {
+            return response()->json(Validation::error($request->token, $validator->errors()->first(), 'form', $lang));
+        }
+
+        if ($refused = $this->refuseForeignProduct($request->product_id)) {
+            return $refused;
+        }
+
+        $review = RatingReview::create([
+            'product_id' => $request->product_id,
+            'order_id' => 0,
+            'rating' => $request->rating,
+            'review' => $request->review,
+            'source' => $request->source,
+            'name' => $request->name,
+            'is_verified' => filter_var($request->is_verified, FILTER_VALIDATE_BOOLEAN) ? 1 : 0,
+            'admin_id' => $this->user->id,
+            'approved' => 1,
+        ]);
+
+        $this->storeManualReviewImages($request, $review->id);
+        $this->updateProductRating($request->product_id);
+
+        return response()->json(new Response($request->token, $review, 200, __('lang.review_saved', [], $lang)));
+    }
+
+    /**
+     * Admin: approve or unapprove reviews. `id` may be a comma list;
+     * `approved` is 1 (show on the product page) or 0 (hide it again).
+     * The products' rating and review count are re-derived from what is
+     * approved afterwards.
+     */
+    public function approve(Request $request)
+    {
+        try {
+            $lang = $request->header('language');
+            if ($can = Utils::userCan($this->user, 'rating_review.delete')) {
+                return $can;
+            }
+
+            $approved = filter_var($request->approved, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+            $ids = array_filter(array_map('intval', explode(',', (string)$request->id)));
+            if (!$ids) {
+                return response()->json(Validation::noDataLang($lang));
+            }
+
+            $reviews = RatingReview::with('product_admin')->whereIn('id', $ids)->get();
+            if ($reviews->isEmpty()) {
+                return response()->json(Validation::noDataLang($lang));
+            }
+
+            foreach ($reviews as $review) {
+                if ($this->isVendor && $isOwner = Utils::isDataOwner($this->user, $review->product_admin)) {
+                    return $isOwner;
+                }
+            }
+
+            RatingReview::whereIn('id', $reviews->pluck('id'))->update(['approved' => $approved]);
+            foreach ($reviews->pluck('product_id')->unique() as $productId) {
+                $this->updateProductRating($productId);
+            }
+
+            return response()->json(new Response($request->token, ['ids' => $reviews->pluck('id'), 'approved' => $approved], 200,
+                __($approved ? 'lang.review_approved' : 'lang.review_unapproved', [], $lang)));
+
+        } catch (\Exception $ex) {
+            return response()->json(Validation::error($request->token, $ex->getMessage()));
+        }
+    }
+
+    /**
+     * A product's rating and review_count, from its approved reviews only:
+     * a review awaiting approval is not on the product page, so it does not
+     * move the stars either. No approved review left means 0 and 0.
+     */
+    protected function updateProductRating($productId)
+    {
+        $stats = RatingReview::where('product_id', $productId)
+            ->where('approved', 1)
+            ->selectRaw('COUNT(*) AS total, AVG(rating) AS average')
+            ->first();
+
+        Product::where('id', $productId)->update([
+            'rating' => $stats && $stats->total ? round($stats->average, 2) : 0,
+            'review_count' => $stats ? (int)$stats->total : 0,
+        ]);
+    }
+
+    private function manualReviewRules()
+    {
+        return [
             'rating' => 'required|integer|min:1|max:5',
             'source' => 'required|in:google,facebook,shop',
             'name' => 'required|string|max:255',
             'product_id' => 'required|exists:products,id',
             'review' => 'required|string',
-            'is_verified' => 'boolean',
+            'is_verified' => 'nullable|boolean',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-		
-		if(isset($request->is_verified)){
-			$is_verified=true;
-		}else{
-			$is_verified=false;
-		}
-		
-		
-        // Create the review
-        $review = RatingReview::create([
-            'product_id' => $request->product_id,
-			'order_id'=>0,
-            'rating' => $request->rating,
-            'review' => $request->review,
-            'source' => $request->source,
-            'name' => $request->name,
-            'is_verified' => $is_verified,
-            'approved' => 1 // or 'approved' if you want auto-approve
-        ]);
-
-        // Handle image uploads
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('review_images', 'public');
-                
-                ReviewImage::create([
-                    'rating_review_id' => $review->id,
-                    'image_path' => $path
-                ]);
-            }
-        }
-		
-		
-
-        // Update product rating statistics
-        $this->updateProductRating($request->product_id);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Review submitted successfully!',
-            'data' => $review
-        ]);
+        ];
     }
-	
-	 protected function updateProductRating($productId)
+
+    /** A vendor may only put reviews on their own products. */
+    private function refuseForeignProduct($productId)
     {
-        $product = \App\Models\Product::find($productId);
-        
-        $reviews = RatingReview::where('product_id', $productId)
-            ->where('approved', '1')
-            ->get();
+        if ($this->isVendor && (int)Product::where('id', $productId)->value('admin_id') !== (int)$this->user->id) {
+            return response()->json(Validation::unauthorized());
+        }
 
-        if ($reviews->count() > 0) {
-            $product->rating = $reviews->avg('rating');
-            $product->review_count = $reviews->count();
-            $product->save();
+        return null;
+    }
+
+    private function storeManualReviewImages(Request $request, $reviewId)
+    {
+        if (!$request->hasFile('images')) {
+            return;
+        }
+        foreach ($request->file('images') as $image) {
+            $info = FileHelper::uploadImage($image, 'review');
+            ReviewImage::create([
+                'rating_review_id' => $reviewId,
+                'image' => $info['name'],
+            ]);
         }
     }
-	
+
 	 public function show($id)
     {
 		
         try {
             // Find the review with relationships
-            $review = RatingReview::findOrFail($id);
+            // only an approved review is public
+            $review = RatingReview::where('approved', 1)->findOrFail($id);
 
             // Format the response
             $formattedReview = [
@@ -433,29 +494,50 @@ class RatingReviewsController extends ControllerHelper
         }
     }
 	
-	// Add this to your RatingReviewController
-	public function update(Request $request)
-	{
-		
-		$review = RatingReview::findOrFail($request->review_id);
-		($request->is_verified=='on') ? $verified=1 : $verified=0;
-		
-		$review->update([
-			'product_id' => $request->product_id,
-			'rating' => $request->rating,
-			'review' => $request->review,
-			'source' => $request->source,
-			'name' => $request->name,
-			'is_verified' => $verified
-		]);
+    /**
+     * Admin: edit a hand-entered or customer review (admin/rating-review/update,
+     * same guard and permission as store). Was a public v1 route that let
+     * anyone rewrite any review by id.
+     */
+    public function update(Request $request)
+    {
+        $lang = $request->header('language');
+        if ($can = Utils::userCan($this->user, 'rating_review.delete')) {
+            return $can;
+        }
 
-		$this->updateProductRating($review->product_id);
+        $review = RatingReview::with('product_admin')->find($request->review_id);
+        if (is_null($review)) {
+            return response()->json(Validation::noDataLang($lang));
+        }
+        if ($this->isVendor && $isOwner = Utils::isDataOwner($this->user, $review->product_admin)) {
+            return $isOwner;
+        }
 
-		return response()->json([
-			'success' => true,
-			'message' => 'Review updated successfully!',
-			'data' => $review
-		]);
-	}
+        $validator = Validator::make($request->all(), $this->manualReviewRules());
+        if ($validator->fails()) {
+            return response()->json(Validation::error($request->token, $validator->errors()->first(), 'form', $lang));
+        }
+        if ($refused = $this->refuseForeignProduct($request->product_id)) {
+            return $refused;
+        }
+
+        $oldProductId = $review->product_id;
+        $review->update([
+            'product_id' => $request->product_id,
+            'rating' => $request->rating,
+            'review' => $request->review,
+            'source' => $request->source,
+            'name' => $request->name,
+            'is_verified' => filter_var($request->is_verified, FILTER_VALIDATE_BOOLEAN) ? 1 : 0,
+        ]);
+
+        $this->updateProductRating($review->product_id);
+        if ((int)$oldProductId !== (int)$review->product_id) {
+            $this->updateProductRating($oldProductId);
+        }
+
+        return response()->json(new Response($request->token, $review->makeHidden('product_admin'), 200, __('lang.review_saved', [], $lang)));
+    }
 
 }

@@ -7,9 +7,11 @@ use App\Models\Helper\ListingPrices;
 use App\Models\Helper\Response;
 use App\Models\Helper\Utils;
 use App\Models\Helper\Validation;
+use App\Models\ProductSpecification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 
 class CompareListsController extends Controller
 {
@@ -112,6 +114,8 @@ class CompareListsController extends Controller
              */
             ListingPrices::decorateRelation($data, 'product', $user);
 
+            $this->attachComparison($data);
+
             return response()->json(new Response($request->token, $data));
 
 
@@ -121,4 +125,63 @@ class CompareListsController extends Controller
     }
 
 
+    /**
+     * What pages/user/compared.vue sets side by side, for the products on this
+     * page: each product's specification rows as `product.specifications`
+     * ({group, label, value}, the product page's order) and the key facts every
+     * product has as `product.compare` (brand, rating, review count, and the
+     * variant options it comes in, e.g. Storage: 128GB, 256GB).
+     */
+    private function attachComparison($data)
+    {
+        $productIds = $data->getCollection()->pluck('product_id')->filter()->unique()->values()->all();
+        if (!$productIds) {
+            return;
+        }
+
+        $specs = ProductSpecification::with('group')
+            ->whereIn('product_id', $productIds)
+            ->orderBy('sort_order')->orderBy('id')
+            ->get()->groupBy('product_id');
+
+        $facts = DB::table('products')
+            ->leftJoin('brands', 'brands.id', '=', 'products.brand_id')
+            ->whereIn('products.id', $productIds)
+            ->get(['products.id', 'brands.title as brand', 'products.rating', 'products.review_count'])
+            ->keyBy('id');
+
+        $options = DB::table('updated_inventories as ui')
+            ->join('inventory_attributes as ia', 'ia.inventory_id', '=', 'ui.id')
+            ->join('attribute_values as av', 'av.id', '=', 'ia.attribute_value_id')
+            ->join('attributes as a', 'a.id', '=', 'av.attribute_id')
+            ->whereIn('ui.product_id', $productIds)
+            ->orderBy('a.id')->orderBy('av.rank')->orderBy('av.id')
+            ->get(['ui.product_id', 'a.title as attribute', 'av.title as value'])
+            ->groupBy('product_id');
+
+        foreach ($data as $item) {
+            if (!$item->product) {
+                continue;
+            }
+            $pid = (int)$item->product_id;
+
+            $item->product->setRelation('specifications', collect($specs->get($pid, []))->map(function ($spec) {
+                return [
+                    'group' => optional($spec->group)->title,
+                    'label' => $spec->label,
+                    'value' => $spec->value,
+                ];
+            })->values());
+
+            $fact = $facts->get($pid);
+            $item->product->setAttribute('compare', [
+                'brand' => $fact->brand ?? null,
+                'rating' => $fact && $fact->rating ? round($fact->rating, 1) : 0,
+                'review_count' => (int)($fact->review_count ?? 0),
+                'options' => collect($options->get($pid, []))->groupBy('attribute')->map(function ($rows, $attribute) {
+                    return ['attribute' => $attribute, 'values' => $rows->pluck('value')->unique()->values()];
+                })->values(),
+            ]);
+        }
+    }
 }

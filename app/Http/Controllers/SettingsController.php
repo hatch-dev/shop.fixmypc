@@ -20,6 +20,52 @@ use Illuminate\Support\Facades\Artisan;
 class SettingsController extends ControllerHelper
 {
 
+    /**
+     * Secrets on the .env-backed settings screens (SEC-004): the form gets
+     * each one blank, with {set, hint} under `secrets`, and a blank one on
+     * save leaves the stored .env value alone (see envSecretSkipped).
+     *
+     * @param array $data   field => current value
+     * @param array $fields the secret fields among them
+     */
+    private static function maskSecrets(array $data, array $fields)
+    {
+        unset($data['secrets']);
+        $secrets = [];
+
+        foreach ($fields as $field) {
+            $secrets[$field] = Utils::secretHint($data[$field] ?? null);
+            $data[$field] = null;
+        }
+
+        $data['secrets'] = $secrets;
+
+        return $data;
+    }
+
+    /** A secret field sent blank: keep what .env holds rather than erase it. */
+    private static function envSecretSkipped($field, array $secretFields)
+    {
+        return in_array($field, $secretFields, true) && trim((string)request($field)) === '';
+    }
+
+    /**
+     * What a save echoes: the request, with each secret as now stored - the
+     * typed value, or the untouched .env one when left blank - masked.
+     */
+    private static function maskedEcho(Request $request, array $envKeys, array $secretFields)
+    {
+        $data = $request->except(['secrets', 'token']);
+
+        foreach ($envKeys as $envKey => $field) {
+            if (in_array($field, $secretFields, true) && trim((string)($data[$field] ?? '')) === '') {
+                $data[$field] = env($envKey);
+            }
+        }
+
+        return self::maskSecrets($data, $secretFields);
+    }
+
     public function find(Request $request)
     {
         try {
@@ -52,7 +98,7 @@ class SettingsController extends ControllerHelper
             $data['mailFrom'] = env('MAIL_FROM_ADDRESS');
             $data['apiKey'] = env('BREVO_API_KEY');
 
-            return response()->json(new Response($request->token, $data));
+            return response()->json(new Response($request->token, self::maskSecrets($data, ['smtpPassword', 'apiKey'])));
 
 
         } catch (\Exception $ex) {
@@ -109,7 +155,8 @@ class SettingsController extends ControllerHelper
             $data['facebookClientId'] = env('FACEBOOK_CLIENT_ID');
             $data['facebookClientSecret'] = env('FACEBOOK_CLIENT_SECRET');
 
-            return response()->json(new Response($request->token, $data));
+            return response()->json(new Response($request->token,
+                self::maskSecrets($data, ['googleClientSecret', 'facebookClientSecret'])));
 
 
         } catch (\Exception $ex) {
@@ -120,10 +167,14 @@ class SettingsController extends ControllerHelper
     public function getSumup(Request $request)
     {
         try {
+            if ($can = Utils::userCan($this->user, 'setting.view')) {
+                return $can;
+            }
+
             $data['sumup_api_key'] = env('SUMUP_API_KEY');
             $data['sumup_merchant_email'] = env('SUMUP_MERCHANT_EMAIL');
             $data['sumup_merchant_code'] = env('SUMUP_MERCHANT_CODE');
-            return response()->json(new Response($request->token, $data));
+            return response()->json(new Response($request->token, self::maskSecrets($data, ['sumup_api_key'])));
         } catch (\Exception $ex) {
             return response()->json(Validation::error($request->token, $ex->getMessage()));
         }
@@ -132,11 +183,16 @@ class SettingsController extends ControllerHelper
     public function updateSumup(Request $request)
     {
         try{
+            if ($can = Utils::userCan($this->user, 'setting.edit')) {
+                return $can;
+            }
+
             $db = [
                 "SUMUP_API_KEY" => "sumup_api_key",
                 "SUMUP_MERCHANT_EMAIL" => "sumup_merchant_email",
                 "SUMUP_MERCHANT_CODE" => "sumup_merchant_code",
             ];
+            $secretFields = ['sumup_api_key'];
             $path = base_path('.env');
             if (file_exists($path)) {
                 Artisan::call('config:clear');
@@ -145,12 +201,15 @@ class SettingsController extends ControllerHelper
                 Artisan::call('view:clear');
 
                 foreach ($db as $key => $value) {
+                    if (self::envSecretSkipped($value, $secretFields)) {
+                        continue;
+                    }
                     file_put_contents($path, str_replace(
                         $key . '=' . env($key), $key . '=' . request($value), file_get_contents($path)
                     ));
                 }
             }
-            return response()->json(new Response($request->token, $request->all()));
+            return response()->json(new Response($request->token, self::maskedEcho($request, $db, $secretFields)));
         }catch (\Exception $ex) {
             return response()->json(Validation::error($request->token, $ex->getMessage()));
         }
@@ -177,6 +236,7 @@ class SettingsController extends ControllerHelper
                 "MAIL_FROM_ADDRESS" => "mailFrom",
                 "BREVO_API_KEY" => "apiKey"
             ];
+            $secretFields = ['smtpPassword', 'apiKey'];
             $path = base_path('.env');
             if (file_exists($path)) {
 
@@ -186,13 +246,16 @@ class SettingsController extends ControllerHelper
                 Artisan::call('view:clear');
 
                 foreach ($db as $key => $value) {
+                    if (self::envSecretSkipped($value, $secretFields)) {
+                        continue;
+                    }
                     file_put_contents($path, str_replace(
                         $key . '=' . env($key), $key . '=' . request($value), file_get_contents($path)
                     ));
                 }
             }
 
-            return response()->json(new Response($request->token, $request->all()));
+            return response()->json(new Response($request->token, self::maskedEcho($request, $db, $secretFields)));
 
 
         } catch (\Exception $ex) {
@@ -276,6 +339,7 @@ class SettingsController extends ControllerHelper
                 "FACEBOOK_CLIENT_ID" => "facebookClientId",
                 "FACEBOOK_CLIENT_SECRET" => "facebookClientSecret"
             ];
+            $secretFields = ['googleClientSecret', 'facebookClientSecret'];
 
             $path = base_path('.env');
 
@@ -287,13 +351,16 @@ class SettingsController extends ControllerHelper
                 Artisan::call('view:clear');
 
                 foreach ($db as $key => $value) {
+                    if (self::envSecretSkipped($value, $secretFields)) {
+                        continue;
+                    }
                     file_put_contents($path, str_replace(
                         $key . '=' . env($key), $key . '=' . request($value), file_get_contents($path)
                     ));
                 }
             }
 
-            return response()->json(new Response($request->token, $request->all()));
+            return response()->json(new Response($request->token, self::maskedEcho($request, $db, $secretFields)));
 
         } catch (\Exception $ex) {
             return response()->json(Validation::error($request->token, $ex->getMessage()));

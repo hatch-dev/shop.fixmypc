@@ -34,6 +34,9 @@ class CheckMailDeliverability extends Command
 
     public function handle()
     {
+        // A fresh count per run: called twice in one process, it used to add up.
+        $this->problems = 0;
+
         $this->line('');
         $this->checkQueue();
         $this->checkBasketReminders();
@@ -179,6 +182,33 @@ class CheckMailDeliverability extends Command
         }
 
         $this->good("from: {$from}");
+
+        /*
+         * Which mailer actually carries the mail. Everything below is judged
+         * against it, and "log" or "array" accept every message and deliver
+         * none, so a clean report means nothing while either is selected.
+         */
+        $mailer = (string)config('mail.default');
+        $transport = (string)config('mail.mailers.' . $mailer . '.transport');
+        $relay = (string)config('mail.mailers.' . $mailer . '.host');
+
+        if ($relay) {
+            $port = config('mail.mailers.' . $mailer . '.port');
+            $relay .= $port ? ':' . $port : '';
+        }
+
+        $via = implode(', ', array_filter([
+            $transport && $transport !== $mailer ? 'transport ' . $transport : '',
+            $relay ? 'host ' . $relay : '',
+        ]));
+
+        if (in_array($transport ?: $mailer, ['log', 'array'], true)) {
+            $this->warn('  ~ mailer: ' . $mailer . ($via ? " ({$via})" : '')
+                . ' -- mail is ' . (($transport ?: $mailer) === 'log' ? 'written to the log' : 'kept in memory')
+                . ' and never sent; set MAIL_MAILER to the real provider');
+        } else {
+            $this->good('mailer: ' . $mailer . ($via ? " ({$via})" : ''));
+        }
 
         $name = config('mail.from.name');
 

@@ -120,6 +120,7 @@ return [
         'AdminsController@activity' => 'dashboard',
         'AdminsController@statistic' => 'dashboard',
         'AdminsController@lowStockProducts' => 'dashboard',
+        'AdminNotificationsController' => 'dashboard',
         'AdminsController@activate' => 'settings',
         'AdminsController@deactivate' => 'settings',
         'AdminsController@manualActivation' => 'settings',

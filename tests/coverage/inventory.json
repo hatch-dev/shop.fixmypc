@@ -2126,6 +2126,36 @@
         },
         {
             "method": "GET",
+            "uri": "api/admin/notifications",
+            "handler": "AdminNotificationsController@index",
+            "module": "dashboard",
+            "tier": 2,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/AdminNotificationsTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/notifications/read",
+            "handler": "AdminNotificationsController@read",
+            "module": "dashboard",
+            "tier": 2,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [
+                    "Isolated/AdminNotificationsTest.php"
+                ],
+                "legacy": []
+            }
+        },
+        {
+            "method": "GET",
             "uri": "api/admin/onboarding",
             "handler": "OnboardingController@index",
             "module": "settings",
@@ -3201,9 +3231,48 @@
             }
         },
         {
+            "method": "POST",
+            "uri": "api/admin/rating-review/approve",
+            "handler": "RatingReviewsController@approve",
+            "module": "engagement",
+            "tier": 3,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
             "method": "DELETE",
             "uri": "api/admin/rating-review/delete/{id}",
             "handler": "RatingReviewsController@delete",
+            "module": "engagement",
+            "tier": 3,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/rating-review/store",
+            "handler": "RatingReviewsController@store",
+            "module": "engagement",
+            "tier": 3,
+            "access": "admin",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
+            "method": "POST",
+            "uri": "api/admin/rating-review/update",
+            "handler": "RatingReviewsController@update",
             "module": "engagement",
             "tier": 3,
             "access": "admin",
@@ -3678,19 +3747,6 @@
             "tier": 1,
             "access": "admin",
             "review": null,
-            "tests": {
-                "isolated": [],
-                "legacy": []
-            }
-        },
-        {
-            "method": "POST",
-            "uri": "api/admin/signup",
-            "handler": "AdminsController@signup",
-            "module": "staff",
-            "tier": 1,
-            "access": "anyone",
-            "review": "admin URL without admin auth",
             "tests": {
                 "isolated": [],
                 "legacy": []
@@ -4669,7 +4725,9 @@
             "access": "admin",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AccountErasureTest.php"
+                ],
                 "legacy": [
                     "Feature/ManualQaSuiteTest.php",
                     "Feature/TradeLifecycleTest.php"
@@ -4685,7 +4743,9 @@
             "access": "admin",
             "review": null,
             "tests": {
-                "isolated": [],
+                "isolated": [
+                    "Isolated/AccountErasureTest.php"
+                ],
                 "legacy": []
             }
         },
@@ -4699,6 +4759,7 @@
             "review": null,
             "tests": {
                 "isolated": [
+                    "Isolated/AccountErasureTest.php",
                     "Isolated/AccountUpgradeAdminApiTest.php"
                 ],
                 "legacy": [
@@ -6314,6 +6375,19 @@
             }
         },
         {
+            "method": "POST",
+            "uri": "api/v1/order/{id}/reorder",
+            "handler": "CartsController@reorder",
+            "module": "pricing",
+            "tier": 1,
+            "access": "anyone (sign-in optional)",
+            "review": null,
+            "tests": {
+                "isolated": [],
+                "legacy": []
+            }
+        },
+        {
             "method": "GET",
             "uri": "api/v1/order/{token}",
             "handler": "BidController@orderDetail",
@@ -6579,32 +6653,6 @@
             "method": "GET",
             "uri": "api/v1/rating-review/show/{productId}",
             "handler": "RatingReviewsController@show",
-            "module": "engagement",
-            "tier": 3,
-            "access": "anyone (sign-in optional)",
-            "review": null,
-            "tests": {
-                "isolated": [],
-                "legacy": []
-            }
-        },
-        {
-            "method": "POST",
-            "uri": "api/v1/rating-review/store",
-            "handler": "RatingReviewsController@store",
-            "module": "engagement",
-            "tier": 3,
-            "access": "anyone (sign-in optional)",
-            "review": null,
-            "tests": {
-                "isolated": [],
-                "legacy": []
-            }
-        },
-        {
-            "method": "POST",
-            "uri": "api/v1/rating-review/update",
-            "handler": "RatingReviewsController@update",
             "module": "engagement",
             "tier": 3,
             "access": "anyone (sign-in optional)",
@@ -7501,6 +7549,7 @@
             "review": null,
             "tests": {
                 "isolated": [
+                    "Isolated/AccountErasureTest.php",
                     "Isolated/AuthenticationSecurityTest.php",
                     "Isolated/CartTraceTest.php",
                     "Isolated/FoundationSmokeTest.php",

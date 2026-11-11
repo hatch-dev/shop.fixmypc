@@ -457,6 +457,86 @@ class OrdersController extends ControllerHelper
                 $query = $query->where('user_id', (int)$request->user_id);
             }
 
+            /*
+             * One guest's orders, from the guest users list. The link carries
+             * the guest's id, never their user_token: that token is the
+             * credential a guest's order pages are opened with, so it is
+             * looked up here and never sent to the screen.
+             */
+            if ($request->guest) {
+                $guestToken = GuestUser::where('id', (int)$request->guest)->value('user_token');
+
+                $query = $guestToken
+                    ? $query->where('orders.user_token', $guestToken)
+                    : $query->whereRaw('1 = 0');
+            }
+
+            /*
+             * Search: order number, the contact captured at checkout, or the
+             * account / guest the order belongs to. One group, so it narrows
+             * the other filters instead of widening past them.
+             */
+            $search = trim((string)$request->q);
+
+            if ($search !== '') {
+                $like = '%' . addcslashes($search, '%_\\') . '%';
+                $orderNumber = ltrim($search, '#');
+
+                $query = $query->where(function ($q) use ($like, $orderNumber) {
+                    $q->where('orders.order', 'LIKE', '%' . addcslashes($orderNumber, '%_\\') . '%')
+                        ->orWhere('orders.contact_email', 'LIKE', $like)
+                        ->orWhere('orders.contact_name', 'LIKE', $like)
+                        ->orWhereHas('user', function ($u) use ($like) {
+                            $u->where(function ($w) use ($like) {
+                                $w->where('name', 'LIKE', $like)->orWhere('email', 'LIKE', $like);
+                            });
+                        })
+                        ->orWhereHas('guest_user', function ($g) use ($like) {
+                            $g->where(function ($w) use ($like) {
+                                $w->where('name', 'LIKE', $like)->orWhere('email', 'LIKE', $like);
+                            });
+                        });
+                });
+            }
+
+            /*
+             * Status: one or more order statuses (comma separated). Cancelled
+             * is the OrderState rule (the customer's flag, staff or the sweep
+             * setting status 6, or a refunded cancellation), and every other
+             * status leaves those out, so a customer-cancelled order whose
+             * status was never moved does not show as Pending.
+             */
+            if ((string)$request->status !== '') {
+                $cancelledStatus = (int)Config::get('constants.orderStatus.CANCELLED');
+                $wanted = collect(explode(',', (string)$request->status))
+                    ->map(function ($s) { return trim($s); })
+                    ->filter(function ($s) { return $s !== ''; })
+                    ->map(function ($s) use ($cancelledStatus) {
+                        return strtolower($s) === 'cancelled' ? $cancelledStatus : (int)$s;
+                    })
+                    ->filter(function ($s) { return $s > 0; })
+                    ->unique()->values();
+
+                if ($wanted->isNotEmpty()) {
+                    $cancelledSql = OrderState::cancelledSql('orders');
+                    $others = $wanted->reject(function ($s) use ($cancelledStatus) {
+                        return $s === $cancelledStatus;
+                    })->values()->all();
+
+                    $query = $query->where(function ($q) use ($wanted, $cancelledStatus, $cancelledSql, $others) {
+                        if ($others) {
+                            $q->where(function ($w) use ($others, $cancelledSql) {
+                                $w->whereIn('orders.status', $others)->whereRaw("NOT $cancelledSql");
+                            });
+                        }
+
+                        if ($wanted->contains($cancelledStatus)) {
+                            $q->orWhereRaw($cancelledSql);
+                        }
+                    });
+                }
+            }
+
             if ($request->filter) {
 
                 /*
@@ -2727,45 +2807,7 @@ class OrdersController extends ControllerHelper
                     ));
                 }
 
-                $walletPaid = \Illuminate\Support\Facades\DB::transaction(function () use ($walletUser, $order, $expectedAmount, $request) {
-
-                    $lockedOrder = Order::where('id', $order->id)->lockForUpdate()->first();
-
-                    if ((int)$lockedOrder->payment_done === 1) {
-                        return 'already';
-                    }
-
-                    $wallet = \App\Models\Wallet::where('user_id', $walletUser->id)->lockForUpdate()->first();
-
-                    if (!$wallet || round((float)$wallet->balance, 2) < $expectedAmount) {
-                        return 'short';
-                    }
-
-                    $newBalance = round((float)$wallet->balance - $expectedAmount, 2);
-                    $wallet->update(['balance' => $newBalance]);
-
-                    $txn = \App\Models\WalletTransaction::create([
-                        'user_id'       => $walletUser->id,
-                        'type'          => 'debit',
-                        'amount'        => $expectedAmount,
-                        'balance_after' => $newBalance,
-                        'source'        => 'order',
-                        'reference_id'  => $order->id,
-                        'status'        => 'success',
-                    ]);
-
-                    $reference = 'WALLET-' . $txn->id;
-
-                    Order::where('id', $order->id)->update(array_merge(
-                        Order::paymentStamp(true),
-                        [
-                            'order_method' => $request->order_method,
-                            'trans_id'     => $reference,
-                        ]
-                    ));
-
-                    return $reference;
-                });
+                $walletPaid = $this->payOrderFromWallet($walletUser->id, $order->id, $expectedAmount);
 
                 if ($walletPaid === 'already') {
                     return response()->json(new Response($request->token, true));
@@ -3484,6 +3526,17 @@ class OrdersController extends ControllerHelper
             ) {
                 return response()->json(Validation::error($request->token,
                     __('lang.accepted_gateway', [], $lang)
+                ));
+
+            } else if ((int)$request->order_method == Config::get('constants.paymentMethod.WALLET') &&
+                (!$checkingOut || Pricing::round(optional(\App\Models\Wallet::where('user_id', $checkingOut->id)->first())->balance ?? 0) <= 0)
+            ) {
+                // Paying in full from the wallet needs an account with money
+                // in it; refused before an order row or stock is touched. The
+                // exact amount is checked again, under a lock, when it is taken.
+                return response()->json(Validation::error($request->token, $checkingOut
+                    ? 'There is not enough in your wallet for this order. Choose another way to pay.'
+                    : 'Sign in to pay from your wallet.'
                 ));
             }
 
@@ -4500,6 +4553,58 @@ class OrdersController extends ControllerHelper
                 }
 
                 /*
+                 * Nothing left to pay: a gift card (or other credit) covered
+                 * the whole order. It is paid now. Left as an unpaid bank
+                 * transfer it would wait for a 0.00 transfer that never comes
+                 * and the sweep would cancel it. Stripe and SumUp settle their
+                 * own payments above.
+                 */
+                $nothingToPay = $result && $payableTotal <= 0 && $walletPart <= 0
+                    && !in_array((int)$request->order_method, [
+                        (int)Config::get('constants.paymentMethod.STRIPE'),
+                        (int)Config::get('constants.paymentMethod.SUMUP'),
+                    ], true);
+
+                if ($nothingToPay) {
+
+                    Order::where('id', $order->id)->update(array_merge(
+                        Order::paymentStamp(true),
+                        ['total_amount' => $payableTotal]
+                    ));
+
+                    $this->markOrderPaid($order->fresh(), $lang);
+                }
+
+                /*
+                 * Paid in full from the wallet. Taken here, once, after the
+                 * lines are in place (like the Stripe capture above), for the
+                 * server's own total. Not enough in the wallet means nothing
+                 * is kept: the order is rolled back and the basket stays. The
+                 * storefront's payment-done call that follows finds the order
+                 * already paid and changes nothing.
+                 */
+                if ((int)$request->order_method == Config::get('constants.paymentMethod.WALLET') && !$nothingToPay) {
+
+                    $walletPaid = $result
+                        ? $this->payOrderFromWallet($request->user('user')->id, $order->id, $payableTotal)
+                        : 'short';
+
+                    if ($walletPaid === 'short') {
+
+                        $this->rollbackOrder($order);
+
+                        return response()->json(Validation::error($request->token, $result
+                            ? 'There is not enough in your wallet for this order. Choose another way to pay.'
+                            : __('lang.went_wrong', [], $lang)
+                        ));
+                    }
+
+                    Order::where('id', $order->id)->update(['total_amount' => $payableTotal]);
+
+                    $this->markOrderPaid($order->fresh(), $lang);
+                }
+
+                /*
                  * Procurement: ask the suppliers who cover these categories
                  * to quote. Inside the success guard on purpose -- it used to
                  * run before it, so a failed OrderedProduct::insert() still
@@ -4595,6 +4700,13 @@ class OrdersController extends ControllerHelper
                         Order::where('id', $order->id)->update([
                             'total_amount' => $payableTotal,
                         ]);
+
+                        return response()->json(new Response($request->token, $re));
+
+                    } else if ((int)$request->order_method == Config::get('constants.paymentMethod.WALLET')) {
+
+                        // Already taken and stamped paid above.
+                        $re['order_method'] = Config::get('constants.paymentMethod.WALLET');
 
                         return response()->json(new Response($request->token, $re));
 
@@ -4753,6 +4865,62 @@ class OrdersController extends ControllerHelper
 
 
     /**
+     * Pay an order in full from the customer's wallet: one debit row (source
+     * 'order', which Refunder and WalletSplit::held() read back) and the
+     * order stamped paid, all in one transaction with the order and the
+     * wallet locked, so a retry or a double tap cannot charge twice and a
+     * failure cannot take the money without paying the order.
+     *
+     * Returns 'already' (the order was paid before), 'short' (not enough in
+     * the wallet; nothing written) or the WALLET-<txn> reference.
+     */
+    private function payOrderFromWallet($userId, $orderId, $amount)
+    {
+        $amount = Pricing::round($amount);
+
+        return DB::transaction(function () use ($userId, $orderId, $amount) {
+
+            $lockedOrder = Order::where('id', $orderId)->lockForUpdate()->first();
+
+            if ((int)$lockedOrder->payment_done === 1) {
+                return 'already';
+            }
+
+            $wallet = \App\Models\Wallet::where('user_id', $userId)->lockForUpdate()->first();
+
+            if (!$wallet || Pricing::round($wallet->balance) < $amount) {
+                return 'short';
+            }
+
+            $newBalance = Pricing::round((float)$wallet->balance - $amount);
+            $wallet->update(['balance' => $newBalance]);
+
+            $txn = \App\Models\WalletTransaction::create([
+                'user_id'       => $userId,
+                'type'          => 'debit',
+                'amount'        => $amount,
+                'balance_after' => $newBalance,
+                'source'        => 'order',
+                'reference_id'  => $orderId,
+                'status'        => 'success',
+            ]);
+
+            $reference = 'WALLET-' . $txn->id;
+
+            Order::where('id', $orderId)->update(array_merge(
+                Order::paymentStamp(true),
+                [
+                    'order_method' => (int)Config::get('constants.paymentMethod.WALLET'),
+                    'trans_id'     => $reference,
+                ]
+            ));
+
+            return $reference;
+        });
+    }
+
+
+    /**
      * Undo a part-built order: restore stock, reverse points, drop child rows.
      *
      * QA audit STK-03 / INT-01. Only the Razorpay branch attempted this, and it
@@ -4806,6 +4974,15 @@ class OrdersController extends ControllerHelper
 
                 // And the wallet part of a split payment.
                 WalletSplit::release($order);
+
+                /*
+                 * And a full wallet payment taken at placement: the order is
+                 * going away entirely, so whatever it still holds goes back
+                 * (held() nets earlier returns, so never twice).
+                 */
+                if ((int)$order->order_method === (int)Config::get('constants.paymentMethod.WALLET')) {
+                    WalletSplit::credit($order, WalletSplit::held($order), 'order_release');
+                }
 
                 /*
                  * Procurement requests, and any price a supplier had

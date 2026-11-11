@@ -15,6 +15,8 @@ use App\Models\CategoryLang;
 use App\Models\CollectionWithProduct;
 use App\Models\Helper\Utils;
 use App\Models\Helper\Shipping;
+use App\Models\Helper\Validation;
+use Illuminate\Support\Facades\DB;
 use App\Models\InventoryAttribute;
 use App\Models\OrderedProduct;
 use App\Models\Product;
@@ -40,6 +42,10 @@ class ProductsImport implements ToCollection
 {
 
     protected $lang;
+
+    /** Rows written, and the rows skipped as [['row' => <sheet row>, 'reason' => ...], ...]. */
+    public $imported = 0;
+    public $failed = [];
 
     public function __construct($lang)
     {
@@ -155,12 +161,22 @@ class ProductsImport implements ToCollection
             $attrValuesArr[$i->title] = $i->id;
         }
 
-        // Process the data as needed
-        foreach ($data as $row) {
+        // A header that is not the 27-column layout means the wrong file altogether.
+        $header = $rows->first();
+        if ($header && count($header) != 27) {
+            throw new \Exception(__('lang.invalid_bulk', [], $lang));
+        }
 
-            if (count($row) != 27) {
-                throw new \Exception(__('lang.invalid_bulk', [], $lang));
-            }
+        /*
+         * Writes one row. Called once per row, each in its own transaction
+         * (see the loop below), so one bad row no longer takes the file with it:
+         * it used to throw, the import's outer transaction rolled every row
+         * back, and the admin got "Something went wrong" with no row number
+         * (ADC-009). The lookups are shared by reference so a brand or category
+         * a row creates is reused by the rows after it.
+         */
+        $importRow = function ($row) use ($lang, $adminId, &$taxRulesArr, &$brandsArr, &$bundleDealsArr,
+            &$productCollectionsArr, &$categoriesArr, &$attrValuesArr) {
 
             $slug = $row[12];
 
@@ -774,6 +790,94 @@ class ProductsImport implements ToCollection
             }
 
 
+        };
+
+        foreach ($data as $index => $row) {
+
+            // The sheet's own row number: the header is row 1.
+            $sheetRow = $index + 1;
+
+            // A blank line (often trailing) is not a product and not an error.
+            if (collect($row)->every(function ($cell) { return trim((string)$cell) === ''; })) {
+                continue;
+            }
+
+            if ($problem = $this->rowProblem($row)) {
+                $this->failed[] = ['row' => $sheetRow, 'reason' => $problem];
+                continue;
+            }
+
+            // A failed row must not leave ids behind that its rollback removed.
+            $lookups = [$taxRulesArr, $brandsArr, $bundleDealsArr, $productCollectionsArr, $categoriesArr, $attrValuesArr];
+
+            try {
+                DB::transaction(function () use ($importRow, $row) {
+                    $importRow($row);
+                });
+
+                $this->imported++;
+
+            } catch (\Throwable $ex) {
+                list($taxRulesArr, $brandsArr, $bundleDealsArr, $productCollectionsArr, $categoriesArr, $attrValuesArr) = $lookups;
+
+                $this->failed[] = [
+                    'row' => $sheetRow,
+                    'reason' => Validation::scrubInternalDetail($ex->getMessage(), $lang),
+                ];
+            }
         }
+    }
+
+    /**
+     * Why a row cannot be imported, or null when it can. Checked before
+     * anything is written, so the reason names the column rather than
+     * surfacing as a database error.
+     */
+    private function rowProblem($row)
+    {
+        $lang = $this->lang;
+
+        if (count($row) != 27) {
+            return __('lang.bulk_row_columns', ['count' => count($row)], $lang);
+        }
+
+        if (trim((string)$row[0]) === '') {
+            return __('lang.bulk_row_title', [], $lang);
+        }
+
+        // Purchase and selling price are required; the offer price may be blank.
+        $numbers = [18 => [__('lang.bulk_col_purchased', [], $lang), true],
+            19 => [__('lang.bulk_col_selling', [], $lang), true],
+            20 => [__('lang.bulk_col_offered', [], $lang), false]];
+
+        foreach ($numbers as $column => list($field, $required)) {
+            $value = trim((string)$row[$column]);
+
+            if (($required || $value !== '') && (!is_numeric($value) || $value < 0)) {
+                return __('lang.bulk_row_number', [
+                    'field' => $field, 'column' => $column + 1, 'value' => Str::limit($value, 40),
+                ], $lang);
+            }
+        }
+
+        $status = trim((string)$row[21]);
+        if (!is_numeric($status) || floor($status) != $status) {
+            return __('lang.bulk_row_status', ['value' => Str::limit($status, 40)], $lang);
+        }
+
+        $inventories = json_decode(trim((string)$row[25]));
+        if (!is_array($inventories)) {
+            return __('lang.bulk_row_inventories', [], $lang);
+        }
+
+        foreach ($inventories as $inv) {
+            if (!is_object($inv) || !property_exists($inv, 'attributes') || !is_scalar($inv->attributes ?? '')
+                || !isset($inv->quantity) || !is_numeric($inv->quantity)
+                || !isset($inv->price) || !is_numeric($inv->price)) {
+                return __('lang.bulk_row_inventories', [], $lang);
+            }
+        }
+
+        return null;
     }
 }
