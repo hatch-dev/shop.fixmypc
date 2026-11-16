@@ -188,9 +188,9 @@
   },
   "socialShare": {
     "share": "Paylaş",
-    "facebook": "Facebook",
-    "twitter": "Twitter",
-    "pinterest": "Pinterest"
+    "shareLink": "Bağlantıyı Paylaş",
+    "linkCopied": "Ürün bağlantısı başarıyla kopyalandı!",
+    "copyFailed": "Bağlantı kopyalanamadı. Lütfen tarayıcınızın adres çubuğundan kopyalayın."
   },
   "stripePayment": {
     "bestDeal": "En iyi teklifi al",

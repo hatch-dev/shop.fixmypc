@@ -213,9 +213,9 @@
   },
   "socialShare": {
     "share": "Share",
-    "facebook": "Facebook",
-    "twitter": "Twitter",
-    "pinterest": "Pinterest"
+    "shareLink": "Share Link",
+    "linkCopied": "Product link copied successfully!",
+    "copyFailed": "Couldn't copy the link. Please copy it from your browser's address bar."
   },
   "stripePayment": {
     "bestDeal": "Get the best deal",

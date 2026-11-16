@@ -69,7 +69,6 @@ export default {
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
     {src: '~/plugins/vue-product-zoomer.js', mode: 'client'},
-    {src: '~/plugins/vue-social-sharing.js', mode: 'client'},
     {src: '~/plugins/v-drag.js', mode: 'client'},
     {src: '~/plugins/cryptojs.js', mode: 'client'},
     {src: '~/plugins/back-handler.js', mode: 'client'},
