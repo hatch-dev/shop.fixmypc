@@ -192,6 +192,16 @@
     "linkCopied": "Ürün bağlantısı başarıyla kopyalandı!",
     "copyFailed": "Bağlantı kopyalanamadı. Lütfen tarayıcınızın adres çubuğundan kopyalayın."
   },
+  "productNotFound": {
+    "status": "Hata 404",
+    "title": "Ürün Bulunamadı",
+    "message": "Üzgünüz, bu ürün şu anda mevcut değil veya bağlantı yanlış olabilir.",
+    "searchLabel": "Ürün ara",
+    "searchPlaceholder": "Parça, cihaz ve onarım arayın...",
+    "search": "Ara",
+    "browse": "Ürünlere Göz At",
+    "home": "Ana Sayfaya Git"
+  },
   "stripePayment": {
     "bestDeal": "En iyi teklifi al",
     "creditDebit": "Kredi veya banka kartı",

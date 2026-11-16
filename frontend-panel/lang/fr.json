@@ -192,6 +192,16 @@
     "linkCopied": "Lien du produit copié avec succès !",
     "copyFailed": "Impossible de copier le lien. Veuillez le copier depuis la barre d'adresse de votre navigateur."
   },
+  "productNotFound": {
+    "status": "Erreur 404",
+    "title": "Produit introuvable",
+    "message": "Désolé, ce produit est actuellement indisponible ou le lien est peut-être incorrect.",
+    "searchLabel": "Rechercher des produits",
+    "searchPlaceholder": "Rechercher des pièces, appareils et réparations...",
+    "search": "Rechercher",
+    "browse": "Parcourir les produits",
+    "home": "Aller à l'accueil"
+  },
   "stripePayment": {
     "bestDeal": "Obtenez la meilleure offre",
     "creditDebit": "Carte de crédit ou de débit",

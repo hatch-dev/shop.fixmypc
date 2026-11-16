@@ -2696,7 +2696,7 @@ export default {
       this.requoteBusinessPrice()
     }
   },
-  async asyncData({ store, route, $auth, error }) {
+  async asyncData({ app, store, route, $auth, error }) {
     try {
       await store.dispatch('detail/fetchProduct', {
         params: {
@@ -2707,6 +2707,16 @@ export default {
         },
         lang: store.state?.language?.langCode,
       })
+
+      /*
+       * The id alone finds the product, so a wrong slug in front of a real id
+       * used to open it anyway. Treat that link as broken too. A product with
+       * no slug accepts any (new-product alert emails link those as /item/).
+       */
+      const slug = store.getters['detail/product']?.slug
+      if (slug && String(route.params.main || '').toLowerCase() !== String(slug).toLowerCase()) {
+        throw {productNotFound: true}
+      }
 
       // PAYMENT GATEWAYS
       if (!store.state.common.paymentGateway) {
@@ -2725,7 +2735,13 @@ export default {
         )
       }
     } catch (e) {
-      error(e)
+      if (e?.notFound || e?.productNotFound) {
+        // Missing, unpublished or deleted product, or a broken link to one.
+        // Server and network failures keep the generic error page.
+        error({statusCode: 404, productNotFound: true, message: app.i18n.t('productNotFound.title')})
+      } else {
+        error(e)
+      }
     }
   },
   async mounted() {

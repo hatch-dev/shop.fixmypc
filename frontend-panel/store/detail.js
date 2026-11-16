@@ -72,7 +72,11 @@ const actions = {
         }else if(data?.status === 201){
 
           return Promise.reject({
-            statusCode: data?.status, message: data?.message
+            statusCode: data?.status, message: data?.message,
+            // The API answers a missing product with a bare list of messages
+            // (Validation::frontendError) and a failure with {form: [...]};
+            // only the first is "no such product".
+            notFound: Array.isArray(data?.data)
           })
         }
 
