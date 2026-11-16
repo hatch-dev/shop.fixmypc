@@ -188,9 +188,9 @@
   },
   "socialShare": {
     "share": "Partager",
-    "facebook": "Facebook",
-    "twitter": "Twitter",
-    "pinterest": "Pinterest"
+    "shareLink": "Partager le lien",
+    "linkCopied": "Lien du produit copié avec succès !",
+    "copyFailed": "Impossible de copier le lien. Veuillez le copier depuis la barre d'adresse de votre navigateur."
   },
   "stripePayment": {
     "bestDeal": "Obtenez la meilleure offre",
