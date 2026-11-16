@@ -217,6 +217,16 @@
     "linkCopied": "Product link copied successfully!",
     "copyFailed": "Couldn't copy the link. Please copy it from your browser's address bar."
   },
+  "productNotFound": {
+    "status": "Error 404",
+    "title": "Product Not Found",
+    "message": "Sorry, this product is currently unavailable or the link may be incorrect.",
+    "searchLabel": "Search products",
+    "searchPlaceholder": "Search parts, devices and repairs...",
+    "search": "Search",
+    "browse": "Browse Products",
+    "home": "Go to Homepage"
+  },
   "stripePayment": {
     "bestDeal": "Get the best deal",
     "creditDebit": "Credit or debit card",

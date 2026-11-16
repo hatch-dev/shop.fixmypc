@@ -1,5 +1,6 @@
 <template>
-  <div class="container-fluid mtb-20 mtb-sm-15">
+  <product-not-found v-if="isProductNotFound" />
+  <div v-else class="container-fluid mtb-20 mtb-sm-15">
     <div class="flex error-wrapper reverse">
 
       <div class="img-wrap mb-sm-20 mlr-xs-auto">
@@ -44,12 +45,18 @@
 <script>
 
   import {mapGetters} from 'vuex'
+  import ProductNotFound from '~/components/ProductNotFound'
 
   export default {
     head() {
       return {
-        title: this.message
+        title: this.message,
+        // A missing product page should not be indexed under its old URL.
+        meta: this.isProductNotFound ? [{hid: 'robots', name: 'robots', content: 'noindex'}] : []
       }
+    },
+    components: {
+      ProductNotFound
     },
     props: {
       error: {
@@ -63,6 +70,9 @@
     },
     mixins: [],
     computed: {
+      isProductNotFound() {
+        return !!this.error?.productNotFound
+      },
       statusCode() {
         return this.error && this.error?.statusCode || 500
       },
