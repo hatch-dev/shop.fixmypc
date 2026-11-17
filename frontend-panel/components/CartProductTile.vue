@@ -1301,6 +1301,8 @@ h6.cart-heading a:hover {
   .cart-product-list-card ::v-deep .quantity-area .no-control {
     min-width: 34px;
     font-size: 13.5px;
+    /* the global 40px line-height overflowed the 32px stepper and cut the number */
+    line-height: 30px;
   }
 
   .cart-product-list-card .line-icon-btn {

@@ -87,7 +87,15 @@ class GiftCardPurchases
             self::close($order, self::FAILED);
             return ['state' => self::FAILED, 'codes' => []];
         }
-        if ($status === 'EXPIRED' || ($status !== 'PENDING' && $order->created_at
+        /*
+         * A day on, an answer from SumUp that is not "still pending" (or SumUp
+         * no longer knowing the checkout, 404) closes it as abandoned. No
+         * answer at all - a refused key, an outage, a timeout - says nothing
+         * about whether the customer paid, and cancelled is final: such a
+         * purchase stays pending and the sweep asks again.
+         */
+        $answered = ($status !== null && $status !== 'PENDING') || self::checkoutGone($verified['reason'] ?? '');
+        if ($status === 'EXPIRED' || ($answered && $order->created_at
                 && $order->created_at->lt(now()->subHours(self::ABANDON_AFTER_HOURS)))) {
             self::close($order, self::CANCELLED);
             return ['state' => self::CANCELLED, 'codes' => []];
@@ -110,6 +118,12 @@ class GiftCardPurchases
     private static function checkoutStatus($reason)
     {
         return preg_match('/checkout status ([A-Z_]+)/', (string)$reason, $m) ? $m[1] : null;
+    }
+
+    /** "sumup checkout lookup failed with HTTP 404 - ..." : SumUp has no such checkout. */
+    private static function checkoutGone($reason)
+    {
+        return (bool)preg_match('/lookup failed with HTTP 404\b/', (string)$reason);
     }
 
     /** Pending -> failed/cancelled, only if nothing settled it meanwhile. */

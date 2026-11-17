@@ -2371,6 +2371,17 @@ header {
   color: #33319A;
 }
 
+/*
+ * 992-1199px: the desktop bar is too short for tabs, links, both buttons and
+ * the written-out email/phone/WhatsApp, and the first link was shown cut in
+ * half under Hot Deals. Contacts go to their icons here, as on phones.
+ */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .fx-nav-row .small-info .contact {
+    display: none;
+  }
+}
+
 .contact {
   color: #6B7191;
   font-size: 13px;

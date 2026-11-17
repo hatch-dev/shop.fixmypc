@@ -759,5 +759,16 @@
     height 38px
     width 26px
 
+  .home-page .flash-sale-box .flash_sale_time_slots_grid
+    gap 6px
+
+// Below 375px four units do not fit across the card (the seconds were cut
+// off at 320px): two rows of two.
+@media only screen and (max-width: 374.98px)
+
+  .home-page .flash-sale-box .flash_sale_time_slots_grid
+    grid-template-columns repeat(2, 1fr)
+    row-gap 10px
+
   .home-page .flash-sale-box .flash-banner h2
     font-size 18px

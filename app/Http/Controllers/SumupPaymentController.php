@@ -97,7 +97,7 @@ class SumupPaymentController extends Controller
             if (!empty($request->is_gift_voucher)) {
                 $checkout['return_url'] = rtrim((string)env('APP_URL'), '/') . '/api/v1/sumup/gift-card-notify';
             }
-            $response = Http::withHeaders([
+            $response = Http::timeout(30)->withHeaders([
                 'Authorization' => 'Bearer ' . $paymentSettings->sumup_api_key,
                 'Content-Type'  => 'application/json'
             ])->post('https://api.sumup.com/v0.1/checkouts', $checkout);
@@ -110,7 +110,10 @@ class SumupPaymentController extends Controller
             }
 
             return $body;
-        }catch(Exception $e){
+        }catch(\Illuminate\Http\Client\HttpClientException $e){
+            // SumUp unreachable or timed out. This used to name a class that
+            // does not exist (App\Http\Controllers\Exception), so the error
+            // escaped as a 500 instead of this answer.
             return response()->json(['error' => $e->getMessage()], 400);
         }
 

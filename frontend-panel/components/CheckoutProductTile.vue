@@ -632,6 +632,7 @@
 
   .tile-price {
     display: flex;
+    flex-wrap: wrap;   /* price, VAT badge and was-price ran 54px off a 320px screen */
     align-items: baseline;
     gap: 8px;
     margin-top: 10px;

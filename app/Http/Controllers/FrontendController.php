@@ -1059,6 +1059,14 @@ class FrontendController extends Controller
 
 
 
+                // Inventories in one query, with the attribute count Pricing
+                // accepts (as products() does): pricing each result used to
+                // lazy-load its inventories and then every inventory's
+                // attributes, two-plus queries per product.
+                $queryP = $queryP->with(['product_inventories' => function ($q) {
+                    $q->withCount('inventory_attributes');
+                }]);
+
                 $data['product'] = $queryP->groupBy('products.id')->get();
                 $this->applyClearanceToProducts($data['product']);
             }
@@ -3526,6 +3534,11 @@ class FrontendController extends Controller
             $title = \DB::raw('COALESCE(pl.title, products.title) as title');
             $badge = \DB::raw('COALESCE(pl.badge, products.badge) as badge');
         }
+
+        // inventories in one query, as search() and products() do (no per-tile lazy loads)
+        $query->with(['product_inventories' => function ($q) {
+            $q->withCount('inventory_attributes');
+        }]);
 
         $rows = $query->select('products.id', $title, $badge,
             'products.selling', 'products.offered', 'products.slug',
