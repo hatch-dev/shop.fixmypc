@@ -600,9 +600,12 @@
     font-weight 600
     line-height 1.4
 
+  // Four units always fit in one row: minmax(0, ...) lets the columns shrink
+  // below their content (a bare 1fr could not, so on a 320-360px phone the
+  // seconds ran out of the card), and the gap narrows with the screen.
   .home-page .flash-sale-box .flash_sale_time_slots_grid
-    gap 12px
-    grid-template-columns repeat(4, 1fr)
+    gap clamp(4px, 2.5vw, 12px)
+    grid-template-columns repeat(4, minmax(0, 1fr))
     margin-top 12px
     row-gap 12px
 
@@ -618,11 +621,17 @@
   .home-page .flash-sale-box .countdown .flash_sale_time_slots_grid > .time-group::before
     display none
 
+  // The two digits of a unit share its column, up to the usual 30 x 42 box,
+  // and keep that shape as they shrink; the digit scales with them.
   .home-page .flash-sale-box .time-box
     border-radius 6px
-    font-size 20px
-    height 42px
-    width 30px
+    font-size clamp(13px, 4.2vw, 20px)
+    flex 1 1 0
+    min-width 0
+    max-width 30px
+    width auto
+    height auto
+    aspect-ratio 30 / 42
 
   .home-page .flash-sale-box .time-label
     font-size 11px
@@ -753,22 +762,6 @@
 
   .home-page .trending-box .product-link-tile .product-card img
     height 78px
-
-  .home-page .flash-sale-box .time-box
-    font-size 16px
-    height 38px
-    width 26px
-
-  .home-page .flash-sale-box .flash_sale_time_slots_grid
-    gap 6px
-
-// Below 375px four units do not fit across the card (the seconds were cut
-// off at 320px): two rows of two.
-@media only screen and (max-width: 374.98px)
-
-  .home-page .flash-sale-box .flash_sale_time_slots_grid
-    grid-template-columns repeat(2, 1fr)
-    row-gap 10px
 
   .home-page .flash-sale-box .flash-banner h2
     font-size 18px
