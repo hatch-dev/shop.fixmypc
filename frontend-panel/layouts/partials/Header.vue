@@ -209,21 +209,34 @@
                         {{ $t('header.register') }}
                       </nuxt-link>
                       <div class="divider"></div>
-                      <nuxt-link to="/track-order">
-                        {{ $t('header.trackOrder') }}
-                      </nuxt-link>
+                      <!-- Admin > Header Links > Right; the built-in four until any are set -->
+                      <template v-if="headerRight.length">
+                        <component
+                          :is="isExternal(item.url) ? 'a' : 'nuxt-link'"
+                          v-for="item in headerRight"
+                          :key="'r' + item.id"
+                          v-bind="linkTarget(item)"
+                        >
+                          {{ item.title }}
+                        </component>
+                      </template>
+                      <template v-else>
+                        <nuxt-link to="/track-order">
+                          {{ $t('header.trackOrder') }}
+                        </nuxt-link>
 
-                      <nuxt-link to="/page/faq">
-                        {{ $t('header.faq') }}
-                      </nuxt-link>
+                        <nuxt-link to="/page/faq">
+                          {{ $t('header.faq') }}
+                        </nuxt-link>
 
-                      <nuxt-link to="/page/help">
-                        {{ $t('header.help') }}
-                      </nuxt-link>
+                        <nuxt-link to="/page/help">
+                          {{ $t('header.help') }}
+                        </nuxt-link>
 
-                      <nuxt-link to="/page/contact">
-                        {{ $t('header.contact') }}
-                      </nuxt-link>
+                        <nuxt-link to="/page/contact">
+                          {{ $t('header.contact') }}
+                        </nuxt-link>
+                      </template>
                     </template>
                     <!-- LOGGED IN -->
                     <template v-else>
@@ -293,15 +306,36 @@
             <div class="nav-links">
               <div class="dr-cap">{{ $t('header.hotDeals') }}</div>
               <div class="dr-deals">
-                <button type="button" class="dr-deal dr-deal-hot" @click.prevent="navigateBadge('hot')">
+                <button type="button" class="dr-deal dr-deal-hot" @click.prevent="openHeaderButton('hot_deals')">
                   <i class="fa-solid fa-fire" aria-hidden="true"></i>
-                  <span>{{ $t('header.hotDeals') }}</span>
+                  <span>{{ hotDealsTitle }}</span>
                 </button>
-                <button type="button" class="dr-deal dr-deal-clear" @click.prevent="navigateBadge('clearance')">
+                <button type="button" class="dr-deal dr-deal-clear" @click.prevent="openHeaderButton('clearance')">
                   <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
-                  <span>{{ $t('header.clearance') }}</span>
+                  <span>{{ clearanceTitle }}</span>
                 </button>
               </div>
+
+              <!-- Admin > Header Links > Left -->
+              <template v-if="headerLeft.length">
+                <div class="dr-cap">{{ $t('header.shopLinks') }}</div>
+                <div class="dr-list">
+                  <component
+                    :is="isExternal(item.url) ? 'a' : 'nuxt-link'"
+                    v-for="item in headerLeft"
+                    :key="'l' + item.id"
+                    class="dr-link"
+                    v-bind="linkTarget(item)"
+                  >
+                    <span class="dr-ico"><i :class="linkIcon(item.url)" aria-hidden="true"></i></span>
+                    {{ item.title }}
+                    <svg class="dr-go" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m9 6 6 6-6 6" />
+                    </svg>
+                  </component>
+                </div>
+              </template>
 
               <div class="dr-cap">{{ $t('searchPopup.categories') }}</div>
 
@@ -352,30 +386,49 @@
 
               <div class="dr-cap">{{ $t('header.help') }}</div>
               <div class="dr-list">
-                <nuxt-link class="dr-link" to="/page/faq" @click.native="mobileMenu = false">
-                  <span class="dr-ico"><i class="fa-solid fa-circle-question" aria-hidden="true"></i></span>
-                  {{ $t('header.faq') }}
-                  <svg class="dr-go" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="m9 6 6 6-6 6" />
-                  </svg>
-                </nuxt-link>
-                <nuxt-link class="dr-link" to="/page/help" @click.native="mobileMenu = false">
-                  <span class="dr-ico"><i class="fa-solid fa-life-ring" aria-hidden="true"></i></span>
-                  {{ $t('header.help') }}
-                  <svg class="dr-go" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="m9 6 6 6-6 6" />
-                  </svg>
-                </nuxt-link>
-                <nuxt-link class="dr-link" to="/page/contact" @click.native="mobileMenu = false">
-                  <span class="dr-ico"><i class="fa-solid fa-envelope" aria-hidden="true"></i></span>
-                  {{ $t('header.contact') }}
-                  <svg class="dr-go" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="m9 6 6 6-6 6" />
-                  </svg>
-                </nuxt-link>
+                <!-- Admin > Header Links > Right; the built-in three until any are set -->
+                <template v-if="headerRight.length">
+                  <component
+                    :is="isExternal(item.url) ? 'a' : 'nuxt-link'"
+                    v-for="item in headerRight"
+                    :key="'r' + item.id"
+                    class="dr-link"
+                    v-bind="linkTarget(item)"
+                  >
+                    <span class="dr-ico"><i :class="linkIcon(item.url)" aria-hidden="true"></i></span>
+                    {{ item.title }}
+                    <svg class="dr-go" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m9 6 6 6-6 6" />
+                    </svg>
+                  </component>
+                </template>
+                <template v-else>
+                  <nuxt-link class="dr-link" to="/page/faq" @click.native="mobileMenu = false">
+                    <span class="dr-ico"><i class="fa-solid fa-circle-question" aria-hidden="true"></i></span>
+                    {{ $t('header.faq') }}
+                    <svg class="dr-go" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m9 6 6 6-6 6" />
+                    </svg>
+                  </nuxt-link>
+                  <nuxt-link class="dr-link" to="/page/help" @click.native="mobileMenu = false">
+                    <span class="dr-ico"><i class="fa-solid fa-life-ring" aria-hidden="true"></i></span>
+                    {{ $t('header.help') }}
+                    <svg class="dr-go" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m9 6 6 6-6 6" />
+                    </svg>
+                  </nuxt-link>
+                  <nuxt-link class="dr-link" to="/page/contact" @click.native="mobileMenu = false">
+                    <span class="dr-ico"><i class="fa-solid fa-envelope" aria-hidden="true"></i></span>
+                    {{ $t('header.contact') }}
+                    <svg class="dr-go" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m9 6 6 6-6 6" />
+                    </svg>
+                  </nuxt-link>
+                </template>
               </div>
             </div>
             <div class="small-info mt-4">
@@ -475,17 +528,27 @@
        </div>
     <div class="fx-nav d-none d-lg-block">
       <div class="container-fluid fx-nav-row">
-                <div class="nav-links nav-links--row">
+                <div class="nav-links nav-links--row" :class="{ 'has-extra': headerLeft.length }">
                   <category-nav :categories="categories" :mega-slug="megaSlug" :limit="navTabLimit" :more-label="$t('featured.showAll')" class="nav-cat-carousel" @toggle-mega="toggleMega" />
-                  <span class="badge-hot text-center" @click="navigateBadge('hot')">
+                  <!-- Admin > Header Links > Left -->
+                  <nav v-if="headerLeft.length" class="nav-extra-links" :aria-label="$t('header.shopLinks')">
+                    <component
+                      :is="isExternal(item.url) ? 'a' : 'nuxt-link'"
+                      v-for="item in headerLeft"
+                      :key="'l' + item.id"
+                      class="nav-extra-link"
+                      v-bind="linkTarget(item)"
+                    >{{ item.title }}</component>
+                  </nav>
+                  <span class="badge-hot text-center" @click="openHeaderButton('hot_deals')">
                     <svg width="14" height="19" viewBox="0 0 14 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path
                         d="M0.761419 12.0462C0.761419 15.2712 3.36975 17.8796 6.59475 17.8796C9.81975 17.8796 12.4281 15.2712 12.4281 12.0462C12.4281 9.64622 11.9614 8.37122 11.9614 8.37122L10.3698 10.0629C10.3698 10.0629 11.2531 6.49622 9.05309 3.83789C7.78642 2.30456 6.38642 1.21289 6.38642 1.21289C6.38642 1.21289 5.61142 3.22122 4.72809 4.70456C4.01142 5.89622 3.59475 6.75456 3.31975 8.54622C2.81975 8.01289 2.41975 7.27956 2.06975 6.45456C2.06975 6.45456 0.561419 8.97122 0.769753 12.0379L0.761419 12.0462Z"
                         stroke="white" stroke-width="1.5" />
                     </svg>
-                    {{ $t('header.hotDeals') }}
+                    {{ hotDealsTitle }}
                   </span>
-                  <span class="badge-green" @click="navigateBadge('clearance')">
+                  <span class="badge-green" @click="openHeaderButton('clearance')">
                     <svg width="16" height="19" viewBox="0 0 16 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path
                         d="M3.44167 15.5C4.125 14.7667 5.16667 14.825 5.76667 15.625L6.60833 16.75C7.28333 17.6417 8.375 17.6417 9.05 16.75L9.89167 15.625C10.4917 14.825 11.5333 14.7667 12.2167 15.5C13.7 17.0833 14.9083 16.5583 14.9083 14.3417V4.95C14.9167 1.59167 14.1333 0.75 10.9833 0.75H4.68333C1.53333 0.75 0.75 1.59167 0.75 4.95V14.3333C0.75 16.5583 1.96667 17.075 3.44167 15.5Z"
@@ -495,7 +558,7 @@
                       <path d="M5.33325 8.25H10.3333" stroke="white" stroke-width="1.5" stroke-linecap="round"
                         stroke-linejoin="round" />
                     </svg>
-                    <span class="nw_img">{{ $t('header.clearance') }}</span>
+                    <span class="nw_img">{{ clearanceTitle }}</span>
                   </span>
                 </div>
                 <div class="small-info">
@@ -817,6 +880,13 @@ export default {
     headerRight() {
       return this.headerLinks?.right || []
     },
+    // Admin > Header Links > Header buttons; the shop's own label until one is set
+    hotDealsTitle() {
+      return this.headerLinks?.hot_deals?.title || this.$t('header.hotDeals')
+    },
+    clearanceTitle() {
+      return this.headerLinks?.clearance?.title || this.$t('header.clearance')
+    },
     isPublic() {
       return parseInt(this.topBanner?.status) === this.status.PUBLIC
     },
@@ -928,6 +998,41 @@ export default {
   },
   mixins: [util],
   methods: {
+    /** A header button: the address set in admin, else the built-in one. */
+    openHeaderButton(key) {
+      const url = (this.headerLinks?.[key]?.url || '').trim()
+      if (!url) {
+        return this.navigateBadge(key === 'hot_deals' ? 'hot' : 'clearance')
+      }
+      if (this.isExternal(url)) {
+        window.open(url, '_blank', 'noopener')
+        return
+      }
+      const p = this.$router.push(url)
+      if (p && p.catch) p.catch(() => {})
+    },
+    /** Another site (or mail/phone), which a router link cannot open. */
+    isExternal(url) {
+      return /^([a-z][a-z0-9+.-]*:|\/\/)/i.test((url || '').trim())
+    },
+    linkTarget(item) {
+      const url = (item.url || '').trim()
+      return this.isExternal(url)
+        ? {href: url, target: '_blank', rel: 'noopener'}
+        : {to: url || '/'}
+    },
+    /** Drawer icon for an admin link: the shop's own for its usual pages. */
+    linkIcon(url) {
+      const path = (url || '').toLowerCase()
+      if (path.includes('faq')) return 'fa-solid fa-circle-question'
+      if (path.includes('help')) return 'fa-solid fa-life-ring'
+      if (path.includes('contact')) return 'fa-solid fa-envelope'
+      if (path.includes('track')) return 'fa-solid fa-truck-fast'
+      if (path.includes('flash') || path.includes('deal')) return 'fa-solid fa-bolt'
+      if (path.includes('brand')) return 'fa-solid fa-tag'
+      if (path.includes('categor')) return 'fa-solid fa-table-cells-large'
+      return 'fa-solid fa-arrow-right'
+    },
     navigateBadge(type) {
 
       let query = {}
@@ -2316,6 +2421,41 @@ header {
   align-self: stretch;
 }
 
+/*
+ * Admin's Left links, beside the category tabs and in their type. The tabs
+ * keep their room: when the row is short these give way first (shrinking a
+ * hundred times faster), and a link that no longer fits wraps onto a hidden
+ * second line rather than being shown cut in half.
+ */
+.nav-links--row.has-extra .nav-cat-carousel {
+  flex: 1 1 auto;
+}
+
+.nav-extra-links {
+  align-items: center;
+  column-gap: 18px;
+  display: flex;
+  flex: 0 100 auto;
+  flex-wrap: wrap;
+  height: 22px;
+  line-height: 22px;
+  margin: 0 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.nav-links .nav-extra-link {
+  color: #3A3C6E;
+  font-size: 14px;
+  font-weight: 600;
+  margin-right: 0;
+  white-space: nowrap;
+}
+
+.nav-links .nav-extra-link:hover {
+  color: #33319A;
+}
+
 .nav-links--row .badge-hot,
 .nav-links--row .badge-green {
   flex: 0 0 auto;
@@ -2369,6 +2509,17 @@ header {
 
 .small-info .contact-link:hover .contact {
   color: #33319A;
+}
+
+/*
+ * 992-1199px: the desktop bar is too short for tabs, links, both buttons and
+ * the written-out email/phone/WhatsApp, and the first link was shown cut in
+ * half under Hot Deals. Contacts go to their icons here, as on phones.
+ */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .fx-nav-row .small-info .contact {
+    display: none;
+  }
 }
 
 .contact {

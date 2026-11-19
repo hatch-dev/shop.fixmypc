@@ -220,6 +220,7 @@
 
               <div
                 v-if="showPeriodPopup"
+                v-dropdown-menu="{key: 'showPeriodPopup'}"
                 class="mini-popup"
                 @click.stop
               >
@@ -264,6 +265,7 @@
 
               <div
                 v-if="showDatePopup"
+                v-dropdown-menu="{key: 'showDatePopup'}"
                 class="mini-popup"
                 @click.stop
               >
@@ -1084,6 +1086,17 @@ export default {
   grid-template-columns:1fr 1fr;
   gap:20px;
   position:relative;
+}
+
+/* two fields side by side ran 245px off a phone screen: one per row */
+@media (max-width: 576px){
+  .row-fields{
+    grid-template-columns:minmax(0, 1fr);
+  }
+  /* the two validity cards in one row ran 80px off a 320-390px screen */
+  .validity-options{
+    flex-direction:column;
+  }
 }
 
 .input-wrapper{

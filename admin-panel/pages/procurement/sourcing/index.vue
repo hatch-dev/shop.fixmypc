@@ -464,7 +464,7 @@ export default {
         ? this.$t('pages.procurementSourcing.confirmAward', { supplier, total: this.money(quote.payable), unit: this.money(quote.price) })
         : this.$t('pages.procurementSourcing.confirmReject', { supplier })
 
-      if (!window.confirm(ask)) return
+      if (!(await this.$dialog.confirm(ask, {tone: decision === 'accepted' ? 'primary' : 'danger'}))) return
 
       const reason = decision === 'rejected' && quote.status === 'accepted'
         ? 'Award undone'
@@ -535,7 +535,7 @@ export default {
     },
 
     async reversePayment(quote) {
-      if (!window.confirm(this.$t('pages.procurementSourcing.confirmReversePayment'))) {
+      if (!(await this.$dialog.confirm(this.$t('pages.procurementSourcing.confirmReversePayment')))) {
         return
       }
 

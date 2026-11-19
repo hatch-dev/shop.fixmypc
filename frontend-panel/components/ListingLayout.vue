@@ -55,25 +55,38 @@
         this.fetchingProductData = true
 
           setTimeout(async () => {
+            const params = {
+              ...this.productParams,
+              ...{
+                sortby: this.sortByData,
+                shipping: this.shippingFromRoute,
+                brand: this.brandFromRoute,
+                collection: this.collectionFromRoute,
+                rating: this.ratingFromRoute,
+                max: this.maxPriceFromRoute,
+                min: this.minPriceFromRoute,
+                q: this.searchedKeyword,
+                category: this.$route.query.category,
+                page: this.pageData,
+                all_categories: !this.allCategories,
+                sidebar_data: !this.brands || !this.shippingRules || !this.collections
+              }
+            }
+
+            /*
+             * One page load asked three times for the same listing (the
+             * product list's immediate watcher, this mounted() and the search
+             * page's watcher), each a full products query. A request identical
+             * to one still in flight is dropped: that one fills the page. Any
+             * change of query, filter, sort or page is a different request.
+             */
+            const key = JSON.stringify(params) + '|' + this.langCode
+            if (this.inflightKey === key) return
+            this.inflightKey = key
+
             try {
               const data = await this.getRequest({
-                params: {
-                  ...this.productParams,
-                  ...{
-                    sortby: this.sortByData,
-                    shipping: this.shippingFromRoute,
-                    brand: this.brandFromRoute,
-                    collection: this.collectionFromRoute,
-                    rating: this.ratingFromRoute,
-                    max: this.maxPriceFromRoute,
-                    min: this.minPriceFromRoute,
-                    q: this.searchedKeyword,
-                    category: this.$route.query.category,
-                    page: this.pageData,
-                    all_categories: !this.allCategories,
-                    sidebar_data: !this.brands || !this.shippingRules || !this.collections
-                  }
-                },
+                params,
                 lang: this.langCode,
                 api: 'products'
               })
@@ -91,6 +104,8 @@
             } catch (e) {
 
               return this.$nuxt.error(e)
+            } finally {
+              if (this.inflightKey === key) this.inflightKey = null
             }
 
           }, 100)
@@ -99,6 +114,10 @@
       },
       ...mapActions('listing', ['setProducts', 'emptyProducts']),
       ...mapActions('common', ['getRequest']),
+    },
+    created() {
+      // not reactive: only fetchingData() reads it
+      this.inflightKey = null
     },
     async mounted() {
       this.emptyProducts()

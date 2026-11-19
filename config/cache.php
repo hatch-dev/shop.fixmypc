@@ -18,6 +18,15 @@ return [
     'default' => env('CACHE_DRIVER', 'file'),
 
     /*
+    | Rate-limit counters live in their own store. ClearCacheAfterWrite runs
+    | cache:clear after every POST/PUT/PATCH/DELETE, which empties the default
+    | store, so throttles kept there (sign-in, codes, gift-card redemption)
+    | were reset by the very request they were counting. cache:clear leaves
+    | this store alone.
+    */
+    'limiter' => env('CACHE_LIMITER_STORE', 'limiter'),
+
+    /*
     |--------------------------------------------------------------------------
     | Cache Stores
     |--------------------------------------------------------------------------
@@ -52,6 +61,18 @@ return [
         'file' => [
             'driver' => 'file',
             'path' => storage_path('framework/cache/data'),
+        ],
+
+        // Rate-limit counters only (see 'limiter' above).
+        'limiter' => [
+            'driver' => 'file',
+            'path' => storage_path('framework/cache/limiter'),
+        ],
+
+        // The same for tests: in memory, separate from the default store.
+        'limiter_array' => [
+            'driver' => 'array',
+            'serialize' => false,
         ],
 
         'memcached' => [

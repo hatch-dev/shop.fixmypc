@@ -632,7 +632,10 @@ export default {
       this.$emit('shipping-changed', this.cartShipping)
     },
     async deleting() {
-      if (confirm(this.$t('cartProductTile.deleteAlert'))) {
+      if (await this.$dialog.confirm(
+        this.$t('dialog.removeItemMessage', {name: [this.product?.title, this.variantLabel].filter(Boolean).join(' - ') || this.$t('dialog.remove')}),
+        {title: this.$t('dialog.removeItemTitle'), confirmLabel: this.$t('dialog.remove'), icon: 'fa-solid fa-trash-can'}
+      )) {
         this.$emit('deleting', { id: this.cartId, isBundle: !!this.bundleDeal, user_token: await this.getUserToken() })
       }
     },
@@ -1301,6 +1304,8 @@ h6.cart-heading a:hover {
   .cart-product-list-card ::v-deep .quantity-area .no-control {
     min-width: 34px;
     font-size: 13.5px;
+    /* the global 40px line-height overflowed the 32px stepper and cut the number */
+    line-height: 30px;
   }
 
   .cart-product-list-card .line-icon-btn {

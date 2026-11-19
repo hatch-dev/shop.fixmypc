@@ -1222,7 +1222,7 @@
 
       async clearCart() {
         if (this.bulkBusy || this.cartEmpty) return
-        if (!confirm(this.$t('ui.cartPage.clearCartConfirm'))) return
+        if (!(await this.$dialog.confirm(this.$t('ui.cartPage.clearCartConfirm'), {confirmLabel: this.$t('dialog.remove'), icon: 'fa-solid fa-trash-can'}))) return
 
         this.bulkBusy = true
 
@@ -1240,7 +1240,7 @@
 
       async removeSelected() {
         if (this.bulkBusy || !this.checkedCount) return
-        if (!confirm(this.$tc('ui.cartPage.removeSelectedConfirm', this.checkedCount, { count: this.checkedCount }))) return
+        if (!(await this.$dialog.confirm(this.$tc('ui.cartPage.removeSelectedConfirm', this.checkedCount, { count: this.checkedCount }), {confirmLabel: this.$t('dialog.remove'), icon: 'fa-solid fa-trash-can'}))) return
 
         this.bulkBusy = true
 

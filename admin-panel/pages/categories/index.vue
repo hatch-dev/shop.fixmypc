@@ -524,7 +524,7 @@
                         <i class="fa fa-ellipsis-vertical"></i>
                       </button>
 
-                      <div v-if="menuId === row.id" class="action-dropdown" @click.stop>
+                      <div v-if="menuId === row.id" v-dropdown-menu="closeMenus" class="action-dropdown" @click.stop>
                         <button type="button" @click="editNode(row)">
                           <i class="fa fa-pen"></i> {{ $t('pages.categories.edit') }}
                         </button>
@@ -3516,6 +3516,11 @@ button.tree-add-btn:hover:enabled {
   .page-actions { justify-content: flex-start; flex-wrap: wrap; }
   .search-box { flex: 1 1 220px; }
   .page-actions .search-box input { width: 100%; }
+  /* at ~1024px the title and every list control shared one row: "Flat" was
+     cut off and the button labels fell under their icons */
+  .table-header { flex-wrap: wrap; gap: 12px; }
+  .table-actions { flex-wrap: wrap; }
+  .view-toggle { flex-shrink: 0; }
 }
 
 @media (max-width: 900px) {
@@ -3536,7 +3541,8 @@ button.tree-add-btn:hover:enabled {
 
   .category-table tbody tr {
     display: grid;
-    grid-template-columns: 44px 1fr auto;
+    /* minmax(0, 1fr): a bare 1fr held the card 24px wider than a 320px screen */
+    grid-template-columns: 44px minmax(0, 1fr) auto;
     grid-template-areas:
       "check thumb actions"
       "name  name  name"

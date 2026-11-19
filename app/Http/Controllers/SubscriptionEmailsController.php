@@ -18,6 +18,10 @@ class SubscriptionEmailsController extends ControllerHelper
     public function allSubscribers(Request $request)
     {
         try {
+            if ($can = Utils::userCan($this->user, 'subscriber.view')) {
+                return $can;
+            }
+
             $data = SubscriptionEmail::orderBy('created_at')->get(['id', 'email']);
             return response()->json(new Response($request->token, $data));
 

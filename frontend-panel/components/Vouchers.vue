@@ -847,6 +847,11 @@
           }
       },
       checkWalletAvailability() {
+        // Not loaded yet is not empty: the designs often arrive before the
+        // wallet, and reading that as a zero balance switched every design to
+        // card for good. The 'wallet.balance' watcher runs this once it lands.
+        if (this.wallet?.balance === undefined || this.wallet?.balance === null) return
+
         this.giftVouchers.forEach(voucher => {
           const total = this.getVoucherTotal(voucher)
 
@@ -2535,7 +2540,9 @@ button.btn-purchase:disabled { opacity: .55; cursor: not-allowed; }
 /* payment */
 .gb-pay {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* side by side while each option has ~200px, stacked when the steps column
+     is narrower (1024px beside the account menu, where 1fr 1fr overflowed) */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   gap: 10px;
 }
 

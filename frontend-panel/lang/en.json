@@ -296,7 +296,8 @@
     "searchParts": "Search parts, devices and repairs…",
     "clearance": "Clearance",
     "allIn": "All {name}",
-    "productsCount": "{count} products"
+    "productsCount": "{count} products",
+    "shopLinks": "Shop"
   },
   "empty": {
     "welcome": "Welcome to {name}",
@@ -3406,5 +3407,19 @@
       "basketUpdateFailed": "We could not update your basket.",
       "basketLoadFailed": "Your basket could not be loaded. Please try again."
     }
+  },
+  "dialog": {
+    "confirmTitle": "Are you sure?",
+    "noticeTitle": "Please note",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "delete": "Delete",
+    "deleteTitle": "Delete this?",
+    "remove": "Remove",
+    "removeItemTitle": "Remove this item?",
+    "removeItemMessage": "{name} will be removed from your basket.",
+    "itemRemoved": "Item removed from your basket.",
+    "removeFailed": "We could not remove that item. Please try again."
   }
 }

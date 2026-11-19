@@ -16,6 +16,7 @@
       <div
         class="search-dropdown"
         v-if="autoSuggestionOpen"
+        v-dropdown-menu="{key: 'autoSuggestionOpen', within: $el}"
       >
         <div class="suggestion-body">
           <div

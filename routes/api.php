@@ -222,10 +222,17 @@ Route::post('check-order', [OrdersController::class, 'checkOrder']);
 Route::group([
     'prefix' => 'admin'
 ], function () {
-    Route::post('login', [AdminsController::class, 'login']);
-    Route::post('signup', [AdminsController::class, 'signup']);
-    Route::post('forgot-password', [AdminsController::class, 'forgotPassword']);
-    Route::post('verify-code', [AdminsController::class, 'verifyCode']);
+    // Staff sign-in, reset and code checks: 10 a minute per IP, like the
+    // customer ones but counted separately (prefix "staff"). Only the
+    // general 300/minute limit applied before, so a staff password could be
+    // guessed at hundreds of tries a minute.
+    Route::post('login', [AdminsController::class, 'login'])->middleware('throttle:10,1,staff');
+    // No public admin signup. It let anyone create an active, verified staff
+    // account (verified/active came straight from the request) and read the
+    // settings endpoints that had no permission check. Staff accounts are
+    // created by an admin from the Admins page (admin/admin/action).
+    Route::post('forgot-password', [AdminsController::class, 'forgotPassword'])->middleware('throttle:10,1,staff');
+    Route::post('verify-code', [AdminsController::class, 'verifyCode'])->middleware('throttle:10,1,staff');
 
     Route::get('languages', [LanguageController::class, "languages"]);
     Route::get('localization', [FrontendController::class, "localizationAdmin"]);

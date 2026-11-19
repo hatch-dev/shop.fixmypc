@@ -214,7 +214,8 @@ export default {
 	.pr-banner-inner {
 		text-align: center;
 		gap: 10px;
-        padding: 10px 0px;
+        /* room on the right for the close button, which sat on "OFF" */
+        padding: 10px 36px 10px 0px;
         height: auto;
 	}
   .pr-banner-text {
@@ -253,6 +254,8 @@ export default {
 		flex-wrap: wrap;
 		justify-content: center;
 		font-size: 12px;
+		/* clear of the close button (top right); equal both sides so it stays centred */
+		padding: 0 26px;
 	}
      .pr-banner-center-div{
         gap:10px
@@ -279,6 +282,12 @@ export default {
     width: 20px;
     height: 20px;
     font-size: 17px;
+  }
+  /* the 20px circle stays, the finger target grows to 36px */
+  .pr-banner-close::after{
+    content: '';
+    position: absolute;
+    inset: -8px;
   }
 }
 </style>

@@ -3084,7 +3084,11 @@ export default {
   text-decoration: underline;
   text-underline-offset: 3px;
   height: auto;
-  line-height: 0;
+  /* was line-height 0: on a phone "View cart" wrapped and its two words were
+     drawn on top of each other */
+  line-height: 1.3;
+  white-space: nowrap;
+  flex-shrink: 0;
   color: rgba(5, 185, 66, 1);
 }
 

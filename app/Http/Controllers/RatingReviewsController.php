@@ -317,6 +317,13 @@ class RatingReviewsController extends ControllerHelper
 	
 	public function store(Request $request)
     {
+        // Staff-entered reviews (the admin Reviews page). This route sits
+        // with the storefront ones, so it answered anyone: an anonymous
+        // caller could publish an approved review marked "verified".
+        if ($can = Utils::userCan($this->user, 'rating_review.delete')) {
+            return $can;
+        }
+
         // Validate the request data
         $validator = Validator::make($request->all(), [
             'rating' => 'required|integer|min:1|max:5',
@@ -436,7 +443,11 @@ class RatingReviewsController extends ControllerHelper
 	// Add this to your RatingReviewController
 	public function update(Request $request)
 	{
-		
+		// Staff only: anyone could rewrite any customer's review by its id.
+		if ($can = Utils::userCan($this->user, 'rating_review.delete')) {
+			return $can;
+		}
+
 		$review = RatingReview::findOrFail($request->review_id);
 		($request->is_verified=='on') ? $verified=1 : $verified=0;
 		

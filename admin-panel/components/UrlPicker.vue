@@ -51,6 +51,7 @@
 
     <div
       v-if="open"
+      v-dropdown-menu="{close: close, within: $el}"
       class="up-menu"
     >
 

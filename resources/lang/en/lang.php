@@ -5,6 +5,7 @@ return [
     "migrating" => "Migrating... Please wait",
     "a_while" => "This may take a while.",
     "wrong_email" => "Wrong email/password",
+    "no_account_for_email" => "No account found with this email address. Please register first and then log in.",
     'hello' => 'Hello',
     'almost_there' => 'You are almost there.',
     'copy_code' => 'Please copy the code below and verify your email in order to update your password.',

@@ -327,8 +327,8 @@ export default {
         const baseUrl = process.env.apiBase || 'https://shop.fixmypc.ie/';
           
         const url = this.reviewForm.id 
-          ? '${baseUrl}api/v1/rating-review/update'
-          : '${baseUrl}api/v1/rating-review/store';
+          ? `${baseUrl}api/v1/rating-review/update`
+          : `${baseUrl}api/v1/rating-review/store`;
         
         const response = await this.$axios.post(url, formData, {
           headers: {
@@ -337,8 +337,8 @@ export default {
         });
         
         // Show success message and reload
-        alert(
-          this.reviewForm.id 
+        this.$store.dispatch('ui/setToastMessage',
+          this.reviewForm.id
             ? this.$t('pages.ratingReviews.updatedOk')
             : this.$t('pages.ratingReviews.addedOk')
         );

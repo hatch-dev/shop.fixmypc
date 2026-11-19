@@ -269,7 +269,7 @@
                       <i class="fa-solid fa-chevron-down"></i>
                     </div>
 
-                    <div v-if="activeBulkCategory" class="category-popup">
+                    <div v-if="activeBulkCategory" v-dropdown-menu="{close: closePopup, key: 'activeBulkCategory'}" class="category-popup">
                       <div class="popup-header">{{ $t('pages.bulkProductEditor.selectCategories') }}</div>
 
                       <div class="category-list">
@@ -321,7 +321,7 @@
                       <i class="fa-solid fa-chevron-down"></i>
                     </div>
 
-                    <div v-if="activeBulkPrimary" class="primary-popup">
+                    <div v-if="activeBulkPrimary" v-dropdown-menu="{close: closePopup, key: 'activeBulkPrimary'}" class="primary-popup">
                       <label
                         v-for="id in bulkData.tempCategoryIds"
                         :key="id"
@@ -352,7 +352,7 @@
                       <i class="fa-solid fa-chevron-down"></i>
                     </div>
 
-                    <div v-if="activeBulkCollection" class="collection-popup">
+                    <div v-if="activeBulkCollection" v-dropdown-menu="{close: closePopup, key: 'activeBulkCollection'}" class="collection-popup">
                       <label
                         v-for="col in collections"
                         :key="col.id"
@@ -398,7 +398,8 @@
                   <dropdown
                     :selectedKey="bulkData.upsell_id"
                     :options="allUpsells"
-                    @clicked="({key}) => bulkData.upsell_id = Number(key)"
+                    default-null
+                    @clicked="({key}) => bulkData.upsell_id = Number(key) || null"
                   />
                 </template>
 
@@ -421,7 +422,7 @@
                       <span v-else class="placeholder">{{ $t('pages.bulkProductEditor.choose') }}</span>
                       <i class="fa-solid fa-chevron-down"></i>
                     </div>
-                    <div v-if="activeBulkBundle" class="collection-popup">
+                    <div v-if="activeBulkBundle" v-dropdown-menu="{close: closePopup, key: 'activeBulkBundle'}" class="collection-popup">
                       <div class="popup-header">{{ $t('pages.bulkProductEditor.selectBundles') }}</div>
 
                       <div class="collection-list">
@@ -472,6 +473,7 @@
                     <!-- Popup -->
                     <div
                       v-if="activeBulkProcurement"
+                      v-dropdown-menu="{close: closePopup, key: 'activeBulkProcurement'}"
                       class="primary-popup"
                     >
                       <label class="primary-option">
@@ -750,6 +752,7 @@
                     <!-- Popup -->
                     <div
                       v-if="activeCategoryRow === value.id"
+                      v-dropdown-menu="{close: closePopup, key: 'activeCategoryRow'}"
                       class="category-popup"
                     >
                       <div class="popup-header">
@@ -835,6 +838,7 @@
                     <!-- Popup -->
                     <div
                       v-if="activePrimaryRow === value.id"
+                      v-dropdown-menu="{close: closePopup, key: 'activePrimaryRow'}"
                       class="primary-popup"
                     >
                       <div class="popup-header">
@@ -909,6 +913,7 @@
                     </div>
                     <div
                       v-if="activeCollectionRow === value.id"
+                      v-dropdown-menu="{close: closePopup, key: 'activeCollectionRow'}"
                       class="collection-popup"
                     >
                       <div class="popup-header">
@@ -978,6 +983,7 @@
                     <!-- Popup -->
                     <div
                       v-if="activeDiscountRow === value.id"
+                      v-dropdown-menu="{close: closePopup, key: 'activeDiscountRow'}"
                       class="discount-popup"
                     >
                       <div class="popup-header">
@@ -1017,10 +1023,23 @@
 
                 <!-- Crosssell -->
                  <template v-if="col.key === 'crosssell'">
+                  <!--
+                    default-null: with no cross-sell set, <dropdown> used to pick
+                    its first option by itself and announce it as a choice, so
+                    opening this page saved that cross-sell onto every product
+                    without one (and the selection bar applied it to every
+                    selected product). Nothing is chosen until someone chooses.
+                  -->
                   <dropdown
                     :selectedKey="value.upsell_id"
                     :options="allUpsells"
-                    @clicked="({key}) => {value.upsell_id = Number(key); autoSave(value);}"
+                    default-null
+                    @clicked="({key}) => {
+                      const id = Number(key) || null
+                      if (id === (Number(value.upsell_id) || null)) return
+                      value.upsell_id = id
+                      autoSave(value)
+                    }"
                   />
                  </template>
 
@@ -1072,6 +1091,7 @@
                     <!-- Popup -->
                     <div
                       v-if="activeBundleRow === value.id"
+                      v-dropdown-menu="{close: closePopup, key: 'activeBundleRow'}"
                       class="collection-popup"
                     >
                       <div class="popup-header">
@@ -1137,6 +1157,7 @@
                     </div>
                     <div
                       v-if="activeProcurementRow === value.id"
+                      v-dropdown-menu="{close: closePopup, key: 'activeProcurementRow'}"
                       class="primary-popup"
                     >
                       <label class="primary-option">
@@ -1439,7 +1460,7 @@
                     <i class="fa-solid fa-chevron-down"></i>
                   </div>
 
-                  <div v-if="activeBulkCategory" class="category-popup">
+                  <div v-if="activeBulkCategory" v-dropdown-menu="{close: closePopup, key: 'activeBulkCategory'}" class="category-popup">
                     <div class="popup-header">{{ $t('pages.bulkProductEditor.selectCategories') }}</div>
 
                     <div class="category-list">
@@ -1496,7 +1517,7 @@
                     <i class="fa-solid fa-chevron-down"></i>
                   </div>
 
-                  <div v-if="activeBulkPrimary" class="primary-popup">
+                  <div v-if="activeBulkPrimary" v-dropdown-menu="{close: closePopup, key: 'activeBulkPrimary'}" class="primary-popup">
                     <div class="popup-header">{{ $t('pages.bulkProductEditor.selectPrimary') }}</div>
 
                     <div class="primary-list">
@@ -1536,7 +1557,7 @@
                     <i class="fa-solid fa-chevron-down"></i>
                   </div>
 
-                  <div v-if="activeBulkCollection" class="collection-popup">
+                  <div v-if="activeBulkCollection" v-dropdown-menu="{close: closePopup, key: 'activeBulkCollection'}" class="collection-popup">
                     <div class="popup-header">{{ $t('pages.bulkProductEditor.selectCollections') }}</div>
 
                     <div class="collection-list">
@@ -1600,7 +1621,8 @@
                 <dropdown
                   :selectedKey="bulkData.upsell_id"
                   :options="allUpsells"
-                  @clicked="({key}) => bulkData.upsell_id = Number(key)"
+                  default-null
+                  @clicked="({key}) => bulkData.upsell_id = Number(key) || null"
                 />
               </div>
 
@@ -1694,7 +1716,7 @@
 
       <!-- Column Selector -->
 
-      <div v-if="showColumnSelector" class="column-selector" @click.stop>
+      <div v-if="showColumnSelector" v-dropdown-menu="{close: closePopup, key: 'showColumnSelector', ignore: '.custom-grid-btn'}" class="column-selector" @click.stop>
         <div class="column-box">
           <div class="column-header">
             <strong>{{ $t('pages.bulkProductEditor.chooseColumns') }}</strong>
@@ -1961,6 +1983,7 @@ export default {
       activeBulkCollection: false,
       activeBulkProcurement: false,
       activeBulkDiscount: false,
+      activeBulkBundle: false,
       showImageModal: false,
       editingImageProduct: null,
       imageGallery: [],
@@ -2279,6 +2302,10 @@ export default {
         highReturn: false,
         deadStock: false
       }
+    },
+    /** Closes one popup; v-dropdown-menu names which (see plugins/dropdown-manager.js). */
+    closePopup(key) {
+      this[key] = typeof this[key] === 'boolean' ? false : null
     },
     handleGlobalClick(e) {
 

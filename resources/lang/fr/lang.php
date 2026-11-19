@@ -5,6 +5,7 @@ return [
     "migrating"=> "Migration... Veuillez patienter",
     "a_while"=> "Cela peut prendre un certain temps.",
     "wrong_email"=> "Mauvais email/mot de passe",
+    "no_account_for_email"=> "Aucun compte n’est associé à cette adresse e-mail. Veuillez d’abord vous inscrire, puis vous connecter.",
     "hello"=> "Bonjour",
     "almost_there"=> "Vous y êtes presque.",
     "copy_code"=> "Veuillez copier le code ci-dessous et vérifier votre adresse e-mail afin de mettre à jour votre mot de passe.",

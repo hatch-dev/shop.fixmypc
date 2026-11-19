@@ -23,6 +23,7 @@
       v-if="open"
       class="dropdown-inner mn-h-200x"
       v-outside-click="outsideClickFn"
+      v-dropdown-menu="{close: outsideClickFn, within: $el}"
       :id="currentId"
     >
       <div

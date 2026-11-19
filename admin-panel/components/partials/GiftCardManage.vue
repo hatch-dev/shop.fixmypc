@@ -51,7 +51,7 @@
             </div>
           </form>
         </template>
-        <form v-if="canEdit && history.log_ready && card.refundable" class="gcm-form" @submit.prevent="submit('refund')">
+        <form v-if="canEdit && history.log_ready && canRefund" class="gcm-form" @submit.prevent="submit('refund')">
           <h5 class="gcm-h">{{ $t('pages.giftCards.refundTitle') }}</h5>
           <p class="gcm-muted">{{ $t('pages.giftCards.refundHelp') }}</p>
           <div class="gcm-row">
@@ -91,12 +91,23 @@ export default {
       error: '',
       adjust: {amount: '', reason: ''},
       expiry: {date: '', reason: ''},
-      refund: {reason: ''}
+      refund: {reason: ''},
+      refunded: false
     }
   },
   computed: {
     canEdit() {
       return this.$can('gift_card', 'edit')
+    },
+    /*
+     * `card` is the list row as it was when this opened. Once its purchase
+     * has been refunded (here, or as the reloaded history shows) the refund
+     * form goes: it used to stay until the popover was reopened.
+     */
+    canRefund() {
+      const status = this.history && this.history.purchase && this.history.purchase.status
+      return !!this.card.refundable && !this.refunded &&
+        (!status || ['success', 'partially_refunded'].includes(status))
     },
     tomorrow() {
       const d = new Date()
@@ -133,6 +144,7 @@ export default {
           this.error = res.message
           return
         }
+        if (kind === 'refund') this.refunded = true
         this.adjust = {amount: '', reason: ''}
         this.expiry = {date: '', reason: ''}
         this.refund = {reason: ''}

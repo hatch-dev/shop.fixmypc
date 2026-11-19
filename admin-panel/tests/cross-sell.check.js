@@ -149,9 +149,12 @@ Vue.prototype.$store = {
   dispatch (action, payload) { toasts.push({action, payload}) }
 }
 
-// jsdom's confirm() is a stub that returns undefined, which would read as a
-// cancelled removal.
-global.window.confirm = () => true
+// Removing asks through this.$dialog (plugins/dialog.js) rather than the
+// browser's confirm(); the stand-in answers yes and records the question.
+const dialogQuestions = []
+Vue.prototype.$dialog = {
+  confirm (message) { dialogQuestions.push(message); return Promise.resolve(true) }
+}
 
 // ============================================================================
 //  The promotion form
@@ -433,6 +436,7 @@ async function run () {
 
     assert.strictEqual(deletes[0].api, 'unassignCrossSell')
     assert.strictEqual(deletes[0].params, '55/1')
+    assert.strictEqual(dialogQuestions.length, 1, 'asked once, in the panel dialog')
   })
 
   // ==========================================================================

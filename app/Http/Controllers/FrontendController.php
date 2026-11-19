@@ -288,7 +288,14 @@ class FrontendController extends Controller
 
 
             if ($request->rating != 0) {
-                $query = $query->where('products.rating', '>=', $request->rating);
+                // The stars shown on a product are the average of its reviews
+                // (Product's withReviews scope, rounded to one decimal);
+                // products.rating is never updated, so filtering on it found
+                // nothing.
+                $query = $query->whereRaw(
+                    '(select round(avg(rr.rating), 1) from rating_reviews rr where rr.product_id = products.id) >= ?',
+                    [(float)$request->rating]
+                );
             }
 
             if ($request->max > 0 || $request->min > 0) {
@@ -299,9 +306,7 @@ class FrontendController extends Controller
                 $query = $query->where(function ($q) use ($request) {
                     $q->where(function ($qr) use ($request) {
                         $qr->whereNotNull('flash_sales.end_time');
-                        $qr->whereBetween('flash_sale_products.price',
-                        'flash_sale_products.discount_type as flash_discount_type',
-                        'flash_sale_products.discount_value as flash_discount_value', [$request->min, $request->max]);
+                        $qr->whereBetween('flash_sale_products.price', [$request->min, $request->max]);
 
                     });
                     $q->orWhere(function ($qr) use ($request) {
@@ -1024,6 +1029,14 @@ class FrontendController extends Controller
 
 
 
+                // Inventories in one query, with the attribute count Pricing
+                // accepts (as products() does): pricing each result used to
+                // lazy-load its inventories and then every inventory's
+                // attributes, two-plus queries per product.
+                $queryP = $queryP->with(['product_inventories' => function ($q) {
+                    $q->withCount('inventory_attributes');
+                }]);
+
                 $data['product'] = $queryP->groupBy('products.id')->get();
                 $this->applyClearanceToProducts($data['product']);
             }
@@ -1303,7 +1316,14 @@ class FrontendController extends Controller
             }
 
             if ($request->rating != 0) {
-                $query = $query->where('products.rating', '>=', $request->rating);
+                // The stars shown on a product are the average of its reviews
+                // (Product's withReviews scope, rounded to one decimal);
+                // products.rating is never updated, so filtering on it found
+                // nothing.
+                $query = $query->whereRaw(
+                    '(select round(avg(rr.rating), 1) from rating_reviews rr where rr.product_id = products.id) >= ?',
+                    [(float)$request->rating]
+                );
             }
 
             if ($request->max > 0 || $request->min > 0) {
@@ -1314,9 +1334,7 @@ class FrontendController extends Controller
                 $query = $query->where(function ($q) use ($request) {
                     $q->where(function ($qr) use ($request) {
                         $qr->whereNotNull('flash_sales.end_time');
-                        $qr->whereBetween('flash_sale_products.price',
-                        'flash_sale_products.discount_type as flash_discount_type',
-                        'flash_sale_products.discount_value as flash_discount_value', [$request->min, $request->max]);
+                        $qr->whereBetween('flash_sale_products.price', [$request->min, $request->max]);
 
                     });
                     $q->orWhere(function ($qr) use ($request) {
@@ -1566,16 +1584,8 @@ class FrontendController extends Controller
                         ->select('header_links.*', 'hl.title')
                         ->get();
 
-                    $headerLinks['left'] = [];
-                    $headerLinks['right'] = [];
-
-                    foreach ($hl as $i) {
-                        if ((int)$i->type == Config::get('constants.headerLinkType.LEFT')) {
-                            array_push($headerLinks['left'], $i);
-                        } else {
-                            array_push($headerLinks['right'], $i);
-                        }
-                    }
+                    // Left, Right, and the Hot Deals / Clearance buttons
+                    $headerLinks = HeaderLink::grouped($hl);
                     $data['header_links'] = $headerLinks;
 
 
@@ -1641,16 +1651,8 @@ class FrontendController extends Controller
                         ->get();
 
 
-                    $headerLinks['left'] = [];
-                    $headerLinks['right'] = [];
-
-                    foreach ($hl as $i) {
-                        if ((int)$i->type == Config::get('constants.headerLinkType.LEFT')) {
-                            array_push($headerLinks['left'], $i);
-                        } else {
-                            array_push($headerLinks['right'], $i);
-                        }
-                    }
+                    // Left, Right, and the Hot Deals / Clearance buttons
+                    $headerLinks = HeaderLink::grouped($hl);
                     $data['header_links'] = $headerLinks;
 
 
@@ -3442,6 +3444,11 @@ class FrontendController extends Controller
             $title = \DB::raw('COALESCE(pl.title, products.title) as title');
             $badge = \DB::raw('COALESCE(pl.badge, products.badge) as badge');
         }
+
+        // inventories in one query, as search() and products() do (no per-tile lazy loads)
+        $query->with(['product_inventories' => function ($q) {
+            $q->withCount('inventory_attributes');
+        }]);
 
         $rows = $query->select('products.id', $title, $badge,
             'products.selling', 'products.offered', 'products.slug',

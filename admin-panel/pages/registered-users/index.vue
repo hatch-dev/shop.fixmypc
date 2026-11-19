@@ -226,7 +226,7 @@
           ? this.$t('pages.registeredUsers.suspendConfirm')
           : this.$t('pages.registeredUsers.reactivateConfirm')
 
-        if (!confirm(wording)) {
+        if (!(await this.$dialog.confirm(wording, {tone: status === 'suspended' ? 'danger' : 'primary'}))) {
           return
         }
 

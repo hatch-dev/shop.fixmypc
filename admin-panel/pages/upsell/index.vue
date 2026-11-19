@@ -169,7 +169,7 @@
             <div class="ups-menu" v-outside-click="closeMenus">
               <button class="ups-menu-btn" @click.prevent="toggleMenu(value.id)">&hellip;</button>
 
-              <div v-if="openMenu === value.id" class="ups-menu-list">
+              <div v-if="openMenu === value.id" v-dropdown-menu="{key: 'openMenu'}" class="ups-menu-list">
                 <button @click.prevent="go(`/upsell/${value.id}`)">
                   {{ $t('upsell.view') }}
                 </button>

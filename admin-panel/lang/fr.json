@@ -617,7 +617,15 @@
     "asTesting": "Test en cours…",
     "asTestOk": "Connecté. Aucun transporteur n'est encore activé dans ce compte AfterShip. | Connecté. 1 transporteur est activé : | Connecté. {count} transporteurs sont activés :",
     "asCouriersHint": "Seuls ces transporteurs peuvent être choisis sur une commande. Pour ajouter An Post ou DPD Ireland, activez-les dans AfterShip > Settings > Couriers, puis testez à nouveau.",
-    "asTestFailed": "Impossible de joindre AfterShip. Réessayez dans une minute."
+    "asTestFailed": "Impossible de joindre AfterShip. Réessayez dans une minute.",
+    "headerPlacementMsg": "Les liens de gauche apparaissent dans la barre de navigation à côté des catégories ; les liens de droite apparaissent dans le menu du compte et le menu mobile.",
+    "headerButtons": "Boutons de l’en-tête",
+    "headerButtonsMsg": "Les deux boutons de la barre de navigation. Laissez les deux champs vides pour conserver le libellé et l’adresse par défaut.",
+    "headerButton": "Bouton",
+    "hotDealsButton": "Bonnes affaires",
+    "clearanceButton": "Déstockage",
+    "headerContactMsg": "L’adresse e-mail, le numéro de téléphone et le numéro WhatsApp affichés dans l’en-tête se modifient dans",
+    "headerContactLink": "Paramètres › Adresse"
   },
   "list": {
     "show": "Affichage de {from} à {to} sur {total} résultats",

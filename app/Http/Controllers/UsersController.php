@@ -609,7 +609,8 @@ class UsersController extends ControllerHelper
                 $user = null;
             }
 
-            $password_check = Validation::password_check($user, request('password'));
+            // In the shopper's language: the refusal was always English.
+            $password_check = Validation::password_check($user, request('password'), null, 'form', $lang);
             if ($password_check) {
                 return response()->json($password_check);
             }
@@ -1117,15 +1118,19 @@ class UsersController extends ControllerHelper
 
             } else {
                 /*
-                 * QA audit ACC-01. This used to answer "no such account" for an
-                 * unknown address, which told an attacker exactly which emails
-                 * are registered. The response is now identical either way; a
-                 * link is only actually sent when the account exists.
+                 * No confirmed account has this address (an unknown email, or a
+                 * sign-up that never entered its code): nothing is issued or
+                 * sent, and the customer is told to register instead.
+                 *
+                 * This reverses QA audit ACC-01, which gave the same "link sent"
+                 * answer either way so the form could not be used to find out
+                 * which emails have accounts. Telling people their email is not
+                 * registered was the owner's choice (2026-11-06); the throttle on
+                 * this route is what limits anyone probing it.
                  */
-                return response()->json(new Response(null, [
-                    'email' => $request->email,
-                    'expires_in_minutes' => PasswordResetToken::LIFETIME_MINUTES
-                ]));
+                return response()->json(Validation::error(null,
+                    __('lang.no_account_for_email', [], $lang)
+                ));
             }
         } catch (\Exception $ex) {
             return response()->json(Validation::error($request->token, $ex->getMessage()));

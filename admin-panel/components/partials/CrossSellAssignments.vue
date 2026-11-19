@@ -182,7 +182,7 @@
       },
 
       async remove(row) {
-        if (!window.confirm(this.$t('crossSell.confirmUnassign', {name: row.name}))) return
+        if (!(await this.$dialog.confirm(this.$t('crossSell.confirmUnassign', {name: row.name}), {confirmLabel: this.$t('crossSell.remove')}))) return
 
         this.busy = true
 

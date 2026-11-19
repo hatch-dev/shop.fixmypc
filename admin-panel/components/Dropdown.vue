@@ -28,6 +28,7 @@
       <div
         class="dropdown-inner"
         v-outside-click="closeDropdown"
+        v-dropdown-menu="{close: closeDropdown, within: $el}"
         :id="currentId"
       >
         <input

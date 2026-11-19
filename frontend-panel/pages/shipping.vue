@@ -1060,7 +1060,7 @@
         }
       },
       async deleting(address) {
-        if (confirm(this.$t('deleteAlert.cartProductTile'))) {
+        if (await this.$dialog.confirm(this.$t('deleteAlert.cartProductTile'), {title: this.$t('dialog.deleteTitle'), confirmLabel: this.$t('dialog.delete')})) {
           this.ajaxDeleting = address.id
           await this.addressDelete(address.id)
           this.ajaxDeleting = 0

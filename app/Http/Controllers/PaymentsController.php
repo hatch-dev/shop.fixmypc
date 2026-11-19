@@ -61,6 +61,11 @@ class PaymentsController extends ControllerHelper
 
     public function find(Request $request)
     {
+        // Every gateway secret is in this row: settings staff only.
+        if ($can = Utils::userCan($this->user, 'setting.view')) {
+            return $can;
+        }
+
         $payment = Payment::first();
 
         return response()->json(new Response($request->token, $payment));

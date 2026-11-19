@@ -240,10 +240,14 @@ export default {
 
       this.busyId = item.id
       try {
-        await this.setRequest({
+        const res = await this.setRequest({
           params: {id: item.id, email: email && email !== current ? email.trim() : null},
           api: 'resendGiftCard'
         })
+        // setRequest hands back a refusal (status 201) instead of rejecting
+        if (res && res.status === 201) {
+          this.$store.dispatch('ui/setToastError', res.message || this.$t('pages.giftCards.resendFailed'))
+        }
         await this.refresh()
       } catch (e) {
         this.$store.dispatch('ui/setToastError', e?.message || this.$t('pages.giftCards.resendFailed'))
@@ -258,7 +262,10 @@ export default {
 
       this.busyId = item.id
       try {
-        await this.setRequest({params: {id: item.id, reason: reason.trim()}, api: 'voidGiftCard'})
+        const res = await this.setRequest({params: {id: item.id, reason: reason.trim()}, api: 'voidGiftCard'})
+        if (res && res.status === 201) {
+          this.$store.dispatch('ui/setToastError', res.message || this.$t('pages.giftCards.voidFailed'))
+        }
         await this.refresh()
       } catch (e) {
         this.$store.dispatch('ui/setToastError', e?.message || this.$t('pages.giftCards.voidFailed'))

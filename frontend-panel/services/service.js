@@ -148,7 +148,7 @@ export default {
    * No auth header: the encrypted token in the link is the credential.
    */
   supplierRequest(token) {
-    return apiClient.get(`${json.api.supplierRequest}/${encodeURIComponent(token)}`)
+    return apiClient.get(`${json.api.supplierRequest}/${encodeURIComponent(token)}`) 
   },
   submitSupplierBid(params) {
     return apiClient.post(json.api.supplierBid, params)

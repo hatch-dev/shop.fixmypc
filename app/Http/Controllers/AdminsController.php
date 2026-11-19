@@ -50,7 +50,8 @@ class AdminsController extends Controller
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            $this->user = Auth::guard('admin')->user();
+            // Staff tokens only (see ControllerHelper::staffFromToken).
+            $this->user = \App\Models\Helper\ControllerHelper::staffFromToken();
             if ($this->user) {
                 foreach ($this->user->roles->pluck('name') as $i) {
                     if ($i == 'vendor') {

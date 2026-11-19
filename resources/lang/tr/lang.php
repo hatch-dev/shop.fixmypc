@@ -5,6 +5,7 @@ return [
     "migrating"=> "Taşınıyor... Lütfen bekleyin",
     "a_while"=> "Bu biraz zaman alabilir.",
     "wrong_email"=> "Yanlış e-posta/şifre",
+    "no_account_for_email"=> "Bu e-posta adresiyle kayıtlı bir hesap bulunamadı. Lütfen önce kayıt olun, ardından giriş yapın.",
     "hello"=> "Merhaba",
     "almost_there"=> "Neredeyse geldiniz.",
     "copy_code"=> "Parolanızı güncellemek için lütfen aşağıdaki kodu kopyalayın ve e-posta adresinizi doğrulayın.",

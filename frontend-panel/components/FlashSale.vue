@@ -414,6 +414,24 @@ export default {
     display: flex;
     justify-content: center;
 }
+/*
+ * Four units across (desktop): fixed 55px boxes and 29px gaps needed ~559px
+ * and the panel has ~536px, so the seconds ran past its edge. The columns can
+ * shrink and the digits share their column, up to 55 x 84, keeping the shape.
+ */
+@media (min-width: 1035px) {
+  .flash_sale_time_slots_grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .time-box {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 55px;
+    width: auto;
+    height: auto;
+    aspect-ratio: 55 / 84;
+  }
+}
 @media (max-width:1034px) {
 .flash_sale_time_slots_grid {
     grid-template-columns: 1fr 1fr;

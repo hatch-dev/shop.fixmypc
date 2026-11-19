@@ -37,6 +37,7 @@
     <div
       class="tag-dropdown"
       v-if="autoSuggestionOpen"
+      v-dropdown-menu="{key: 'autoSuggestionOpen', within: $el}"
     >
       <div
         v-if="loading"

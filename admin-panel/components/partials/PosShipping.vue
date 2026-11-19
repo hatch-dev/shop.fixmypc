@@ -135,7 +135,7 @@
         this.emitSelected()
       },
       async deleteAddress(value){
-        if (confirm(this.$t('admin.dltMsg'))) {
+        if (await this.$dialog.confirmDelete(this.$t('admin.dltMsg'))) {
           try {
             this.ajaxDeleting = true
             await this.deleteData({params: value.id, api: 'deleteUserAddress' })

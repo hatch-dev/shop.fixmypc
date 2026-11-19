@@ -19,6 +19,7 @@
     <div
       v-if="showPopover"
       ref="pop"
+      v-dropdown-menu="{close: closePop, within: $el}"
       class="inline-pop-over"
       :class="alignClass"
     >

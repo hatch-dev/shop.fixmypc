@@ -271,7 +271,8 @@
     "searchParts": "Parça, cihaz ve onarım arayın…",
     "clearance": "Tasfiye",
     "allIn": "Tüm {name}",
-    "productsCount": "{count} ürün"
+    "productsCount": "{count} ürün",
+    "shopLinks": "Alışveriş"
   },
   "empty": {
     "welcome": "Hoş geldiniz {name}",
@@ -3407,5 +3408,19 @@
     "minutes": "Dk",
     "seconds": "Sn",
     "shopNow": "İndirimdekileri incele"
+  },
+  "dialog": {
+    "confirmTitle": "Emin misiniz?",
+    "noticeTitle": "Lütfen dikkat",
+    "confirm": "Onayla",
+    "cancel": "İptal",
+    "ok": "Tamam",
+    "delete": "Sil",
+    "deleteTitle": "Bu silinsin mi?",
+    "remove": "Kaldır",
+    "removeItemTitle": "Bu ürün kaldırılsın mı?",
+    "removeItemMessage": "{name} sepetinizden kaldırılacak.",
+    "itemRemoved": "Ürün sepetinizden kaldırıldı.",
+    "removeFailed": "Bu ürün kaldırılamadı. Lütfen tekrar deneyin."
   }
 }

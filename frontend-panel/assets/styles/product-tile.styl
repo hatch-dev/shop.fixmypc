@@ -107,6 +107,7 @@
       min-width 20%
       width 20%
 
+
 @media only screen and (max-width: 1200px)
   .tile-container
     .p-tile
@@ -137,6 +138,11 @@
     .p-tile
       width 50%
       min-width 50%
+
+  // a .d-flex tile row (compare, flash sale) did not wrap: three half-width
+  // tiles in one row ran the third off the screen
+  .tile-container.d-flex
+    flex-wrap wrap
 
 
 @media only screen and (max-width: 576px)
@@ -215,3 +221,15 @@
 .price-vat-amount
   white-space nowrap
   color #9096a5
+
+// .tile-container is a CSS grid (above): the grid sizes the columns and a tile
+// fills its cell. The percentage widths in this file come from when tiles
+// floated in a row; inside a grid cell they shrank every card to a fifth,
+// quarter or third of its column (store page, wishlists, followed stores),
+// down to one digit of the price per line. Kept last in the file so it wins.
+// A .d-flex tile row (compare, flash sale) is a flex row: there the
+// percentages are the column widths, so it is left alone.
+.tile-container:not(.d-flex) > .p-tile
+.user-wishlists .tile-container:not(.d-flex) > .p-tile
+  width 100%
+  min-width 0

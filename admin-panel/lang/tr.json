@@ -617,7 +617,15 @@
     "asTesting": "Test ediliyor…",
     "asTestOk": "Bağlandı. Bu AfterShip hesabında henüz etkin kargo firması yok. | Bağlandı. 1 kargo firması etkin: | Bağlandı. {count} kargo firması etkin:",
     "asCouriersHint": "Siparişte yalnızca bu kargo firmaları seçilebilir. An Post veya DPD Ireland eklemek için AfterShip > Settings > Couriers bölümünden etkinleştirin ve tekrar test edin.",
-    "asTestFailed": "AfterShip'e ulaşılamadı. Bir dakika sonra tekrar deneyin."
+    "asTestFailed": "AfterShip'e ulaşılamadı. Bir dakika sonra tekrar deneyin.",
+    "headerPlacementMsg": "Sol bağlantılar gezinme satırında kategorilerin yanında; sağ bağlantılar hesap menüsünde ve mobil menüde görünür.",
+    "headerButtons": "Başlık düğmeleri",
+    "headerButtonsMsg": "Gezinme satırındaki iki düğme. Varsayılan etiketi ve adresi korumak için her iki alanı boş bırakın.",
+    "headerButton": "Düğme",
+    "hotDealsButton": "Sıcak Fırsatlar",
+    "clearanceButton": "Tasfiye",
+    "headerContactMsg": "Başlıkta gösterilen e-posta adresi, telefon numarası ve WhatsApp numarası şuradan düzenlenir:",
+    "headerContactLink": "Ayarlar › Adres"
   },
   "list": {
     "show": "{total} sonuçtan {from} - {to} arası gösteriliyor",

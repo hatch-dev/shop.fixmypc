@@ -67,6 +67,7 @@
 
                     <div
                         v-if="productListOpen"
+                        v-dropdown-menu="{key: 'productListOpen'}"
                         class="product-options"
                     >
                         <div
@@ -922,7 +923,15 @@ export default {
 .pricing-table {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  overflow: hidden;
+  /* scrolls sideways on a narrow screen: hidden cut off the price columns */
+  overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  /* six columns stay usable and the table scrolls instead of squeezing */
+  .pricing-row {
+    min-width: 620px;
+  }
 }
 
 .pricing-row {

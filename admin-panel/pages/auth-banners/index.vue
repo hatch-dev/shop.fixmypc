@@ -1078,7 +1078,7 @@
           return
         }
 
-        if (!confirm(this.$t('admin.dltMsg'))) {
+        if (!(await this.$dialog.confirmDelete(this.$t('admin.dltMsg')))) {
           return
         }
 
@@ -1155,7 +1155,7 @@
 
       async removeBanner(banner) {
 
-        if (!confirm(this.$t('admin.dltMsg'))) {
+        if (!(await this.$dialog.confirmDelete(this.$t('admin.dltMsg')))) {
           return
         }
 

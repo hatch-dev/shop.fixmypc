@@ -178,7 +178,7 @@
         return this.$router.push(`/${this.routeName}/${id}`)
       },
       async deleteItem(id) {
-        if (confirm(this.$t('admin.dltMsg'))) {
+        if (await this.$dialog.confirmDelete(this.$t('admin.dltMsg'))) {
           try {
             this.loading = true
             await this.deleteData({params: id, api: this.deleteApi })
