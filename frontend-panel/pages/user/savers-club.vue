@@ -1474,8 +1474,8 @@
       resumeMembership() {
         return this.membershipAction('resume', {}, this.$t('ui.saversClub.toast.resumed'))
       },
-      changePlan(plan) {
-        const ok = window.confirm(this.$t('ui.saversClub.confirm.switchPlan', { plan: plan.name, price: `${this.currencyIcon}${this.money(plan.price)} ${plan.interval_label}` }))
+      async changePlan(plan) {
+        const ok = await this.$dialog.confirm(this.$t('ui.saversClub.confirm.switchPlan', { plan: plan.name, price: `${this.currencyIcon}${this.money(plan.price)} ${plan.interval_label}` }), {tone: 'primary'})
         if (!ok) return
         return this.membershipAction('change', { plan_id: plan.id }, this.$t('ui.saversClub.toast.nowOnPlan', { plan: plan.name }))
       },
@@ -1490,13 +1490,13 @@
         return this.membershipAction('digest', { enabled },
           enabled ? this.$t('ui.saversClub.toast.digestOn') : this.$t('ui.saversClub.toast.digestOff'))
       },
-      changeBilling() {
+      async changeBilling() {
         const to = this.membership?.switch_to
         if (!to) return
         const price = `${this.currencyIcon}${this.money(to.price)} ${to.interval_label}`
-        const ok = window.confirm(to.interval === 'year'
+        const ok = await this.$dialog.confirm(to.interval === 'year'
           ? this.$t('ui.saversClub.confirm.yearly', { price })
-          : this.$t('ui.saversClub.confirm.monthly', { price }))
+          : this.$t('ui.saversClub.confirm.monthly', { price }), {tone: 'primary'})
         if (!ok) return
         return this.membershipAction('change', { interval: to.interval },
           to.interval === 'year' ? this.$t('ui.saversClub.toast.billedYearly') : this.$t('ui.saversClub.toast.billedMonthly'))

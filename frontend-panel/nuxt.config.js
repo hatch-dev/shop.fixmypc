@@ -3,7 +3,16 @@ import missingHandler from './lang/missing-handler'
 
 const configJson = require('./config.json')
 
-let apiBase = !process.env.API_BASE.trim() ? '/' : process.env.API_BASE
+/*
+ * Where the API lives, from frontend-panel/.env (gitignored, so a fresh
+ * checkout has none) or the shell. Empty means the storefront is served by
+ * Laravel itself and calls its own origin; unset is treated the same way
+ * rather than crashing here on .trim(), and the client (mixin/util.js) is
+ * always handed a string for the same reason.
+ */
+const API_BASE = process.env.API_BASE || ''
+
+let apiBase = !API_BASE.trim() ? '/' : API_BASE
 apiBase += configJson.api.url
 
 export default {
@@ -14,13 +23,13 @@ export default {
     { path: "/robots.txt", handler: "~/api/robots/index.js" },
   ],
   env: {
-    apiBase: process.env.API_BASE
+    apiBase: API_BASE
   },
   head: {
     meta: [
       {charset: 'utf-8'},
       {
-        name: 'viewport',
+        name: 'viewport', 
         content: 'width=device-width,initial-scale=1,width=device-width, initial-scale=1'
       },
     ],
@@ -80,7 +89,9 @@ export default {
     // when this decides whose it is.
     { src: '~/plugins/cart-identity.js', ssr: false },
     // A placeholder wherever an image fails to load.
-    { src: '~/plugins/image-placeholder.js', mode: 'client' }
+    { src: '~/plugins/image-placeholder.js', mode: 'client' },
+    // this.$dialog: confirm / alert / prompt in place of the browser's own.
+    { src: '~/plugins/dialog.js', mode: 'client' }
     
   ],
 

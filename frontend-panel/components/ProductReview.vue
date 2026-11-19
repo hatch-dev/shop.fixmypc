@@ -21,7 +21,12 @@
                       </svg>
                     </div>
                   </div>
-                  <div class="verified-badge">
+                  <!--
+                    Only reviews that really are verified: written against the
+                    reviewer's own delivered order (order_id), or marked
+                    verified by staff. Staff-entered reviews have order_id 0.
+                  -->
+                  <div v-if="Number(value.is_verified) === 1 || Number(value.order_id) > 0" class="verified-badge">
                     <span class="verified-icon">
                       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="7" cy="7" r="7" fill="#72718E" />

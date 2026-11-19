@@ -1078,7 +1078,7 @@
         await this.fetchingData()
       },
       async cancelReturn(ret) {
-        if (!window.confirm(this.$t('returnForm.confirmCancel'))) return
+        if (!(await this.$dialog.confirm(this.$t('returnForm.confirmCancel')))) return
         this.cancellingReturn = ret.id
         try {
           const data = await this.postRequest({

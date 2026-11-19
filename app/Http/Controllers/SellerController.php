@@ -88,7 +88,9 @@ class SellerController extends Controller
 
                 } else if(!$existingUsername){
 
-                    Admin::create($request->all());
+                    // Named fields only: the whole request let a caller send
+                    // verified/active and skip the emailed code.
+                    Admin::create($request->only(['name', 'username', 'email', 'password', 'code']));
 
                 } else if($existingUsername){
 

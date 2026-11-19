@@ -204,7 +204,7 @@
         this.fileUploading = false
       },
       async deleteItem() {
-        if (confirm(this.$t('admin.dltMsg'))) {
+        if (await this.$dialog.confirmDelete(this.$t('admin.dltMsg'))) {
           try {
             this.deletingData = true
             await this.deleteData({params: "", api: 'deletePosSetting' })

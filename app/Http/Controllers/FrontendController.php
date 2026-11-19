@@ -325,7 +325,14 @@ class FrontendController extends Controller
 
 
             if ($request->rating != 0) {
-                $query = $query->where('products.rating', '>=', $request->rating);
+                // The stars shown on a product are the average of its reviews
+                // (Product's withReviews scope, rounded to one decimal);
+                // products.rating is never updated, so filtering on it found
+                // nothing.
+                $query = $query->whereRaw(
+                    '(select round(avg(rr.rating), 1) from rating_reviews rr where rr.product_id = products.id) >= ?',
+                    [(float)$request->rating]
+                );
             }
 
             if ($request->max > 0 || $request->min > 0) {
@@ -1346,7 +1353,14 @@ class FrontendController extends Controller
             }
 
             if ($request->rating != 0) {
-                $query = $query->where('products.rating', '>=', $request->rating);
+                // The stars shown on a product are the average of its reviews
+                // (Product's withReviews scope, rounded to one decimal);
+                // products.rating is never updated, so filtering on it found
+                // nothing.
+                $query = $query->whereRaw(
+                    '(select round(avg(rr.rating), 1) from rating_reviews rr where rr.product_id = products.id) >= ?',
+                    [(float)$request->rating]
+                );
             }
 
             if ($request->max > 0 || $request->min > 0) {
@@ -1607,16 +1621,8 @@ class FrontendController extends Controller
                         ->select('header_links.*', 'hl.title')
                         ->get();
 
-                    $headerLinks['left'] = [];
-                    $headerLinks['right'] = [];
-
-                    foreach ($hl as $i) {
-                        if ((int)$i->type == Config::get('constants.headerLinkType.LEFT')) {
-                            array_push($headerLinks['left'], $i);
-                        } else {
-                            array_push($headerLinks['right'], $i);
-                        }
-                    }
+                    // Left, Right, and the Hot Deals / Clearance buttons
+                    $headerLinks = HeaderLink::grouped($hl);
                     $data['header_links'] = $headerLinks;
 
 
@@ -1682,16 +1688,8 @@ class FrontendController extends Controller
                         ->get();
 
 
-                    $headerLinks['left'] = [];
-                    $headerLinks['right'] = [];
-
-                    foreach ($hl as $i) {
-                        if ((int)$i->type == Config::get('constants.headerLinkType.LEFT')) {
-                            array_push($headerLinks['left'], $i);
-                        } else {
-                            array_push($headerLinks['right'], $i);
-                        }
-                    }
+                    // Left, Right, and the Hot Deals / Clearance buttons
+                    $headerLinks = HeaderLink::grouped($hl);
                     $data['header_links'] = $headerLinks;
 
 

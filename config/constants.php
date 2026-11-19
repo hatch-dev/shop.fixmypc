@@ -70,7 +70,10 @@ return [
     ],
     'headerLinkType' => [
         'LEFT' => 1,
-        'RIGHT' => 2
+        'RIGHT' => 2,
+        // The two buttons in the storefront's navigation row: one row each.
+        'HOT_DEALS' => 3,
+        'CLEARANCE' => 4
     ],
     'footerImageLinkType' => [
         'PAYMENT' => 1,

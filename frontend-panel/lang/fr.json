@@ -271,7 +271,8 @@
     "searchParts": "Rechercher des pièces, appareils et réparations…",
     "clearance": "Déstockage",
     "allIn": "Tout : {name}",
-    "productsCount": "{count} produits"
+    "productsCount": "{count} produits",
+    "shopLinks": "Boutique"
   },
   "empty": {
     "welcome": "Bienvenue à {name}",
@@ -3432,5 +3433,19 @@
     "minutes": "Min",
     "seconds": "Sec",
     "shopNow": "Voir la vente"
+  },
+  "dialog": {
+    "confirmTitle": "Êtes-vous sûr ?",
+    "noticeTitle": "Veuillez noter",
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "ok": "OK",
+    "delete": "Supprimer",
+    "deleteTitle": "Supprimer ceci ?",
+    "remove": "Retirer",
+    "removeItemTitle": "Retirer cet article ?",
+    "removeItemMessage": "{name} sera retiré de votre panier.",
+    "itemRemoved": "Article retiré de votre panier.",
+    "removeFailed": "Impossible de retirer cet article. Veuillez réessayer."
   }
 }

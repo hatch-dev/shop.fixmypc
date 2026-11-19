@@ -161,6 +161,12 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 30px;
 }
+/* two link groups side by side ran 130px off a phone: one per row */
+@media (max-width: 576px) {
+    .links-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
 .services-tabs {
     justify-content: flex-start;
     align-items: center;

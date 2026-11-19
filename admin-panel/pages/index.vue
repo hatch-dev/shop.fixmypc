@@ -273,5 +273,7 @@
 
   @media only screen and (max-width: 1200px)
     .dashboard-main
-      grid-template-columns 1fr
+      // minmax(0, ...) as above: a bare 1fr grew to the chart's widest
+      // control (~510px) and the dashboard scrolled sideways on a phone
+      grid-template-columns minmax(0, 1fr)
 </style>

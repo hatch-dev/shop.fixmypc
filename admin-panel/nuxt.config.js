@@ -58,6 +58,8 @@ export default {
     { src: '~/plugins/toast.js', mode: 'client' },
     // this.$dialog: confirm / alert / prompt in place of the browser's own.
     { src: '~/plugins/dialog.js', mode: 'client' },
+    // One open dropdown at a time, outside press and Escape close it (v-dropdown-menu).
+    { src: '~/plugins/dropdown-manager.js', mode: 'client' },
     // A placeholder wherever an image fails to load.
     { src: '~/plugins/image-placeholder.js', mode: 'client' }
   ],

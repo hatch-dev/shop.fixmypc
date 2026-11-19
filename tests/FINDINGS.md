@@ -41,6 +41,31 @@ for requests that did not come from a superadmin; add a permission check to the
 routes above. Then check the live `admins` table for accounts nobody
 recognises, and rotate the Stripe and SumUp keys if any exist.
 
+**Fixed locally 2026-11-18, not yet deployed** (pinned by
+`tests/Isolated/AdminAccessSecurityTest.php`):
+- the `admin/signup` route is removed;
+- seller signup saves named fields only, so it can no longer send `verified`/`active`;
+- `payment/find`, `setting/sumup` (GET and POST), `wallet-overview/all` and
+  `subscriber/all-subscribers` now check `setting.view`/`setting.edit`,
+  `wallet_log.view` and `subscriber.view`;
+- `POST setting/sumup` refuses a value containing a line break, because it
+  writes into `.env`.
+
+**Still open (needs a staff login now):** 30 admin write routes have no
+permission check, so any role can call them. They include:
+- `store/action`, `setting/currency`, `templates/action` and `flash-discount/action`;
+- `pos-order/action`, `manual-activation` and `user/address/action`;
+- the image uploads.
+
+**Merge note (2026-11-19):** the live branch had already fixed parts of this
+in late October (SEC-003):
+- the signup route is gone;
+- `payment/find` and `setting/sumup` are permission-checked, with secrets masked.
+
+The merge keeps those implementations. It adds the seller-signup whitelist,
+the `wallet-overview` and `subscriber` checks and the SumUp line-break guard,
+which live did not have.
+
 ### F-02 · To confirm · Customer-area routes open to guests
 
 Eleven routes under `api/v1/user/` answer without `auth:user`: addresses, wishlist,
@@ -48,6 +73,60 @@ save-for-later, profile, and voucher lists (see the access review in
 `tests/COVERAGE.md`). Several are meant to serve guest baskets through a
 `user_token`. Each needs a test proving a guest only ever sees their own
 records and a stranger sees nothing. Not yet verified either way.
+
+**2026-11-18 audit, run against the local API:** none of address/all, profile,
+save-for-later/all, wishlist/all or user-vouchers returned anyone's records:
+- with no token they answer 201/403;
+- with an unknown `user_token` they answer 403;
+- with `?user_id=1` they answer 201/403;
+- user-vouchers lists only public vouchers.
+
+Addresses and deletes are scoped to the signed-in user or the guest's own
+`user_token`. Remaining gap: `api/admin/user/address/all?user_id=` has no
+permission check, so any staff role can read any customer's addresses.
+
+### F-03 · Critical · A customer token counted as the staff member with the same id
+
+**Found** 2026-11-19 (audit). `ControllerHelper` (and `AdminsController`)
+took `Auth::guard('admin')->user()` as the staff member. Passport resolves
+any token to the admin with the same numeric id. Admin routes also run
+`scope:admin`, so they refused customers. Storefront routes in those
+controllers did not, so customer 101 acted as admin 101.
+
+**Reproduced locally:** customer 101 read customer 102's address with
+`v1/user/address/all?user_id=102`.
+
+**Fixed locally, not deployed:** `ControllerHelper::staffFromToken()`
+accepts only tokens with the `admin` scope.
+
+### F-04 · High · Anyone could publish or rewrite product reviews
+
+**Found** 2026-11-19. `v1/rating-review/store` and `update` (used by the
+admin Reviews page) had no auth. A guest could:
+- publish an approved review marked verified;
+- rewrite any review by its id.
+
+**Already fixed on live (late October):** store/update moved to the admin
+routes behind `rating_review.delete`, with validation and approve/hide; the
+merge keeps that implementation. The merge adds:
+- the storefront "Verified" badge only on verified or order-linked reviews;
+- the admin Reviews form posting to `api/admin/rating-review/*` (it still
+  pointed at the removed v1 routes).
+
+### F-05 · High · Rate limits never applied to write routes
+
+**Found** 2026-11-19. `ClearCacheAfterWrite` runs `cache:clear` after
+every POST/PUT/PATCH/DELETE. That emptied the store holding the throttle
+counters. Staff login also had only the general 300/minute limit;
+70 wrong passwords in a row were never refused.
+
+**Already fixed on live (SEC-007):** the limiter has its own store in
+`config/cache.php`; the merge keeps that version.
+
+**Added by the merge:** staff sign-in, reset and code routes are limited to
+10/min per IP, with their own counter (prefix "staff").
+
+All three are pinned by `tests/Isolated/AdminAccessSecurityTest.php`.
 
 ## Closed
 

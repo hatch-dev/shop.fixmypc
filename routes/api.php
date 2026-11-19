@@ -223,11 +223,15 @@ Route::post('check-order', [OrdersController::class, 'checkOrder']);
 Route::group([
     'prefix' => 'admin'
 ], function () {
-    Route::post('login', [AdminsController::class, 'login']);
+    // Staff sign-in, reset and code checks: 10 a minute per IP, counted apart
+    // from the customer limits (prefix "staff"). Only the general 300/minute
+    // limit applied to staff sign-in before. forgot-password keeps its own
+    // per-address limit as well.
+    Route::post('login', [AdminsController::class, 'login'])->middleware('throttle:10,1,staff');
     // No public admin signup (SEC-003 / F-01): admins are created only by a
     // signed-in admin with admin.create, through admin-data/action.
-    Route::post('forgot-password', [AdminsController::class, 'forgotPassword']);
-    Route::post('verify-code', [AdminsController::class, 'verifyCode']);
+    Route::post('forgot-password', [AdminsController::class, 'forgotPassword'])->middleware('throttle:10,1,staff');
+    Route::post('verify-code', [AdminsController::class, 'verifyCode'])->middleware('throttle:10,1,staff');
 
     Route::get('languages', [LanguageController::class, "languages"]);
     Route::get('localization', [FrontendController::class, "localizationAdmin"]);

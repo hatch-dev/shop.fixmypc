@@ -163,6 +163,32 @@ header
     border none
     padding 0 10px
 
+// The logo column above the sidebar always has the sidebar's width, so the
+// hamburger lines up with the menu under it:
+//   > 1200px   open 248 (sidebar-width), collapsed 64 (sidebar-collapsed-width)
+//   769-1200   open 232 (sidebar-width-lg, as the sidebar), collapsed 64
+//   <= 768     the sidebar is an off-canvas drawer: the column shrinks to its
+//              buttons on the start edge (left in English, right in Arabic)
+// Below 1200px a min-width (and a 180px flex-basis below 992px) used to hold
+// the collapsed column at 180-262px with the hamburger floating in it, and the
+// open width lived in sidebar.styl, where it overrode these rules.
+//
+// Arabic (body.rtl): the build's PostCSS turns logical properties into
+// left/right ones, so the few sided values are mirrored under .rtl here,
+// next to the rule they mirror.
+.rtl
+  header
+    padding 0 0 0 12px
+
+    .header-brand
+      padding-left 0
+      padding-right 14px
+
+.sidebar-opened
+  header
+    .logo-wrapper
+      width sidebar-width
+
 .sidebar-closed
   header
     .logo-wrapper
@@ -177,63 +203,42 @@ header
       display none
 
 @media only screen and (max-width: 1200px)
-  header
-    .logo-wrapper
-      min-width sidebar-width-lg
-
-  .sidebar-closed
+  .sidebar-opened
     header
       .logo-wrapper
-        width sidebar-collapsed-width
-        justify-content center
+        width sidebar-width-lg
 
 @media only screen and (max-width: 992px)
-  .rtl header .right-wrap
-    justify-content left
-
   header
     .right-wrap
-      justify-content right
+      justify-content flex-end
 
     button
       padding 0 5px
-
-    .logo-wrapper
-      flex 0 0 180px
-
 
     .header-brand span
       display none
 
 @media only screen and (max-width: 768px)
-  .rtl header .right-area
-    left 0
-    right auto
-
-  .rtl header .right-area button
-    padding-left 15px
-    padding-right 15px
-
   header
+    height header-height-sm
     padding 0 12px
     // Keep the header (and its menu toggle) above the mobile drawer + overlay
     // so the hamburger can always open/close the sidebar.
     z-index 1003
 
-    .logo-wrapper
-      width auto
-      flex 1
-      min-width 0
-      border-right 0
-
     .header-brand
       display none
 
     .header-actions
-      margin-left auto
+      gap 4px
 
     .clear-cache
       display none
+
+    .expand-btn
+      width 36px
+      height 36px
 
     .toggle-menu-btn
       height 40px
@@ -266,14 +271,34 @@ header
         width 100%
         border-radius var(--radius-sm)
 
+  .rtl header
+    padding 0 12px
+
+    .right-area
+      left 0
+      right auto
+
+      button
+        padding-left 20px
+        padding-right 10px
+
+  // open or collapsed, the column is just its buttons at the start edge
+  .sidebar-opened,
+  .sidebar-closed
+    header
+      .logo-wrapper
+        width auto
+        flex 0 0 auto
+        min-width 0
+        padding 0
+        justify-content flex-start
+
   .dots-open
     .right-area
       display block
 
   .expand-btn,
   .toggle-menu-btn
-    width 38px
-    height 38px
     display flex
     align-items center
     justify-content center
@@ -283,33 +308,3 @@ header
     transition .25s
     &:hover
       background #EEF2FF
-
-
-@media only screen and (max-width:768px)
-
-  header
-    height header-height-sm
-    padding 0 12px
-
-    .logo-wrapper
-      flex 1
-      padding 0
-      border-right none
-
-    .header-brand
-
-      img
-        width auto
-        height 28px
-        max-width 120px
-
-      span
-        display none
-
-    .header-actions
-      gap 4px
-
-    .expand-btn,
-    .toggle-menu-btn
-      width 36px
-      height 36px

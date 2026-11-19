@@ -1318,7 +1318,7 @@
        * change what gets submitted, and somebody who filled in a whole trade
        * application should be told before that stops counting.
        */
-      chooseType(type) {
+      async chooseType(type) {
 
         if (type !== this.accountType && this.step === 'details') {
 
@@ -1330,7 +1330,7 @@
               + stranded.join('\n  · ')
               + '\n\n' + this.$t('ui.registerPage.switchWarning.outro')
 
-            if (!window.confirm(warning)) {
+            if (!(await this.$dialog.confirm(warning, {tone: 'primary'}))) {
               return
             }
           }

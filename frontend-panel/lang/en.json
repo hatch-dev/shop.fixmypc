@@ -296,7 +296,8 @@
     "searchParts": "Search parts, devices and repairs…",
     "clearance": "Clearance",
     "allIn": "All {name}",
-    "productsCount": "{count} products"
+    "productsCount": "{count} products",
+    "shopLinks": "Shop"
   },
   "empty": {
     "welcome": "Welcome to {name}",
@@ -3431,5 +3432,19 @@
       "specifications": "Specifications",
       "noSpecs": "No specifications listed for these products."
     }
+  },
+  "dialog": {
+    "confirmTitle": "Are you sure?",
+    "noticeTitle": "Please note",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "delete": "Delete",
+    "deleteTitle": "Delete this?",
+    "remove": "Remove",
+    "removeItemTitle": "Remove this item?",
+    "removeItemMessage": "{name} will be removed from your basket.",
+    "itemRemoved": "Item removed from your basket.",
+    "removeFailed": "We could not remove that item. Please try again."
   }
 }

@@ -642,13 +642,19 @@ class GiftCardTest extends TestCase
 
     public function test_a_card_gift_is_held_pending_until_sumup_says_paid_then_emailed_once()
     {
+        /*
+         * A declined checkout is final (GiftCardPurchases::settle); the
+         * checkout page's "try again" starts a new checkout. So: one declined
+         * checkout, then a second one that is paid.
+         */
         Http::fake([
-            'api.sumup.com/v0.1/checkouts' => Http::response(['id' => 'chk_test_gift_1'], 201),
-            'api.sumup.com/v0.1/checkouts/chk_test_gift_1' => Http::sequence()
-                ->push(['id' => 'chk_test_gift_1', 'status' => 'FAILED', 'amount' => 50, 'currency' => 'EUR',
-                    'description' => 'Gift Voucher Purchase #X'])
-                ->push(['id' => 'chk_test_gift_1', 'status' => 'PAID', 'amount' => 50, 'currency' => 'EUR',
-                    'description' => 'Gift Voucher Purchase #X', 'transaction_code' => 'TX1']),
+            'api.sumup.com/v0.1/checkouts' => Http::sequence()
+                ->push(['id' => 'chk_test_gift_1'], 201)
+                ->push(['id' => 'chk_test_gift_2'], 201),
+            'api.sumup.com/v0.1/checkouts/chk_test_gift_1' => Http::response(['id' => 'chk_test_gift_1', 'status' => 'FAILED',
+                'amount' => 50, 'currency' => 'EUR', 'description' => 'Gift Voucher Purchase #X']),
+            'api.sumup.com/v0.1/checkouts/chk_test_gift_2' => Http::response(['id' => 'chk_test_gift_2', 'status' => 'PAID',
+                'amount' => 50, 'currency' => 'EUR', 'description' => 'Gift Voucher Purchase #X', 'transaction_code' => 'TX1']),
         ]);
 
         $start = $this->postJson('/api/v1/user/purchase-gift-voucher/start', $this->gift(['amount' => 25, 'quantity' => 2]));
@@ -662,23 +668,29 @@ class GiftCardTest extends TestCase
         $this->assertCount(0, $this->codesBought(), 'no codes before payment');
         $this->assertCount(0, $this->outbox());
 
-        // Declined card: nothing issued, and the customer is told nothing was charged.
+        // Declined card: nothing issued, the customer is told nothing was charged, and that checkout is closed.
         $declined = $this->postJson('/api/v1/user/purchase-gift-voucher/confirm', ['checkout_id' => 'chk_test_gift_1']);
         $declined->assertStatus(422);
         $this->assertSame('The payment did not go through, so nothing was charged. Please try again.', $declined->json('message'));
+        $this->assertSame('failed', $order->fresh()->status);
+        $this->postJson('/api/v1/user/purchase-gift-voucher/confirm', ['checkout_id' => 'chk_test_gift_1'])->assertStatus(422);
         $this->assertCount(0, $this->codesBought());
 
-        // Paid.
-        $paid = $this->postJson('/api/v1/user/purchase-gift-voucher/confirm', ['checkout_id' => 'chk_test_gift_1']);
+        // Try again: a new checkout, paid.
+        $retry = $this->postJson('/api/v1/user/purchase-gift-voucher/start', $this->gift(['amount' => 25, 'quantity' => 2]));
+        $retry->assertOk();
+        $this->assertSame('chk_test_gift_2', $retry->json('checkout_id'));
+        $paid = $this->postJson('/api/v1/user/purchase-gift-voucher/confirm', ['checkout_id' => 'chk_test_gift_2']);
         $paid->assertOk();
         $this->assertSame('2 gift cards went to ' . self::RECIPIENT . '.', $paid->json('message'));
-        $this->assertSame('success', $order->fresh()->status);
+        $this->assertSame('success', GiftVoucherOrder::where('reference', 'chk_test_gift_2')->value('status'));
+        $this->assertSame('failed', $order->fresh()->status, 'the declined checkout stays closed');
         $this->assertCount(2, $this->codesBought());
         $this->assertCount(1, $this->outbox());
         $this->assertSame(100.0, $this->balance(), 'a card purchase does not touch the wallet');
 
         // Confirming again (a refresh) issues nothing more.
-        $this->postJson('/api/v1/user/purchase-gift-voucher/confirm', ['checkout_id' => 'chk_test_gift_1'])->assertOk();
+        $this->postJson('/api/v1/user/purchase-gift-voucher/confirm', ['checkout_id' => 'chk_test_gift_2'])->assertOk();
         $this->assertCount(2, $this->codesBought());
         $this->assertCount(1, $this->outbox());
     }

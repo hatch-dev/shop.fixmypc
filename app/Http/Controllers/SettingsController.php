@@ -187,6 +187,14 @@ class SettingsController extends ControllerHelper
                 return $can;
             }
 
+            // Each value is written into .env as one line: a line break in
+            // it would add settings of the caller's choosing.
+            foreach (['sumup_api_key', 'sumup_merchant_email', 'sumup_merchant_code'] as $field) {
+                if (preg_match('/[\r\n]/', (string)$request->input($field))) {
+                    return response()->json(Validation::error($request->token, 'Invalid SumUp setting.'));
+                }
+            }
+
             $db = [
                 "SUMUP_API_KEY" => "sumup_api_key",
                 "SUMUP_MERCHANT_EMAIL" => "sumup_merchant_email",

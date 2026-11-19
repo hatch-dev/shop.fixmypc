@@ -165,8 +165,10 @@
             lang: this.langCode
           })
           this.$emit('cart-changed', true);
+          this.$store.commit('common/SET_TOAST_MESSAGE', this.$t('dialog.itemRemoved'))
         }catch (e) {
-          this.$nuxt.error(e)
+          // A refusal is the shopper's to read, not a reason for the error page.
+          this.$store.commit('common/SET_TOAST_ERROR', (e && e.message) || this.$t('dialog.removeFailed'))
         }
       },
       async cbChangedFn(evt){

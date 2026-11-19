@@ -8,7 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use App\Models\Helper\Response;
+use App\Models\Helper\Utils;
 use App\Models\Helper\Validation;
+use Illuminate\Support\Facades\Auth;
 
 class WalletOverviewController extends Controller
 {
@@ -31,6 +33,11 @@ class WalletOverviewController extends Controller
     public function all(Request $request)
     {
         try {
+            // Customers' emails and balances: the same permission as the
+            // Wallet Overview menu item.
+            if ($can = Utils::userCan(Auth::guard('admin')->user(), 'wallet_log.view')) {
+                return $can;
+            }
 
             $activity = DB::query()
                 ->fromSub(

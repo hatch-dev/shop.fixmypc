@@ -271,7 +271,8 @@
     "searchParts": "ابحث عن القطع والأجهزة والإصلاحات…",
     "clearance": "تصفية",
     "allIn": "كل {name}",
-    "productsCount": "{count} منتج"
+    "productsCount": "{count} منتج",
+    "shopLinks": "تسوّق"
   },
   "empty": {
     "welcome": "{name} مرحبًا بك في",
@@ -3432,5 +3433,19 @@
     "minutes": "دقيقة",
     "seconds": "ثانية",
     "shopNow": "تسوّق التخفيضات"
+  },
+  "dialog": {
+    "confirmTitle": "هل أنت متأكد؟",
+    "noticeTitle": "يرجى الانتباه",
+    "confirm": "تأكيد",
+    "cancel": "إلغاء",
+    "ok": "حسنًا",
+    "delete": "حذف",
+    "deleteTitle": "حذف هذا؟",
+    "remove": "إزالة",
+    "removeItemTitle": "إزالة هذا المنتج؟",
+    "removeItemMessage": "ستتم إزالة {name} من سلتك.",
+    "itemRemoved": "تمت إزالة المنتج من سلتك.",
+    "removeFailed": "تعذّرت إزالة هذا المنتج. يرجى المحاولة مرة أخرى."
   }
 }

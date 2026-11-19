@@ -60,6 +60,7 @@
           <div
             class="dropdown-body"
             v-if="productDropdown"
+            v-dropdown-menu="{key: 'productDropdown'}"
           >
             <div
               class="checkbox-item"

@@ -586,7 +586,8 @@ class UsersController extends ControllerHelper
                 $user = null;
             }
 
-            $password_check = Validation::password_check($user, request('password'));
+            // In the shopper's language: the refusal was always English.
+            $password_check = Validation::password_check($user, request('password'), null, 'form', $lang);
             if ($password_check) {
                 return response()->json($password_check);
             }

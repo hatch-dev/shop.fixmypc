@@ -94,6 +94,7 @@
 
           <div
             v-if="showColumnSelector"
+            v-dropdown-menu="{close: closeMenu, key: 'showColumnSelector', ignore: '.grid-columns-btn'}"
             class="grid-column-selector"
             @click.stop
           >
@@ -262,6 +263,7 @@
 
               <div
                 v-if="activeDropdown === value.id"
+                v-dropdown-menu="{close: closeMenu, key: 'activeDropdown'}"
                 class="action-dropdown-menu"
               >
 
@@ -648,6 +650,10 @@
           this.showColumnSelector = false
         }
       },
+      /** Closes one menu; v-dropdown-menu names which (see plugins/dropdown-manager.js). */
+      closeMenu(key) {
+        this[key] = typeof this[key] === 'boolean' ? false : null
+      },
       toggleActionDropdown(id) {
         this.showColumnSelector = false
         this.activeDropdown =
@@ -678,7 +684,7 @@
         this.showAlert(this.$t('pages.products.embedCopied'))
       },
       async duplicateProduct(productId) {
-        if (!confirm(this.$t('prod.confirmDuplicate'))) return;
+        if (!(await this.$dialog.confirm(this.$t('prod.confirmDuplicate'), {tone: 'primary', icon: 'fa-solid fa-copy'}))) return;
 
         try {
           this.loading = true;

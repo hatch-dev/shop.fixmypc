@@ -141,7 +141,7 @@ class GiftCardStabilisationTest extends IsolatedTestCase
         ]));
     }
 
-    private function placeOrder(User $user, $voucherCode, $method = null)
+    private function placeOrder(User $user, $voucherCode, $method = null, array $extra = [])
     {
         $method = $method ?: (int)config('constants.paymentMethod.CASH_ON_DELIVERY');
         $place = DB::table('shipping_places')->where('shipping_rule_id', Fixture::SHIPPING_RULE_ID)->value('id');
@@ -150,7 +150,7 @@ class GiftCardStabilisationTest extends IsolatedTestCase
             'shipping_place_id' => $place,
             'shipping_type' => (int)config('constants.shippingTypeIn.PICKUP'),
         ]);
-        $json = json_encode(['user_token' => null, 'order_method' => $method, 'voucher' => $voucherCode, 'time_zone' => 'Europe/Dublin']);
+        $json = json_encode(array_merge(['user_token' => null, 'order_method' => $method, 'voucher' => $voucherCode, 'time_zone' => 'Europe/Dublin'], $extra));
         $json .= str_repeat(' ', (16 - strlen($json) % 16) % 16);
 
         return $this->asCustomer($user->id)->postJson('/api/v1/order/action', [
@@ -313,11 +313,14 @@ class GiftCardStabilisationTest extends IsolatedTestCase
 
         // a card payment SumUp never took: the order is rolled back, voucher row and all
         $this->addLaptop($this->a);
-        $this->fakeHttp(['api.sumup.com/v0.1/checkouts/*' => Http::response(['status' => 'FAILED', 'amount' => 1, 'currency' => 'EUR'])]);
-        $json = json_encode(['user_token' => null, 'order_method' => (int)config('constants.paymentMethod.SUMUP'),
-            'voucher' => $voucher->code, 'time_zone' => 'Europe/Dublin', 'checkout_id' => 'chk_order_failed']);
+        $asked = (object)['urls' => []];
+        $this->fakeHttp(['api.sumup.com/v0.1/checkouts/*' => function ($request) use ($asked) {
+            $asked->urls[] = $request->url();
+            return Http::response(['status' => 'FAILED', 'amount' => 1, 'currency' => 'EUR']);
+        }]);
         $before = DB::table('ordered_voucher')->where('voucher_id', $voucher->id)->count();
-        $this->placeOrder($this->a, $voucher->code, (int)config('constants.paymentMethod.SUMUP'));
+        $this->placeOrder($this->a, $voucher->code, (int)config('constants.paymentMethod.SUMUP'), ['checkout_id' => 'chk_order_failed']);
+        $this->assertNotEmpty(preg_grep('#/checkouts/chk_order_failed$#', $asked->urls), 'SumUp was asked about this checkout and said FAILED');
         $this->assertSame($before, DB::table('ordered_voucher')->where('voucher_id', $voucher->id)->count(),
             'a rolled-back order leaves nothing on the card');
         $this->assertEqualsWithDelta(2000, $this->balance($voucher), 0.001);

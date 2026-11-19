@@ -144,7 +144,7 @@
         }
       },
       async imageDelete(id) {
-        if (confirm(this.$t('admin.dltMsg'))) {
+        if (await this.$dialog.confirmDelete(this.$t('admin.dltMsg'))) {
 
           try {
             this.deleting = true

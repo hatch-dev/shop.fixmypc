@@ -617,7 +617,15 @@
     "asTesting": "Testing…",
     "asTestOk": "Connected. No couriers are activated in this AfterShip account yet. | Connected. 1 courier is activated: | Connected. {count} couriers are activated:",
     "asCouriersHint": "Only these couriers can be chosen on an order. To add An Post or DPD Ireland, activate them in AfterShip > Settings > Couriers, then test again.",
-    "asTestFailed": "AfterShip could not be reached. Try again in a minute."
+    "asTestFailed": "AfterShip could not be reached. Try again in a minute.",
+    "headerPlacementMsg": "Left links appear in the navigation row next to the categories; Right links appear in the account menu and the mobile menu.",
+    "headerButtons": "Header buttons",
+    "headerButtonsMsg": "The two buttons in the navigation row. Leave both fields empty to keep the default label and address.",
+    "headerButton": "Button",
+    "hotDealsButton": "Hot Deals",
+    "clearanceButton": "Clearance",
+    "headerContactMsg": "The email address, phone number and WhatsApp number shown in the header are edited in",
+    "headerContactLink": "Settings › Address"
   },
   "list": {
     "show": "Showing {from} to {to} of {total} results",

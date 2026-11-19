@@ -63,7 +63,7 @@ export default {
       }
     },
     async deleting(address) {
-      if (confirm(this.$t('cartProductTile.deleteAlert'))) {
+      if (await this.$dialog.confirm(this.$t('cartProductTile.deleteAlert'), {title: this.$t('dialog.deleteTitle'), confirmLabel: this.$t('dialog.delete')})) {
         this.ajaxDeleting = address.id
         const data = await this.userAddressDelete({
           id: address.id,

@@ -2153,7 +2153,8 @@
 
 .seo-score-checklist {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  /* min(230px, 100%): a 230px minimum ran past a phone-width form */
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
   gap: 6px 18px;
   margin-top: 0;
 }

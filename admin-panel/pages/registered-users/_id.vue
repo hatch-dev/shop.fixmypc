@@ -566,7 +566,7 @@
           ? this.$t('pages.registeredUsers.suspendConfirm')
           : this.$t('pages.registeredUsers.reactivateConfirm')
 
-        if (!confirm(wording)) {
+        if (!(await this.$dialog.confirm(wording, {tone: ['suspended', 'rejected'].includes(status) ? 'danger' : 'primary'}))) {
           return
         }
 
@@ -589,7 +589,7 @@
           pending: this.$t('pages.registeredUsers.confirmPendingTrade')
         }[status]
 
-        if (!confirm(wording)) {
+        if (!(await this.$dialog.confirm(wording, {tone: ['suspended', 'rejected'].includes(status) ? 'danger' : 'primary'}))) {
           return
         }
 

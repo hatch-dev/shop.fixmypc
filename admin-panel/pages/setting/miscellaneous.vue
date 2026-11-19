@@ -207,7 +207,7 @@
         }
       },
       async deactivateScript() {
-        if (confirm(this.$t('dataPage.deactMsg'))) {
+        if (await this.$dialog.confirm(this.$t('dataPage.deactMsg'))) {
           try {
             this.setErrors()
 
