@@ -370,9 +370,17 @@ export default {
 .ip-panel {
   position: fixed;
   z-index: 2000;
+  box-sizing: border-box;
   width: 284px;
   max-width: calc(100vw - 24px);
   padding: 11px 12px 12px;
+  /* The panel sits inside its trigger's parent in the DOM (it is only placed
+     elsewhere on screen), so it inherits that parent's text settings. The
+     basket and checkout VAT badges set white-space: nowrap, which kept every
+     sentence on one line running out past the panel's edge. Reset here, so
+     the panel wraps the same whatever it is placed in. */
+  white-space: normal;
+  overflow-wrap: break-word;
   border: 1px solid #E3E8F0;
   border-radius: 10px;
   background: #fff;
@@ -439,6 +447,9 @@ export default {
 }
 
 .ip-title {
+  /* may shrink, so a long (translated) heading wraps beside the close icon
+     instead of pushing it out of the panel */
+  min-width: 0;
   margin: 0;
   font-size: 13.5px;
   font-weight: 700;
