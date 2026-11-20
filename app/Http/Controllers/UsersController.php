@@ -2278,7 +2278,11 @@ class UsersController extends ControllerHelper
                 // store-wide vouchers plus this customer's own gift vouchers
                 ->usableBy(optional($request->user('user'))->id)
                 ->orderBy('vouchers.' . ($request->order_by ?: 'id'), $request->type ?: 'desc');
-            // $query = $query->where('status', Config::get('constants.status.PUBLIC'));
+            // Only Public vouchers are listed: a Private one is refused at
+            // checkout (voucher/validity), so listing it only misled the
+            // customer. Redeemed gift cards are stored as Public, so they
+            // stay. Expired vouchers stay too: the page shows them under Expired.
+            $query = $query->where('vouchers.status', Config::get('constants.status.PUBLIC'));
 
 
             if ($lang) {
