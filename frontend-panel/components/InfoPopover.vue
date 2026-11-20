@@ -1,5 +1,5 @@
 <template>
-  <span class="ip" :class="`ip-${variant}`">
+  <span class="ip" :class="`ip-${variant}`" @mouseenter="hoverIn" @mouseleave="hoverOut">
     <button
       ref="btn"
       type="button"
@@ -11,15 +11,17 @@
       @click.stop.prevent="toggle"
     >i</button>
 
-    <template v-if="open">
-      <!--
-        The sheet needs something to dim and to catch a tap behind it. The
-        desktop popover has no scrim: it is a light disclosure, not a modal,
-        and the page behind it stays readable while it is open.
-      -->
-      <div v-if="sheet" class="ip-scrim" @click="close(false)"></div>
+    <!--
+      The sheet needs something to dim and to catch a tap behind it. The
+      desktop popover has no scrim: it is a light disclosure, not a modal,
+      and the page behind it stays readable while it is open.
+    -->
+    <div v-if="open && sheet" class="ip-scrim" @click="close(false)"></div>
 
+    <!-- fades in and out (instant under prefers-reduced-motion) -->
+    <transition name="ip-fade">
       <div
+        v-if="open"
         :id="key"
         ref="panel"
         class="ip-panel"
@@ -71,7 +73,7 @@
 
         <p v-if="note" class="ip-note">{{ note }}</p>
       </div>
-    </template>
+    </transition>
   </span>
 </template>
 
@@ -111,6 +113,9 @@ export default {
     label: { type: String, default: '' },
     // 'badge' takes its colour from the badge around it, 'summary' is grey.
     variant: { type: String, default: 'summary' },
+    // Also open while a mouse rests on the icon (devices that can hover only;
+    // touch keeps tap). A click while it is hover-opened keeps it open.
+    hover: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -120,6 +125,8 @@ export default {
       arrowLeft: 24,
       sheet: false,
       ready: false,
+      // opened by hovering (not clicked): no focus move, closes on leave
+      viaHover: false,
     }
   },
   computed: {
@@ -136,17 +143,24 @@ export default {
           this.position()
           this.ready = true
           const panel = this.$refs.panel
-          if (panel) panel.focus()
+          // a hover must not pull keyboard focus (or scroll) to the panel
+          if (panel && !this.viaHover) panel.focus()
         })
       } else {
         this.unbind()
         this.ready = false
+        this.viaHover = false
       }
     },
   },
   methods: {
     toggle() {
-      if (this.open) {
+      if (this.open && this.viaHover) {
+        // clicking a hover-opened panel keeps it open, as a click would open it
+        this.viaHover = false
+        const panel = this.$refs.panel
+        if (panel) panel.focus()
+      } else if (this.open) {
         this.close(true)
       } else {
         // assigning the shared id is what closes any other open panel
@@ -165,6 +179,25 @@ export default {
           if (btn) btn.focus()
         })
       }
+    },
+
+    hoverIn() {
+      if (!this.hover || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
+      clearTimeout(this.hoverTimer)
+      if (!this.open) {
+        this.viaHover = true
+        // the shared id: any other open panel closes, one at a time
+        openState.id = this.key
+      }
+    },
+
+    hoverOut() {
+      if (!this.viaHover) return
+      // a short grace period lets the pointer cross from the icon to the panel
+      clearTimeout(this.hoverTimer)
+      this.hoverTimer = setTimeout(() => {
+        if (this.viaHover) this.close(false)
+      }, 180)
     },
 
     onDocPointer(e) {
@@ -260,6 +293,7 @@ export default {
     },
   },
   beforeDestroy() {
+    clearTimeout(this.hoverTimer)
     this.unbind()
     // a panel left open in the shared slot would block every other icon
     if (this.open) openState.id = null
@@ -353,6 +387,21 @@ export default {
 
 .ip-panel.is-ready {
   visibility: visible;
+}
+
+/* fade in once placed, fade out on close (it stays visible while it fades) */
+.ip-fade-enter-active,
+.ip-fade-leave-active {
+  transition: opacity .16s ease;
+}
+
+.ip-fade-leave-active {
+  visibility: visible;
+}
+
+.ip-fade-enter,
+.ip-fade-leave-to {
+  opacity: 0;
 }
 
 .ip-panel:focus {
@@ -553,7 +602,9 @@ export default {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ip-btn {
+  .ip-btn,
+  .ip-fade-enter-active,
+  .ip-fade-leave-active {
     transition: none;
   }
 }
