@@ -21,6 +21,7 @@ use App\Models\GiftVoucher;
 use App\Models\RecentlyViewedProduct;
 use App\Models\FooterLink;
 use App\Models\HeaderLink;
+use App\Models\Helper\CategoryProducts;
 use App\Models\Helper\FileHelper;
 use App\Models\Helper\ListingPrices;
 use App\Models\Helper\FlashSaleAllowance;
@@ -274,16 +275,18 @@ class FrontendController extends Controller
 
             if ($request->category) {
 
-                $productCategories = ProductCategory::where('category_id', $category->id)->get();
-
-                $productIds = [];
-                foreach ($productCategories as $i) {
-                    array_push($productIds, $i->product_id);
+                // The category and its subcategories, filed through either
+                // product_categories or product_subcategories (the product
+                // form saves a subcategory to the second). Reading only
+                // product_categories for this one category listed nothing
+                // under a subcategory, and a missing category threw here.
+                if ($category) {
+                    $query = CategoryProducts::constrain($query, CategoryProducts::branchIds($category->id));
+                    // counts on the same rule as the list, for the sidebar
+                    CategoryProducts::applyCounts($category);
+                } else {
+                    $query = $query->whereRaw('1 = 0');
                 }
-
-
-                $query = $query->whereIn('products.id', $productIds);
-
 
             }
 
@@ -418,6 +421,11 @@ class FrontendController extends Controller
             }
 
             $pagination = Config::get('constants.listing.PAGINATION');
+
+            // A unique last sort key: products sharing an updated_at (a bulk
+            // import) otherwise come back in a different order per page query,
+            // so a product could appear on two pages and another on none.
+            $query = $query->orderBy('products.id', 'desc');
 
             $data['result'] = $query->paginate($pagination);
             $this->applyClearanceToProducts($data['result']->getCollection());
@@ -867,6 +875,9 @@ class FrontendController extends Controller
             $page = $request->get('page', 1);
             $perPage = $request->get('per_page', Config::get('constants.frontend.PAGINATION'));
             $data = $query->paginate($perPage, ['*'], 'page', $page);
+
+            // counts on the listing's rule: subcategories and both link tables
+            CategoryProducts::applyCounts($data->getCollection());
 
             // Eloquent cannot LIMIT an eager load per parent, so the cut to the
             // handful the card has room for happens here.
@@ -1378,27 +1389,14 @@ class FrontendController extends Controller
 
             if ($request->category) {
 
-                $query = $query
-                    ->join(
-                        'product_categories as search_pc',
-                        'products.id',
-                        '=',
-                        'search_pc.product_id'
-                    )
+                // Same rule as the category listing (CategoryProducts): the
+                // category and its subcategories, through either link table.
+                // The join read product_categories for this slug only.
+                $filterCategoryId = Category::where('slug', $request->category)->value('id');
 
-                    ->join(
-                        'categories as search_c',
-                        'search_pc.category_id',
-                        '=',
-                        'search_c.id'
-                    )
-
-                    ->where(
-                        'search_c.slug',
-                        $request->category
-                    )
-
-                    ->groupBy('products.id');
+                $query = $filterCategoryId
+                    ? CategoryProducts::constrain($query, CategoryProducts::branchIds($filterCategoryId))
+                    : $query->whereRaw('1 = 0');
             }
 
             // Products are no longer assigned a shipping rule, so there is
@@ -1447,6 +1445,8 @@ class FrontendController extends Controller
                 $pagination = Config::get('constants.homeProduct.PAGINATION');
             }
 
+            // unique last sort key, so pages never overlap (see all())
+            $query = $query->orderBy('products.id', 'desc');
 
             $data['result'] = $query->paginate($pagination);
             $this->applyClearanceToProducts($data['result']->getCollection());
@@ -1765,6 +1765,9 @@ class FrontendController extends Controller
                     }])
                     ->get();
 
+                // sidebar and menu counts on the listing's own rule
+                CategoryProducts::applyCounts($data['nav_categories']);
+
 
                 // FOOTER PAGES
                 $data['services'] = [];
@@ -2074,6 +2077,9 @@ class FrontendController extends Controller
                         }]);
                 }])
                 ->get();
+
+                // the same counts the listing filters by
+                CategoryProducts::applyCounts($data['categories']);
 
 
                 $data['flash_sales'] = [];
