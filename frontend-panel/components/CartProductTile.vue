@@ -64,6 +64,7 @@
             >{{ vatLine.badge }}<info-popover
               v-if="vatExplainer"
               variant="badge"
+              hover
               :title="vatExplainer.title"
               :label="vatExplainer.label"
               :lede="vatExplainer.lede"
@@ -874,7 +875,9 @@ h6.cart-heading a:hover {
   font-weight: 600;
   line-height: 1.4;
   white-space: nowrap;
-  cursor: help;
+  /* was cursor: help - the browser's arrow-with-question-mark pointer, which
+     was all a hover showed; the ⓘ icon opens the explanation instead */
+  cursor: default;
 }
 
 .cart-basis-badge.is-exclusive {
