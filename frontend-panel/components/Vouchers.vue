@@ -290,7 +290,8 @@
 
         <!-- ── the card ── -->
         <div class="gb-visual">
-          <div class="gb-card" :class="`gb-theme-${themeIndex}`" aria-hidden="true">
+          <!-- the design's own image when the admin uploaded one; the colour theme otherwise -->
+          <div class="gb-card" :class="`gb-theme-${themeIndex}`" :style="designImageStyle(activeDesign, true)" aria-hidden="true">
             <div class="gb-card-top">
               <span class="gb-card-brand">FixMyPC</span>
               <span class="gb-card-kind">{{ $t('ui.vouchersPanel.builder.cardKind') }}</span>
@@ -321,11 +322,12 @@
               role="radio"
               class="gb-design"
               :class="{ active: design.id === activeDesign.id }"
+              :title="design.title"
               :aria-checked="design.id === activeDesign.id ? 'true' : 'false'"
               @click="pickDesign(design.id)"
             >
-              <span class="gb-design-swatch" :class="`gb-theme-${i % 4}`">
-                <i class="fa-solid fa-gift" aria-hidden="true"></i>
+              <span class="gb-design-swatch" :class="`gb-theme-${i % 4}`" :style="designImageStyle(design)">
+                <i v-if="!design.image" class="fa-solid fa-gift" aria-hidden="true"></i>
               </span>
               <span class="gb-design-name">{{ design.title }}</span>
             </button>
@@ -1099,6 +1101,24 @@
 
         if (current > voucher.min_quantity) {
           this.$set(this.selectedVoucherQty, voucher.id, current - 1)
+        }
+      },
+      /*
+       * The image the admin uploaded for a gift card design (Gift Vouchers in
+       * the admin). Since the October builder redesign the card showed only a
+       * colour theme, so a new design's artwork never reached customers. With
+       * no image the theme class stays in charge, exactly as before. The card
+       * gets a light shade so its white text stays readable on any picture.
+       */
+      designImageStyle(design, shade = false) {
+        if (!design || !design.image) {
+          return null
+        }
+        const url = `url("${this.getImageURL(design.image)}")`
+        return {
+          backgroundImage: shade ? `linear-gradient(rgba(0, 0, 0, .28), rgba(0, 0, 0, .42)), ${url}` : url,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
         }
       },
       async fetchGiftVouchers() {
@@ -2271,6 +2291,12 @@ button.btn-purchase:disabled { opacity: .55; cursor: not-allowed; }
   margin-top: 16px;
   overflow-x: auto;
   scrollbar-width: none;
+  /*
+   * Wrap instead of scrolling: the scrollbar is hidden, so a design past the
+   * card's width (a third design, or a long name) could not be seen or
+   * reached, and a newly added design looked like it was missing.
+   */
+  flex-wrap: wrap;
 }
 
 .gb-designs::-webkit-scrollbar { display: none; }
@@ -2313,6 +2339,9 @@ button.btn-purchase:disabled { opacity: .55; cursor: not-allowed; }
 }
 
 .gb-design-name { white-space: nowrap; }
+/* a very long design name is shortened rather than pushed out of the box */
+.gb-design { max-width: 100%; min-width: 0; }
+.gb-design-name { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 
 /* ---- steps ---- */
 
